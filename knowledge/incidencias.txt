@@ -1,0 +1,3 @@
+Error al iniciar sesión en el módulo de pagos.
+Verificar usuario, contraseña y permisos asignados.
+Si el problema persiste, escalar al departamento TI.
