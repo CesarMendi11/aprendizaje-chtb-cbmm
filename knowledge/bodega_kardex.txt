@@ -1,0 +1,35 @@
+TEMA: Kardex de bodega
+
+PREGUNTA: ¿Qué es el Kardex?
+RESPUESTA:
+Es un sistema que permite consultar el inventario de productos en un periodo determinado mostrando todos los movimientos.
+
+---
+
+PREGUNTA: ¿Cómo funciona el Kardex?
+RESPUESTA:
+El usuario selecciona un rango de fechas o año fiscal y el sistema muestra movimientos de ingreso, egreso y saldo.
+
+---
+
+PREGUNTA: ¿Qué información muestra el Kardex?
+RESPUESTA:
+Saldo inicial, ingresos, egresos, precio unitario y valor total.
+
+---
+
+PREGUNTA: ¿Qué acciones se pueden realizar en Kardex?
+RESPUESTA:
+Seleccionar productos, definir rango de fechas y generar reporte en PDF.
+
+---
+
+PREGUNTA: ¿Cuál es el proceso para generar un Kardex?
+RESPUESTA:
+Seleccionar productos, definir fechas, confirmar y generar el reporte.
+
+---
+
+PREGUNTA: ¿Qué resultado genera el Kardex?
+RESPUESTA:
+Un documento PDF con el detalle completo de los movimientos de inventario.

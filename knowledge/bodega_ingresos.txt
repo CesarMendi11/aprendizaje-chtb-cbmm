@@ -1,0 +1,35 @@
+TEMA: Ingresos de bodega
+
+PREGUNTA: ¿Qué es un comprobante de ingreso?
+RESPUESTA:
+Es un registro que permite gestionar el ingreso de productos a la bodega, generalmente provenientes de compras o facturas.
+
+---
+
+PREGUNTA: ¿Cómo registrar un ingreso?
+RESPUESTA:
+Se debe ingresar información del comprobante como número, fecha, responsable, proveedor y tipo de transacción. Luego se registran los productos con cantidad, precio unitario y valor total.
+
+---
+
+PREGUNTA: ¿Qué acciones se pueden realizar en un ingreso?
+RESPUESTA:
+Guardar registro, aprobar ingreso, anular ingreso o imprimir el comprobante en PDF.
+
+---
+
+PREGUNTA: ¿Qué documentos genera el sistema?
+RESPUESTA:
+Se generan documentos en formato PDF una vez guardado el registro.
+
+---
+
+PREGUNTA: ¿Qué tipos de documentos existen?
+RESPUESTA:
+Acta de ingreso de activo fijo (no aprobado), acta de ingreso aprobado y acta de entrega-recepción.
+
+---
+
+PREGUNTA: ¿Qué información se registra en un ingreso?
+RESPUESTA:
+Datos del responsable, detalle de productos, cantidades, valores e información del proveedor.

@@ -1,0 +1,35 @@
+TEMA: Inventario de bodega
+
+PREGUNTA: ¿Qué permite el registro de inventario?
+RESPUESTA:
+Permite gestionar los movimientos de inventario de un producto, incluyendo saldos iniciales, ingresos y ajustes.
+
+---
+
+PREGUNTA: ¿Qué información se registra en inventario?
+RESPUESTA:
+Código del registro, estado, departamento, fecha, usuario y observaciones.
+
+---
+
+PREGUNTA: ¿Qué información tiene el producto?
+RESPUESTA:
+Código, descripción, cantidad, precio unitario y valor total.
+
+---
+
+PREGUNTA: ¿Qué acciones se pueden realizar en inventario?
+RESPUESTA:
+Guardar registro, aprobar movimiento, anular registro o imprimir reporte en PDF.
+
+---
+
+PREGUNTA: ¿Qué documento genera el sistema?
+RESPUESTA:
+Un reporte en PDF con datos de la institución, información del movimiento, detalle de productos y estado del registro.
+
+---
+
+PREGUNTA: ¿Qué pasa si el registro no está aprobado?
+RESPUESTA:
+El documento incluirá una marca indicando que no es válido oficialmente.

@@ -1,3 +1,19 @@
-Error al iniciar sesión en el módulo de pagos.
-Verificar usuario, contraseña y permisos asignados.
-Si el problema persiste, escalar al departamento TI.
+INCIDENCIAS ERP - CUERPO DE BOMBEROS DE MACHALA
+
+1. Problema: No puedo iniciar sesión en el sistema
+Solución:
+Verificar que el usuario y contraseña sean correctos.
+Revisar si el usuario está activo en el sistema.
+Validar que el rol tenga permisos para acceder al módulo.
+
+2. Problema: No puedo registrar un pago
+Solución:
+Verificar que el módulo de pagos esté habilitado.
+Revisar que el usuario tenga permisos de registro.
+Confirmar que los datos obligatorios estén completos.
+
+3. Problema: No se genera el reporte
+Solución:
+Revisar conexión con la base de datos.
+Verificar filtros aplicados.
+Intentar generar el reporte nuevamente.
