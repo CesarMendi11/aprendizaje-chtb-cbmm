@@ -1,36 +1,64 @@
+import shutil
 import chromadb
 from pathlib import Path
 import uuid
 
-# Conectar a ChromaDB (base vectorial)
-client = chromadb.PersistentClient(path="./chroma_db")
+CHROMA_PATH = "./chroma_db"
+COLLECTION_NAME = "erp_docs"
+KNOWLEDGE_PATH = Path("./knowledge")
 
-# Crear o abrir colección
-collection = client.get_or_create_collection("erp_docs")
 
-# Carpeta donde están los documentos
-knowledge_path = Path("./knowledge")
+def reset_chroma_db():
+    chroma_path = Path(CHROMA_PATH)
 
-# Buscar todos los archivos .txt
-files = list(knowledge_path.glob("*.txt"))
+    if chroma_path.exists():
+        shutil.rmtree(chroma_path)
+        print("🧹 Base vectorial anterior eliminada.")
+
+
+def dividir_en_chunks(texto):
+    partes = texto.split("---")
+
+    chunks = []
+
+    for parte in partes:
+        parte = parte.strip()
+
+        if parte:
+            chunks.append(parte)
+
+    return chunks
+
+
+reset_chroma_db()
+
+client = chromadb.PersistentClient(path=CHROMA_PATH)
+collection = client.get_or_create_collection(COLLECTION_NAME)
+
+files = list(KNOWLEDGE_PATH.glob("*.txt"))
 
 print(f"Encontrados {len(files)} archivos para indexar...\n")
 
 for file in files:
     print(f"Procesando: {file.name}")
 
-    # Leer contenido
     contenido = file.read_text(encoding="utf-8")
+    chunks = dividir_en_chunks(contenido)
 
-    # Crear ID único para evitar conflictos
-    doc_id = str(uuid.uuid4())
+    for index, chunk in enumerate(chunks, start=1):
+        doc_id = str(uuid.uuid4())
 
-    # Guardar en ChromaDB
-    collection.add(
-        documents=[contenido],
-        ids=[doc_id]
-    )
+        collection.add(
+            documents=[chunk],
+            ids=[doc_id],
+            metadatas=[
+                {
+                    "archivo": file.name,
+                    "chunk": index
+                }
+            ]
+        )
 
-    print(f"✔ Indexado: {file.name}")
+    print(f"✔ Indexado en {len(chunks)} fragmentos: {file.name}")
 
 print("\n✅ Indexación completa.")

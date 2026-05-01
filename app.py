@@ -1,7 +1,7 @@
-import chromadb
 import os
 import argparse
 import requests
+import chromadb
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -15,56 +15,58 @@ load_dotenv()
 # =========================
 def search_context(query, n_results=2):
     """
-    Busca en ChromaDB los fragmentos más relacionados con la pregunta.
+    Busca en ChromaDB los documentos o fragmentos más relacionados con la pregunta.
     """
 
     client = chromadb.PersistentClient(path="./chroma_db")
     collection = client.get_or_create_collection("erp_docs")
 
-    resultado = collection.query(
+    result = collection.query(
         query_texts=[query],
         n_results=n_results
     )
 
-    documentos = resultado.get("documents", [[]])[0]
+    documents = result.get("documents", [[]])[0]
 
-    if not documentos:
+    if not documents:
         return "No se encontró contexto relevante en la base documental."
 
-    contexto = "\n\n---\n\n".join(documentos)
-    return contexto
+    context = "\n\n---\n\n".join(documents)
+    return context
 
 
 # =========================
-# 2. CONSTRUIR EL PROMPT
+# 2. CONSTRUIR PROMPT
 # =========================
 def build_prompt(user_question, context):
-    """
-    Construye el mensaje que se enviará al modelo.
-    """
+    return f"""
+Eres un asistente técnico del ERP del Cuerpo de Bomberos de Machala.
 
-    prompt = f"""
-Eres un asistente para el ERP del Cuerpo de Bomberos de Machala.
+Responde SOLO con la información del contexto.
 
-Responde únicamente usando la información del contexto.
-Si la respuesta no está en el contexto, di claramente:
-"No encontré esa información en los documentos disponibles."
+Reglas:
+- NO agregues texto adicional.
+- NO hagas introducciones.
+- NO hagas preguntas al usuario.
+- NO uses frases como "te ayudo", "claro", etc.
+- Responde de forma directa y en lista si aplica.
 
 Contexto:
 {context}
 
-Pregunta del usuario:
+Pregunta:
 {user_question}
-"""
-    return prompt
 
+Respuesta:
+"""
 
 # =========================
-# 3. CONSULTAR OPENROUTER / OPENAI
+# 3. OPENROUTER / OPENAI
 # =========================
 def ask_openai_compatible(prompt, provider, model):
     """
-    Sirve para OpenAI y OpenRouter, porque ambos usan cliente tipo OpenAI.
+    Consulta proveedores compatibles con la API de OpenAI.
+    Sirve para OpenAI y OpenRouter.
     """
 
     if provider == "openrouter":
@@ -88,25 +90,29 @@ def ask_openai_compatible(prompt, provider, model):
         client = OpenAI(api_key=api_key)
 
     else:
-        raise ValueError("Proveedor no soportado en ask_openai_compatible")
+        raise ValueError(f"Proveedor no compatible: {provider}")
 
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "user", "content": prompt}
-        ]
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0.2
     )
 
     return response.choices[0].message.content
 
 
 # =========================
-# 4. CONSULTAR OLLAMA
+# 4. OLLAMA LOCAL
 # =========================
 def ask_ollama(prompt, model):
     """
-    Hace consulta local a Ollama.
-    Debe estar corriendo en tu máquina.
+    Consulta Ollama local.
+    Ollama debe estar activo en http://localhost:11434
     """
 
     url = "http://localhost:11434/api/generate"
@@ -114,16 +120,31 @@ def ask_ollama(prompt, model):
     payload = {
         "model": model,
         "prompt": prompt,
-        "stream": False
+        "stream": False,
+        "options": {
+            "temperature": 0.2
+        }
     }
 
-    response = requests.post(url, json=payload)
+    try:
+        response = requests.post(url, json=payload, timeout=120)
+    except requests.exceptions.ConnectionError:
+        raise ConnectionError(
+            "No se pudo conectar con Ollama. "
+            "Verifica que esté activo con: ollama serve"
+        )
+
+    except requests.exceptions.Timeout:
+        raise TimeoutError(
+            "Ollama tardó demasiado en responder. "
+            "Puede ser por el hardware o por un modelo muy pesado."
+        )
 
     if response.status_code != 200:
         raise ValueError(f"Error al consultar Ollama: {response.text}")
 
     data = response.json()
-    return data["response"]
+    return data.get("response", "No se recibió respuesta desde Ollama.")
 
 
 # =========================
@@ -131,40 +152,64 @@ def ask_ollama(prompt, model):
 # =========================
 def ask_llm(prompt, provider, model):
     """
-    Decide qué proveedor usar.
+    Decide qué proveedor utilizar.
     """
+
+    provider = provider.lower()
 
     if provider in ["openai", "openrouter"]:
         return ask_openai_compatible(prompt, provider, model)
 
-    elif provider == "ollama":
+    if provider == "ollama":
         return ask_ollama(prompt, model)
 
-    else:
-        raise ValueError(f"Proveedor no soportado: {provider}")
+    raise ValueError(
+        f"Proveedor no soportado: {provider}. "
+        "Usa: ollama, openrouter u openai."
+    )
 
 
 # =========================
 # 6. PROGRAMA PRINCIPAL
 # =========================
 def main():
-    parser = argparse.ArgumentParser(description="Asistente RAG ERP")
-    parser.add_argument("question", help="Pregunta del usuario")
+    parser = argparse.ArgumentParser(description="Asistente RAG ERP - CBMM")
+
+    parser.add_argument(
+        "question",
+        help="Pregunta del usuario"
+    )
+
     parser.add_argument(
         "--provider",
-        default=os.getenv("MODEL_PROVIDER", "openrouter"),
-        help="Proveedor del modelo: openrouter, ollama, openai"
+        default=os.getenv("MODEL_PROVIDER", "ollama"),
+        help="Proveedor: ollama, openrouter u openai"
     )
+
     parser.add_argument(
         "--model",
-        default=os.getenv("MODEL_NAME", "openrouter/auto"),
-        help="Modelo a usar"
+        default=os.getenv("MODEL_NAME", "llama3"),
+        help="Modelo a utilizar"
+    )
+
+    parser.add_argument(
+        "--results",
+        type=int,
+        default=2,
+        help="Cantidad de fragmentos recuperados desde ChromaDB"
     )
 
     args = parser.parse_args()
 
+    print("\n==============================")
+    print("ASISTENTE RAG ERP - CBMM")
+    print("==============================")
+    print(f"Proveedor: {args.provider}")
+    print(f"Modelo: {args.model}")
+    print(f"Pregunta: {args.question}")
+
     print("\n🔎 Buscando contexto en ChromaDB...\n")
-    context = search_context(args.question)
+    context = search_context(args.question, args.results)
 
     print("📚 Contexto encontrado:\n")
     print(context)
@@ -172,10 +217,16 @@ def main():
     prompt = build_prompt(args.question, context)
 
     print("\n🤖 Generando respuesta...\n")
-    answer = ask_llm(prompt, args.provider, args.model)
 
-    print("✅ Respuesta final:\n")
-    print(answer)
+    try:
+        answer = ask_llm(prompt, args.provider, args.model)
+
+        print("\n✅ Respuesta final:\n")
+        print(answer)
+
+    except Exception as error:
+        print("\n❌ Ocurrió un error:\n")
+        print(error)
 
 
 if __name__ == "__main__":
