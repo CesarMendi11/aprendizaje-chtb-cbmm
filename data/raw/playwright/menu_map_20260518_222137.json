@@ -1,0 +1,288 @@
+{
+  "source": "playwright",
+  "type": "erp_menu_map",
+  "timestamp": "20260518_222137",
+  "base_url": "http://177.234.239.116:8084",
+  "modules": [
+    {
+      "name": "Cuentas por cobrar",
+      "submodules": [
+        {
+          "name": "Comprobantes",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/comprobantes",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Facturación Electronica",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/facturacion",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Forma pago",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/forma-pago",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Lista de facturas",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/lista-facturas",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Notas de crédito",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/notas-credito",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Puntos de emisión",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/puntos-emision",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Retenciones",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/retenciones",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Tipo pago",
+          "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/tipo-pago",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "General",
+      "submodules": [
+        {
+          "name": "Año",
+          "url": "http://177.234.239.116:8084/admin/general/anios",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Area",
+          "url": "http://177.234.239.116:8084/admin/general/areas",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Cargo Funcional",
+          "url": "http://177.234.239.116:8084/admin/general/cargo-funcional",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Estado Seguimiento",
+          "url": "http://177.234.239.116:8084/admin/general/estado-seguimiento",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Personas",
+          "url": "http://177.234.239.116:8084/admin/general/personas",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "Gerencial",
+      "submodules": [
+        {
+          "name": "Actividad portal ciudadano",
+          "url": "http://177.234.239.116:8084/admin/gerencial/actividad-portal",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Talento humano",
+          "url": "http://177.234.239.116:8084/admin/gerencial/talento-humano",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Trámites",
+          "url": "http://177.234.239.116:8084/admin/gerencial/tramites",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "Permisos",
+      "submodules": [
+        {
+          "name": "Aprobar solicitudes",
+          "url": "http://177.234.239.116:8084/admin/permisos/solicitudes",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Emitir solicitudes",
+          "url": "http://177.234.239.116:8084/admin/permisos/emitir",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Enviar Notificaciones",
+          "url": "http://177.234.239.116:8084/admin/permisos/enviar-inspecciones",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Ficha inspección",
+          "url": "http://177.234.239.116:8084/admin/permisos/funcionamiento",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Inspecciones registradas",
+          "url": "http://177.234.239.116:8084/admin/permisos/inspecciones",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "Rentas",
+      "submodules": [
+        {
+          "name": "Conceptos",
+          "url": "http://177.234.239.116:8084/admin/rentas/conceptos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Descuentos",
+          "url": "http://177.234.239.116:8084/admin/rentas/descuentos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Impuestos",
+          "url": "http://177.234.239.116:8084/admin/rentas/impuestos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Intereses",
+          "url": "http://177.234.239.116:8084/admin/rentas/intereses",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Titulos credito",
+          "url": "http://177.234.239.116:8084/admin/rentas/titulos-credito",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "Seguridad",
+      "submodules": [
+        {
+          "name": "Auditoria",
+          "url": "http://177.234.239.116:8084/admin/seguridad/auditoria",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Correos",
+          "url": "http://177.234.239.116:8084/admin/seguridad/correos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Empresa",
+          "url": "http://177.234.239.116:8084/admin/seguridad/empresa",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Logs",
+          "url": "http://177.234.239.116:8084/admin/seguridad/logs",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Multinacional",
+          "url": "http://177.234.239.116:8084/admin/seguridad/multinacional",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Opciones",
+          "url": "http://177.234.239.116:8084/admin/seguridad/opciones",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Parametros",
+          "url": "http://177.234.239.116:8084/admin/seguridad/parametros",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Permisos",
+          "url": "http://177.234.239.116:8084/admin/seguridad/permisos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Usuarios",
+          "url": "http://177.234.239.116:8084/admin/seguridad/usuarios",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "SRI",
+      "submodules": [
+        {
+          "name": "Firma electrónica",
+          "url": "http://177.234.239.116:8084/admin/sri/firma-electronica",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Impuestos Retenciones",
+          "url": "http://177.234.239.116:8084/admin/sri/impuesto",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Renta",
+          "url": "http://177.234.239.116:8084/admin/sri/tes-impuesto",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Tipo emisión",
+          "url": "http://177.234.239.116:8084/admin/sri/tipo-emision",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    },
+    {
+      "name": "Tramites",
+      "submodules": [
+        {
+          "name": "Asignación",
+          "url": "http://177.234.239.116:8084/admin/tramites/asignacion-new",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Categorias",
+          "url": "http://177.234.239.116:8084/admin/tramites/categorias",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Documentos",
+          "url": "http://177.234.239.116:8084/admin/tramites/documentos",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Empleado documentos",
+          "url": "http://177.234.239.116:8084/admin/tramites/persona-departamento",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Gestion de Tareas",
+          "url": "http://177.234.239.116:8084/admin/tramites/actividades",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Internos",
+          "url": "http://177.234.239.116:8084/admin/tramites/interno",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Prioridad",
+          "url": "http://177.234.239.116:8084/admin/tramites/prioridad",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Subir Firma-Electronica",
+          "url": "http://177.234.239.116:8084/admin/tramites/subir-firma",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        },
+        {
+          "name": "Tipo adjuntos",
+          "url": "http://177.234.239.116:8084/admin/tramites/tipo-adjunto",
+          "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item ng-star-inserted"
+        }
+      ]
+    }
+  ]
+}
