@@ -38,3 +38,9 @@ neo4j/logs/
 
 # Node
 node_modules/
+
+# docker neo4j
+docker/neo4j/data/
+docker/neo4j/logs/
+docker/neo4j/import/
+docker/neo4j/plugins/
