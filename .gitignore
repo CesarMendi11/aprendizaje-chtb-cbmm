@@ -1,6 +1,40 @@
-venv/
-.env
-chroma_db/
+# Python
 __pycache__/
 *.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# ChromaDB
+chroma_db/
+
+# IDEs
 .vscode/
+.idea/
+
+# Linux
+.directory
+
+# Playwright
+playwright-report/
+test-results/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Neo4j local data (si luego lo usan)
+neo4j/data/
+neo4j/logs/
+
+# Node
+node_modules/
