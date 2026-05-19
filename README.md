@@ -1,404 +1,260 @@
-# 🔥 Asistente Inteligente ERP – Cuerpo de Bomberos de Machala
+# 🔥 Aprendizaje-CHTB-CBMM
 
-Sistema backend basado en **RAG (Retrieval-Augmented Generation)** para asistencia inteligente sobre manuales, incidencias y procedimientos del ERP institucional.
+## 📌 Descripción
 
-Este proyecto permite:
+Proyecto de investigación y desarrollo orientado a la construcción de un asistente inteligente basado en RAG (Retrieval-Augmented Generation) para sistemas ERP institucionales.
 
-- 📚 Indexar documentos institucionales
-- 🔎 Realizar búsquedas semánticas
-- 🧠 Recuperar conocimiento contextual
-- 🗂 Preparar la base para integrar IA generativa
-- 🏢 Escalar a integración empresarial con PostgreSQL
+La propuesta busca construir conocimiento funcional de manera semiautomática mediante navegación automatizada sobre interfaces ERP reales utilizando Playwright, modelos de lenguaje (LLMs), bases vectoriales y bases de grafos.
+
+El sistema está enfocado principalmente en:
+
+- orientación funcional del ERP
+- soporte técnico básico
+- navegación guiada por módulos y pantallas
+- resolución de incidencias comunes
+- construcción semiautomática de conocimiento funcional
 
 ---
 
-# 📌 Estado actual del proyecto
+## 🎯 Objetivo principal
+
+Desarrollar una metodología semiautomática para la construcción de conocimiento funcional en sistemas ERP institucionales mediante:
+
+- navegación automatizada
+- extracción de componentes de interfaz
+- organización inteligente del conocimiento
+- validación humana
+- almacenamiento híbrido usando Neo4j y ChromaDB
+
+---
+
+## 🧠 Arquitectura general
+
+```text
+ERP institucional
+↓
+Playwright navega y extrae información
+↓
+LLM organiza conocimiento funcional
+↓
+Validación humana
+↓
+Neo4j + ChromaDB
+↓
+RAG híbrido
+↓
+Asistente inteligente
+```
+
+---
+
+## 🏗 Arquitectura híbrida
+
+### 🔹 Neo4j
+
+Neo4j almacena la estructura real del ERP obtenida desde la interfaz en producción.
+
+Ejemplos:
+
+- módulos
+- pantallas
+- botones
+- formularios
+- rutas
+- campos
+- permisos y roles
+
+Ejemplo conceptual:
+
+```text
+ERP → módulo → pantalla → botón → acción
+```
+
+### 🔹 ChromaDB
+
+ChromaDB almacena conocimiento funcional y semántico.
+
+Ejemplos:
+
+- explicaciones funcionales
+- preguntas y respuestas
+- incidencias comunes
+- soporte técnico
+- documentación validada
+- embeddings semánticos
+
+---
+
+## 🔄 Flujo general del sistema
+
+```text
+ERP institucional
+↓
+Playwright extrae información real
+↓
+LLM organiza y redacta conocimiento funcional
+↓
+Validación humana
+↓
+Neo4j almacena relaciones estructurales
+↓
+ChromaDB almacena conocimiento semántico
+↓
+RAG híbrido consulta ambas fuentes
+↓
+LLM genera respuesta final
+```
+
+---
+
+## ⚙️ Tecnologías utilizadas
+
+| Tecnología            | Propósito                       |
+| --------------------- | ------------------------------- |
+| Python                | Backend principal               |
+| Playwright            | Navegación automatizada del ERP |
+| FastAPI               | API del asistente               |
+| Ollama                | Ejecución local de modelos LLM  |
+| Llama 3 / 3.2         | Modelo de lenguaje              |
+| Neo4j                 | Base de grafos                  |
+| ChromaDB              | Base vectorial                  |
+| Sentence Transformers | Embeddings                      |
+| PyPDF                 | Lectura de PDFs                 |
+| Git/GitHub            | Control de versiones            |
+
+---
+
+## 📂 Estructura del proyecto
+
+```text
+aprendizaje-chtb-cbmm/
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   ├── review/
+│   ├── approved/
+│   └── rejected/
+│
+├── docs/
+│
+├── knowledge/
+│
+├── scripts/
+│
+├── src/
+│   ├── api/
+│   ├── extraction/
+│   ├── graph/
+│   ├── llm/
+│   └── rag/
+│
+├── app.py
+├── requirements.txt
+├── README.md
+└── .gitignore
+```
+
+---
+
+## 📚 Carpeta `knowledge`
+
+La carpeta `knowledge/` almacena conocimiento complementario validado manualmente.
+
+Ejemplos:
+
+- soporte técnico
+- incidencias comunes
+- preguntas frecuentes
+- manuales oficiales
+- documentación institucional
+- procedimientos
+
+Esta información complementa el conocimiento extraído automáticamente desde el ERP.
+
+---
+
+## ✅ Flujo de validación
+
+```text
+Playwright extrae información
+↓
+LLM genera conocimiento funcional
+↓
+review/
+↓
+Validación humana
+↓
+approved/
+↓
+Indexación en Neo4j y ChromaDB
+```
+
+---
+
+## 🚧 Estado actual del proyecto
 
 Actualmente el proyecto cuenta con:
 
-- ✅ entorno virtual configurado
-- ✅ dependencias instaladas
-- ✅ base vectorial con ChromaDB
-- ✅ indexación de documentos
-- ✅ recuperación semántica
-- 🔄 pendiente integración completa con LLM / API REST
+- arquitectura base definida
+- estructura modular organizada
+- diseño de flujo de conocimiento
+- integración conceptual RAG híbrido
+- entorno preparado para Playwright
+- entorno preparado para Neo4j
+- entorno preparado para ChromaDB
+- validación humana contemplada en la arquitectura
 
 ---
 
-# 📂 Estructura del proyecto
+## 🐧 Instalación del entorno
 
-```text
-mi-asistente/
-│
-├── knowledge/              # Documentos fuente
-├── chroma_db/              # Base vectorial persistente
-├── venv/                   # Entorno virtual (NO subir)
-│
-├── .env                    # Variables sensibles (NO subir)
-├── .gitignore
-├── requirements.txt
-│
-├── rag_test.py             # Prueba inicial ChromaDB
-├── index_documents.py      # Indexación documental
-├── search_documents.py     # Búsqueda semántica
-├── test_api.py             # Prueba conexión OpenAI
-└── app.py                  # Futuro backend / interfaz
-```
+### 🔹 Requisitos
 
----
-
-# ⚙️ REQUISITOS
-
-Instalar previamente:
-
-- Python 3.10 o superior
+- Python 3.13+
 - Git
-- VS Code (recomendado)
-- PowerShell / Terminal
+- Node.js
+- npm
+- Ollama
+- Debian/Linux recomendado
 
-Verificar Python:
-
-```bash
-python --version
-```
-
----
-
-# 🚀 INSTALACIÓN PASO A PASO (DETALLADA)
-
----
-
-## 1) Clonar repositorio
+### 🔹 Crear entorno virtual
 
 ```bash
-git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git
-cd mi-asistente
+python3 -m venv .venv
 ```
 
----
-
-## 2) Crear entorno virtual
-
-Este paso crea un entorno aislado de Python.
+### 🔹 Activar entorno
 
 ```bash
-python -m venv venv
+source .venv/bin/activate
 ```
 
-Esto generará la carpeta:
-
-```text
-venv
-```
-
----
-
-## 3) Activar entorno virtual
-
-### Windows PowerShell
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
-Si todo salió bien, debe verse así:
-
-```text
-(venv) PS C:\ruta\proyecto>
-```
-
----
-
-## ❗ Error común: no se activa el entorno
-
-### ❌ Error
-```text
-El módulo 'venv' no pudo cargarse
-```
-
-### ✅ Solución
-Verifica que estés en la carpeta correcta:
-
-```powershell
-dir
-```
-
-Debes ver:
-
-```text
-venv
-requirements.txt
-```
-
-Luego activa nuevamente:
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
----
-
-## 4) Instalar dependencias
+### 🔹 Instalar dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Esto instalará:
-
-- openai
-- chromadb
-- langchain
-- streamlit
-- fastapi
-- python-dotenv
-- pypdf
-
----
-
-## 5) Crear archivo `.env`
-
-Crear archivo:
-
-```text
-.env
-```
-
-Contenido:
-
-```text
-OPENAI_API_KEY=tu_api_key_aqui
-```
-
----
-
-## ❓ ¿Dónde obtener la API key?
-
-Ingresar a:
-
-https://platform.openai.com/api-keys
-
-Crear nueva clave y copiarla.
-
----
-
-## ❗ Error común: quota insuficiente
-
-### ❌ Error
-```text
-Error 429 insufficient_quota
-```
-
-### ✅ Significado
-La API está bien conectada, pero la cuenta no tiene saldo disponible.
-
-Esto **NO es error del código**.
-
-Solución:
-
-- agregar método de pago
-- cargar saldo en OpenAI Platform
-
----
-
-# 🧠 ¿Qué significa indexar?
-
-Indexar significa:
-
-```text
-documento → texto → vector → almacenamiento
-```
-
-Es decir, preparar documentos para búsquedas inteligentes.
-
-Ejemplo:
-
-```text
-manual ERP
-↓
-embeddings
-↓
-ChromaDB
-```
-
----
-
-# 📄 PREPARAR DOCUMENTOS
-
-Colocar documentos dentro de:
-
-```text
-knowledge/
-```
-
-Ejemplo:
-
-```text
-knowledge/
-├── incidencias.txt
-├── manual_bodega.txt
-└── faq_pagos.txt
-```
-
----
-
-## ✅ Formato recomendado
-
-Preferiblemente:
-
-- `.txt`
-- `.pdf` con texto seleccionable
-
----
-
-## ❌ Evitar
-
-- PDFs escaneados como imagen
-- capturas de pantalla
-- documentos sin estructura
-
----
-
-# 📥 INDEXAR DOCUMENTOS
-
-Ejecutar:
+### 🔹 Instalar navegador Playwright
 
 ```bash
-python index_documents.py
-```
-
-Salida esperada:
-
-```text
-Documento indexado correctamente.
+playwright install chromium
 ```
 
 ---
 
-# 🔍 REALIZAR BÚSQUEDA
+## 🧪 Objetivo investigativo
 
-Ejecutar:
-
-```bash
-python search_documents.py
-```
-
-Ejemplo de consulta:
-
-```text
-No puedo iniciar sesión en pagos
-```
-
-Resultado esperado:
-
-```text
-incidencia_1
-```
+El objetivo principal de investigación no es únicamente implementar un chatbot, sino proponer una metodología para reducir el esfuerzo manual de construcción y mantenimiento de bases de conocimiento funcionales en sistemas ERP institucionales.
 
 ---
 
-# 🧪 PRUEBA DE CHROMADB
+## 👨‍💻 Equipo de desarrollo
 
-Para validar la base vectorial:
+- César Andrés Mendieta Espinoza
+- Jonathan Joseph Chalco Berrezueta
 
-```bash
-python rag_test.py
-```
-
-Debe recuperar el documento correcto según la consulta.
-
----
-
-# 🛠 ERRORES FRECUENTES Y SOLUCIONES
-
----
-
-## Error: no reconoce comando python
-
-```text
-python no se reconoce
-```
-
-### Solución
-Verificar instalación:
-
-```bash
-python --version
-```
-
-Si no funciona, reinstalar Python marcando:
-
-```text
-Add Python to PATH
-```
-
----
-
-## Error: entorno no activado
-
-Si no aparece:
-
-```text
-(venv)
-```
-
-la terminal NO está usando el proyecto.
-
-Activar nuevamente:
-
-```powershell
-.\venv\Scripts\Activate.ps1
-```
-
----
-
-## Error: archivos no encontrados
-
-Ejemplo:
-
-```text
-knowledge/incidencias.txt
-```
-
-### Solución
-Verificar carpeta con:
-
-```powershell
-dir
-```
-
----
-
-# 🧱 ARQUITECTURA ACTUAL
-
-```text
-Usuario
-   ↓
-Consulta
-   ↓
-Python Backend
-   ↓
-ChromaDB
-   ↓
-Documento recuperado
-```
-
----
-
-# 🏢 FUTURA INTEGRACIÓN EMPRESARIAL
-
-Próximamente se integrará:
-
-```text
-PostgreSQL + pgvector
-```
-
-para conexión con ERP institucional.
-
----
-
-# 👨‍💻 Autor
-
-César Andrés Mendieta Espinoza  
-Proyecto de titulación – Tecnologías de la Información  
+Proyecto de investigación y desarrollo  
+Tecnologías de la Información  
 Universidad Técnica de Machala
