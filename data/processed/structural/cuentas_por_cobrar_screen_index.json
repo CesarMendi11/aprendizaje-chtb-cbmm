@@ -1,0 +1,329 @@
+{
+  "/admin/home": {
+    "url": "http://177.234.239.116:8084/admin/home",
+    "title": "Dashboard",
+    "buttons": [],
+    "inputs": [],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_home_20260523_130521.png",
+      "html": "data/raw/html/admin_home_20260523_130521.html"
+    }
+  },
+  "/admin/cuentasxcobrar/comprobantes": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/comprobantes",
+    "title": "Dashboard",
+    "buttons": [
+      "Buscar"
+    ],
+    "inputs": [
+      {
+        "id": null,
+        "name": null,
+        "placeholder": "Desde",
+        "type": "text"
+      },
+      {
+        "id": null,
+        "name": null,
+        "placeholder": "Hasta",
+        "type": "text"
+      },
+      {
+        "id": "mat-input-0",
+        "name": null,
+        "placeholder": "0000000000001",
+        "type": null
+      },
+      {
+        "id": "mat-input-1",
+        "name": null,
+        "placeholder": "000000000",
+        "type": null
+      }
+    ],
+    "tables": [
+      {
+        "headers": [
+          "",
+          "RUC/CI",
+          "RAZON SOCIAL / NOMBRE",
+          "COMPROBANTE",
+          "FECHA EMISIÓN",
+          "CORREO",
+          "TOTAL",
+          "ESTADO"
+        ],
+        "rows_count": 3
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_comprobantes_20260523_130524.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_comprobantes_20260523_130524.html"
+    }
+  },
+  "/admin/cuentasxcobrar/facturacion": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/facturacion",
+    "title": "Dashboard",
+    "buttons": [
+      "Conumidor Final",
+      "Con datos cliente",
+      "Guardar sin firmar",
+      "Guardar y Enviar SRI"
+    ],
+    "inputs": [
+      {
+        "id": "mat-input-0",
+        "name": null,
+        "placeholder": "DD/MM/AAAA",
+        "type": null
+      },
+      {
+        "id": "mat-input-1",
+        "name": null,
+        "placeholder": null,
+        "type": null
+      },
+      {
+        "id": "mat-input-2",
+        "name": null,
+        "placeholder": null,
+        "type": null
+      },
+      {
+        "id": "mat-input-3",
+        "name": null,
+        "placeholder": null,
+        "type": null
+      },
+      {
+        "id": "mat-input-5",
+        "name": null,
+        "placeholder": "Escriba una letra o palabra, después seleccione el producto",
+        "type": "text"
+      },
+      {
+        "id": "mat-mdc-checkbox-1-input",
+        "name": null,
+        "placeholder": null,
+        "type": "checkbox"
+      }
+    ],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_facturacion_20260523_130526.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_facturacion_20260523_130526.html"
+    }
+  },
+  "/admin/cuentasxcobrar/forma-pago": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/forma-pago",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo",
+      "Agregar"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "NOMBRE",
+          "CODIGO",
+          "ALTERNO",
+          "ACTIVO",
+          ""
+        ],
+        "rows_count": 3
+      },
+      {
+        "headers": [
+          "ID",
+          "DETALLE",
+          "ACTIVO",
+          ""
+        ],
+        "rows_count": 1
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_forma_pago_20260523_130529.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_forma_pago_20260523_130530.html"
+    }
+  },
+  "/admin/cuentasxcobrar/lista-facturas": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/lista-facturas",
+    "title": "Dashboard",
+    "buttons": [
+      "search\nBuscar"
+    ],
+    "inputs": [
+      {
+        "id": "mat-input-0",
+        "name": null,
+        "placeholder": "0000000000001",
+        "type": null
+      },
+      {
+        "id": "mat-input-1",
+        "name": null,
+        "placeholder": "000000000",
+        "type": null
+      }
+    ],
+    "tables": [
+      {
+        "headers": [
+          "ACCIONES",
+          "ESTADO",
+          "FECHA EMISIÓN",
+          "RUC",
+          "RAZÓN SOCIAL / NOMBRE",
+          "COMPROBANTE",
+          "TOTAL"
+        ],
+        "rows_count": 51
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_lista_facturas_20260523_130532.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_lista_facturas_20260523_130532.html"
+    }
+  },
+  "/admin/cuentasxcobrar/notas-credito": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/notas-credito",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "ACCIONES",
+          "ESTADO",
+          "FECHA EMISIÓN",
+          "RUC",
+          "RAZÓN SOCIAL / NOMBRE",
+          "COMPROBANTE",
+          "NUM. FACTURA",
+          "TOTAL FACTURA",
+          "TOTAL RETENIDO"
+        ],
+        "rows_count": 2
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_notas_credito_20260523_130535.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_notas_credito_20260523_130535.html"
+    }
+  },
+  "/admin/cuentasxcobrar/puntos-emision": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/puntos-emision",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo",
+      "Agregar"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "DETALLE",
+          "CODIGO",
+          "ACTIVO",
+          "APLICA TRIBUTO",
+          ""
+        ],
+        "rows_count": 5
+      },
+      {
+        "headers": [
+          "CODIGO",
+          "CODIGO DE SERIE",
+          "PUNTO EMISION",
+          "DETALLE",
+          "ELECTRONICO",
+          "ACTIVO",
+          "SECUENCIAL",
+          ""
+        ],
+        "rows_count": 2
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_puntos_emision_20260523_130538.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_puntos_emision_20260523_130538.html"
+    }
+  },
+  "/admin/cuentasxcobrar/retenciones": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/retenciones",
+    "title": "Dashboard",
+    "buttons": [
+      "Nueva retención",
+      "Buscar"
+    ],
+    "inputs": [
+      {
+        "id": "mat-input-0",
+        "name": null,
+        "placeholder": "0000000000001",
+        "type": null
+      },
+      {
+        "id": "mat-input-1",
+        "name": null,
+        "placeholder": "000000000",
+        "type": null
+      },
+      {
+        "id": "mat-input-2",
+        "name": null,
+        "placeholder": "000-000-000000000",
+        "type": null
+      }
+    ],
+    "tables": [
+      {
+        "headers": [
+          "ACCIONES",
+          "ESTADO",
+          "FECHA EMISIÓN",
+          "RUC",
+          "NOMBRE",
+          "COMPROBANTE",
+          "NÚMERO FACTURA",
+          "TOTAL FACTURA",
+          "TOTAL RETENIDO"
+        ],
+        "rows_count": 11
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_retenciones_20260523_130540.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_retenciones_20260523_130540.html"
+    }
+  },
+  "/admin/cuentasxcobrar/tipo-pago": {
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/tipo-pago",
+    "title": "Dashboard",
+    "buttons": [
+      "Nueva categoría",
+      "Sincronizar"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "NOMBRE",
+          "ABREVIATURA",
+          "ÍCONO",
+          ""
+        ],
+        "rows_count": 3
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_tipo_pago_20260523_130543.png",
+      "html": "data/raw/html/admin_cuentasxcobrar_tipo_pago_20260523_130543.html"
+    }
+  }
+}

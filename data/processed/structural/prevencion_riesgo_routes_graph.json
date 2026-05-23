@@ -1,0 +1,20 @@
+{
+  "/admin/home": {
+    "source_module": "Prevencion Riesgo",
+    "links_to": []
+  },
+  "/admin/prevencion-riesgo/consulta-pago-cliente": {
+    "source_module": "Prevencion Riesgo",
+    "links_to": [
+      "/admin/home",
+      "/admin/prevencion-riesgo/sri"
+    ]
+  },
+  "/admin/prevencion-riesgo/sri": {
+    "source_module": "Prevencion Riesgo",
+    "links_to": [
+      "/admin/home",
+      "/admin/prevencion-riesgo/consulta-pago-cliente"
+    ]
+  }
+}

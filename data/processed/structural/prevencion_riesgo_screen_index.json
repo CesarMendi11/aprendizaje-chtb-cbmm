@@ -1,0 +1,55 @@
+{
+  "/admin/home": {
+    "url": "http://177.234.239.116:8084/admin/home",
+    "title": "Dashboard",
+    "buttons": [],
+    "inputs": [],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_home_20260523_130644.png",
+      "html": "data/raw/html/admin_home_20260523_130644.html"
+    }
+  },
+  "/admin/prevencion-riesgo/consulta-pago-cliente": {
+    "url": "http://177.234.239.116:8084/admin/prevencion-riesgo/consulta-pago-cliente",
+    "title": "Dashboard",
+    "buttons": [
+      "Buscar",
+      "Limpiar"
+    ],
+    "inputs": [
+      {
+        "id": "mat-input-0",
+        "name": null,
+        "placeholder": "Ejemplo: 0700000000 o 0700000000001",
+        "type": "text"
+      }
+    ],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_prevencion_riesgo_consulta_pago_cliente_20260523_130647.png",
+      "html": "data/raw/html/admin_prevencion_riesgo_consulta_pago_cliente_20260523_130647.html"
+    }
+  },
+  "/admin/prevencion-riesgo/sri": {
+    "url": "http://177.234.239.116:8084/admin/prevencion-riesgo/sri",
+    "title": "Dashboard",
+    "buttons": [
+      "Consultar",
+      "Limpiar"
+    ],
+    "inputs": [
+      {
+        "id": "identificacion",
+        "name": "identificacion",
+        "placeholder": "Ejemplo: 1723377451001",
+        "type": "text"
+      }
+    ],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_prevencion_riesgo_sri_20260523_130650.png",
+      "html": "data/raw/html/admin_prevencion_riesgo_sri_20260523_130650.html"
+    }
+  }
+}

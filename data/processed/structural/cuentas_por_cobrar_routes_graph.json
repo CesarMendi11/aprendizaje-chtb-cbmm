@@ -1,0 +1,110 @@
+{
+  "/admin/home": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": []
+  },
+  "/admin/cuentasxcobrar/comprobantes": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/facturacion": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/forma-pago": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/lista-facturas": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/notas-credito": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/puntos-emision": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/retenciones": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/tipo-pago",
+      "/admin/home"
+    ]
+  },
+  "/admin/cuentasxcobrar/tipo-pago": {
+    "source_module": "Cuentas por cobrar",
+    "links_to": [
+      "/admin/cuentasxcobrar/comprobantes",
+      "/admin/cuentasxcobrar/facturacion",
+      "/admin/cuentasxcobrar/forma-pago",
+      "/admin/cuentasxcobrar/lista-facturas",
+      "/admin/cuentasxcobrar/notas-credito",
+      "/admin/cuentasxcobrar/puntos-emision",
+      "/admin/cuentasxcobrar/retenciones",
+      "/admin/home"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "/admin/home": {
+    "source_module": "SRI",
+    "links_to": []
+  },
+  "/admin/sri/firma-electronica": {
+    "source_module": "SRI",
+    "links_to": [
+      "/admin/home",
+      "/admin/sri/impuesto",
+      "/admin/sri/tes-impuesto",
+      "/admin/sri/tipo-emision"
+    ]
+  },
+  "/admin/sri/impuesto": {
+    "source_module": "SRI",
+    "links_to": [
+      "/admin/home",
+      "/admin/sri/firma-electronica",
+      "/admin/sri/tes-impuesto",
+      "/admin/sri/tipo-emision"
+    ]
+  },
+  "/admin/sri/tes-impuesto": {
+    "source_module": "SRI",
+    "links_to": [
+      "/admin/home",
+      "/admin/sri/firma-electronica",
+      "/admin/sri/impuesto",
+      "/admin/sri/tipo-emision"
+    ]
+  },
+  "/admin/sri/tipo-emision": {
+    "source_module": "SRI",
+    "links_to": [
+      "/admin/home",
+      "/admin/sri/firma-electronica",
+      "/admin/sri/impuesto",
+      "/admin/sri/tes-impuesto"
+    ]
+  }
+}

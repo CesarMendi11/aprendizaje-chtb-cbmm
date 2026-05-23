@@ -1,0 +1,30 @@
+{
+  "/admin/home": {
+    "source_module": "Gerencial",
+    "links_to": []
+  },
+  "/admin/gerencial/actividad-portal": {
+    "source_module": "Gerencial",
+    "links_to": [
+      "/admin/gerencial/talento-humano",
+      "/admin/gerencial/tramites",
+      "/admin/home"
+    ]
+  },
+  "/admin/gerencial/talento-humano": {
+    "source_module": "Gerencial",
+    "links_to": [
+      "/admin/gerencial/actividad-portal",
+      "/admin/gerencial/tramites",
+      "/admin/home"
+    ]
+  },
+  "/admin/gerencial/tramites": {
+    "source_module": "Gerencial",
+    "links_to": [
+      "/admin/gerencial/actividad-portal",
+      "/admin/gerencial/talento-humano",
+      "/admin/home"
+    ]
+  }
+}

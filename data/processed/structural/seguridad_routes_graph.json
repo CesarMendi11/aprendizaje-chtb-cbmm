@@ -1,0 +1,122 @@
+{
+  "/admin/home": {
+    "source_module": "Seguridad",
+    "links_to": []
+  },
+  "/admin/seguridad/auditoria": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/correos": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/empresa": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/logs": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/multinacional": {
+    "source_module": "Seguridad",
+    "links_to": []
+  },
+  "/admin/seguridad/opciones": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/parametros": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/permisos",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/permisos": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/usuarios"
+    ]
+  },
+  "/admin/seguridad/usuarios": {
+    "source_module": "Seguridad",
+    "links_to": [
+      "/admin/home",
+      "/admin/seguridad/auditoria",
+      "/admin/seguridad/correos",
+      "/admin/seguridad/empresa",
+      "/admin/seguridad/logs",
+      "/admin/seguridad/multinacional",
+      "/admin/seguridad/opciones",
+      "/admin/seguridad/parametros",
+      "/admin/seguridad/permisos"
+    ]
+  }
+}

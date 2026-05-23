@@ -1,0 +1,508 @@
+{
+  "url": "http://177.234.239.116:8084/admin/home",
+  "title": "Dashboard",
+  "visible_text": "MENU DE NAVEGACIÓN\nDashboard\nCuentas por cobrar\nGeneral\nGerencial\nPermisos\nPrevencion Riesgo\nrentas\nRentas\nSeguridad\nSRI\nTramites\nadmin\nBienvenido/a, Administrador\n01:06 PM\nChrome\nVer. 148.0.0.0\nsábado\n23/5/2026\nBENEMÉRITO CUERPO DE BOMBEROS DE MACHALA\nBENEMÉRITO CUERPO DE BOMBEROS DE MACHALA\n(07) 2968456\nCalle Bolívar y Ayacucho (Machala)\nHistorial de inicio de sesión\nINGRESO AL SISTEMA\n2026-05-23 13:05:14\n177.234.239.7\nINGRESO AL SISTEMA\n2026-05-23 12:58:05\n177.234.239.7\nINGRESO AL SISTEMA\n2026-05-23 12:53:27\n177.234.239.7\nINGRESO AL SISTEMA\n2026-05-23 12:49:37\n177.234.239.7\nINGRESO AL SISTEMA\n2026-05-23 12:43:29\n177.234.239.7",
+  "buttons": [],
+  "inputs": [],
+  "links": [
+    {
+      "text": "Dashboard",
+      "href": "/admin/home"
+    }
+  ],
+  "tables": [],
+  "interactive_elements": [
+    {
+      "index": 0,
+      "tag": "div",
+      "text": "MENU DE NAVEGACIÓN",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 88,
+        "width": 256,
+        "height": 36
+      }
+    },
+    {
+      "index": 1,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Dashboard",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 124,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 2,
+      "tag": "a",
+      "text": "Dashboard",
+      "href": "/admin/home",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item fuse-vertical-navigation-item-active",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 124,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 3,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-4",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 168,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 4,
+      "tag": "div",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 168,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 5,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-5",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 212,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 6,
+      "tag": "div",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 212,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 7,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-6",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 256,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 8,
+      "tag": "div",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 256,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 9,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Permisos",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-7",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 300,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 10,
+      "tag": "div",
+      "text": "Permisos",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 300,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 11,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-8",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 344,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 12,
+      "tag": "div",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 344,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 13,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-9",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 388,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 14,
+      "tag": "div",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 388,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 15,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-10",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 432,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 16,
+      "tag": "div",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 432,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 17,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-11",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 476,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 18,
+      "tag": "div",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 476,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 19,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "SRI",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-12",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 520,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 20,
+      "tag": "div",
+      "text": "SRI",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 520,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 21,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-13",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 564,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 22,
+      "tag": "div",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 564,
+        "width": 256,
+        "height": 40
+      }
+    }
+  ],
+  "artifacts": {
+    "screenshot": "data/raw/screenshots/admin_home_20260523_130644.png",
+    "html": "data/raw/html/admin_home_20260523_130644.html"
+  },
+  "crawler": {
+    "source_module": "Prevencion Riesgo",
+    "route": "/admin/home",
+    "visited_order": 1
+  }
+}

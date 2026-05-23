@@ -1,0 +1,980 @@
+{
+  "url": "http://177.234.239.116:8084/admin/permisos/inspecciones",
+  "title": "Dashboard",
+  "visible_text": "MENU DE NAVEGACIÓN\nDashboard\nCuentas por cobrar\nGeneral\nGerencial\nPermisos\nAprobar solicitudes\nConsultar\nEmitir solicitudes\nEnviar Notificaciones\nFicha inspección\nInspecciones registradas\nPrevencion Riesgo\nrentas\nRentas\nSeguridad\nSRI\nTramites\nadmin\nDashboard\nPermisos\nInspecciones\nInspecciones realizadas-\nInspector\n-- Seleccionar --\nBuscar\nLimpiar\nImprimir\nCÓDIGO\tFECHA\tHORA\tRUC\tPROPIETARIO\tNOMBRE COMERCIAL\tESTAB.\tDIRECCION\tZONA\n\n57\n\t\n2024-10-18\n\t\n08:57:56\n\t\n0703534768001\n\t\nROMERO ALMACHE RONALD STEV\n\t\nNO REGISTRA\n\t\n2\n\t\n9 DE MAYO Y SUCRE Y OLMEDO\n\t\nZONA 3\n\n\n62\n\t\n2024-10-18\n\t\n09:01:37\n\t\n0703534768001\n\t\nROMERO ALMACHE RONALD STEV\n\t\nCIERRE 19/04/2023 - ACTIVIDADES SERVICIOS DIVERSOS\n\t\n2\n\t\n9 DE MAYO Y SUCRE Y OLMEDO\n\t\nZONA 3\n\n\n64\n\t\n2024-10-18\n\t\n10:40:22\n\t\n0707024329001\n\t\nDAVILA JIMENEZ RONNY FERNANDO\n\t\nNO REGISTRA\n\t\n1\n\t\nAV SEPTIMA Y AV OCTAVA\n\t\nZONA 5\n\n\n66\n\t\n2024-10-18\n\t\n13:56:44\n\t\n0704418474001\n\t\nSOLANO NORIEGA JOEL PATRICIO\n\t\nSAVAGE FOOD DRINK\n\t\n1\n\t\nARIZAGA Y BABAHOYO\n\t\nZONA 5\n\n\n67\n\t\n2024-10-18\n\t\n16:03:30\n\t\n0704363084001\n\t\nCABRERA RODRIGUEZ ROSA AMADA\n\t\nNO REGISTRA\n\t\n1\n\t\nAV DE JUNIO Y CC ORO PLAZA\n\t\nZONA 1\n\n\n68\n\t\n2024-10-18\n\t\n16:33:04\n\t\n0702966987001\n\t\nCALLE OTAVALO JHONY FREDDY\n\t\nSERVICIOS DE TAXIS\n\t\n1\n\t\nSUCRE Y SANTA ROSA\n\t\nZONA 2\n\n\n69\n\t\n2024-10-21\n\t\n08:25:59\n\t\n0301066890001\n\t\nCABRERA PALOMEQUE CARLOS ORLANDO\n\t\nCIERRE 31/07/2024 - ACTIVIDADES DE ENSEÑANZA\n\t\n1\n\t\nURBANIZACION CIUDAD DEL SOL Y FRENTE A MC DONALDS\n\t\nZONA 1\n\n\n70\n\t\n2024-10-21\n\t\n09:53:59\n\t\n0706017837001\n\t\nCHICA GOMEZ TONNY ALEX\n\t\nGRUPO ALTO ECUADOR\n\t\n1\n\t\nGUAYAQUIL Y QUINTA NORTE\n\t\nZONA 5\n\n\n71\n\t\n2024-10-21\n\t\n09:57:26\n\t\n0706017837001\n\t\nCHICA GOMEZ TONNY ALEX\n\t\nCIERRE 11/06/2021 - GRUPO AMD MARKETING DIGITAL\n\t\n2\n\t\nCALLE GUAYAQUIL Y AVDA LOJA Y QUINTA NORTE\n\t\nZONA 5\n\n\n72\n\t\n2024-10-21\n\t\n13:14:28\n\t\n0703478818001\n\t\nULLAURI MARQUEZ CARLOS ANDRES\n\t\nCIERRE 31/12/2023 - CULTIVO DE BANANOS Y PLATANOS\n\t\n1\n\t\n25 DE JUNIO Y JUNTO A ORO PLAZA\n\t\nZONA 1\n\nTotal de registros (19020)\n\n1 - 10 de 19020",
+  "buttons": [
+    {
+      "text": "Buscar",
+      "disabled": false
+    },
+    {
+      "text": "Limpiar",
+      "disabled": false
+    },
+    {
+      "text": "Imprimir",
+      "disabled": true
+    }
+  ],
+  "inputs": [],
+  "links": [
+    {
+      "text": "Dashboard",
+      "href": "/admin/home"
+    },
+    {
+      "text": "Aprobar solicitudes",
+      "href": "/admin/permisos/solicitudes"
+    },
+    {
+      "text": "Emitir solicitudes",
+      "href": "/admin/permisos/emitir"
+    },
+    {
+      "text": "Enviar Notificaciones",
+      "href": "/admin/permisos/enviar-inspecciones"
+    },
+    {
+      "text": "Ficha inspección",
+      "href": "/admin/permisos/funcionamiento"
+    },
+    {
+      "text": "Inspecciones registradas",
+      "href": "/admin/permisos/inspecciones"
+    },
+    {
+      "text": "Dashboard",
+      "href": "/"
+    }
+  ],
+  "tables": [
+    {
+      "headers": [
+        "CÓDIGO",
+        "FECHA",
+        "HORA",
+        "RUC",
+        "PROPIETARIO",
+        "NOMBRE COMERCIAL",
+        "ESTAB.",
+        "DIRECCION",
+        "ZONA"
+      ],
+      "rows_count": 11
+    }
+  ],
+  "interactive_elements": [
+    {
+      "index": 0,
+      "tag": "div",
+      "text": "MENU DE NAVEGACIÓN",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": -63,
+        "width": 256,
+        "height": 36
+      }
+    },
+    {
+      "index": 1,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Dashboard",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": -27,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 2,
+      "tag": "a",
+      "text": "Dashboard",
+      "href": "/admin/home",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": -27,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 3,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-6",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 17,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 4,
+      "tag": "div",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 17,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 5,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-7",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 61,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 6,
+      "tag": "div",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 61,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 7,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-8",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 105,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 8,
+      "tag": "div",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 105,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 9,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Permisos\nAprobar solicitudes\nConsultar\nEmitir solicitudes\nEnviar Notificaciones\nFicha inspección\nInspecciones registradas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-expanded ng-tns-c4255854719-9",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 149,
+        "width": 280,
+        "height": 332
+      }
+    },
+    {
+      "index": 10,
+      "tag": "div",
+      "text": "Permisos",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 149,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 11,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Aprobar solicitudes",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 195,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 12,
+      "tag": "a",
+      "text": "Aprobar solicitudes",
+      "href": "/admin/permisos/solicitudes",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 195,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 13,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Consultar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-10",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 239,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 14,
+      "tag": "div",
+      "text": "Consultar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 239,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 15,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Emitir solicitudes",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 283,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 16,
+      "tag": "a",
+      "text": "Emitir solicitudes",
+      "href": "/admin/permisos/emitir",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 283,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 17,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Enviar Notificaciones",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 327,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 18,
+      "tag": "a",
+      "text": "Enviar Notificaciones",
+      "href": "/admin/permisos/enviar-inspecciones",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 327,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 19,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Ficha inspección",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 371,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 20,
+      "tag": "a",
+      "text": "Ficha inspección",
+      "href": "/admin/permisos/funcionamiento",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 371,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 21,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Inspecciones registradas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 415,
+        "width": 280,
+        "height": 62
+      }
+    },
+    {
+      "index": 22,
+      "tag": "a",
+      "text": "Inspecciones registradas",
+      "href": "/admin/permisos/inspecciones",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item fuse-vertical-navigation-item-active",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 415,
+        "width": 256,
+        "height": 56
+      }
+    },
+    {
+      "index": 23,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-11",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 485,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 24,
+      "tag": "div",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 485,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 25,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-12",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 529,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 26,
+      "tag": "div",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 529,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 27,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-13",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 573,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 28,
+      "tag": "div",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 573,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 29,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-14",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 617,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 30,
+      "tag": "div",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 617,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 31,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "SRI",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-15",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 661,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 32,
+      "tag": "div",
+      "text": "SRI",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 661,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 33,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-16",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 705,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 34,
+      "tag": "div",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 705,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 36,
+      "tag": "a",
+      "text": "Dashboard",
+      "href": "/",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "whitespace-nowrap text-primary-600 hover:underline",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-breadcrumbs:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 304,
+        "y": 90,
+        "width": 74.78125,
+        "height": 17
+      }
+    },
+    {
+      "index": 37,
+      "tag": "button",
+      "text": "Buscar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "h-7 mdc-button mdc-button--unelevated mat-mdc-unelevated-button mat-primary mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(2) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 626.65625,
+        "y": 186,
+        "width": 93.25,
+        "height": 28
+      }
+    },
+    {
+      "index": 38,
+      "tag": "button",
+      "text": "Limpiar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": "button",
+      "placeholder": null,
+      "classes": "h-7 mdc-button mdc-button--unelevated mat-mdc-unelevated-button mat-primary mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 703.328125,
+        "y": 186,
+        "width": 94.1875,
+        "height": 28
+      }
+    },
+    {
+      "index": 39,
+      "tag": "button",
+      "text": "Imprimir",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mdc-button mdc-button--unelevated mat-mdc-unelevated-button mat-primary mat-mdc-button-disabled mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(4) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 779.984375,
+        "y": 186,
+        "width": 101.21875,
+        "height": 36
+      }
+    },
+    {
+      "index": 40,
+      "tag": "button",
+      "text": "",
+      "href": null,
+      "role": null,
+      "aria_label": "Primera página",
+      "id": null,
+      "name": null,
+      "type": "button",
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger mat-mdc-paginator-navigation-first mdc-icon-button mat-mdc-icon-button mat-mdc-button-disabled mat-unthemed mat-mdc-button-base mat-mdc-tooltip-disabled",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-table-list:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > mat-paginator:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 1120,
+        "y": 721.5,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "index": 41,
+      "tag": "button",
+      "text": "",
+      "href": null,
+      "role": null,
+      "aria_label": "Página anterior",
+      "id": null,
+      "name": null,
+      "type": "button",
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger mat-mdc-paginator-navigation-previous mdc-icon-button mat-mdc-icon-button mat-mdc-button-disabled mat-unthemed mat-mdc-button-base mat-mdc-tooltip-disabled",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-table-list:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > mat-paginator:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 1148,
+        "y": 721.5,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "index": 42,
+      "tag": "button",
+      "text": "",
+      "href": null,
+      "role": null,
+      "aria_label": "Siguiente página",
+      "id": null,
+      "name": null,
+      "type": "button",
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger mat-mdc-paginator-navigation-next mdc-icon-button mat-mdc-icon-button mat-unthemed mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-table-list:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > mat-paginator:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 1176,
+        "y": 721.5,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "index": 43,
+      "tag": "button",
+      "text": "",
+      "href": null,
+      "role": null,
+      "aria_label": "Última página",
+      "id": null,
+      "name": null,
+      "type": "button",
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger mat-mdc-paginator-navigation-last mdc-icon-button mat-mdc-icon-button mat-unthemed mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-inspecciones:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-table-list:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > mat-paginator:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 1204,
+        "y": 721.5,
+        "width": 28,
+        "height": 28
+      }
+    }
+  ],
+  "artifacts": {
+    "screenshot": "data/raw/screenshots/admin_permisos_inspecciones_20260523_130638.png",
+    "html": "data/raw/html/admin_permisos_inspecciones_20260523_130638.html"
+  },
+  "crawler": {
+    "source_module": "Permisos",
+    "route": "/admin/permisos/inspecciones",
+    "visited_order": 6
+  }
+}

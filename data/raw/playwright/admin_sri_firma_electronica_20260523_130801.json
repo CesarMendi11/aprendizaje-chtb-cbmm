@@ -1,0 +1,804 @@
+{
+  "url": "http://177.234.239.116:8084/admin/sri/firma-electronica",
+  "title": "Dashboard",
+  "visible_text": "MENU DE NAVEGACIÓN\nDashboard\nCuentas por cobrar\nGeneral\nGerencial\nPermisos\nPrevencion Riesgo\nrentas\nRentas\nSeguridad\nSRI\nFirma electrónica\nImpuestos Retenciones\nRenta\nTipo emisión\nTramites\nadmin\nDashboard\nSri\nFirma Electrónica\nConfiguración\nAmbiente:\nPRODUCCIÓN\nTipo emisión:\nEmisión Normal\nMoneda:\nDOLAR\nActualizar\nSubir Firma electrónica\n\nSubir firma electrónica, formato permitido .p12\n\nPor favor ingresa la contraseña de tu firma electrónica:\nSubir firma",
+  "buttons": [
+    {
+      "text": "Actualizar",
+      "disabled": false
+    },
+    {
+      "text": "Subir firma",
+      "disabled": true
+    }
+  ],
+  "inputs": [
+    {
+      "id": null,
+      "name": null,
+      "placeholder": null,
+      "type": "file",
+      "required": false
+    },
+    {
+      "id": "password",
+      "name": null,
+      "placeholder": "Contraseña firma...",
+      "type": "password",
+      "required": false
+    }
+  ],
+  "links": [
+    {
+      "text": "Dashboard",
+      "href": "/admin/home"
+    },
+    {
+      "text": "Firma electrónica",
+      "href": "/admin/sri/firma-electronica"
+    },
+    {
+      "text": "Impuestos Retenciones",
+      "href": "/admin/sri/impuesto"
+    },
+    {
+      "text": "Renta",
+      "href": "/admin/sri/tes-impuesto"
+    },
+    {
+      "text": "Tipo emisión",
+      "href": "/admin/sri/tipo-emision"
+    },
+    {
+      "text": "Dashboard",
+      "href": "/"
+    }
+  ],
+  "tables": [],
+  "interactive_elements": [
+    {
+      "index": 0,
+      "tag": "div",
+      "text": "MENU DE NAVEGACIÓN",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 19,
+        "width": 256,
+        "height": 36
+      }
+    },
+    {
+      "index": 1,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Dashboard",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 55,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 2,
+      "tag": "a",
+      "text": "Dashboard",
+      "href": "/admin/home",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 55,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 3,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-11",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 99,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 4,
+      "tag": "div",
+      "text": "Cuentas por cobrar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 99,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 5,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-12",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 143,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 6,
+      "tag": "div",
+      "text": "General",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 143,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 7,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-13",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 187,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 8,
+      "tag": "div",
+      "text": "Gerencial",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 187,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 9,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Permisos",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-14",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 231,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 10,
+      "tag": "div",
+      "text": "Permisos",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 231,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 11,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-15",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 275,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 12,
+      "tag": "div",
+      "text": "Prevencion Riesgo",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 275,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 13,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-16",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 319,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 14,
+      "tag": "div",
+      "text": "rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 319,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 15,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-17",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 363,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 16,
+      "tag": "div",
+      "text": "Rentas",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 363,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 17,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-18",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 407,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 18,
+      "tag": "div",
+      "text": "Seguridad",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 407,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 19,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "SRI\nFirma electrónica\nImpuestos Retenciones\nRenta\nTipo emisión",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-expanded ng-tns-c4255854719-19",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 451,
+        "width": 280,
+        "height": 228
+      }
+    },
+    {
+      "index": 20,
+      "tag": "div",
+      "text": "SRI",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 451,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 21,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Firma electrónica",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 497,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 22,
+      "tag": "a",
+      "text": "Firma electrónica",
+      "href": "/admin/sri/firma-electronica",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item fuse-vertical-navigation-item-active",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 497,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 23,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Impuestos Retenciones",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 541,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 24,
+      "tag": "a",
+      "text": "Impuestos Retenciones",
+      "href": "/admin/sri/impuesto",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 541,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 25,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Renta",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 585,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 26,
+      "tag": "a",
+      "text": "Renta",
+      "href": "/admin/sri/tes-impuesto",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 585,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 27,
+      "tag": "fuse-vertical-navigation-basic-item",
+      "text": "Tipo emisión",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 629,
+        "width": 280,
+        "height": 46
+      }
+    },
+    {
+      "index": 28,
+      "tag": "a",
+      "text": "Tipo emisión",
+      "href": "/admin/sri/tipo-emision",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 629,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 29,
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-20",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10)",
+      "visible": true,
+      "position": {
+        "x": 0,
+        "y": 683,
+        "width": 280,
+        "height": 40
+      }
+    },
+    {
+      "index": 30,
+      "tag": "div",
+      "text": "Tramites",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "mat-mdc-tooltip-trigger fuse-vertical-navigation-item",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > fuse-vertical-navigation:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-group-item:nth-of-type(1) > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div:nth-of-type(1) > div:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 12,
+        "y": 683,
+        "width": 256,
+        "height": 40
+      }
+    },
+    {
+      "index": 32,
+      "tag": "a",
+      "text": "Dashboard",
+      "href": "/",
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "whitespace-nowrap text-primary-600 hover:underline",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-firma-electronica:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > ui-breadcrumbs:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 304,
+        "y": 90,
+        "width": 74.78125,
+        "height": 17
+      }
+    },
+    {
+      "index": 33,
+      "tag": "button",
+      "text": "Actualizar",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "h-8 rounded-lg mdc-button mdc-button--unelevated mat-mdc-unelevated-button mat-primary mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-firma-electronica:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 1123.890625,
+        "y": 373,
+        "width": 108.109375,
+        "height": 32
+      }
+    },
+    {
+      "index": 35,
+      "tag": "input",
+      "text": "",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": "password",
+      "name": null,
+      "type": "password",
+      "placeholder": "Contraseña firma...",
+      "classes": "mat-mdc-input-element ng-untouched ng-pristine ng-valid mat-mdc-form-field-input-control mdc-text-field__input cdk-text-field-autofill-monitored",
+      "css_path": "input#password",
+      "visible": true,
+      "position": {
+        "x": 329,
+        "y": 611.5,
+        "width": 870,
+        "height": 24
+      }
+    },
+    {
+      "index": 37,
+      "tag": "button",
+      "text": "Subir firma",
+      "href": null,
+      "role": null,
+      "aria_label": null,
+      "id": null,
+      "name": null,
+      "type": null,
+      "placeholder": null,
+      "classes": "ui-mat-button w-full rounded mt-2 mdc-button mdc-button--unelevated mat-mdc-unelevated-button mat-primary mat-mdc-button-disabled mat-mdc-button-base",
+      "css_path": "html:nth-of-type(1) > body:nth-of-type(1) > app-root:nth-of-type(1) > layout:nth-of-type(1) > admin-layout:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > app-firma-electronica:nth-of-type(1) > ui-content-wrapper:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(1)",
+      "visible": true,
+      "position": {
+        "x": 320,
+        "y": 648.5,
+        "width": 912,
+        "height": 36
+      }
+    }
+  ],
+  "artifacts": {
+    "screenshot": "data/raw/screenshots/admin_sri_firma_electronica_20260523_130801.png",
+    "html": "data/raw/html/admin_sri_firma_electronica_20260523_130801.html"
+  },
+  "crawler": {
+    "source_module": "SRI",
+    "route": "/admin/sri/firma-electronica",
+    "visited_order": 2
+  }
+}

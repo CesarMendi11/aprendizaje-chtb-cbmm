@@ -1,0 +1,72 @@
+erp:
+  name: "ERP Cuerpo de Bomberos de Machala"
+  code: "cbmm"
+  base_url: "http://177.234.239.116:8084"
+  framework: "Angular"
+
+login:
+  url: "/login"
+  username_selector: "#username"
+  password_selector: "#password"
+  submit_role_name: "Iniciar sesión"
+  success_url_contains: "/admin/home"
+
+navigation:
+  home_url: "/admin/home"
+  menu_container_selector: "fuse-vertical-navigation"
+  menu_item_selectors:
+    - "a[href]"
+    - "button"
+    - "[role='button']"
+    - "div.fuse-vertical-navigation-item"
+  interactive_selectors:
+    - "a[href]"
+    - "button"
+    - "input"
+    - "select"
+    - "textarea"
+    - "[role='button']"
+    - "[role='menuitem']"
+    - ".fuse-vertical-navigation-item"
+    - "fuse-vertical-navigation-basic-item"
+    - "fuse-vertical-navigation-collapsable-item"
+
+exploration:
+  allowed_routes:
+    - "/admin/"
+  start_modules:
+    - "Cuentas por cobrar"
+    - "General"
+    - "Gerencial"
+    - "Permisos"
+    - "Rentas"
+    - "Seguridad"
+    - "SRI"
+    - "Tramites"
+  max_depth: 3
+  max_pages_per_module: 50
+
+safety:
+  dangerous_keywords:
+    - "Guardar"
+    - "Eliminar"
+    - "Aprobar"
+    - "Emitir"
+    - "Enviar"
+    - "Anular"
+    - "Confirmar"
+    - "Procesar"
+  safe_keywords:
+    - "Ver"
+    - "Buscar"
+    - "Filtros"
+    - "Nuevo"
+    - "Detalle"
+    - "Cerrar"
+    - "Cancelar"
+
+output:
+  raw_dir: "data/raw/playwright"
+  html_dir: "data/raw/html"
+  screenshots_dir: "data/raw/screenshots"
+  marked_screenshots_dir: "data/raw/marked_screenshots"

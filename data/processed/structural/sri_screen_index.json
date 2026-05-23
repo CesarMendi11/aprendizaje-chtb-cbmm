@@ -1,0 +1,132 @@
+{
+  "/admin/home": {
+    "url": "http://177.234.239.116:8084/admin/home",
+    "title": "Dashboard",
+    "buttons": [],
+    "inputs": [],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_home_20260523_130758.png",
+      "html": "data/raw/html/admin_home_20260523_130758.html"
+    }
+  },
+  "/admin/sri/firma-electronica": {
+    "url": "http://177.234.239.116:8084/admin/sri/firma-electronica",
+    "title": "Dashboard",
+    "buttons": [
+      "Actualizar",
+      "Subir firma"
+    ],
+    "inputs": [
+      {
+        "id": null,
+        "name": null,
+        "placeholder": null,
+        "type": "file"
+      },
+      {
+        "id": "password",
+        "name": null,
+        "placeholder": "Contraseña firma...",
+        "type": "password"
+      }
+    ],
+    "tables": [],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_sri_firma_electronica_20260523_130801.png",
+      "html": "data/raw/html/admin_sri_firma_electronica_20260523_130801.html"
+    }
+  },
+  "/admin/sri/impuesto": {
+    "url": "http://177.234.239.116:8084/admin/sri/impuesto",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo",
+      "Agregar"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "NOMBRE",
+          "CODIGO",
+          "ACTIVO",
+          ""
+        ],
+        "rows_count": 4
+      },
+      {
+        "headers": [
+          "ID",
+          "DETALLE",
+          "PORCENTAJE",
+          "CODIGO",
+          "ACTIVO",
+          "APLICA IVA",
+          ""
+        ],
+        "rows_count": 8
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_sri_impuesto_20260523_130804.png",
+      "html": "data/raw/html/admin_sri_impuesto_20260523_130804.html"
+    }
+  },
+  "/admin/sri/tes-impuesto": {
+    "url": "http://177.234.239.116:8084/admin/sri/tes-impuesto",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo",
+      "Agregar"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "ID",
+          "NOMBRE",
+          "ACTIVO",
+          ""
+        ],
+        "rows_count": 4
+      },
+      {
+        "headers": [
+          "ID",
+          "DETALLE",
+          "CODIGO SRI",
+          "PORCENTAJE",
+          "ACTIVO",
+          ""
+        ],
+        "rows_count": 1
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_sri_tes_impuesto_20260523_130807.png",
+      "html": "data/raw/html/admin_sri_tes_impuesto_20260523_130807.html"
+    }
+  },
+  "/admin/sri/tipo-emision": {
+    "url": "http://177.234.239.116:8084/admin/sri/tipo-emision",
+    "title": "Dashboard",
+    "buttons": [
+      "Nuevo"
+    ],
+    "inputs": [],
+    "tables": [
+      {
+        "headers": [
+          "NAME",
+          ""
+        ],
+        "rows_count": 2
+      }
+    ],
+    "artifacts": {
+      "screenshot": "data/raw/screenshots/admin_sri_tipo_emision_20260523_130809.png",
+      "html": "data/raw/html/admin_sri_tipo_emision_20260523_130809.html"
+    }
+  }
+}

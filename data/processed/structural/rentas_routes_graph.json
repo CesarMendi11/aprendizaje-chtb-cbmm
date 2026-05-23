@@ -1,0 +1,26 @@
+{
+  "/admin/home": {
+    "source_module": "Rentas",
+    "links_to": []
+  },
+  "/admin/rentas/conceptos": {
+    "source_module": "Rentas",
+    "links_to": []
+  },
+  "/admin/rentas/descuentos": {
+    "source_module": "Rentas",
+    "links_to": []
+  },
+  "/admin/rentas/impuestos": {
+    "source_module": "Rentas",
+    "links_to": []
+  },
+  "/admin/rentas/intereses": {
+    "source_module": "Rentas",
+    "links_to": []
+  },
+  "/admin/rentas/titulos-credito": {
+    "source_module": "Rentas",
+    "links_to": []
+  }
+}

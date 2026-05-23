@@ -1,0 +1,12 @@
+[project]
+name = "aprendizaje-chtb-cbmm"
+version = "0.1.0"
+description = "Sistema GraphRAG híbrido para ERP"
+requires-python = ">=3.13"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.setuptools]
+packages = ["src"]
