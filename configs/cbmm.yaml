@@ -38,6 +38,12 @@ exploration:
     - "Seguridad"
     - "SRI"
     - "Tramites"
+  allowed_routes:
+    - "/admin/"
+  blocked_routes: []
+  max_depth: 3
+  max_pages_total: 300
+  max_pages_per_module: 50
 
 extraction:
   extract_table_rows: false
@@ -47,15 +53,6 @@ extraction:
   keep_form_fields: true
   keep_buttons: true
   keep_links: true
-
-  allowed_routes:
-    - "/admin/"
-
-  blocked_routes: []
-
-  max_depth: 3
-  max_pages_total: 300
-  max_pages_per_module: 50
 
 safety:
   dangerous_keywords:
