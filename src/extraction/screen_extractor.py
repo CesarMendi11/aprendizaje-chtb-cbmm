@@ -1,10 +1,4 @@
-from pathlib import Path
-from datetime import datetime
-import json
-
 from playwright.sync_api import Page
-from src.utils.text_utils import slugify
-
 class ScreenExtractor:
     def __init__(self, page: Page, profile: dict):
         self.page = page
@@ -21,24 +15,6 @@ class ScreenExtractor:
             "tables": self._extract_tables(),
             "interactive_elements": self._extract_interactive_elements(),
         }
-
-    def save_raw_json(self, data: dict, prefix: str | None = None) -> Path:
-        output_dir = Path(self.profile["output"]["raw_dir"])
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        if prefix:
-            safe_prefix = slugify(prefix)
-        else:
-            safe_prefix = slugify(data.get("title") or data.get("url") or "screen")
-
-        file_path = output_dir / f"{safe_prefix}_{timestamp}.json"
-
-        with open(file_path, "w", encoding="utf-8") as file:
-            json.dump(data, file, indent=2, ensure_ascii=False)
-
-        return file_path
 
     def _safe_body_text(self) -> str:
         try:
@@ -213,29 +189,3 @@ class ScreenExtractor:
             """,
             selectors
         )
-        
-    def save_screenshot(self, prefix: str | None = None) -> Path:
-        output_dir = Path(self.profile["output"]["screenshots_dir"])
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_prefix = slugify(prefix or self.page.title() or "screen")
-
-        file_path = output_dir / f"{safe_prefix}_{timestamp}.png"
-        self.page.screenshot(path=file_path, full_page=True)
-
-        return file_path
-
-    def save_html(self, prefix: str | None = None) -> Path:
-        output_dir = Path(self.profile["output"]["html_dir"])
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_prefix = slugify(prefix or self.page.title() or "screen")
-
-        file_path = output_dir / f"{safe_prefix}_{timestamp}.html"
-
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(self.page.content())
-
-        return file_path

@@ -7,6 +7,7 @@ from src.extraction.screen_extractor import ScreenExtractor
 from src.graph.routes_graph_builder import RoutesGraphBuilder
 from src.graph.screen_index_builder import ScreenIndexBuilder
 from src.utils.text_utils import slugify
+from src.storage.artifact_storage import ArtifactStorage
 
 class RouteCrawler:
     def __init__(self, page: Page, profile: dict):
@@ -25,6 +26,7 @@ class RouteCrawler:
     def crawl_module(self, module_name: str) -> None:
         navigator = ERPNavigator(self.page, self.profile)
         extractor = ScreenExtractor(self.page, self.profile)
+        storage = ArtifactStorage(self.profile)
 
         print(f"Abriendo módulo inicial: {module_name}")
         opened = navigator.open_module_safe(module_name)
@@ -34,7 +36,7 @@ class RouteCrawler:
             return
 
         data = extractor.extract_screen_data()
-        extractor.save_raw_json(data)
+        storage.save_json(data)
 
         links = self._extract_allowed_links(data)
         self.pending.extend(links)
@@ -62,8 +64,8 @@ class RouteCrawler:
 
                 route_prefix = route.strip("/").replace("/", "_")
 
-                screenshot_path = extractor.save_screenshot(route_prefix)
-                html_path = extractor.save_html(route_prefix)
+                screenshot_path = storage.save_screenshot(self.page, route_prefix)
+                html_path = storage.save_html(self.page, route_prefix)
 
                 screen_data["artifacts"] = {
                     "screenshot": str(screenshot_path),
@@ -76,8 +78,7 @@ class RouteCrawler:
                     "visited_order": len(self.visited),
                 }
 
-                #extractor.save_raw_json(screen_data)
-                extractor.save_raw_json(screen_data, prefix=route_prefix)
+                storage.save_json(screen_data, prefix=route_prefix)
 
                 new_links = self._extract_allowed_links(screen_data)
                 self.routes_graph.add_screen(
