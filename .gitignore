@@ -51,12 +51,11 @@ data/raw/screenshots/
 data/raw/marked_screenshots/
 data/processed/structural/
 
-# Neo4j
-neo4j/data/
-neo4j/logs/
-
 # Docker Neo4j
 docker/neo4j/data/
 docker/neo4j/logs/
 docker/neo4j/import/
 docker/neo4j/plugins/
+
+data/cache/
+data/approved/chromadb/
