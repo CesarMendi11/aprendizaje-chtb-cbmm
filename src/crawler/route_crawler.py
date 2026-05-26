@@ -10,6 +10,7 @@ from src.utils.text_utils import slugify
 from src.storage.artifact_storage import ArtifactStorage
 from src.policy.route_policy import RoutePolicy
 from src.discovery.link_normalizer import LinkNormalizer
+from src.discovery.link_discovery import LinkDiscovery
 
 class RouteCrawler:
     def __init__(self, page: Page, profile: dict):
@@ -17,6 +18,7 @@ class RouteCrawler:
         self.profile = profile
         self.base_url = profile["erp"]["base_url"]
         self.route_policy = RoutePolicy(profile)
+        self.link_discovery = LinkDiscovery(self.route_policy)
         self.max_pages_total = profile["exploration"].get("max_pages_total", 100)
 
         self.visited: set[str] = set()
@@ -39,7 +41,7 @@ class RouteCrawler:
         data = extractor.extract_screen_data()
         storage.save_json(data)
 
-        links = self._extract_allowed_links(data)
+        links = self.link_discovery.extract_allowed_links(data)
         self.pending.extend(links)
 
         print(f"Rutas iniciales encontradas: {len(links)}")
@@ -81,7 +83,7 @@ class RouteCrawler:
 
                 storage.save_json(screen_data, prefix=route_prefix)
 
-                new_links = self._extract_allowed_links(screen_data)
+                new_links = self.link_discovery.extract_allowed_links(screen_data)
                 self.routes_graph.add_screen(
                     route=route,
                     links=new_links,
@@ -111,22 +113,3 @@ class RouteCrawler:
         print("✅ Crawling finalizado")
         
         print("Pantallas visitadas:", len(self.visited))
-
-    def _extract_allowed_links(self, screen_data: dict) -> list[str]:
-        links = []
-
-        for link in screen_data.get("links", []):
-            href = link.get("href")
-
-            if not href:
-                continue
-
-            normalized = LinkNormalizer.normalize(href)
-
-            if normalized == "/":
-                continue
-
-            if normalized and self.route_policy.is_allowed(normalized):
-                links.append(normalized)
-
-        return list(dict.fromkeys(links))
