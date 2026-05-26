@@ -1,10 +1,13 @@
 from playwright.sync_api import Page
+from src.discovery.menu_discovery import MenuDiscovery
+
 class ScreenExtractor:
     def __init__(self, page: Page, profile: dict):
         self.page = page
         self.profile = profile
 
     def extract_screen_data(self) -> dict:
+        menu_discovery = MenuDiscovery(self.page, self.profile)
         return {
             "url": self.page.url,
             "title": self.page.title(),
@@ -14,6 +17,7 @@ class ScreenExtractor:
             "links": self._extract_links(),
             "tables": self._extract_tables(),
             "interactive_elements": self._extract_interactive_elements(),
+            "menu_items": menu_discovery.extract_menu_items(),
         }
 
     def _safe_body_text(self) -> str:
