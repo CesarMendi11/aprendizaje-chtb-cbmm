@@ -3,9 +3,9 @@ import argparse
 from playwright.sync_api import sync_playwright
 
 from src.config.profile_loader import load_profile
-from src.extraction.navigator import ERPNavigator
-from src.extraction.route_crawler import RouteCrawler
-
+from src.browser.navigator import ERPNavigator
+from src.crawler.route_crawler import RouteCrawler
+from src.auth.auth_manager import AuthManager
 
 def main():
     parser = argparse.ArgumentParser(
@@ -36,10 +36,11 @@ def main():
         browser = p.chromium.launch(headless=args.headless)
         page = browser.new_page()
 
+        auth = AuthManager(page, profile)
         navigator = ERPNavigator(page, profile)
 
         print("Iniciando login...")
-        navigator.login()
+        auth.login()
 
         for module_name in modules:
             print("=" * 60)

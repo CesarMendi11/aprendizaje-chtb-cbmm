@@ -1,9 +1,9 @@
 from playwright.sync_api import sync_playwright
 
+from src.auth.auth_manager import AuthManager
 from src.config.profile_loader import load_profile
-from src.extraction.navigator import ERPNavigator
-from src.extraction.route_crawler import RouteCrawler
-
+from src.browser.navigator import ERPNavigator
+from src.crawler.route_crawler import RouteCrawler
 
 def main():
     profile = load_profile("cbmm")
@@ -13,10 +13,11 @@ def main():
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
 
+        auth = AuthManager(page, profile)
         navigator = ERPNavigator(page, profile)
 
         print("Iniciando login...")
-        navigator.login()
+        auth.login()
 
         crawler = RouteCrawler(page, profile)
         crawler.crawl_module(module_name)

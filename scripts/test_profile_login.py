@@ -3,8 +3,9 @@ from datetime import datetime
 
 from playwright.sync_api import sync_playwright
 
+from src.auth.auth_manager import AuthManager
 from src.config.profile_loader import load_profile
-from src.extraction.navigator import ERPNavigator
+from src.browser.navigator import ERPNavigator
 
 
 def main():
@@ -19,10 +20,11 @@ def main():
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
 
+        auth = AuthManager(page, profile)
         navigator = ERPNavigator(page, profile)
 
-        print("Iniciando sesión...")
-        navigator.login()
+        print("Iniciando login...")
+        auth.login()
 
         screenshot_path = output_dir / f"profile_login_{timestamp}.png"
         page.screenshot(path=screenshot_path, full_page=True)

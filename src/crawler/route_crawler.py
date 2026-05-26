@@ -2,7 +2,7 @@ from urllib.parse import urljoin, urlparse
 
 from playwright.sync_api import Page
 
-from src.extraction.navigator import ERPNavigator
+from src.browser.navigator import ERPNavigator
 from src.extraction.screen_extractor import ScreenExtractor
 from src.graph.routes_graph_builder import RoutesGraphBuilder
 from src.graph.screen_index_builder import ScreenIndexBuilder
