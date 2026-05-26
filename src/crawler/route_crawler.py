@@ -11,6 +11,7 @@ from src.storage.artifact_storage import ArtifactStorage
 from src.policy.route_policy import RoutePolicy
 from src.discovery.link_normalizer import LinkNormalizer
 from src.discovery.link_discovery import LinkDiscovery
+from src.crawler.frontier import CrawlerFrontier
 
 class RouteCrawler:
     def __init__(self, page: Page, profile: dict):
@@ -19,10 +20,8 @@ class RouteCrawler:
         self.base_url = profile["erp"]["base_url"]
         self.route_policy = RoutePolicy(profile)
         self.link_discovery = LinkDiscovery(self.route_policy)
-        self.max_pages_total = profile["exploration"].get("max_pages_total", 100)
-
-        self.visited: set[str] = set()
-        self.pending: list[str] = []
+        max_pages_total = profile["exploration"].get("max_pages_total", 100)
+        self.frontier = CrawlerFrontier(max_pages=max_pages_total)
         self.routes_graph = RoutesGraphBuilder()
         self.screen_index = ScreenIndexBuilder()
 
@@ -42,14 +41,14 @@ class RouteCrawler:
         storage.save_json(data)
 
         links = self.link_discovery.extract_allowed_links(data)
-        self.pending.extend(links)
+        self.frontier.add_many(links)
 
         print(f"Rutas iniciales encontradas: {len(links)}")
 
-        while self.pending and len(self.visited) < self.max_pages_total:
-            route = self.pending.pop(0)
+        while self.frontier.has_next():
+            route = self.frontier.next()
 
-            if route in self.visited:
+            if self.frontier.was_visited(route):
                 continue
 
             if not self.route_policy.is_allowed(route):
@@ -61,7 +60,7 @@ class RouteCrawler:
                 self.page.goto(urljoin(self.base_url, route), wait_until="networkidle")
                 self.page.wait_for_timeout(1500)
 
-                self.visited.add(route)
+                self.frontier.mark_visited(route)
 
                 screen_data = extractor.extract_screen_data()
 
@@ -78,7 +77,7 @@ class RouteCrawler:
                 screen_data["crawler"] = {
                     "source_module": module_name,
                     "route": route,
-                    "visited_order": len(self.visited),
+                    "visited_order": self.frontier.visited_count(),
                 }
 
                 storage.save_json(screen_data, prefix=route_prefix)
@@ -94,9 +93,7 @@ class RouteCrawler:
                     screen_data=screen_data,
                 )
 
-                for link in new_links:
-                    if link not in self.visited and link not in self.pending:
-                        self.pending.append(link)
+                self.frontier.add_many(new_links)
 
             except Exception as error:
                 print(f"⚠️ Error visitando {route}: {error}")
@@ -112,4 +109,4 @@ class RouteCrawler:
         )
         print("✅ Crawling finalizado")
         
-        print("Pantallas visitadas:", len(self.visited))
+        print("Pantallas visitadas:", self.frontier.visited_count())
