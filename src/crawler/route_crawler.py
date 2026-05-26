@@ -8,14 +8,15 @@ from src.graph.routes_graph_builder import RoutesGraphBuilder
 from src.graph.screen_index_builder import ScreenIndexBuilder
 from src.utils.text_utils import slugify
 from src.storage.artifact_storage import ArtifactStorage
+from src.policy.route_policy import RoutePolicy
+from src.discovery.link_normalizer import LinkNormalizer
 
 class RouteCrawler:
     def __init__(self, page: Page, profile: dict):
         self.page = page
         self.profile = profile
         self.base_url = profile["erp"]["base_url"]
-        self.allowed_routes = profile["exploration"].get("allowed_routes", [])
-        self.blocked_routes = profile["exploration"].get("blocked_routes", [])
+        self.route_policy = RoutePolicy(profile)
         self.max_pages_total = profile["exploration"].get("max_pages_total", 100)
 
         self.visited: set[str] = set()
@@ -49,7 +50,7 @@ class RouteCrawler:
             if route in self.visited:
                 continue
 
-            if not self._is_allowed_route(route):
+            if not self.route_policy.is_allowed(route):
                 continue
 
             print(f"Visitando: {route}")
@@ -120,40 +121,12 @@ class RouteCrawler:
             if not href:
                 continue
 
-            normalized = self._normalize_href(href)
+            normalized = LinkNormalizer.normalize(href)
 
             if normalized == "/":
                 continue
 
-            if normalized and self._is_allowed_route(normalized):
+            if normalized and self.route_policy.is_allowed(normalized):
                 links.append(normalized)
 
         return list(dict.fromkeys(links))
-
-    def _normalize_href(self, href: str) -> str | None:
-        if href.startswith("http"):
-            parsed = urlparse(href)
-            return parsed.path
-
-        if href.startswith("/"):
-            return href
-
-        return None
-
-    def _is_allowed_route(self, route: str) -> bool:
-        if not route:
-            return False
-
-        if route == "/":
-            return False
-
-        if any(blocked in route for blocked in self.blocked_routes):
-            return False
-
-        if not self.allowed_routes:
-            return True
-
-        return any(
-            route == allowed.rstrip("/") or route.startswith(allowed)
-            for allowed in self.allowed_routes
-        )
