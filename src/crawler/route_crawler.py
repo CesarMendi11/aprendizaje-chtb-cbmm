@@ -78,6 +78,7 @@ class RouteCrawler:
 
         ui_events = profile.get("ui_events", {})
         self.ui_events_enabled = ui_events.get("enabled", True)
+        self.max_event_depth = ui_events.get("max_event_depth", 0)
 
     def crawl(self) -> CrawlSummary:
         """
@@ -216,7 +217,7 @@ class RouteCrawler:
             reason="href_discovered",
         )
 
-        if self.ui_events_enabled:
+        if self.ui_events_enabled and depth <= self.max_event_depth:
             self._explore_ui_events_from_screen(
                 route=route,
                 screen_data=screen_data,
@@ -301,6 +302,7 @@ class RouteCrawler:
         links: list[dict[str, Any]],
         depth: int,
         reason: str,
+        only_new_targets: bool = False,
     ) -> None:
         for link in links:
             target_route = link["route"]
@@ -310,6 +312,9 @@ class RouteCrawler:
 
             if not self.policy.is_allowed_route(target_route):
                 continue
+            
+            if only_new_targets and self.routes_graph.has_screen(target_route):
+               continue
 
             self.routes_graph.add_screen(
                 route=target_route,
@@ -438,6 +443,7 @@ class RouteCrawler:
                 links=discovered_links,
                 depth=depth,
                 reason="ui_event_discovered_href",
+                only_new_targets=True,
             )
 
     def _save_ui_event_results(

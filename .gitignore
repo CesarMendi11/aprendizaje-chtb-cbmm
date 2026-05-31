@@ -3,6 +3,9 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 venv/
@@ -45,17 +48,15 @@ chroma_db/
 data/chroma_db/
 
 # Generated crawler data
-data/raw/playwright/
-data/raw/html/
-data/raw/screenshots/
-data/raw/marked_screenshots/
-data/processed/structural/
+data/raw/
+data/cache/
+data/review/
+data/processed/
+data/approved/
+data/rejected/
 
 # Docker Neo4j
 docker/neo4j/data/
 docker/neo4j/logs/
 docker/neo4j/import/
 docker/neo4j/plugins/
-
-data/cache/
-data/approved/chromadb/
