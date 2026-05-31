@@ -1,0 +1,1096 @@
+{
+  "route": "/admin/general/cargo-funcional",
+  "reason": "uncertain_screen",
+  "extra": {
+    "reasons": [
+      "La pantalla contiene muchos elementos interactivos personalizados."
+    ],
+    "title": "Dashboard",
+    "url": "http://177.234.239.116:8084/admin/general/cargo-funcional",
+    "buttons": [
+      {
+        "text": "",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+        "tag": "button"
+      },
+      {
+        "text": "Nuevo",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(4) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(4) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(6) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(6) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(7) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(7) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(8) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(8) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(9) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(9) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(10) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(10) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "Primera página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Primera página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "Página anterior",
+        "type": "button",
+        "role": null,
+        "aria_label": "Página anterior",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "Siguiente página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Siguiente página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button"
+      },
+      {
+        "text": "Última página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Última página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+        "tag": "button"
+      },
+      {
+        "text": "Agregar",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div > div > div > div:nth-of-type(2) > div > div > button",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": "button",
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "Primera página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Primera página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "Página anterior",
+        "type": "button",
+        "role": null,
+        "aria_label": "Página anterior",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "Siguiente página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Siguiente página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button"
+      },
+      {
+        "text": "Última página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Última página",
+        "title": null,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+        "tag": "button"
+      }
+    ],
+    "inputs": [],
+    "custom_interactives": [
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar General Año Area Cargo Funcional Estado Seguimiento Personas Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites",
+        "tag": "fuse-vertical-navigation",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar General Año Area Cargo Funcional Estado Seguimiento Personas Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar General Año Area Cargo Funcional Estado Seguimiento Personas Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2)"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div > div > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a > div > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div > div > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div > div > div > div"
+      },
+      {
+        "text": "General Año Area Cargo Funcional Estado Seguimiento Personas",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1)"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div > div"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(1) > div > div > div"
+      },
+      {
+        "text": "Año Area Cargo Funcional Estado Seguimiento Personas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2)"
+      },
+      {
+        "text": "Año",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)"
+      },
+      {
+        "text": "Año",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div"
+      },
+      {
+        "text": "Año",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a"
+      },
+      {
+        "text": "Año",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a > div"
+      },
+      {
+        "text": "Año",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a > div > div"
+      },
+      {
+        "text": "Area",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)"
+      },
+      {
+        "text": "Area",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div"
+      },
+      {
+        "text": "Area",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a"
+      },
+      {
+        "text": "Area",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a > div"
+      },
+      {
+        "text": "Area",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a > div > div"
+      },
+      {
+        "text": "Cargo Funcional",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)"
+      },
+      {
+        "text": "Cargo Funcional",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div"
+      },
+      {
+        "text": "Cargo Funcional",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a"
+      },
+      {
+        "text": "Cargo Funcional",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a > div"
+      },
+      {
+        "text": "Cargo Funcional",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a > div > div"
+      },
+      {
+        "text": "Estado Seguimiento",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4)"
+      },
+      {
+        "text": "Estado Seguimiento",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div"
+      },
+      {
+        "text": "Estado Seguimiento",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a"
+      },
+      {
+        "text": "Estado Seguimiento",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a > div"
+      },
+      {
+        "text": "Estado Seguimiento",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a > div > div"
+      },
+      {
+        "text": "Personas",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5)"
+      },
+      {
+        "text": "Personas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div"
+      },
+      {
+        "text": "Personas",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a"
+      },
+      {
+        "text": "Personas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a > div"
+      },
+      {
+        "text": "Personas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6)"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7)"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8)"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9)"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10)"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div > div > div"
+      },
+      {
+        "text": "admin",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": "false",
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > div > div:nth-of-type(1) > div > user > div"
+      },
+      {
+        "text": "Primera página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)"
+      },
+      {
+        "text": "Página anterior",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)"
+      },
+      {
+        "text": "Siguiente página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)"
+      },
+      {
+        "text": "Última página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)"
+      },
+      {
+        "text": "Primera página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)"
+      },
+      {
+        "text": "Página anterior",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)"
+      },
+      {
+        "text": "Siguiente página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)"
+      },
+      {
+        "text": "Última página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)"
+      }
+    ],
+    "artifacts": {
+      "html": "data/raw/html/admin_general_cargo-funcional.html",
+      "screenshot": "data/raw/screenshots/admin_general_cargo-funcional.png",
+      "raw_json": "data/raw/playwright/admin_general_cargo-funcional.json"
+    },
+    "next_step": "Enviar a analysis/LLM helper para generar YAML incremental."
+  },
+  "status": "pending_llm_or_human_review"
+}

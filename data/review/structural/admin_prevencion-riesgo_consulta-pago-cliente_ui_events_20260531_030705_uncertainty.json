@@ -1,0 +1,207 @@
+{
+  "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "e23e09d1692d7a3949fc8c61b5864e54ee16872d67f27065866ceb21659af5bd",
+      "after_fingerprint": "567420ed392f8b5c9c89d5735d0b340931c61c66535708afef2de7bf2c128a90",
+      "before_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "after_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "links_count": 12,
+        "buttons_count": 3,
+        "inputs_count": 1,
+        "custom_interactives_count": 115
+      }
+    },
+    {
+      "candidate": {
+        "label": "General",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "567420ed392f8b5c9c89d5735d0b340931c61c66535708afef2de7bf2c128a90",
+      "after_fingerprint": "f8417824d5e2c93daee174c4bb585075c50df7697fe68ee72501583babd94cd2",
+      "before_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "after_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "links_count": 9,
+        "buttons_count": 3,
+        "inputs_count": 1,
+        "custom_interactives_count": 100
+      }
+    },
+    {
+      "candidate": {
+        "label": "Gerencial",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f8417824d5e2c93daee174c4bb585075c50df7697fe68ee72501583babd94cd2",
+      "after_fingerprint": "3be3f2ed8c3c035e9e330237bfafd2d08decf1625e84162156ef697d9f97980d",
+      "before_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "after_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "links_count": 7,
+        "buttons_count": 3,
+        "inputs_count": 1,
+        "custom_interactives_count": 90
+      }
+    },
+    {
+      "candidate": {
+        "label": "pagos cliente",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "3be3f2ed8c3c035e9e330237bfafd2d08decf1625e84162156ef697d9f97980d",
+      "after_fingerprint": "3be3f2ed8c3c035e9e330237bfafd2d08decf1625e84162156ef697d9f97980d",
+      "before_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "after_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "links_count": 7,
+        "buttons_count": 3,
+        "inputs_count": 1,
+        "custom_interactives_count": 90
+      }
+    },
+    {
+      "candidate": {
+        "label": "Permisos",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "3be3f2ed8c3c035e9e330237bfafd2d08decf1625e84162156ef697d9f97980d",
+      "after_fingerprint": "d54610ba254b9a4647b1af6bd6b0a30fe7abeb034e396da4e493102f463cb5f9",
+      "before_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "after_route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "links_count": 9,
+        "buttons_count": 3,
+        "inputs_count": 1,
+        "custom_interactives_count": 105
+      }
+    }
+  ]
+}

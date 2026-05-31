@@ -1,17 +1,46 @@
-from urllib.parse import urlparse
+from __future__ import annotations
+
+from src.policy.route_policy import RoutePolicy
 
 
 class LinkNormalizer:
-    @staticmethod
-    def normalize(href: str | None) -> str | None:
-        if not href:
-            return None
+    """
+    Normaliza enlaces encontrados en pantalla.
 
-        if href.startswith("http"):
-            parsed = urlparse(href)
-            return parsed.path
+    Responsabilidad:
+    - Tomar hrefs crudos del extractor.
+    - Convertirlos a rutas internas.
+    - Eliminar duplicados.
+    - No decide si una ruta se visita o no; eso lo decide RoutePolicy.
+    """
 
-        if href.startswith("/"):
-            return href
+    def __init__(self, policy: RoutePolicy):
+        self.policy = policy
 
-        return None
+    def normalize_many(self, links: list[dict]) -> list[dict]:
+        normalized: list[dict] = []
+        seen_routes: set[str] = set()
+
+        for link in links:
+            href = link.get("href") or link.get("absolute_href")
+            route = self.policy.normalize_href(href)
+
+            if not route:
+                continue
+
+            if route in seen_routes:
+                continue
+
+            seen_routes.add(route)
+
+            normalized.append(
+                {
+                    "route": route,
+                    "text": link.get("text", ""),
+                    "href": href,
+                    "selector": link.get("selector", ""),
+                    "tag": link.get("tag", ""),
+                }
+            )
+
+        return normalized

@@ -1,81 +1,143 @@
 erp:
-  name: "ERP Cuerpo de Bomberos de Machala"
+  name: "ERP Cuerpo de Bomberos Municipal de Machala"
   code: "cbmm"
   base_url: "http://177.234.239.116:8084"
-  framework: "Angular"
+
+browser:
+  headless: false
+  slow_mo: 150
+  viewport:
+    width: 1366
+    height: 768
 
 login:
   url: "/login"
+  username_env: "ERP_USERNAME"
+  password_env: "ERP_PASSWORD"
+
   username_selector: "#username"
   password_selector: "#password"
+
   submit_role_name: "Iniciar sesión"
+  submit_selector: null
+
   success_url_contains: "/admin/home"
+  wait_until: "domcontentloaded"
+  initial_wait_ms: 1000
+  post_login_wait_ms: 3000
 
 navigation:
   home_url: "/admin/home"
-  menu_container_selector: "fuse-vertical-navigation"
-  interactive_selectors:
-    - "a[href]"
-    - "button"
-    - "input"
-    - "select"
-    - "textarea"
-    - "[role='button']"
-    - "[role='menuitem']"
-    - ".fuse-vertical-navigation-item"
-    - "fuse-vertical-navigation-basic-item"
-    - "fuse-vertical-navigation-collapsable-item"
+  home_wait_ms: 1500
 
 exploration:
-  start_modules:
-    - "Cuentas por cobrar"
-    - "General"
-    - "Gerencial"
-    - "Permisos"
-    - "Prevencion Riesgo"
-    - "rentas"
-    - "Rentas"
-    - "Seguridad"
-    - "SRI"
-    - "Tramites"
   allowed_routes:
     - "/admin/"
-  blocked_routes: []
-  max_depth: 3
-  max_pages_total: 300
-  max_pages_per_module: 50
 
-extraction:
-  extract_table_rows: false
-  max_visible_text_chars: 8000
-  ignore_record_values: true
-  keep_table_headers: true
-  keep_form_fields: true
-  keep_buttons: true
-  keep_links: true
+  blocked_routes:
+    - "/admin/configuracion"
+    - "/admin/usuarios"
+    - "/admin/roles"
+    - "/admin/permisos"
+
+  start_modules: []
+
+  max_depth: 2
+  max_pages_total: 25
+  page_wait_ms: 800
 
 safety:
   dangerous_keywords:
     - "Guardar"
     - "Eliminar"
+    - "Borrar"
     - "Aprobar"
+    - "Anular"
     - "Emitir"
     - "Enviar"
-    - "Anular"
-    - "Confirmar"
     - "Procesar"
+    - "Confirmar"
 
   safe_keywords:
     - "Ver"
     - "Buscar"
-    - "Filtros"
-    - "Nuevo"
+    - "Consultar"
     - "Detalle"
+    - "Filtros"
     - "Cerrar"
     - "Cancelar"
 
+extraction:
+  max_visible_text_chars: 8000
+  keep_table_headers: true
+  keep_form_fields: true
+  keep_buttons: true
+  keep_links: true
+
 output:
-  raw_dir: "data/raw/playwright"
+  raw_playwright_dir: "data/raw/playwright"
   html_dir: "data/raw/html"
   screenshots_dir: "data/raw/screenshots"
   marked_screenshots_dir: "data/raw/marked_screenshots"
+
+  processed_structural_dir: "data/processed/structural"
+  processed_semantic_dir: "data/processed/semantic"
+
+  review_structural_dir: "data/review/structural"
+  review_semantic_dir: "data/review/semantic"
+
+  approved_neo4j_dir: "data/approved/neo4j"
+  approved_chromadb_dir: "data/approved/chromadb"
+
+  rejected_dir: "data/rejected"
+  cache_dir: "data/cache"
+
+crawl_mode:
+  environment: "production" # production | staging | test
+  strategy: "safe" # safe | interactive | test_full
+
+ui_events:
+  enabled: true
+  min_candidate_score: 3
+  event_wait_ms: 400
+  click_timeout_ms: 1000
+  skip_link_navigation: true
+
+  allowed_event_types:
+    - "click"
+
+  candidate_limits:
+    max_candidates_per_screen: 30
+    max_events_per_state: 5
+    max_text_length: 100
+
+  click_candidates:
+    include:
+      - "a"
+      - "button"
+      - "[role='button']"
+      - "[role='menuitem']"
+      - "[role='tab']"
+      - "[aria-expanded]"
+      - "[onclick]"
+      - "[tabindex]"
+      - "[class*='menu']"
+      - "[class*='nav']"
+      - "[class*='sidebar']"
+      - "[class*='collapse']"
+      - "[class*='accordion']"
+      - "custom-elements"
+
+    exclude:
+      - "input[type='submit']"
+      - "button[type='submit']"
+
+forms:
+  enabled: false
+  fill_mode: "disabled" # disabled | fixture_only | test_random
+  allow_submit: false
+
+  test_values:
+    default_text: "PRUEBA"
+    default_number: "1"
+    default_date: "2026-01-01"

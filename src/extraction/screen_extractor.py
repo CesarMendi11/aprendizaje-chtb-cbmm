@@ -1,195 +1,258 @@
+from __future__ import annotations
+
 from playwright.sync_api import Page
-from src.discovery.menu_discovery import MenuDiscovery
+
 
 class ScreenExtractor:
+    """
+    Extrae información estructural de la pantalla actual.
+
+    Responsabilidad:
+    - Leer texto visible.
+    - Extraer enlaces.
+    - Extraer botones.
+    - Extraer inputs, selects y textareas.
+    - Extraer tablas.
+    - Detectar elementos interactivos personalizados.
+
+    Este componente NO navega.
+    Este componente NO decide qué hacer.
+    Este componente NO guarda archivos.
+    """
+
     def __init__(self, page: Page, profile: dict):
         self.page = page
         self.profile = profile
 
-    def extract_screen_data(self) -> dict:
-        menu_discovery = MenuDiscovery(self.page, self.profile)
-        return {
-            "url": self.page.url,
-            "title": self.page.title(),
-            "visible_text": self._safe_body_text(),
-            "buttons": self._extract_buttons(),
-            "inputs": self._extract_inputs(),
-            "links": self._extract_links(),
-            "tables": self._extract_tables(),
-            "interactive_elements": self._extract_interactive_elements(),
-            "menu_items": menu_discovery.extract_menu_items(),
-        }
+        extraction_config = profile.get("extraction", {})
+        self.max_visible_text_chars = extraction_config.get(
+            "max_visible_text_chars",
+            8000,
+        )
 
-    def _safe_body_text(self) -> str:
-        try:
-            text = self.page.locator("body").inner_text()
-            max_chars = self.profile["extraction"].get("max_visible_text_chars", 8000)
-
-            if len(text) > max_chars:
-                return text[:max_chars] + "\n...[TRUNCATED]"
-
-            return text
-
-        except Exception:
-            return ""
-
-    def _extract_buttons(self) -> list[dict]:
-        buttons = []
-
-        for button in self.page.locator("button").all():
-            try:
-                text = button.inner_text().strip()
-                if text:
-                    buttons.append({
-                        "text": text,
-                        "disabled": button.is_disabled(),
-                    })
-            except Exception:
-                continue
-
-        return buttons
-
-    def _extract_inputs(self) -> list[dict]:
-        inputs = []
-
-        for input_el in self.page.locator("input").all():
-            try:
-                inputs.append({
-                    "id": input_el.get_attribute("id"),
-                    "name": input_el.get_attribute("name"),
-                    "placeholder": input_el.get_attribute("placeholder"),
-                    "type": input_el.get_attribute("type"),
-                    "required": input_el.get_attribute("required") is not None,
-                })
-            except Exception:
-                continue
-
-        return inputs
-
-    def _extract_links(self) -> list[dict]:
-        links = []
-
-        for link in self.page.locator("a[href]").all():
-            try:
-                text = link.inner_text().strip()
-                href = link.get_attribute("href")
-
-                if href:
-                    links.append({
-                        "text": text,
-                        "href": href,
-                    })
-            except Exception:
-                continue
-
-        return links
-
-    def _extract_tables(self) -> list[dict]:
-        tables = []
-
-        for table in self.page.locator("table").all():
-            try:
-                headers = table.locator("th").all_inner_texts()
-                rows_count = table.locator("tr").count()
-
-                tables.append({
-                    "headers": headers,
-                    "rows_count": rows_count,
-                })
-            except Exception:
-                continue
-
-        return tables
-
-    def _extract_interactive_elements(self) -> list[dict]:
-        selectors = self.profile["navigation"].get("interactive_selectors", [
-            "a[href]",
-            "button",
-            "input",
-            "select",
-            "textarea",
-            "[role='button']",
-            "[role='menuitem']",
-        ])
-
-        return self.page.evaluate(
+    def extract(self) -> dict:
+        data = self.page.evaluate(
             """
-            (selectors) => {
-                const joinedSelectors = selectors.join(",");
-                const nodes = Array.from(document.querySelectorAll(joinedSelectors));
+            () => {
+                const isVisible = (element) => {
+                    if (!element) return false;
 
-                const getText = (el) => {
-                    return (el.innerText || el.textContent || "").trim();
+                    const style = window.getComputedStyle(element);
+                    const rect = element.getBoundingClientRect();
+
+                    return (
+                        style &&
+                        style.display !== "none" &&
+                        style.visibility !== "hidden" &&
+                        style.opacity !== "0" &&
+                        rect.width > 0 &&
+                        rect.height > 0
+                    );
                 };
 
-                const getCssPath = (el) => {
-                    if (!(el instanceof Element)) return null;
+                const normalizeText = (value) => {
+                    if (!value) return "";
+                    return String(value).replace(/\\s+/g, " ").trim();
+                };
 
-                    const path = [];
+                const textOf = (element) => {
+                    if (!element) return "";
 
-                    while (el && el.nodeType === Node.ELEMENT_NODE) {
-                        let selector = el.nodeName.toLowerCase();
+                    const directText =
+                        element.innerText ||
+                        element.textContent ||
+                        element.value ||
+                        element.getAttribute("aria-label") ||
+                        element.getAttribute("title") ||
+                        "";
 
-                        if (el.id) {
-                            selector += "#" + el.id;
-                            path.unshift(selector);
+                    return normalizeText(directText);
+                };
+
+                const cssPath = (element) => {
+                    if (!element || !element.tagName) return "";
+
+                    const parts = [];
+                    let current = element;
+
+                    while (
+                        current &&
+                        current.nodeType === Node.ELEMENT_NODE &&
+                        parts.length < 8
+                    ) {
+                        let selector = current.tagName.toLowerCase();
+
+                        if (current.id) {
+                            const escapedId = window.CSS && window.CSS.escape
+                                ? window.CSS.escape(current.id)
+                                : current.id.replace(/([^a-zA-Z0-9_-])/g, "\\\\$1");
+
+                            selector += "#" + escapedId;
+                            parts.unshift(selector);
                             break;
                         }
 
-                        let sibling = el;
-                        let nth = 1;
+                        const parent = current.parentElement;
 
-                        while (sibling.previousElementSibling) {
-                            sibling = sibling.previousElementSibling;
-                            if (sibling.nodeName.toLowerCase() === selector) nth++;
+                        if (parent) {
+                            const siblings = Array.from(parent.children)
+                                .filter((child) => child.tagName === current.tagName);
+
+                            if (siblings.length > 1) {
+                                const index = siblings.indexOf(current) + 1;
+                                selector += `:nth-of-type(${index})`;
+                            }
                         }
 
-                        selector += `:nth-of-type(${nth})`;
-                        path.unshift(selector);
-                        el = el.parentElement;
+                        parts.unshift(selector);
+                        current = current.parentElement;
                     }
 
-                    return path.join(" > ");
+                    return parts.join(" > ");
                 };
 
-                return nodes
-                    .map((el, index) => {
-                        const rect = el.getBoundingClientRect();
+                const limit = (items, max = 300) => items.slice(0, max);
 
-                        return {
-                            index,
-                            tag: el.tagName.toLowerCase(),
-                            text: getText(el),
-                            href: el.getAttribute("href"),
-                            role: el.getAttribute("role"),
-                            aria_label: el.getAttribute("aria-label"),
-                            id: el.id || null,
-                            name: el.getAttribute("name"),
-                            type: el.getAttribute("type"),
-                            placeholder: el.getAttribute("placeholder"),
-                            classes: typeof el.className === "string" ? el.className : "",
-                            css_path: getCssPath(el),
-                            visible: !!(rect.width && rect.height),
-                            position: {
-                                x: rect.x,
-                                y: rect.y,
-                                width: rect.width,
-                                height: rect.height
-                            }
-                        };
-                    })
-                    .filter(item =>
-                        item.visible &&
-                        (
-                            item.text ||
-                            item.href ||
-                            item.placeholder ||
-                            item.aria_label ||
-                            item.id ||
-                            item.name
+                const links = limit(
+                    Array.from(document.querySelectorAll("a[href]"))
+                        .filter(isVisible)
+                        .map((element) => ({
+                            text: textOf(element),
+                            href: element.getAttribute("href"),
+                            absolute_href: element.href,
+                            selector: cssPath(element),
+                            tag: element.tagName.toLowerCase()
+                        }))
+                );
+
+                const buttons = limit(
+                    Array.from(
+                        document.querySelectorAll(
+                            "button, [role='button'], input[type='button'], input[type='submit']"
                         )
-                    );
+                    )
+                        .filter(isVisible)
+                        .map((element) => ({
+                            text: textOf(element),
+                            type: element.getAttribute("type"),
+                            role: element.getAttribute("role"),
+                            aria_label: element.getAttribute("aria-label"),
+                            title: element.getAttribute("title"),
+                            selector: cssPath(element),
+                            tag: element.tagName.toLowerCase()
+                        }))
+                );
+
+                const labelForInput = (input) => {
+                    if (!input) return "";
+
+                    const id = input.getAttribute("id");
+
+                    if (id) {
+                        const label = document.querySelector(`label[for="${id}"]`);
+                        if (label) return textOf(label);
+                    }
+
+                    const parentLabel = input.closest("label");
+                    if (parentLabel) return textOf(parentLabel);
+
+                    const parent = input.parentElement;
+                    if (parent) {
+                        const possibleLabel = parent.querySelector("label");
+                        if (possibleLabel) return textOf(possibleLabel);
+                    }
+
+                    return "";
+                };
+
+                const inputs = limit(
+                    Array.from(document.querySelectorAll("input, textarea, select"))
+                        .filter(isVisible)
+                        .map((element) => ({
+                            name: element.getAttribute("name"),
+                            id: element.getAttribute("id"),
+                            type: element.getAttribute("type"),
+                            placeholder: element.getAttribute("placeholder"),
+                            label: labelForInput(element),
+                            value_present: Boolean(element.value),
+                            selector: cssPath(element),
+                            tag: element.tagName.toLowerCase()
+                        }))
+                );
+
+                const tables = limit(
+                    Array.from(document.querySelectorAll("table"))
+                        .filter(isVisible)
+                        .map((table) => {
+                            const headers = Array.from(table.querySelectorAll("th"))
+                                .map(textOf)
+                                .filter(Boolean);
+
+                            const rows_count = table.querySelectorAll("tbody tr").length ||
+                                table.querySelectorAll("tr").length;
+
+                            return {
+                                headers,
+                                rows_count,
+                                selector: cssPath(table)
+                            };
+                        }),
+                    50
+                );
+
+                const customSelectors = [
+                    "[onclick]",
+                    "[tabindex]",
+                    "[role='menuitem']",
+                    "[role='tab']",
+                    "[role='option']",
+                    "[aria-expanded]",
+                    "fuse-vertical-navigation-item",
+                    "fuse-vertical-navigation-basic-item",
+                    "fuse-vertical-navigation-collapsable-item",
+                    "mat-expansion-panel",
+                    "mat-tab",
+                    "app-menu",
+                    "app-sidebar",
+                    "[class*='menu']",
+                    "[class*='nav']",
+                    "[class*='sidebar']",
+                    "[class*='collapse']",
+                    "[class*='accordion']"
+                ].join(",");
+
+                const custom_interactives = limit(
+                    Array.from(document.querySelectorAll(customSelectors))
+                        .filter(isVisible)
+                        .map((element) => ({
+                            text: textOf(element),
+                            tag: element.tagName.toLowerCase(),
+                            role: element.getAttribute("role"),
+                            aria_expanded: element.getAttribute("aria-expanded"),
+                            onclick: Boolean(element.getAttribute("onclick")),
+                            selector: cssPath(element)
+                        }))
+                        .filter((item) => item.text || item.onclick || item.aria_expanded !== null)
+                );
+
+                return {
+                    url: window.location.href,
+                    path: window.location.pathname,
+                    title: document.title || "",
+                    visible_text: document.body ? normalizeText(document.body.innerText || "") : "",
+                    links,
+                    buttons,
+                    inputs,
+                    tables,
+                    custom_interactives
+                };
             }
-            """,
-            selectors
+            """
         )
+
+        visible_text = data.get("visible_text") or ""
+
+        data["visible_text"] = visible_text[: self.max_visible_text_chars]
+        data["visible_text_truncated"] = len(visible_text) > self.max_visible_text_chars
+
+        return data

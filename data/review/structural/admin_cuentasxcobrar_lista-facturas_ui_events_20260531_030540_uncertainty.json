@@ -1,0 +1,207 @@
+{
+  "route": "/admin/cuentasxcobrar/lista-facturas",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Comprobantes",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "83a9396a6323421815d3d99224141258b4b1acbe455d2ec07a6cd913f072cd9a",
+      "after_fingerprint": "eb23698e7673788d8d47f7739c7f2a0796ee8d1eac73b37e183d6a66c0fa6db1",
+      "before_route": "/admin/cuentasxcobrar/lista-facturas",
+      "after_route": "/admin/cuentasxcobrar/comprobantes",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/cuentasxcobrar/comprobantes",
+        "links_count": 10,
+        "buttons_count": 9,
+        "inputs_count": 4,
+        "custom_interactives_count": 113
+      }
+    },
+    {
+      "candidate": {
+        "label": "Facturación Electronica",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "eb23698e7673788d8d47f7739c7f2a0796ee8d1eac73b37e183d6a66c0fa6db1",
+      "after_fingerprint": "5e912e52eb9472d3990c7b8118c87b1b36cfdf83d36a3ed86b02143c146424b0",
+      "before_route": "/admin/cuentasxcobrar/comprobantes",
+      "after_route": "/admin/cuentasxcobrar/facturacion",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/cuentasxcobrar/facturacion",
+        "links_count": 9,
+        "buttons_count": 6,
+        "inputs_count": 6,
+        "custom_interactives_count": 107
+      }
+    },
+    {
+      "candidate": {
+        "label": "Forma pago",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "5e912e52eb9472d3990c7b8118c87b1b36cfdf83d36a3ed86b02143c146424b0",
+      "after_fingerprint": "5b49d966888ca7a47ae0d529bcb71c5179abe5a5ff958779f2c4d292cb43a637",
+      "before_route": "/admin/cuentasxcobrar/facturacion",
+      "after_route": "/admin/cuentasxcobrar/forma-pago",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/cuentasxcobrar/forma-pago",
+        "links_count": 10,
+        "buttons_count": 15,
+        "inputs_count": 0,
+        "custom_interactives_count": 112
+      }
+    },
+    {
+      "candidate": {
+        "label": "General",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "5b49d966888ca7a47ae0d529bcb71c5179abe5a5ff958779f2c4d292cb43a637",
+      "after_fingerprint": "33cdd3baa47d20af8267df1d4e7df3a5f736c82c75dc9bd9cdc162671e11d3b4",
+      "before_route": "/admin/cuentasxcobrar/forma-pago",
+      "after_route": "/admin/cuentasxcobrar/forma-pago",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/cuentasxcobrar/forma-pago",
+        "links_count": 15,
+        "buttons_count": 15,
+        "inputs_count": 0,
+        "custom_interactives_count": 138
+      }
+    },
+    {
+      "candidate": {
+        "label": "Gerencial",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "33cdd3baa47d20af8267df1d4e7df3a5f736c82c75dc9bd9cdc162671e11d3b4",
+      "after_fingerprint": "3cd7e7d8f7f8e088bdc40dd8f4086e9011199b401ecf173d9e1021b2aad75746",
+      "before_route": "/admin/cuentasxcobrar/forma-pago",
+      "after_route": "/admin/cuentasxcobrar/forma-pago",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/cuentasxcobrar/forma-pago",
+        "links_count": 13,
+        "buttons_count": 15,
+        "inputs_count": 0,
+        "custom_interactives_count": 128
+      }
+    }
+  ]
+}

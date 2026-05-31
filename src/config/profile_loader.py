@@ -1,55 +1,95 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any
 
 import yaml
+from dotenv import load_dotenv
 
 
-class ProfileLoaderError(Exception):
-    pass
-
-
-def load_profile(profile_name: str) -> dict[str, Any]:
+class ProfileLoader:
     """
-    Load an ERP profile from configs/<profile_name>.yaml
+    Carga y valida el perfil YAML del ERP.
+
+    Responsabilidad:
+    - Leer configs/cbmm.yaml.
+    - Validar secciones mínimas.
+    - Cargar variables de entorno desde .env.
     """
-    profile_path = Path("configs") / f"{profile_name}.yaml"
 
-    if not profile_path.exists():
-        raise ProfileLoaderError(f"No existe el perfil: {profile_path}")
+    def __init__(self, profile_path: str | Path):
+        self.profile_path = Path(profile_path)
 
-    with open(profile_path, "r", encoding="utf-8") as file:
-        profile = yaml.safe_load(file)
+    def load(self) -> dict[str, Any]:
+        if not self.profile_path.exists():
+            raise FileNotFoundError(f"No existe el perfil YAML: {self.profile_path}")
 
-    validate_profile(profile)
+        load_dotenv()
 
-    return profile
+        with self.profile_path.open("r", encoding="utf-8") as file:
+            profile = yaml.safe_load(file)
 
+        if not isinstance(profile, dict):
+            raise ValueError("El YAML debe contener un objeto principal.")
 
-def validate_profile(profile: dict[str, Any]) -> None:
-    required_sections = [
-        "erp",
-        "login",
-        "navigation",
-        "exploration",
-        "extraction",
-        "safety",
-        "output",
-    ]
+        self._validate(profile)
+        return profile
 
-    for section in required_sections:
-        if section not in profile:
-            raise ProfileLoaderError(f"Falta la sección obligatoria: {section}")
+    def _validate(self, profile: dict[str, Any]) -> None:
+        required_sections = [
+            "erp",
+            "login",
+            "navigation",
+            "exploration",
+            "safety",
+            "extraction",
+            "output",
+        ]
 
-    required_login_fields = [
-        "url",
-        "username_selector",
-        "password_selector",
-        "submit_role_name",
-    ]
+        for section in required_sections:
+            if section not in profile:
+                raise ValueError(f"Falta la sección requerida: {section}")
 
-    for field in required_login_fields:
-        if field not in profile["login"]:
-            raise ProfileLoaderError(f"Falta login.{field}")
+        for field in ["name", "code", "base_url"]:
+            if field not in profile["erp"]:
+                raise ValueError(f"Falta erp.{field}")
 
-    if "base_url" not in profile["erp"]:
-        raise ProfileLoaderError("Falta erp.base_url")
+        for field in [
+            "url",
+            "username_selector",
+            "password_selector",
+            "success_url_contains",
+        ]:
+            if field not in profile["login"]:
+                raise ValueError(f"Falta login.{field}")
+
+        if not profile["login"].get("submit_selector") and not profile["login"].get(
+            "submit_role_name"
+        ):
+            raise ValueError(
+                "Debes definir login.submit_selector o login.submit_role_name."
+            )
+
+        if "home_url" not in profile["navigation"]:
+            raise ValueError("Falta navigation.home_url")
+
+        allowed_routes = profile["exploration"].get("allowed_routes", [])
+        blocked_routes = profile["exploration"].get("blocked_routes", [])
+
+        if not isinstance(allowed_routes, list):
+            raise ValueError("exploration.allowed_routes debe ser una lista.")
+
+        if not isinstance(blocked_routes, list):
+            raise ValueError("exploration.blocked_routes debe ser una lista.")
+
+        required_output_fields = [
+            "raw_playwright_dir",
+            "html_dir",
+            "screenshots_dir",
+            "processed_structural_dir",
+            "review_structural_dir",
+        ]
+
+        for field in required_output_fields:
+            if field not in profile["output"]:
+                raise ValueError(f"Falta output.{field}")

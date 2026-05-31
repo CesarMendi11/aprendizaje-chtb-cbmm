@@ -1,12 +1,22 @@
 [project]
 name = "aprendizaje-chtb-cbmm"
 version = "0.1.0"
-description = "Sistema GraphRAG híbrido para ERP"
-requires-python = ">=3.13"
+description = "Asistente inteligente ERP para el Cuerpo de Bomberos Municipal de Machala"
+requires-python = ">=3.11"
 
-[tool.pyright]
-venvPath = "."
-venv = ".venv"
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
 
-[tool.setuptools]
-packages = ["src"]
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = []

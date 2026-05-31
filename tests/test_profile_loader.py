@@ -1,18 +1,16 @@
-from src.config.profile_loader import load_profile
+from pathlib import Path
+
+from src.config.profile_loader import ProfileLoader
 
 
-def main():
-    profile = load_profile("cbmm")
+def test_profile_loader_loads_cbmm_profile():
+    profile_path = Path("configs/cbmm.yaml")
 
-    print("✅ Perfil cargado correctamente")
-    print("ERP:", profile["erp"]["name"])
-    print("Base URL:", profile["erp"]["base_url"])
-    print("Login URL:", profile["login"]["url"])
-    print("Módulos iniciales:")
+    profile = ProfileLoader(profile_path).load()
 
-    for module in profile["exploration"]["start_modules"]:
-        print("-", module)
-
-
-if __name__ == "__main__":
-    main()
+    assert profile["erp"]["code"] == "cbmm"
+    assert "base_url" in profile["erp"]
+    assert "login" in profile
+    assert "navigation" in profile
+    assert "exploration" in profile
+    assert "output" in profile

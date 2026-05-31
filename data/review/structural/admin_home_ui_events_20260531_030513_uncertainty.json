@@ -1,0 +1,207 @@
+{
+  "route": "/admin/home",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "d0540002b0888bffa59312efca5b35b2a325109a253c6af3e16f2eb53139563e",
+      "after_fingerprint": "1b1f724bab7a12b9160f027716ba4c3a7d5f8d4c813d34c748b1b450ec866bdc",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 9,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 104
+      }
+    },
+    {
+      "candidate": {
+        "label": "General",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "1b1f724bab7a12b9160f027716ba4c3a7d5f8d4c813d34c748b1b450ec866bdc",
+      "after_fingerprint": "18b2247329fb04e37d68277eded44f2520952cb9f310e9f3dbdc88c5b4ccd776",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 6,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 89
+      }
+    },
+    {
+      "candidate": {
+        "label": "Gerencial",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "18b2247329fb04e37d68277eded44f2520952cb9f310e9f3dbdc88c5b4ccd776",
+      "after_fingerprint": "e69c1591090787422d41ad02ab76caed89e88fe3bd3070da28141376ae11269d",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 4,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 79
+      }
+    },
+    {
+      "candidate": {
+        "label": "Permisos",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "e69c1591090787422d41ad02ab76caed89e88fe3bd3070da28141376ae11269d",
+      "after_fingerprint": "f474ec6b19c64a814db5e9308e7f16fa2f9c1d7601e60ccd85fddea675e43731",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 6,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 94
+      }
+    },
+    {
+      "candidate": {
+        "label": "Prevencion Riesgo",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f474ec6b19c64a814db5e9308e7f16fa2f9c1d7601e60ccd85fddea675e43731",
+      "after_fingerprint": "f40e8e6717d1a64077abc87d4a2e968119e9b55d79bdc54b84c253a3df39d756",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 3,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 74
+      }
+    }
+  ]
+}

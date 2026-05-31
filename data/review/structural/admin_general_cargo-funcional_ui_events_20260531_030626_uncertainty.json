@@ -1,0 +1,207 @@
+{
+  "route": "/admin/general/cargo-funcional",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Area",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "be8089dbd785eb92c5e1f70494efa0b14f3881b986ab8ebfb885e1ca8a79db7f",
+      "after_fingerprint": "bc626443898acde2c1e75084e352ad0dd2a1b734a2a64c20af928f28a1ffefeb",
+      "before_route": "/admin/general/cargo-funcional",
+      "after_route": "/admin/general/areas",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/general/areas",
+        "links_count": 7,
+        "buttons_count": 6,
+        "inputs_count": 1,
+        "custom_interactives_count": 92
+      }
+    },
+    {
+      "candidate": {
+        "label": "Año",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "bc626443898acde2c1e75084e352ad0dd2a1b734a2a64c20af928f28a1ffefeb",
+      "after_fingerprint": "0ed4ff17c35e7116a8ae767129ae48d6d103cebe118e71aa7dc0ed5cf433ff52",
+      "before_route": "/admin/general/areas",
+      "after_route": "/admin/general/anios",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/general/anios",
+        "links_count": 7,
+        "buttons_count": 26,
+        "inputs_count": 0,
+        "custom_interactives_count": 93
+      }
+    },
+    {
+      "candidate": {
+        "label": "Cargo Funcional",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "0ed4ff17c35e7116a8ae767129ae48d6d103cebe118e71aa7dc0ed5cf433ff52",
+      "after_fingerprint": "be8089dbd785eb92c5e1f70494efa0b14f3881b986ab8ebfb885e1ca8a79db7f",
+      "before_route": "/admin/general/anios",
+      "after_route": "/admin/general/cargo-funcional",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/general/cargo-funcional",
+        "links_count": 7,
+        "buttons_count": 33,
+        "inputs_count": 0,
+        "custom_interactives_count": 97
+      }
+    },
+    {
+      "candidate": {
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "be8089dbd785eb92c5e1f70494efa0b14f3881b986ab8ebfb885e1ca8a79db7f",
+      "after_fingerprint": "040944292a0f034ef52bd3264adc2b7222deb03065f2027b044450482021152e",
+      "before_route": "/admin/general/cargo-funcional",
+      "after_route": "/admin/general/cargo-funcional",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/general/cargo-funcional",
+        "links_count": 15,
+        "buttons_count": 33,
+        "inputs_count": 0,
+        "custom_interactives_count": 138
+      }
+    },
+    {
+      "candidate": {
+        "label": "Estado Seguimiento",
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4)",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "040944292a0f034ef52bd3264adc2b7222deb03065f2027b044450482021152e",
+      "after_fingerprint": "bb551c8ea9e09c1425c8a27fd59e5d7f0715127c6d891e10e5928de84775f7ed",
+      "before_route": "/admin/general/cargo-funcional",
+      "after_route": "/admin/general/estado-seguimiento",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/general/estado-seguimiento",
+        "links_count": 7,
+        "buttons_count": 27,
+        "inputs_count": 1,
+        "custom_interactives_count": 95
+      }
+    }
+  ]
+}

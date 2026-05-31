@@ -1,52 +1,63 @@
+from __future__ import annotations
+
 import os
+from dataclasses import dataclass
 from urllib.parse import urljoin
 
-from dotenv import load_dotenv
-from playwright.sync_api import Page
 
-load_dotenv()
+@dataclass(frozen=True)
+class ERPCredentials:
+    username: str
+    password: str
 
 
 class AuthManager:
-    def __init__(self, page: Page, profile: dict):
-        self.page = page
+    """
+    Maneja la configuración de autenticación del ERP.
+
+    Responsabilidad:
+    - Obtener credenciales desde .env o YAML.
+    - Construir URL de login.
+    - Validar si una URL corresponde a login exitoso.
+
+    Este componente NO ejecuta Playwright directamente.
+    """
+
+    def __init__(self, profile: dict):
         self.profile = profile
-        self.base_url = profile["erp"]["base_url"]
+        self.base_url = profile["erp"]["base_url"].rstrip("/")
+        self.login_config = profile["login"]
 
-    def login(self) -> None:
-        login_config = self.profile["login"]
+    def get_login_url(self) -> str:
+        login_path = self.login_config["url"].lstrip("/")
+        return urljoin(self.base_url + "/", login_path)
 
-        username = os.getenv("ERP_USERNAME")
-        password = os.getenv("ERP_PASSWORD")
+    def get_credentials(self) -> ERPCredentials:
+        username_env = self.login_config.get("username_env", "ERP_USERNAME")
+        password_env = self.login_config.get("password_env", "ERP_PASSWORD")
+
+        username = os.getenv(username_env) or self.login_config.get("username")
+        password = os.getenv(password_env) or self.login_config.get("password")
 
         if not username or not password:
-            raise ValueError("Faltan ERP_USERNAME o ERP_PASSWORD en el archivo .env")
-
-        login_url = urljoin(self.base_url, login_config["url"])
-
-        self.page.goto(login_url, wait_until="networkidle")
-
-        self.page.locator(login_config["username_selector"]).fill(username)
-        self.page.locator(login_config["password_selector"]).fill(password)
-
-        self.page.get_by_role(
-            "button",
-            name=login_config["submit_role_name"],
-        ).click()
-
-        self.page.wait_for_load_state("networkidle")
-        self.page.wait_for_timeout(3000)
-
-        if not self.is_login_successful():
             raise RuntimeError(
-                f"Login posiblemente falló. URL actual: {self.page.url}"
+                "No se encontraron credenciales. "
+                "Define ERP_USERNAME y ERP_PASSWORD en .env "
+                "o username/password en el YAML."
             )
 
-    def is_login_successful(self) -> bool:
-        login_config = self.profile["login"]
-        success_text = login_config.get("success_url_contains")
+        return ERPCredentials(username=username, password=password)
 
-        if not success_text:
+    def is_successful_login_url(self, current_url: str) -> bool:
+        expected_fragment = self.login_config.get("success_url_contains")
+
+        if not expected_fragment:
             return True
 
-        return success_text in self.page.url
+        return expected_fragment in current_url
+
+    def requires_submit_selector(self) -> bool:
+        return bool(self.login_config.get("submit_selector"))
+
+    def requires_submit_role_name(self) -> bool:
+        return bool(self.login_config.get("submit_role_name"))

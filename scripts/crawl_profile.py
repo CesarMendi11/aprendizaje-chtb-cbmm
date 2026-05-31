@@ -1,61 +1,141 @@
+from __future__ import annotations
+
 import argparse
+import sys
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from src.config.profile_loader import load_profile
 from src.browser.navigator import ERPNavigator
+from src.config.profile_loader import ProfileLoader
 from src.crawler.route_crawler import RouteCrawler
-from src.auth.auth_manager import AuthManager
 
-def main():
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Crawler estructural ERP basado en perfil YAML"
+        description="Ejecuta el descubrimiento estructural de un ERP."
     )
 
     parser.add_argument(
         "--profile",
-        default="cbmm",
-        help="Nombre del perfil YAML ubicado en configs/"
+        default="configs/cbmm.yaml",
+        help="Ruta del archivo YAML de perfil del ERP.",
     )
 
     parser.add_argument(
         "--headless",
         action="store_true",
-        help="Ejecutar navegador en modo headless"
+        help="Ejecuta el navegador en modo oculto.",
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--slow-mo",
+        type=int,
+        default=None,
+        help="Tiempo en milisegundos entre acciones de Playwright.",
+    )
 
-    profile = load_profile(args.profile)
-    modules = profile["exploration"].get("start_modules", [])
+    return parser.parse_args()
 
-    if not modules:
-        raise ValueError("No hay módulos definidos en exploration.start_modules")
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=args.headless)
-        page = browser.new_page()
+def main() -> int:
+    args = parse_args()
 
-        auth = AuthManager(page, profile)
-        navigator = ERPNavigator(page, profile)
+    profile_path = Path(args.profile)
 
-        print("Iniciando login...")
-        auth.login()
+    print("=" * 80)
+    print("ASISTENTE ERP - DESCUBRIMIENTO ESTRUCTURAL")
+    print("=" * 80)
+    print(f"Perfil YAML: {profile_path}")
 
-        for module_name in modules:
-            print("=" * 60)
-            print(f"Procesando módulo: {module_name}")
-            print("=" * 60)
+    profile = ProfileLoader(profile_path).load()
 
+    browser_config = profile.get("browser", {})
+    viewport = browser_config.get(
+        "viewport",
+        {
+            "width": 1366,
+            "height": 768,
+        },
+    )
+
+    headless = args.headless or browser_config.get("headless", False)
+    slow_mo = args.slow_mo
+    if slow_mo is None:
+        slow_mo = browser_config.get("slow_mo", 0)
+
+    print(f"ERP: {profile['erp']['name']}")
+    print(f"Base URL: {profile['erp']['base_url']}")
+    print(f"Headless: {headless}")
+    print(f"Slow motion: {slow_mo} ms")
+    print("-" * 80)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=headless,
+            slow_mo=slow_mo,
+        )
+
+        context = browser.new_context(
+            viewport=viewport,
+            ignore_https_errors=True,
+        )
+
+        page = context.new_page()
+
+        try:
+            print("1. Iniciando login...")
+            navigator = ERPNavigator(page, profile)
+            navigator.login()
+            print("   Login confirmado.")
+            print(f"   URL actual: {navigator.current_url()}")
+
+            print("-" * 80)
+            print("2. Iniciando crawler estructural...")
             crawler = RouteCrawler(page, profile)
-            crawler.crawl_module(module_name)
+            summary = crawler.crawl()
 
-            navigator.go_home()
+            print("-" * 80)
+            print("3. Descubrimiento finalizado.")
+            print(f"   Pantallas visitadas: {summary.visited_count}")
+            print(f"   Rutas pendientes restantes: {summary.pending_count}")
+            print(f"   Nodos estructurales: {summary.nodes_count}")
+            print(f"   Relaciones estructurales: {summary.edges_count}")
+            print(f"   Grafo guardado en: {summary.routes_graph_path}")
+            print(f"   Índice guardado en: {summary.screen_index_path}")
 
-        browser.close()
+            print("=" * 80)
+            print("PROCESO COMPLETADO CORRECTAMENTE")
+            print("=" * 80)
 
-    print("✅ Perfil completo procesado")
+            return 0
+
+        except KeyboardInterrupt:
+            print("\nProceso interrumpido por el usuario.")
+            return 130
+
+        except Exception as error:
+            print("=" * 80)
+            print("ERROR DURANTE EL DESCUBRIMIENTO")
+            print("=" * 80)
+            print(str(error))
+            return 1
+
+        finally:
+            try:
+                context.close()
+            except KeyboardInterrupt:
+                pass
+            except Exception:
+                pass
+
+            try:
+                browser.close()
+            except KeyboardInterrupt:
+                pass
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
