@@ -229,3 +229,123 @@ def test_event_candidate_discovery_deduplicates_by_selector():
     candidates = discovery.discover_candidates(screen_data)
 
     assert len(candidates) == 1
+
+def test_event_candidate_discovery_classifies_and_allows_menu_expansion():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "Abrir menú",
+                "tag": "button",
+                "type": None,
+                "selector": "button.open-menu",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category == "expand_menu"
+    assert candidates[0].decision == "allow"
+    assert candidates[0].risk_level == "low"
+
+
+def test_event_candidate_discovery_does_not_execute_unknown_action():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "Ejecutar operación especial",
+                "tag": "button",
+                "type": None,
+                "selector": "button.special",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+    safe_candidates = discovery.discover_safe_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category == "unknown"
+    assert candidates[0].decision == "review"
+    assert safe_candidates == []
+
+
+def test_event_candidate_discovery_blocks_mutative_hint_not_in_profile_keywords():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "Registrar novedad",
+                "tag": "button",
+                "type": None,
+                "selector": "button.register",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "mutative_action"
+    assert candidate.decision == "deny"
+    assert candidate.dangerous is True
+
+
+def test_event_candidate_discovery_allows_search_submit_without_general_form_submit():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "Buscar",
+                "tag": "button",
+                "type": "submit",
+                "selector": "button.search",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "submit_search"
+    assert candidate.decision == "allow"
+    assert candidate.dangerous is False
+
+def test_discovery_classifies_accented_open_menu_as_safe_expand_menu():
+    profile = build_profile()
+    policy = RoutePolicy(profile)
+    discovery = EventCandidateDiscovery(profile, policy)
+
+    screen_data = {
+        "links": [],
+        "buttons": [
+            {
+                "text": "Abrir menú",
+                "tag": "button",
+                "type": None,
+                "role": None,
+                "selector": "html > body > button",
+            }
+        ],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_safe_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category == "expand_menu"
+    assert candidates[0].decision == "allow"
+

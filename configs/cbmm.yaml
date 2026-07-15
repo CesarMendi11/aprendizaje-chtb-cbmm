@@ -47,17 +47,57 @@ exploration:
   page_wait_ms: 800
 
 safety:
+  # Regla principal: una acción desconocida no se ejecuta automáticamente.
+  default_decision: "deny" # allow | review | deny
+
+  allowed_event_categories:
+    - "navigation_link"
+    - "expand_menu"
+    - "collapse_menu"
+    - "activate_tab"
+    - "open_readonly_view"
+    - "open_modal"
+    - "close_modal"
+    - "open_drawer"
+    - "close_drawer"
+    - "open_dropdown"
+    - "close_dropdown"
+    - "submit_search"
+    - "change_pagination"
+
+  review_event_categories:
+    - "expand_row"
+    - "unknown"
+
+  forbidden_event_categories:
+    - "mutative_action"
+
   dangerous_keywords:
     - "Guardar"
     - "Eliminar"
     - "Borrar"
+    - "Crear"
+    - "Nuevo"
+    - "Nueva"
+    - "Registrar"
+    - "Editar"
+    - "Modificar"
+    - "Actualizar"
     - "Aprobar"
     - "Anular"
+    - "Firmar"
     - "Emitir"
     - "Enviar"
+    - "Reenviar"
     - "Procesar"
     - "Confirmar"
+    - "Pagar"
+    - "Finalizar"
+    - "Publicar"
+    - "Activar"
+    - "Desactivar"
 
+  # Estas palabras ayudan a clasificar, pero no reemplazan la política por categorías.
   safe_keywords:
     - "Ver"
     - "Buscar"
@@ -65,7 +105,19 @@ safety:
     - "Detalle"
     - "Filtros"
     - "Cerrar"
-    - "Cancelar"
+
+state_detection:
+  # La firma estructural identifica estados funcionales aunque cambien datos.
+  visible_text_limit: 4000
+  ignore_query_values: true
+  ignore_table_row_count: true
+  volatile_text_patterns:
+    - "\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b"
+    - "\\b\\d{4}-\\d{2}-\\d{2}\\b"
+    - "\\b\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}\\b"
+    - "\\b\\d{1,2}:\\d{2}(?::\\d{2})?\\b"
+    - "\\b[0-9a-f]{24,}\\b"
+    - "\\b\\d{6,}\\b"
 
 extraction:
   max_visible_text_chars: 8000

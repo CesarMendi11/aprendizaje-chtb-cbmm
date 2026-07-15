@@ -137,7 +137,14 @@ class ScreenExtractor:
                             type: element.getAttribute("type"),
                             role: element.getAttribute("role"),
                             aria_label: element.getAttribute("aria-label"),
+                            aria_expanded: element.getAttribute("aria-expanded"),
+                            aria_selected: element.getAttribute("aria-selected"),
+                            aria_controls: element.getAttribute("aria-controls"),
                             title: element.getAttribute("title"),
+                            disabled: Boolean(
+                                element.disabled ||
+                                element.getAttribute("aria-disabled") === "true"
+                            ),
                             selector: cssPath(element),
                             tag: element.tagName.toLowerCase()
                         }))
@@ -174,6 +181,17 @@ class ScreenExtractor:
                             type: element.getAttribute("type"),
                             placeholder: element.getAttribute("placeholder"),
                             label: labelForInput(element),
+                            aria_label: element.getAttribute("aria-label"),
+                            role: element.getAttribute("role"),
+                            required: Boolean(
+                                element.required ||
+                                element.getAttribute("aria-required") === "true"
+                            ),
+                            disabled: Boolean(
+                                element.disabled ||
+                                element.getAttribute("aria-disabled") === "true"
+                            ),
+                            readonly: Boolean(element.readOnly),
                             value_present: Boolean(element.value),
                             selector: cssPath(element),
                             tag: element.tagName.toLowerCase()
@@ -206,7 +224,13 @@ class ScreenExtractor:
                     "[role='menuitem']",
                     "[role='tab']",
                     "[role='option']",
+                    "[role='combobox']",
+                    "[role='listbox']",
                     "[aria-expanded]",
+                    "[aria-selected]",
+                    "[aria-controls]",
+                    "select",
+                    "mat-select",
                     "fuse-vertical-navigation-item",
                     "fuse-vertical-navigation-basic-item",
                     "fuse-vertical-navigation-collapsable-item",
@@ -229,10 +253,39 @@ class ScreenExtractor:
                             tag: element.tagName.toLowerCase(),
                             role: element.getAttribute("role"),
                             aria_expanded: element.getAttribute("aria-expanded"),
+                            aria_selected: element.getAttribute("aria-selected"),
+                            aria_controls: element.getAttribute("aria-controls"),
+                            aria_hidden: element.getAttribute("aria-hidden"),
+                            type: element.getAttribute("type"),
+                            disabled: Boolean(
+                                element.disabled ||
+                                element.getAttribute("aria-disabled") === "true"
+                            ),
                             onclick: Boolean(element.getAttribute("onclick")),
                             selector: cssPath(element)
                         }))
                         .filter((item) => item.text || item.onclick || item.aria_expanded !== null)
+                );
+
+                const dialogs = limit(
+                    Array.from(
+                        document.querySelectorAll(
+                            "dialog, [role='dialog'], [role='alertdialog'], " +
+                            "mat-dialog-container, .modal.show"
+                        )
+                    )
+                        .filter(isVisible)
+                        .map((element) => ({
+                            title: textOf(
+                                element.querySelector(
+                                    "h1, h2, h3, [role='heading'], .modal-title, [mat-dialog-title]"
+                                )
+                            ),
+                            role: element.getAttribute("role") || "dialog",
+                            open: element.hasAttribute("open") || isVisible(element),
+                            selector: cssPath(element)
+                        })),
+                    50
                 );
 
                 return {
@@ -244,7 +297,8 @@ class ScreenExtractor:
                     buttons,
                     inputs,
                     tables,
-                    custom_interactives
+                    custom_interactives,
+                    dialogs
                 };
             }
             """

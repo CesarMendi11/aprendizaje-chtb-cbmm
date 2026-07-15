@@ -6,6 +6,8 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
+from src.models.ui_event import UIEventType
+
 
 class ProfileLoader:
     """
@@ -93,3 +95,34 @@ class ProfileLoader:
         for field in required_output_fields:
             if field not in profile["output"]:
                 raise ValueError(f"Falta output.{field}")
+
+        safety = profile.get("safety", {})
+        default_decision = safety.get("default_decision", "deny")
+        if default_decision not in {"allow", "review", "deny"}:
+            raise ValueError(
+                "safety.default_decision debe ser allow, review o deny."
+            )
+
+        category_fields = [
+            "allowed_event_categories",
+            "review_event_categories",
+            "forbidden_event_categories",
+        ]
+        valid_event_categories = {item.value for item in UIEventType}
+        for field in category_fields:
+            value = safety.get(field)
+            if value is not None and not isinstance(value, list):
+                raise ValueError(f"safety.{field} debe ser una lista.")
+            if isinstance(value, list):
+                unknown = sorted(set(value) - valid_event_categories)
+                if unknown:
+                    raise ValueError(
+                        f"safety.{field} contiene categorías desconocidas: {unknown}"
+                    )
+
+        state_detection = profile.get("state_detection", {})
+        volatile_patterns = state_detection.get("volatile_text_patterns")
+        if volatile_patterns is not None and not isinstance(volatile_patterns, list):
+            raise ValueError(
+                "state_detection.volatile_text_patterns debe ser una lista."
+            )

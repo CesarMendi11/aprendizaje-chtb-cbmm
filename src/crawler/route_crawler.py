@@ -61,7 +61,7 @@ class RouteCrawler:
         self.screen_index = ScreenIndexBuilder()
 
         self.candidate_discovery = EventCandidateDiscovery(profile, self.policy)
-        self.state_signature_builder = StateSignatureBuilder()
+        self.state_signature_builder = StateSignatureBuilder.from_profile(profile)
         self.ui_event_explorer = UIEventExplorer(
             page=page,
             profile=profile,
@@ -432,6 +432,9 @@ class RouteCrawler:
                 metadata={
                     "event_type": result.candidate.get("event_type"),
                     "action_kind": result.candidate.get("action_kind"),
+                    "event_category": result.candidate.get("event_category"),
+                    "decision": result.candidate.get("decision"),
+                    "risk_level": result.candidate.get("risk_level"),
                     "selector": result.candidate.get("selector"),
                 },
             )
@@ -462,6 +465,8 @@ class RouteCrawler:
                     "changed": result.get("changed"),
                     "before_fingerprint": result.get("before_fingerprint"),
                     "after_fingerprint": result.get("after_fingerprint"),
+                    "before_exact_fingerprint": result.get("before_exact_fingerprint"),
+                    "after_exact_fingerprint": result.get("after_exact_fingerprint"),
                     "before_route": result.get("before_route"),
                     "after_route": result.get("after_route"),
                     "error": result.get("error"),
@@ -512,20 +517,36 @@ class RouteCrawler:
                 "La pantalla contiene muchos elementos interactivos personalizados."
             )
 
+        event_candidates = self.candidate_discovery.discover_candidates(screen_data)
+        denied_candidates = [
+            candidate for candidate in event_candidates
+            if candidate.decision == "deny"
+        ]
+        review_candidates = [
+            candidate for candidate in event_candidates
+            if candidate.decision == "review"
+        ]
+
         dangerous_buttons = [
             button
             for button in buttons
             if self.policy.is_dangerous_action_label(button.get("text"))
         ]
 
-        if dangerous_buttons:
+        if dangerous_buttons or denied_candidates:
             reasons.append(
-                "La pantalla contiene acciones peligrosas que no deben ejecutarse automáticamente."
+                "La pantalla contiene acciones bloqueadas por la política de seguridad."
+            )
+
+        if review_candidates:
+            reasons.append(
+                "La pantalla contiene acciones ambiguas pendientes de revisión humana."
             )
 
         if inputs and buttons and not discovered_links:
             reasons.append(
-                "La pantalla parece depender de formularios o búsqueda para mostrar nuevos estados."
+                "La pantalla parece depender de formularios o búsqueda "
+                "para mostrar nuevos estados."
             )
 
         if not reasons:
@@ -541,8 +562,12 @@ class RouteCrawler:
                 "buttons": buttons,
                 "inputs": inputs,
                 "custom_interactives": custom_interactives,
+                "event_policy": {
+                    "denied": [candidate.to_dict() for candidate in denied_candidates],
+                    "review": [candidate.to_dict() for candidate in review_candidates],
+                },
                 "artifacts": screen_data.get("artifacts", {}),
-                "next_step": "Enviar a analysis/LLM helper para generar YAML incremental.",
+                "next_step": "Revisión humana; luego LLM helper podrá proponer reglas YAML.",
             },
         )
 

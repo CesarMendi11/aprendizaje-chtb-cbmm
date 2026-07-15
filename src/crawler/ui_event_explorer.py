@@ -29,6 +29,8 @@ class UIEventResult:
     changed: bool
     before_fingerprint: str
     after_fingerprint: str
+    before_exact_fingerprint: str
+    after_exact_fingerprint: str
     before_route: str
     after_route: str
     after_screen_data: dict[str, Any]
@@ -40,6 +42,8 @@ class UIEventResult:
             "changed": self.changed,
             "before_fingerprint": self.before_fingerprint,
             "after_fingerprint": self.after_fingerprint,
+            "before_exact_fingerprint": self.before_exact_fingerprint,
+            "after_exact_fingerprint": self.after_exact_fingerprint,
             "before_route": self.before_route,
             "after_route": self.after_route,
             "after_screen_data": self.after_screen_data,
@@ -112,7 +116,8 @@ class UIEventExplorer:
             result = self._try_candidate(
                 candidate=candidate,
                 before_screen_data=current_screen_data,
-                before_fingerprint=current_signature.fingerprint,
+                before_fingerprint=current_signature.structural_fingerprint,
+                before_exact_fingerprint=current_signature.exact_fingerprint,
                 before_route=current_signature.route,
             )
 
@@ -139,7 +144,10 @@ class UIEventExplorer:
             if candidate.dangerous:
                 continue
 
-            if self.skip_link_navigation and candidate.action_kind == "link_navigation":
+            if self.skip_link_navigation and (
+                candidate.action_kind == "link_navigation"
+                or candidate.event_category == "navigation_link"
+            ):
                 continue
 
             filtered.append(candidate)
@@ -151,6 +159,7 @@ class UIEventExplorer:
         candidate: EventCandidate,
         before_screen_data: dict[str, Any],
         before_fingerprint: str,
+        before_exact_fingerprint: str,
         before_route: str,
     ) -> UIEventResult:
         try:
@@ -166,13 +175,15 @@ class UIEventExplorer:
             after_screen_data = self.extractor.extract()
             after_signature = self.state_signature_builder.build(after_screen_data)
 
-            changed = before_fingerprint != after_signature.fingerprint
+            changed = before_fingerprint != after_signature.structural_fingerprint
 
             return UIEventResult(
                 candidate=candidate.to_dict(),
                 changed=changed,
                 before_fingerprint=before_fingerprint,
-                after_fingerprint=after_signature.fingerprint,
+                after_fingerprint=after_signature.structural_fingerprint,
+                before_exact_fingerprint=before_exact_fingerprint,
+                after_exact_fingerprint=after_signature.exact_fingerprint,
                 before_route=before_route,
                 after_route=after_signature.route,
                 after_screen_data=after_screen_data,
@@ -183,6 +194,7 @@ class UIEventExplorer:
             return self._error_result(
                 candidate=candidate,
                 before_fingerprint=before_fingerprint,
+                before_exact_fingerprint=before_exact_fingerprint,
                 before_route=before_route,
                 before_screen_data=before_screen_data,
                 error=f"timeout: {error}",
@@ -192,6 +204,7 @@ class UIEventExplorer:
             return self._error_result(
                 candidate=candidate,
                 before_fingerprint=before_fingerprint,
+                before_exact_fingerprint=before_exact_fingerprint,
                 before_route=before_route,
                 before_screen_data=before_screen_data,
                 error=str(error),
@@ -217,6 +230,7 @@ class UIEventExplorer:
         self,
         candidate: EventCandidate,
         before_fingerprint: str,
+        before_exact_fingerprint: str,
         before_route: str,
         before_screen_data: dict[str, Any],
         error: str,
@@ -226,6 +240,8 @@ class UIEventExplorer:
             changed=False,
             before_fingerprint=before_fingerprint,
             after_fingerprint=before_fingerprint,
+            before_exact_fingerprint=before_exact_fingerprint,
+            after_exact_fingerprint=before_exact_fingerprint,
             before_route=before_route,
             after_route=before_route,
             after_screen_data=before_screen_data,

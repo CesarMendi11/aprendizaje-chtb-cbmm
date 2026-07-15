@@ -188,3 +188,85 @@ def test_state_signature_removes_duplicate_buttons():
     signature = builder.build(screen_data)
 
     assert len(signature.summary["buttons"]) == 1
+
+def test_state_signature_separates_exact_and_structural_changes():
+    builder = StateSignatureBuilder()
+
+    first_data = {
+        "path": "/admin/facturas?id=123456",
+        "title": "Facturas",
+        "visible_text": "Actualizado 2026-07-15 10:30:00 Factura 123456",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [{"headers": ["Número", "Estado"], "rows_count": 3}],
+        "custom_interactives": [],
+    }
+    second_data = {
+        "path": "/admin/facturas?id=987654",
+        "title": "Facturas",
+        "visible_text": "Actualizado 2026-07-16 11:45:00 Factura 987654",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [{"headers": ["Número", "Estado"], "rows_count": 8}],
+        "custom_interactives": [],
+    }
+
+    first = builder.build(first_data)
+    second = builder.build(second_data)
+
+    assert first.exact_fingerprint != second.exact_fingerprint
+    assert first.structural_fingerprint == second.structural_fingerprint
+    assert not builder.has_changed(first, second)
+    assert builder.has_changed(first, second, mode="exact")
+
+
+def test_state_signature_detects_active_tab_change():
+    builder = StateSignatureBuilder()
+
+    inactive = {
+        "path": "/admin/facturas",
+        "title": "Facturas",
+        "visible_text": "Facturas Pendientes Emitidas",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [
+            {
+                "text": "Pendientes",
+                "tag": "button",
+                "role": "tab",
+                "aria_selected": "true",
+            },
+            {
+                "text": "Emitidas",
+                "tag": "button",
+                "role": "tab",
+                "aria_selected": "false",
+            },
+        ],
+    }
+    active = {
+        **inactive,
+        "custom_interactives": [
+            {
+                "text": "Pendientes",
+                "tag": "button",
+                "role": "tab",
+                "aria_selected": "false",
+            },
+            {
+                "text": "Emitidas",
+                "tag": "button",
+                "role": "tab",
+                "aria_selected": "true",
+            },
+        ],
+    }
+
+    before = builder.build(inactive)
+    after = builder.build(active)
+
+    assert builder.has_changed(before, after)
