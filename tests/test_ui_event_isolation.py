@@ -162,3 +162,99 @@ def test_ui_event_explorer_restores_source_before_each_candidate():
     # El explorador deja el navegador nuevamente en el estado fuente.
     assert "Contenido A" not in final_text
     assert "Contenido B" not in final_text
+
+
+def test_ui_event_explorer_retries_animated_root_modules_independently():
+    animated_html = """
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>ERP Test</title>
+        <style>
+          @keyframes settle { from { transform: translateX(0); }
+                             to { transform: translateX(50px); } }
+          .module { animation: settle 900ms linear; }
+        </style>
+      </head>
+      <body>
+        <h1>Dashboard</h1>
+        <button class="module menu-a" onclick="
+          document.getElementById('panel-a').style.display='block';
+        ">Abrir menú A</button>
+        <button class="module menu-b" onclick="
+          document.getElementById('panel-b').style.display='block';
+        ">Abrir menú B</button>
+        <div id="panel-a" style="display:none">Contenido A</div>
+        <div id="panel-b" style="display:none">Contenido B</div>
+      </body>
+    </html>
+    """
+
+    cfg = profile()
+    cfg["browser_interaction"] = {
+        "click_timeout_ms": 350,
+        "click_attempts": 4,
+        "retry_wait_ms": 250,
+        "pre_click_wait_ms": 0,
+    }
+
+    class AnimatedNavigator(FakeNavigator):
+        def goto_path(self, path: str) -> None:
+            assert path == ROUTE
+            self.page.set_content(animated_html)
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        navigator = AnimatedNavigator(page)
+        navigator.goto_path(ROUTE)
+        extractor = FixedRouteExtractor(page, cfg)
+        builder = StateSignatureBuilder()
+        registry = StateRegistry()
+
+        source_signature = builder.build(extractor.extract())
+        source_id = registry.build_state_id(
+            source_signature.structural_fingerprint
+        )
+        source_path = CrawlPath(root_state_id=source_id)
+        source_state = registry.register_signature(
+            source_signature,
+            path=source_path,
+        ).state
+
+        replayer = PathReplayer(
+            page=page,
+            profile=cfg,
+            navigator=navigator,
+            extractor=extractor,
+            signature_builder=builder,
+            registry=registry,
+        )
+        restorer = StateRestorer(
+            profile=cfg,
+            navigator=navigator,
+            extractor=extractor,
+            signature_builder=builder,
+            registry=registry,
+            path_replayer=replayer,
+        )
+        discovery = EventCandidateDiscovery(cfg, RoutePolicy(cfg))
+        explorer = UIEventExplorer(
+            page=page,
+            profile=cfg,
+            extractor=extractor,
+            candidate_discovery=discovery,
+            state_signature_builder=builder,
+            state_restorer=restorer,
+        )
+
+        results = explorer.explore_current_state(
+            screen_data=extractor.extract(),
+            source_state=source_state,
+        )
+        browser.close()
+
+    changed = [result for result in results if result.changed]
+    assert len(changed) == 2
+    assert all(result.interaction_succeeded for result in changed)
+    assert all(result.interaction_attempts >= 2 for result in changed)

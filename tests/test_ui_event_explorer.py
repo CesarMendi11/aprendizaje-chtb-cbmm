@@ -256,3 +256,46 @@ def test_ui_event_explorer_returns_error_result_for_invalid_selector():
     assert len(results) == 1
     assert results[0].changed is False
     assert results[0].error is not None
+
+def test_ui_event_explorer_reports_interaction_attempts_after_animation():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>ERP Test</title>
+        <style>
+          @keyframes moving { from { transform: translateX(0); }
+                              to { transform: translateX(80px); } }
+          .open-menu { animation: moving 900ms linear; }
+        </style>
+      </head>
+      <body>
+        <h1>Dashboard</h1>
+        <button class="open-menu" onclick="
+          document.getElementById('submenu').style.display='block';
+        ">Abrir menú</button>
+        <div id="submenu" style="display:none">Facturas</div>
+      </body>
+    </html>
+    """
+
+    profile = build_profile()
+    profile["browser_interaction"] = {
+        "click_timeout_ms": 350,
+        "click_attempts": 4,
+        "retry_wait_ms": 250,
+        "pre_click_wait_ms": 0,
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html)
+        explorer = build_explorer(page, profile)
+        results = explorer.explore_current_state()
+        browser.close()
+
+    changed = [result for result in results if result.changed]
+    assert changed
+    assert changed[0].interaction_attempts >= 2
+    assert changed[0].interaction_strategy == "validated_click"

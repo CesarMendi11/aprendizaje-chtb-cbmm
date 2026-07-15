@@ -1,0 +1,54 @@
+{
+  "route": "/admin/home",
+  "reason": "ui_event_artifact_capture_error",
+  "extra": {
+    "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+    "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+    "candidate": {
+      "label": "Permisos",
+      "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+      "tag": "fuse-vertical-navigation-collapsable-item",
+      "source": "custom_interactives",
+      "event_type": "click",
+      "action_kind": "expand_or_collapse",
+      "event_category": "expand_menu",
+      "decision": "allow",
+      "risk_level": "low",
+      "score": 12,
+      "reasons": [
+        "has_label",
+        "label_length_ok",
+        "navigation_like_selector",
+        "high_value_navigation_area",
+        "custom_element",
+        "collapsable_like_element",
+        "region:global_navigation",
+        "has_selector"
+      ],
+      "policy_reasons": [
+        "event_category_explicitly_allowed"
+      ],
+      "dangerous": false,
+      "metadata": {
+        "role": null,
+        "aria_expanded": null,
+        "aria_selected": null,
+        "aria_controls": null,
+        "onclick": false,
+        "type": null,
+        "disabled": false,
+        "region": "global_navigation",
+        "href": null,
+        "absolute_href": null,
+        "aria_label": null,
+        "title": null,
+        "within_table": false,
+        "form_method": null,
+        "form_action": null,
+        "screen_path": "/admin/home"
+      }
+    },
+    "error": "screenshot: Page.screenshot: Timeout 3000ms exceeded.\nCall log:\n  - taking page screenshot\n  - waiting for fonts to load...\n  - fonts loaded\n"
+  },
+  "status": "pending_llm_or_human_review"
+}

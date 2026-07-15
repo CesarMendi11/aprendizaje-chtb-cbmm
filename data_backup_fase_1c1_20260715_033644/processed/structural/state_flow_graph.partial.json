@@ -1,0 +1,2508 @@
+{
+  "graph_type": "erp_ui_state_flow_graph",
+  "states": [
+    {
+      "state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "exact_signature": "f6aabd0032b16f30904546556010bb47adcd42061af72670b0f834ef3adad295",
+      "structural_signature": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+      "summary": {
+        "route": "/admin/home",
+        "title": "dashboard",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin bienvenido/a, administrador <volatile> chrome ver. <volatile> miércoles <volatile> benemérito cuerpo de bomberos de machala benemérito cuerpo de bomberos de machala (07) <volatile> calle bolívar y ayacucho (machala) <volatile>",
+        "links": [],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 2
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "target_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "root",
+        "depth": 0,
+        "reason": "home_url",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "exact_signature": "d76a93388a3e56428104eb63f4bf1ac28037fd25574f6349c60b5ee1a38a46e6",
+      "structural_signature": "0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+      "summary": {
+        "route": "/admin/home",
+        "title": "dashboard",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin bienvenido/a, administrador <volatile> chrome ver. <volatile> miércoles <volatile> benemérito cuerpo de bomberos de machala benemérito cuerpo de bomberos de machala (07) <volatile> calle bolívar y ayacucho (machala) <volatile>",
+        "links": [],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 2
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "target_state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+        "depth": 1,
+        "steps": [
+          {
+            "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+            "event": {
+              "event_type": "expand_menu",
+              "label": "Cuentas por cobrar",
+              "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+              "decision": "allow",
+              "risk_level": "low",
+              "source": "custom_interactives",
+              "tag": "fuse-vertical-navigation-collapsable-item",
+              "reasons": [
+                "has_label",
+                "label_length_ok",
+                "navigation_like_selector",
+                "high_value_navigation_area",
+                "custom_element",
+                "collapsable_like_element",
+                "region:global_navigation",
+                "has_selector",
+                "event_category_explicitly_allowed"
+              ],
+              "metadata": {
+                "role": null,
+                "aria_expanded": null,
+                "aria_selected": null,
+                "aria_controls": null,
+                "onclick": false,
+                "type": null,
+                "disabled": false,
+                "region": "global_navigation",
+                "href": null,
+                "absolute_href": null,
+                "aria_label": null,
+                "title": null,
+                "within_table": false,
+                "form_method": null,
+                "form_action": null,
+                "screen_path": "/admin/home"
+              }
+            },
+            "target_state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7"
+          }
+        ],
+        "metadata": {}
+      },
+      "metadata": {
+        "kind": "ui_event_state",
+        "base_route": "/admin/home",
+        "discovered_from": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "candidate": {
+          "label": "Cuentas por cobrar",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        }
+      }
+    },
+    {
+      "state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "exact_signature": "bc8b3da283940708241becfd3ba82624718bab4070d6ee21af3052fb6c16a35e",
+      "structural_signature": "0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+      "summary": {
+        "route": "/admin/home",
+        "title": "dashboard",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar general gerencial permisos aprobar solicitudes consultar emitir solicitudes enviar notificaciones ficha inspección inspecciones registradas prevencion riesgo rentas rentas seguridad sri tramites transporte admin bienvenido/a, administrador <volatile> chrome ver. <volatile> miércoles <volatile> benemérito cuerpo de bomberos de machala benemérito cuerpo de bomberos de machala (07) <volatile> calle bolívar y ayacucho (machala) <volatile>",
+        "links": [],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            },
+            {
+              "text": "emitir solicitudes",
+              "href": "/admin/permisos/emitir",
+              "tag": "a"
+            },
+            {
+              "text": "enviar notificaciones",
+              "href": "/admin/permisos/enviar-inspecciones",
+              "tag": "a"
+            },
+            {
+              "text": "ficha inspección",
+              "href": "/admin/permisos/funcionamiento",
+              "tag": "a"
+            },
+            {
+              "text": "inspecciones registradas",
+              "href": "/admin/permisos/inspecciones",
+              "tag": "a"
+            },
+            {
+              "text": "aprobar solicitudes",
+              "href": "/admin/permisos/solicitudes",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 2
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+        "depth": 1,
+        "steps": [
+          {
+            "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+            "event": {
+              "event_type": "expand_menu",
+              "label": "Permisos",
+              "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+              "decision": "allow",
+              "risk_level": "low",
+              "source": "custom_interactives",
+              "tag": "fuse-vertical-navigation-collapsable-item",
+              "reasons": [
+                "has_label",
+                "label_length_ok",
+                "navigation_like_selector",
+                "high_value_navigation_area",
+                "custom_element",
+                "collapsable_like_element",
+                "region:global_navigation",
+                "has_selector",
+                "event_category_explicitly_allowed"
+              ],
+              "metadata": {
+                "role": null,
+                "aria_expanded": null,
+                "aria_selected": null,
+                "aria_controls": null,
+                "onclick": false,
+                "type": null,
+                "disabled": false,
+                "region": "global_navigation",
+                "href": null,
+                "absolute_href": null,
+                "aria_label": null,
+                "title": null,
+                "within_table": false,
+                "form_method": null,
+                "form_action": null,
+                "screen_path": "/admin/home"
+              }
+            },
+            "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0"
+          }
+        ],
+        "metadata": {}
+      },
+      "metadata": {
+        "kind": "ui_event_state",
+        "base_route": "/admin/home",
+        "discovered_from": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "candidate": {
+          "label": "Permisos",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        }
+      }
+    },
+    {
+      "state_id": "ui_state:e0d982e69caf72e2ee2e5ad007cf6a2ac010816be74a940387e6866202534d61",
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes eléctronicos emitidos",
+      "exact_signature": "90fc1d3ed93cd5917765becdea09f14ff7293dc7162477e880f33520237ea73f",
+      "structural_signature": "e0d982e69caf72e2ee2e5ad007cf6a2ac010816be74a940387e6866202534d61",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/comprobantes",
+        "title": "comprobantes eléctronicos emitidos",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin comprobantes eléctronicos emitidos dashboard cuentas por cobrar comprobantes pendientes 8 recibidos 0 devueltos 1 no autorizados 0 autorizados 1961 anulados 51 tipos de comprobante: --seleccione-- estado --seleccione-- fecha emisión – ruc núm. comprobante buscar ruc/ci razon social / nombre comprobante fecha emisión correo total estado <volatile> transporte de carga pesada alicia valarezo benitez alivaben sa fa-<volatile> digasa.econ@hotmail.com $27,72 autorizado <volatile> transporte de carga pesada alicia valarezo benitez alivaben sa fa-<volatile> alicia1954av@gmail.com $27,72 autorizado total de registros (2) 1 - 2 de 2",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "buscar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "open calendar",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "false",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [
+          {
+            "name": "",
+            "id": "",
+            "type": "text",
+            "placeholder": "desde",
+            "label": "",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "",
+            "type": "text",
+            "placeholder": "hasta",
+            "label": "",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-0",
+            "type": "",
+            "placeholder": "0000000000001",
+            "label": "ruc",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-1",
+            "type": "",
+            "placeholder": "000000000",
+            "label": "núm. comprobante",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          }
+        ],
+        "tables": [
+          {
+            "headers": [
+              "ruc/ci",
+              "razon social / nombre",
+              "comprobante",
+              "fecha emisión",
+              "correo",
+              "total",
+              "estado"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "open calendar",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "--seleccione--",
+            "tag": "mat-select",
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 25
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:e0d982e69caf72e2ee2e5ad007cf6a2ac010816be74a940387e6866202534d61",
+        "target_state_id": "ui_state:e0d982e69caf72e2ee2e5ad007cf6a2ac010816be74a940387e6866202534d61",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Facturación Electronica",
+      "exact_signature": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "structural_signature": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/facturacion",
+        "title": "facturación electronica",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin punto de emisión facturación electrónica cajero loaiza aguilargiancarlo oswaldo caja caja 1 factura no. <volatile> cliente conumidor final con datos cliente recuerde que apartir de $50 no se puede emitir una factura como consumidor final. informacion fecha emisión: establecimiento: punto de emisión: ambiente: forma de pago: sin utilización de sistema financiero guardar sin firmar guardar y enviar sri delete producto cant. precio desc % desc subtotal total observaciones totales subtotal sin impuestos $0,00 subtotal tarifa 15%: $0,00 subtotal tarifa 0%: $0,00 total descuento $0,00 iva 15% $0,00 propina 10% $0,00 valor total $0,00",
+        "links": [],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "con datos cliente",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "conumidor final",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "guardar sin firmar",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "guardar y enviar sri",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "open calendar",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [
+          {
+            "name": "",
+            "id": "mat-input-0",
+            "type": "",
+            "placeholder": "dd/mm/aaaa",
+            "label": "fecha emisión:",
+            "tag": "input",
+            "required": "true",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-4",
+            "type": "",
+            "placeholder": "digite una descripción u observación",
+            "label": "",
+            "tag": "textarea",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-5",
+            "type": "text",
+            "placeholder": "escriba una letra o palabra, después seleccione el producto",
+            "label": "",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-1",
+            "type": "",
+            "placeholder": "",
+            "label": "establecimiento:",
+            "tag": "input",
+            "required": "false",
+            "disabled": "true"
+          },
+          {
+            "name": "",
+            "id": "mat-input-2",
+            "type": "",
+            "placeholder": "",
+            "label": "punto de emisión:",
+            "tag": "input",
+            "required": "false",
+            "disabled": "true"
+          },
+          {
+            "name": "",
+            "id": "mat-input-3",
+            "type": "",
+            "placeholder": "",
+            "label": "ambiente:",
+            "tag": "input",
+            "required": "false",
+            "disabled": "true"
+          }
+        ],
+        "tables": [],
+        "custom_interactives": [
+          {
+            "text": "open calendar",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "number",
+            "tag": "input",
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "sin utilización de sistema financiero",
+            "tag": "mat-select",
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 16
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+        "target_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:0862852e7aa1a56f61be5ee387de44149be6cb812f089c0bc04fea1fac3ffa1f",
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Forma pago",
+      "exact_signature": "1386bcd133ab7d88704503de229186b71464c501d2ab58b3b88193f52f4e8f93",
+      "structural_signature": "0862852e7aa1a56f61be5ee387de44149be6cb812f089c0bc04fea1fac3ffa1f",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/forma-pago",
+        "title": "forma pago",
+        "visible_text": "por favor espere, estamos procesando su información... menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin dashboard cuentasxcobrar forma pagos tipo pago nuevo nombre codigo alterno activo sin utilización de sistema financiero 01 activo otros con utilización del sistema financiero 20 activo total de registros (2) 1 - 2 de 2 agregar id detalle activo total de registros (0) 0 de 0",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "agregar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "nuevo",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [
+          {
+            "headers": [
+              "id",
+              "detalle",
+              "activo"
+            ]
+          },
+          {
+            "headers": [
+              "nombre",
+              "codigo",
+              "alterno",
+              "activo"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 27
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:0862852e7aa1a56f61be5ee387de44149be6cb812f089c0bc04fea1fac3ffa1f",
+        "target_state_id": "ui_state:0862852e7aa1a56f61be5ee387de44149be6cb812f089c0bc04fea1fac3ffa1f",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:21184872b7b53ecf025477653b51a03267f7a348409b58c3b6ad6ca5737df3ea",
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Lista de facturas",
+      "exact_signature": "0590510d94919c87e8d696b2a6212aa19b38a16cd62db7c1e9117371d66167d3",
+      "structural_signature": "21184872b7b53ecf025477653b51a03267f7a348409b58c3b6ad6ca5737df3ea",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/lista-facturas",
+        "title": "lista de facturas",
+        "visible_text": "por favor espere, estamos procesando su información... menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin dashboard cuentas por cobrar lista facturas facturas generadas ruc núm. comprobante search buscar total de registros (0) 0 de 0 acciones estado fecha emisión ruc razón social / nombre comprobante total !no tiene retenciones generados!",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "search buscar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [
+          {
+            "name": "",
+            "id": "mat-input-0",
+            "type": "",
+            "placeholder": "0000000000001",
+            "label": "ruc",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-1",
+            "type": "",
+            "placeholder": "000000000",
+            "label": "núm. comprobante",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          }
+        ],
+        "tables": [
+          {
+            "headers": [
+              "acciones",
+              "estado",
+              "fecha emisión",
+              "ruc",
+              "razón social / nombre",
+              "comprobante",
+              "total"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 16
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:21184872b7b53ecf025477653b51a03267f7a348409b58c3b6ad6ca5737df3ea",
+        "target_state_id": "ui_state:21184872b7b53ecf025477653b51a03267f7a348409b58c3b6ad6ca5737df3ea",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:37601dabe9a0cb86830c83334bfc204e1f480631b67c2207e3039b0c4810d56a",
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito",
+      "exact_signature": "db9c4dfc664516acb57ab0e18e534bc72b2567b080d854f02a3b0d881f812cf3",
+      "structural_signature": "37601dabe9a0cb86830c83334bfc204e1f480631b67c2207e3039b0c4810d56a",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/notas-credito",
+        "title": "notas de crédito",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin dashboard cuentas por cobrar notas credito notas de crédito generados nuevo total de registros (0) 0 de 0 acciones estado fecha emisión ruc razón social / nombre comprobante num. factura total factura total retenido no hay datos disponibles",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "nuevo",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [
+          {
+            "headers": [
+              "acciones",
+              "estado",
+              "fecha emisión",
+              "ruc",
+              "razón social / nombre",
+              "comprobante",
+              "num. factura",
+              "total factura",
+              "total retenido"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "nuevo",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 15
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:37601dabe9a0cb86830c83334bfc204e1f480631b67c2207e3039b0c4810d56a",
+        "target_state_id": "ui_state:37601dabe9a0cb86830c83334bfc204e1f480631b67c2207e3039b0c4810d56a",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:978843ecfca8ff6d2435399c8c6a3ac7ebf46a9595c7b1c59af1adc39458204a",
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Puntos de emisión",
+      "exact_signature": "d90454fffae8d0f4f037515d4cb14353ee1539a3d17cef9e6fafc522168a33aa",
+      "structural_signature": "978843ecfca8ff6d2435399c8c6a3ac7ebf46a9595c7b1c59af1adc39458204a",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/puntos-emision",
+        "title": "puntos de emisión",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin dashboard cuentasxcobrar puntos emision tipo documento nuevo detalle codigo activo aplica tributo nota de crédito 04 activo activo retenciones 07 activo activo factura 01 activo activo liquidación de compras 03 activo activo total de registros (4) 1 - 4 de 4 agregar codigo codigo de serie punto emision detalle electronico activo secuencial 5 001 100 notas crédito activo activo 1 total de registros (1) 1 - 1 de 1",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "agregar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "nuevo",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [
+          {
+            "headers": [
+              "codigo",
+              "codigo de serie",
+              "punto emision",
+              "detalle",
+              "electronico",
+              "activo",
+              "secuencial"
+            ]
+          },
+          {
+            "headers": [
+              "detalle",
+              "codigo",
+              "activo",
+              "aplica tributo"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 33
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:978843ecfca8ff6d2435399c8c6a3ac7ebf46a9595c7b1c59af1adc39458204a",
+        "target_state_id": "ui_state:978843ecfca8ff6d2435399c8c6a3ac7ebf46a9595c7b1c59af1adc39458204a",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones",
+      "exact_signature": "2dbe3062479d9245f003cb6ad9db6f93aab2aa87b3089fd9d049c4239c290d6e",
+      "structural_signature": "5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/retenciones",
+        "title": "retenciones",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin dashboard cuentas por cobrar retenciones retenciones generados nueva retención ruc núm. comprobante num. factura buscar total de registros (1772) 1 - 10 de 1772 acciones estado fecha emisión ruc nombre comprobante número factura total factura total retenido autorizado 31 dic 2025 <volatile> calderon calderon danilo fabricio <volatile> 001-100-<volatile> $10.694,34 $2.324,85 autorizado 30 dic 2025 <volatile> phva peru s.a.c. <volatile> 001-001-<volatile> $299,00 $104,00 autorizado 29 dic 2025 <volatile> proaño jimenez jose gabriel <volatile> 001-100-<volatile> $7.551,13 $1.099,84 autorizado 29 dic 2025 <volatile> freire torres jefferson paclito <volatile> 001-100-<volatile> $25.242,50 $5.487,50 autorizado 29 dic 2025 <volatile> proteseg seguridad cia ltda <volatile> 001-100-<volatile> $11.239,81 $1.637,10 autorizado 29 dic 2025 <volatile> cescom cia. ltda <volatile> 002-001-<volatile> $928,05 $143,24 autorizado 26 dic 2025 <volatile> morales castro ivan tyrone <volatile> 001-001-<volatile> $49.450,00 $7.202,50 autorizado 24 dic 2025 <volatile> benitez gomez oscar malvin <volatile> 001-002-<volatile> $8.280,00 $1.800,00 autorizado 24 dic 2025 <volatile> cuenca macas jaime emiliano <volatile> 001-005-<volatile> $1.408,34 $205,13 autorizado 24 dic 2025 <volatile> cescom cia. ltda <volatile> 002-001-<volatile> $8.096,00 $1.249,60",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "buscar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "nueva retención",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [
+          {
+            "name": "",
+            "id": "mat-input-0",
+            "type": "",
+            "placeholder": "0000000000001",
+            "label": "ruc",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-1",
+            "type": "",
+            "placeholder": "000000000",
+            "label": "núm. comprobante",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          },
+          {
+            "name": "",
+            "id": "mat-input-2",
+            "type": "",
+            "placeholder": "000-000-000000000",
+            "label": "num. factura",
+            "tag": "input",
+            "required": "false",
+            "disabled": "false"
+          }
+        ],
+        "tables": [
+          {
+            "headers": [
+              "acciones",
+              "estado",
+              "fecha emisión",
+              "ruc",
+              "nombre",
+              "comprobante",
+              "número factura",
+              "total factura",
+              "total retenido"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "nueva retención",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 29
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+        "target_state_id": "ui_state:5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    },
+    {
+      "state_id": "ui_state:ebadde94411b44a4ac8a6577c73f20e5bb3c2785ddc36437d708e3fd10eeb92e",
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Categorías",
+      "exact_signature": "294e4e70c5a264602b97baad77f7e32853b828c46eeb1376aa90ddce2dd05233",
+      "structural_signature": "ebadde94411b44a4ac8a6577c73f20e5bb3c2785ddc36437d708e3fd10eeb92e",
+      "summary": {
+        "route": "/admin/cuentasxcobrar/tipo-pago",
+        "title": "categorías",
+        "visible_text": "menu de navegación dashboard cuentas por cobrar comprobantes facturación electronica forma pago lista de facturas notas de crédito puntos de emisión retenciones tipo pago general gerencial permisos prevencion riesgo rentas rentas seguridad sri tramites transporte admin categorías dashboard nueva categoría sincronizar nombre abreviatura ícono efectivo cheque total de registros (2) 1 - 2 de 2",
+        "links": [
+          {
+            "text": "dashboard",
+            "href": "/",
+            "tag": "a"
+          }
+        ],
+        "buttons": [
+          {
+            "text": "",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "nueva categoría",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "primera página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "página anterior",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "siguiente página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "sincronizar",
+            "type": "",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          },
+          {
+            "text": "última página",
+            "type": "button",
+            "role": "",
+            "tag": "button",
+            "aria_expanded": "",
+            "aria_selected": ""
+          }
+        ],
+        "inputs": [],
+        "tables": [
+          {
+            "headers": [
+              "nombre",
+              "abreviatura",
+              "ícono"
+            ]
+          }
+        ],
+        "custom_interactives": [
+          {
+            "text": "primera página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "página anterior",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "siguiente página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "última página",
+            "tag": "button",
+            "role": "",
+            "aria_expanded": "",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          },
+          {
+            "text": "admin",
+            "tag": "div",
+            "role": "",
+            "aria_expanded": "false",
+            "aria_selected": "",
+            "aria_hidden": "",
+            "onclick": "false"
+          }
+        ],
+        "dialogs": [],
+        "navigation_state": {
+          "links": [
+            {
+              "text": "comprobantes",
+              "href": "/admin/cuentasxcobrar/comprobantes",
+              "tag": "a"
+            },
+            {
+              "text": "facturación electronica",
+              "href": "/admin/cuentasxcobrar/facturacion",
+              "tag": "a"
+            },
+            {
+              "text": "forma pago",
+              "href": "/admin/cuentasxcobrar/forma-pago",
+              "tag": "a"
+            },
+            {
+              "text": "lista de facturas",
+              "href": "/admin/cuentasxcobrar/lista-facturas",
+              "tag": "a"
+            },
+            {
+              "text": "notas de crédito",
+              "href": "/admin/cuentasxcobrar/notas-credito",
+              "tag": "a"
+            },
+            {
+              "text": "puntos de emisión",
+              "href": "/admin/cuentasxcobrar/puntos-emision",
+              "tag": "a"
+            },
+            {
+              "text": "retenciones",
+              "href": "/admin/cuentasxcobrar/retenciones",
+              "tag": "a"
+            },
+            {
+              "text": "tipo pago",
+              "href": "/admin/cuentasxcobrar/tipo-pago",
+              "tag": "a"
+            },
+            {
+              "text": "dashboard",
+              "href": "/admin/home",
+              "tag": "a"
+            }
+          ],
+          "interactives": []
+        },
+        "regions": {
+          "main_content": {
+            "elements_count": 18
+          },
+          "dialog": {
+            "elements_count": 0
+          }
+        }
+      },
+      "path": {
+        "root_state_id": "ui_state:ebadde94411b44a4ac8a6577c73f20e5bb3c2785ddc36437d708e3fd10eeb92e",
+        "target_state_id": "ui_state:ebadde94411b44a4ac8a6577c73f20e5bb3c2785ddc36437d708e3fd10eeb92e",
+        "depth": 0,
+        "steps": [],
+        "metadata": {}
+      },
+      "metadata": {
+        "source": "/admin/home#state:0d7661f7e713",
+        "depth": 1,
+        "reason": "ui_event_discovered_href",
+        "kind": "route_root_state"
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+      "target_state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+      "event": {
+        "event_type": "expand_menu",
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "decision": "allow",
+        "risk_level": "low",
+        "source": "custom_interactives",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "region:global_navigation",
+          "has_selector",
+          "event_category_explicitly_allowed"
+        ],
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "global_navigation",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/home"
+        }
+      },
+      "changed_route": false,
+      "observed": true,
+      "metadata": {
+        "candidate": {
+          "label": "Cuentas por cobrar",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "restored_before": true,
+        "restore_strategy": "already_current"
+      }
+    },
+    {
+      "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+      "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+      "event": {
+        "event_type": "expand_menu",
+        "label": "Permisos",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+        "decision": "allow",
+        "risk_level": "low",
+        "source": "custom_interactives",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "region:global_navigation",
+          "has_selector",
+          "event_category_explicitly_allowed"
+        ],
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "global_navigation",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/home"
+        }
+      },
+      "changed_route": false,
+      "observed": true,
+      "metadata": {
+        "candidate": {
+          "label": "Permisos",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "restored_before": true,
+        "restore_strategy": "already_current"
+      }
+    }
+  ],
+  "summary": {
+    "states_count": 11,
+    "transitions_count": 2
+  }
+}

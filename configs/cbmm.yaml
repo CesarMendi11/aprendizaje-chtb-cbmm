@@ -191,12 +191,21 @@ crawl_mode:
   environment: "production" # production | staging | test
   strategy: "safe" # safe | interactive | test_full
 
+browser_interaction:
+  # Los menús de algunos ERP se animan o reconstruyen tras cada navegación.
+  # Se reintenta sin usar force=True para conservar la seguridad de Playwright.
+  click_timeout_ms: 3000
+  click_attempts: 3
+  retry_wait_ms: 500
+  pre_click_wait_ms: 200
+  scroll_into_view: true
+
 state_replay:
   # Restaura el estado fuente antes de probar cada evento seguro.
   enabled: true
   page_wait_ms: 800
   step_wait_ms: 400
-  click_timeout_ms: 1000
+  click_timeout_ms: 3000
   verify_each_step: true
   restore_attempts: 2
 
@@ -204,12 +213,13 @@ ui_events:
   enabled: true
   min_candidate_score: 3
   event_wait_ms: 400
-  click_timeout_ms: 1000
+  click_timeout_ms: 3000
   skip_link_navigation: true
   max_event_depth: 0
   restore_after_exploration: true
   capture_event_artifacts: true
   artifact_timeout_ms: 3000
+  artifact_full_page: false
 
   allowed_event_types:
     - "click"

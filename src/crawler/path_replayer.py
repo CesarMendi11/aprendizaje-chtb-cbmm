@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page
+
+from src.browser.interaction_executor import BrowserInteractionExecutor
 
 from src.browser.navigator import ERPNavigator
 from src.crawler.state_registry import StateRegistry
@@ -80,6 +82,11 @@ class PathReplayer:
             )
         )
         self.verify_each_step = bool(config.get("verify_each_step", True))
+        self.interaction_executor = BrowserInteractionExecutor(
+            page=page,
+            profile=profile,
+            default_timeout_ms=self.click_timeout_ms,
+        )
 
     def replay(
         self,
@@ -130,7 +137,7 @@ class PathReplayer:
                 signature=signature,
             )
 
-        except (PlaywrightTimeoutError, KeyError, ValueError, RuntimeError) as error:
+        except (KeyError, ValueError, RuntimeError) as error:
             return ReplayResult(
                 success=False,
                 root_state_id=path.root_state_id,
@@ -162,9 +169,13 @@ class PathReplayer:
         if not event.selector:
             raise ValueError("El evento no tiene selector reproducible.")
 
-        locator = self.page.locator(event.selector).first
-        locator.wait_for(state="visible", timeout=self.click_timeout_ms)
-        locator.click(timeout=self.click_timeout_ms)
+        interaction = self.interaction_executor.click(event.selector)
+        if not interaction.success:
+            raise RuntimeError(
+                "No se pudo reproducir el evento "
+                f"{event.label!r} después de {interaction.attempts} intentos: "
+                f"{interaction.error}"
+            )
 
     def _validate_step_source(
         self,

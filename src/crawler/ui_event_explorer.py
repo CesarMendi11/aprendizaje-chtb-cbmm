@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page
+
+from src.browser.interaction_executor import BrowserInteractionExecutor
 
 from src.crawler.state_restorer import RestoreResult, StateRestorer
 from src.crawler.state_signature import StateSignatureBuilder
@@ -37,6 +39,9 @@ class UIEventResult:
     restore_strategy: str | None = None
     restore_error: str | None = None
     artifact_error: str | None = None
+    interaction_attempts: int = 0
+    interaction_strategy: str | None = None
+    interaction_succeeded: bool = False
     after_html: str | None = field(default=None, repr=False)
     after_screenshot: bytes | None = field(default=None, repr=False)
 
@@ -59,6 +64,9 @@ class UIEventResult:
             "restore_strategy": self.restore_strategy,
             "restore_error": self.restore_error,
             "artifact_error": self.artifact_error,
+            "interaction_attempts": self.interaction_attempts,
+            "interaction_strategy": self.interaction_strategy,
+            "interaction_succeeded": self.interaction_succeeded,
             "after_html_captured": self.after_html is not None,
             "after_screenshot_captured": self.after_screenshot is not None,
         }
@@ -107,6 +115,14 @@ class UIEventExplorer:
         )
         self.artifact_timeout_ms = ui_events.get(
             "artifact_timeout_ms", 3000
+        )
+        self.artifact_full_page = bool(
+            ui_events.get("artifact_full_page", False)
+        )
+        self.interaction_executor = BrowserInteractionExecutor(
+            page=page,
+            profile=profile,
+            default_timeout_ms=self.click_timeout_ms,
         )
 
     def set_state_restorer(self, restorer: StateRestorer | None) -> None:
@@ -215,11 +231,23 @@ class UIEventExplorer:
     ) -> UIEventResult:
         event = candidate.to_ui_event()
 
-        try:
-            locator = self.page.locator(candidate.selector).first
-            locator.wait_for(state="visible", timeout=self.click_timeout_ms)
-            locator.click(timeout=self.click_timeout_ms)
+        interaction = self.interaction_executor.click(candidate.selector)
+        if not interaction.success:
+            return self._error_result(
+                candidate=candidate,
+                before_fingerprint=before_fingerprint,
+                before_exact_fingerprint=before_exact_fingerprint,
+                before_route=before_route,
+                before_screen_data=before_screen_data,
+                error=interaction.error or "interaction_failed",
+                source_state_id=source_state_id,
+                restore_result=restore_result,
+                interaction_attempts=interaction.attempts,
+                interaction_strategy=interaction.strategy,
+                interaction_succeeded=False,
+            )
 
+        try:
             if self.event_wait_ms:
                 self.page.wait_for_timeout(self.event_wait_ms)
 
@@ -263,19 +291,11 @@ class UIEventExplorer:
                 artifact_error=artifact_error,
                 after_html=after_html,
                 after_screenshot=after_screenshot,
+                interaction_attempts=interaction.attempts,
+                interaction_strategy=interaction.strategy,
+                interaction_succeeded=True,
             )
 
-        except PlaywrightTimeoutError as error:
-            return self._error_result(
-                candidate=candidate,
-                before_fingerprint=before_fingerprint,
-                before_exact_fingerprint=before_exact_fingerprint,
-                before_route=before_route,
-                before_screen_data=before_screen_data,
-                error=f"timeout: {error}",
-                source_state_id=source_state_id,
-                restore_result=restore_result,
-            )
         except Exception as error:
             return self._error_result(
                 candidate=candidate,
@@ -286,6 +306,9 @@ class UIEventExplorer:
                 error=str(error),
                 source_state_id=source_state_id,
                 restore_result=restore_result,
+                interaction_attempts=interaction.attempts,
+                interaction_strategy=interaction.strategy,
+                interaction_succeeded=True,
             )
 
     def _capture_result_artifacts(
@@ -305,7 +328,7 @@ class UIEventExplorer:
 
         try:
             screenshot = self.page.screenshot(
-                full_page=True,
+                full_page=self.artifact_full_page,
                 timeout=self.artifact_timeout_ms,
             )
         except Exception as error:
@@ -347,6 +370,9 @@ class UIEventExplorer:
         error: str,
         source_state_id: str | None = None,
         restore_result: RestoreResult | None = None,
+        interaction_attempts: int = 0,
+        interaction_strategy: str | None = None,
+        interaction_succeeded: bool = False,
     ) -> UIEventResult:
         return UIEventResult(
             event=candidate.to_ui_event(),
@@ -363,4 +389,7 @@ class UIEventExplorer:
             source_state_id=source_state_id,
             restored_before=restore_result is not None,
             restore_strategy=(restore_result.strategy if restore_result else None),
+            interaction_attempts=interaction_attempts,
+            interaction_strategy=interaction_strategy,
+            interaction_succeeded=interaction_succeeded,
         )

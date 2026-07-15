@@ -1,0 +1,1003 @@
+{
+  "route": "/admin/cuentasxcobrar/lista-facturas",
+  "reason": "uncertain_screen",
+  "extra": {
+    "reasons": [
+      "La pantalla contiene muchos elementos interactivos personalizados."
+    ],
+    "title": "Dashboard",
+    "url": "http://177.234.239.116:8084/admin/cuentasxcobrar/lista-facturas",
+    "buttons": [
+      {
+        "text": "",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+        "tag": "button"
+      },
+      {
+        "text": "",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "app-factura-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button",
+        "tag": "button"
+      },
+      {
+        "text": "search Buscar",
+        "type": null,
+        "role": null,
+        "aria_label": null,
+        "title": null,
+        "selector": "app-factura-list > ui-content-wrapper > div > div > div > div:nth-of-type(2) > div:nth-of-type(3) > button",
+        "tag": "button"
+      },
+      {
+        "text": "Primera página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Primera página",
+        "title": null,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+        "tag": "button"
+      },
+      {
+        "text": "Página anterior",
+        "type": "button",
+        "role": null,
+        "aria_label": "Página anterior",
+        "title": null,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+        "tag": "button"
+      },
+      {
+        "text": "Siguiente página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Siguiente página",
+        "title": null,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button"
+      },
+      {
+        "text": "Última página",
+        "type": "button",
+        "role": null,
+        "aria_label": "Última página",
+        "title": null,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+        "tag": "button"
+      }
+    ],
+    "inputs": [
+      {
+        "name": null,
+        "id": "mat-input-0",
+        "type": null,
+        "placeholder": "0000000000001",
+        "label": "RUC",
+        "value_present": false,
+        "selector": "input#mat-input-0",
+        "tag": "input"
+      },
+      {
+        "name": null,
+        "id": "mat-input-1",
+        "type": null,
+        "placeholder": "000000000",
+        "label": "Núm. comprobante",
+        "value_present": false,
+        "selector": "input#mat-input-1",
+        "tag": "input"
+      }
+    ],
+    "custom_interactives": [
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar Comprobantes Facturación Electronica Forma pago Lista de facturas Notas de crédito Puntos de emisión Retenciones Tipo pago General Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites Transporte",
+        "tag": "fuse-vertical-navigation",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar Comprobantes Facturación Electronica Forma pago Lista de facturas Notas de crédito Puntos de emisión Retenciones Tipo pago General Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN Dashboard Cuentas por cobrar Comprobantes Facturación Electronica Forma pago Lista de facturas Notas de crédito Puntos de emisión Retenciones Tipo pago General Gerencial Permisos Prevencion Riesgo rentas Rentas Seguridad SRI Tramites Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "html > body > app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2)"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div > div"
+      },
+      {
+        "text": "MENU DE NAVEGACIÓN",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > div > div > div > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a > div"
+      },
+      {
+        "text": "Dashboard",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a > div > div"
+      },
+      {
+        "text": "Cuentas por cobrar Comprobantes Facturación Electronica Forma pago Lista de facturas Notas de crédito Puntos de emisión Retenciones Tipo pago",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1)"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div > div"
+      },
+      {
+        "text": "Cuentas por cobrar",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(1) > div > div > div"
+      },
+      {
+        "text": "Comprobantes",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1)"
+      },
+      {
+        "text": "Comprobantes",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div"
+      },
+      {
+        "text": "Comprobantes",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a"
+      },
+      {
+        "text": "Comprobantes",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a > div"
+      },
+      {
+        "text": "Comprobantes",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a > div > div"
+      },
+      {
+        "text": "Facturación Electronica",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2)"
+      },
+      {
+        "text": "Facturación Electronica",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div"
+      },
+      {
+        "text": "Facturación Electronica",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a"
+      },
+      {
+        "text": "Facturación Electronica",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a > div"
+      },
+      {
+        "text": "Facturación Electronica",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a > div > div"
+      },
+      {
+        "text": "Forma pago",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3)"
+      },
+      {
+        "text": "Forma pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div"
+      },
+      {
+        "text": "Forma pago",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a"
+      },
+      {
+        "text": "Forma pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a > div"
+      },
+      {
+        "text": "Forma pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a > div > div"
+      },
+      {
+        "text": "Lista de facturas",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4)"
+      },
+      {
+        "text": "Lista de facturas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div"
+      },
+      {
+        "text": "Lista de facturas",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a"
+      },
+      {
+        "text": "Lista de facturas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a > div"
+      },
+      {
+        "text": "Lista de facturas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a > div > div"
+      },
+      {
+        "text": "Notas de crédito",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5)"
+      },
+      {
+        "text": "Notas de crédito",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div"
+      },
+      {
+        "text": "Notas de crédito",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a"
+      },
+      {
+        "text": "Notas de crédito",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a > div"
+      },
+      {
+        "text": "Notas de crédito",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a > div > div"
+      },
+      {
+        "text": "Puntos de emisión",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6)"
+      },
+      {
+        "text": "Puntos de emisión",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div"
+      },
+      {
+        "text": "Puntos de emisión",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a"
+      },
+      {
+        "text": "Puntos de emisión",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a > div"
+      },
+      {
+        "text": "Puntos de emisión",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a > div > div"
+      },
+      {
+        "text": "Retenciones",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7)"
+      },
+      {
+        "text": "Retenciones",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div"
+      },
+      {
+        "text": "Retenciones",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a"
+      },
+      {
+        "text": "Retenciones",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a > div"
+      },
+      {
+        "text": "Retenciones",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a > div > div"
+      },
+      {
+        "text": "Tipo pago",
+        "tag": "fuse-vertical-navigation-basic-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8)"
+      },
+      {
+        "text": "Tipo pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div"
+      },
+      {
+        "text": "Tipo pago",
+        "tag": "a",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a"
+      },
+      {
+        "text": "Tipo pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a > div"
+      },
+      {
+        "text": "Tipo pago",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a > div > div"
+      },
+      {
+        "text": "General",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div > div"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div > div > div"
+      },
+      {
+        "text": "General",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div > div > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div > div"
+      },
+      {
+        "text": "Gerencial",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div > div > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div > div"
+      },
+      {
+        "text": "Permisos",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4) > div > div > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div > div"
+      },
+      {
+        "text": "Prevencion Riesgo",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div > div > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6)"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div > div"
+      },
+      {
+        "text": "rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(6) > div > div > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7)"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div > div"
+      },
+      {
+        "text": "Rentas",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(7) > div > div > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8)"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div > div"
+      },
+      {
+        "text": "Seguridad",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(8) > div > div > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9)"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div > div"
+      },
+      {
+        "text": "SRI",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(9) > div > div > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10)"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div > div"
+      },
+      {
+        "text": "Tramites",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(10) > div > div > div > div"
+      },
+      {
+        "text": "Transporte",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(11)"
+      },
+      {
+        "text": "Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(11) > div"
+      },
+      {
+        "text": "Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(11) > div > div"
+      },
+      {
+        "text": "Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(11) > div > div > div"
+      },
+      {
+        "text": "Transporte",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(11) > div > div > div > div"
+      },
+      {
+        "text": "admin",
+        "tag": "div",
+        "role": null,
+        "aria_expanded": "false",
+        "onclick": false,
+        "selector": "app-root > layout > admin-layout > div > div:nth-of-type(1) > div > user > div"
+      },
+      {
+        "text": "Primera página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)"
+      },
+      {
+        "text": "Página anterior",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)"
+      },
+      {
+        "text": "Siguiente página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)"
+      },
+      {
+        "text": "Última página",
+        "tag": "button",
+        "role": null,
+        "aria_expanded": null,
+        "onclick": false,
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)"
+      }
+    ],
+    "artifacts": {
+      "html": "data/raw/html/admin_cuentasxcobrar_lista-facturas.html",
+      "screenshot": "data/raw/screenshots/admin_cuentasxcobrar_lista-facturas.png",
+      "raw_json": "data/raw/playwright/admin_cuentasxcobrar_lista-facturas.json"
+    },
+    "next_step": "Enviar a analysis/LLM helper para generar YAML incremental."
+  },
+  "status": "pending_llm_or_human_review"
+}
