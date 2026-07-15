@@ -125,7 +125,7 @@ class UIEventExplorer:
             current_screen_data
         )
 
-        candidates = self.candidate_discovery.discover_safe_candidates(
+        candidates = self.candidate_discovery.discover_exploration_candidates(
             current_screen_data
         )
         candidates = self._filter_candidates_for_ui_events(candidates)

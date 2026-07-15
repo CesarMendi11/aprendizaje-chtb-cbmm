@@ -120,6 +120,45 @@ class ProfileLoader:
                         f"safety.{field} contiene categorías desconocidas: {unknown}"
                     )
 
+
+        ui_events = profile.get("ui_events", {})
+        exploration_budget = ui_events.get("exploration_budget", {})
+        if exploration_budget and not isinstance(exploration_budget, dict):
+            raise ValueError("ui_events.exploration_budget debe ser un objeto.")
+
+        exclude_global = exploration_budget.get(
+            "exclude_global_navigation_outside_home"
+        )
+        if exclude_global is not None and not isinstance(exclude_global, bool):
+            raise ValueError(
+                "ui_events.exploration_budget."
+                "exclude_global_navigation_outside_home debe ser booleano."
+            )
+
+        for field in ["category_limits", "home_category_limits"]:
+            limits = exploration_budget.get(field, {})
+            if limits and not isinstance(limits, dict):
+                raise ValueError(
+                    f"ui_events.exploration_budget.{field} debe ser un objeto."
+                )
+            if isinstance(limits, dict):
+                unknown = sorted(set(limits) - valid_event_categories)
+                if unknown:
+                    raise ValueError(
+                        f"ui_events.exploration_budget.{field} contiene "
+                        f"categorías desconocidas: {unknown}"
+                    )
+                invalid_limits = {
+                    key: value
+                    for key, value in limits.items()
+                    if not isinstance(value, int) or value < 0
+                }
+                if invalid_limits:
+                    raise ValueError(
+                        f"ui_events.exploration_budget.{field} solo admite "
+                        "enteros no negativos."
+                    )
+
         state_detection = profile.get("state_detection", {})
         volatile_patterns = state_detection.get("volatile_text_patterns")
         if volatile_patterns is not None and not isinstance(volatile_patterns, list):

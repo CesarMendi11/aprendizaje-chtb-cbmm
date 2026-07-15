@@ -38,6 +38,7 @@ class EventPolicy:
         UIEventType.ACTIVATE_TAB,
         UIEventType.OPEN_READONLY_VIEW,
         UIEventType.OPEN_MODAL,
+        UIEventType.OPEN_DATE_PICKER,
         UIEventType.CLOSE_MODAL,
         UIEventType.OPEN_DRAWER,
         UIEventType.CLOSE_DRAWER,

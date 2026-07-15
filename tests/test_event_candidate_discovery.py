@@ -384,3 +384,276 @@ def test_safe_candidates_prioritize_local_controls_outside_home():
         "Abrir menú",
     ]
     assert candidates[0].metadata["region"] == "main_content"
+
+
+def test_table_button_is_not_misclassified_as_tab():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/facturas",
+        "buttons": [
+            {
+                "text": "",
+                "tag": "button",
+                "selector": "table > tbody > tr > td > button",
+                "region": "main_content",
+                "within_table": True,
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "unknown"
+    assert candidate.decision == "review"
+    assert discovery.discover_safe_candidates(screen_data) == []
+
+
+def test_table_button_with_aria_expanded_requires_review_as_expand_row():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/comprobantes",
+        "buttons": [
+            {
+                "text": "",
+                "tag": "button",
+                "selector": "table > tbody > tr > td > button",
+                "region": "main_content",
+                "within_table": True,
+                "aria_expanded": "false",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "expand_row"
+    assert candidate.decision == "review"
+    assert discovery.discover_safe_candidates(screen_data) == []
+
+
+def test_navigation_link_and_custom_anchor_are_functionally_deduplicated():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/home",
+        "links": [
+            {
+                "text": "Facturas",
+                "tag": "a",
+                "selector": "nav a.facturas",
+                "href": "/admin/facturas",
+                "region": "global_navigation",
+            }
+        ],
+        "buttons": [],
+        "custom_interactives": [
+            {
+                "text": "Facturas",
+                "tag": "a",
+                "selector": "nav a.facturas",
+                "region": "global_navigation",
+            }
+        ],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].source == "links"
+    assert candidates[0].metadata["href"] == "/admin/facturas"
+
+
+def test_same_navigation_label_in_different_regions_is_preserved():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/facturas",
+        "links": [
+            {
+                "text": "Dashboard",
+                "tag": "a",
+                "selector": "nav a.dashboard",
+                "href": "/admin/home",
+                "region": "global_navigation",
+            },
+            {
+                "text": "Dashboard",
+                "tag": "a",
+                "selector": "main .breadcrumb a",
+                "href": "/admin/home",
+                "region": "main_content",
+            },
+        ],
+        "buttons": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 2
+    assert {candidate.metadata["region"] for candidate in candidates} == {
+        "global_navigation",
+        "main_content",
+    }
+
+
+def test_date_picker_is_classified_explicitly():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/comprobantes",
+        "buttons": [
+            {
+                "text": "Open calendar",
+                "aria_label": "Open calendar",
+                "tag": "button",
+                "selector": "mat-datepicker-toggle > button",
+                "region": "main_content",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "open_date_picker"
+    assert candidate.decision == "allow"
+
+
+def test_exploration_budget_excludes_global_navigation_outside_home():
+    profile = build_profile()
+    profile["navigation"] = {"home_url": "/admin/home"}
+    profile["ui_events"]["skip_link_navigation"] = True
+    profile["ui_events"]["candidate_limits"]["max_events_per_state"] = 5
+    profile["ui_events"]["exploration_budget"] = {
+        "exclude_global_navigation_outside_home": True,
+        "category_limits": {
+            "submit_search": 1,
+            "expand_menu": 0,
+        },
+        "home_category_limits": {"expand_menu": 10},
+    }
+    discovery = EventCandidateDiscovery(profile, RoutePolicy(profile))
+
+    screen_data = {
+        "path": "/admin/facturas",
+        "buttons": [
+            {
+                "text": "Buscar",
+                "tag": "button",
+                "selector": "main button.search",
+                "region": "main_content",
+            },
+            {
+                "text": "Abrir menú",
+                "tag": "button",
+                "selector": "aside button.open-menu",
+                "region": "global_navigation",
+            },
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    selected = discovery.discover_exploration_candidates(screen_data)
+    report = discovery.build_pipeline_report(screen_data)
+
+    assert [candidate.label for candidate in selected] == ["Buscar"]
+    assert report["selection_exclusions"][
+        "global_navigation_outside_home"
+    ] == 1
+
+
+def test_exploration_budget_preserves_distinct_dropdowns_with_same_label():
+    profile = build_profile()
+    profile["navigation"] = {"home_url": "/admin/home"}
+    profile["ui_events"]["candidate_limits"]["max_events_per_state"] = 5
+    profile["ui_events"]["exploration_budget"] = {
+        "category_limits": {"open_dropdown": 2},
+    }
+    discovery = EventCandidateDiscovery(profile, RoutePolicy(profile))
+
+    screen_data = {
+        "path": "/admin/reportes",
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "--Seleccione--",
+                "tag": "mat-select",
+                "selector": "mat-select#one",
+                "role": "combobox",
+                "aria_expanded": "false",
+                "region": "main_content",
+            },
+            {
+                "text": "--Seleccione--",
+                "tag": "mat-select",
+                "selector": "mat-select#two",
+                "role": "combobox",
+                "aria_expanded": "false",
+                "region": "main_content",
+            },
+            {
+                "text": "--Seleccione--",
+                "tag": "mat-select",
+                "selector": "mat-select#three",
+                "role": "combobox",
+                "aria_expanded": "false",
+                "region": "main_content",
+            },
+        ],
+    }
+
+    selected = discovery.discover_exploration_candidates(screen_data)
+
+    assert len(selected) == 2
+    assert {candidate.selector for candidate in selected} == {
+        "mat-select#one",
+        "mat-select#two",
+    }
+
+
+def test_repeated_table_row_actions_are_deduplicated_by_selector_template():
+    discovery = build_discovery()
+
+    screen_data = {
+        "path": "/admin/facturas",
+        "buttons": [
+            {
+                "text": "",
+                "tag": "button",
+                "selector": (
+                    "table > tbody > tr:nth-of-type(1) > "
+                    "td:nth-of-type(1) > button"
+                ),
+                "region": "main_content",
+                "within_table": True,
+            },
+            {
+                "text": "",
+                "tag": "button",
+                "selector": (
+                    "table > tbody > tr:nth-of-type(2) > "
+                    "td:nth-of-type(1) > button"
+                ),
+                "region": "main_content",
+                "within_table": True,
+            },
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category == "unknown"
+    assert candidates[0].decision == "review"

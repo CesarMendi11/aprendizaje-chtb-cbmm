@@ -17,10 +17,13 @@ def build_event_policy_audit(
     decision_totals: Counter[str] = Counter()
     category_totals: Counter[str] = Counter()
     region_totals: Counter[str] = Counter()
+    pipeline_totals: Counter[str] = Counter()
+    selection_exclusion_totals: Counter[str] = Counter()
     screens: list[dict[str, Any]] = []
 
     for screen in screen_index.get("screens", []):
         candidates = discovery._discover_all_candidates(screen)
+        pipeline = discovery.build_pipeline_report(screen)
         decisions = Counter(candidate.decision for candidate in candidates)
         categories = Counter(candidate.event_category for candidate in candidates)
         regions = Counter(
@@ -31,6 +34,16 @@ def build_event_policy_audit(
         decision_totals.update(decisions)
         category_totals.update(categories)
         region_totals.update(regions)
+        pipeline_totals.update(
+            {
+                key: value
+                for key, value in pipeline.items()
+                if key.endswith("_count") and isinstance(value, int)
+            }
+        )
+        selection_exclusion_totals.update(
+            pipeline.get("selection_exclusions", {})
+        )
 
         screens.append(
             {
@@ -38,6 +51,7 @@ def build_event_policy_audit(
                 "title": screen.get("functional_title") or screen.get("title"),
                 "title_source": screen.get("title_source"),
                 "candidates_count": len(candidates),
+                "pipeline": pipeline,
                 "decisions": dict(sorted(decisions.items())),
                 "categories": dict(sorted(categories.items())),
                 "regions": dict(sorted(regions.items())),
@@ -60,5 +74,9 @@ def build_event_policy_audit(
         "decision_totals": dict(sorted(decision_totals.items())),
         "category_totals": dict(sorted(category_totals.items())),
         "region_totals": dict(sorted(region_totals.items())),
+        "pipeline_totals": dict(sorted(pipeline_totals.items())),
+        "selection_exclusion_totals": dict(
+            sorted(selection_exclusion_totals.items())
+        ),
         "screens": screens,
     }

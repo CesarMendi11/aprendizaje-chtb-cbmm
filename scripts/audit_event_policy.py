@@ -58,6 +58,11 @@ def main() -> int:
     print(f"Pantallas: {audit['screens_count']}")
     print(f"Decisiones: {audit['decision_totals']}")
     print(f"Categorías: {audit['category_totals']}")
+    print(f"Pipeline: {audit.get('pipeline_totals', {})}")
+    print(
+        "Exclusiones de ejecución: "
+        f"{audit.get('selection_exclusion_totals', {})}"
+    )
     print(f"Resultado: {output_path}")
     return 0
 

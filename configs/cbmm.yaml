@@ -57,6 +57,7 @@ safety:
     - "activate_tab"
     - "open_readonly_view"
     - "open_modal"
+    - "open_date_picker"
     - "close_modal"
     - "open_drawer"
     - "close_drawer"
@@ -217,6 +218,23 @@ ui_events:
     max_candidates_per_screen: 30
     max_events_per_state: 5
     max_text_length: 100
+
+  # La auditoría conserva todos los candidatos, pero la ejecución usa un
+  # presupuesto equilibrado para que tablas y menús repetidos no desplacen
+  # controles locales relevantes.
+  exploration_budget:
+    exclude_global_navigation_outside_home: true
+    category_limits:
+      activate_tab: 3
+      open_readonly_view: 2
+      open_date_picker: 1
+      open_modal: 2
+      open_dropdown: 2
+      submit_search: 0
+      change_pagination: 1
+      expand_menu: 0
+    home_category_limits:
+      expand_menu: 10
 
   click_candidates:
     include:

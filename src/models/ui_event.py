@@ -14,6 +14,7 @@ class UIEventType(StrEnum):
     ACTIVATE_TAB = "activate_tab"
     OPEN_READONLY_VIEW = "open_readonly_view"
     OPEN_MODAL = "open_modal"
+    OPEN_DATE_PICKER = "open_date_picker"
     CLOSE_MODAL = "close_modal"
     OPEN_DRAWER = "open_drawer"
     CLOSE_DRAWER = "close_drawer"

@@ -137,6 +137,13 @@ class EventCandidateDiscovery:
         "search",
         "filter",
     }
+    DATE_PICKER_WORDS = {
+        "calendar",
+        "calendario",
+        "datepicker",
+        "date-picker",
+        "date_picker",
+    }
     READONLY_WORDS = {"ver", "detalle", "visualizar", "view", "details"}
     CLOSE_WORDS = {"cerrar", "close"}
     PAGINATION_WORDS = {
@@ -208,6 +215,26 @@ class EventCandidateDiscovery:
         self.forms_allow_submit = forms.get("allow_submit", False)
         self.home_route = profile.get("navigation", {}).get("home_url", "")
 
+        self.skip_link_navigation = bool(
+            ui_events.get("skip_link_navigation", True)
+        )
+        exploration_budget = ui_events.get("exploration_budget", {}) or {}
+        self.exclude_global_navigation_outside_home = bool(
+            exploration_budget.get(
+                "exclude_global_navigation_outside_home",
+                False,
+            )
+        )
+        self.category_limits = self._parse_category_limits(
+            exploration_budget.get("category_limits", {})
+        )
+        self.home_category_limits = self._parse_category_limits(
+            exploration_budget.get("home_category_limits", {})
+        )
+        self.max_events_per_state = int(
+            candidate_limits.get("max_events_per_state", 25)
+        )
+
     def discover_candidates(self, screen_data: dict[str, Any]) -> list[EventCandidate]:
         """Devuelve una muestra equilibrada para auditoría y revisión.
 
@@ -237,6 +264,12 @@ class EventCandidateDiscovery:
         return selected
 
     def discover_safe_candidates(self, screen_data: dict[str, Any]) -> list[EventCandidate]:
+        """Devuelve todos los candidatos permitidos, ordenados por prioridad.
+
+        Este método conserva compatibilidad con consumidores anteriores. Para
+        ejecutar eventos debe preferirse ``discover_exploration_candidates``,
+        que aplica región, presupuesto por categoría y límite por estado.
+        """
         candidates = [
             candidate
             for candidate in self._discover_all_candidates(screen_data)
@@ -244,6 +277,56 @@ class EventCandidateDiscovery:
         ]
         candidates.sort(key=self._exploration_sort_key)
         return candidates[: self.max_candidates_per_screen]
+
+    def discover_exploration_candidates(
+        self,
+        screen_data: dict[str, Any],
+    ) -> list[EventCandidate]:
+        """Selecciona únicamente los eventos que pueden ejecutarse en el estado.
+
+        La selección evita que el menú global o una tabla con decenas de
+        botones repetidos consuman todo el presupuesto de exploración.
+        """
+        candidates = [
+            candidate
+            for candidate in self._discover_all_candidates(screen_data)
+            if candidate.is_allowed
+        ]
+        selected, _ = self._select_for_exploration(candidates, screen_data)
+        return selected
+
+    def build_pipeline_report(
+        self,
+        screen_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Explica cuántos candidatos sobreviven a cada etapa del pipeline."""
+        raw_candidates = self._build_raw_candidates(screen_data)
+        deduplicated = self._deduplicate(raw_candidates)
+        eligible = self._filter_eligible_candidates(
+            deduplicated,
+            screen_data,
+        )
+        allowed = [candidate for candidate in eligible if candidate.is_allowed]
+        selected, exclusion_reasons = self._select_for_exploration(
+            allowed,
+            screen_data,
+        )
+
+        return {
+            "raw_candidates_count": len(raw_candidates),
+            "deduplicated_candidates_count": len(deduplicated),
+            "duplicates_removed_count": max(
+                0,
+                len(raw_candidates) - len(deduplicated),
+            ),
+            "eligible_candidates_count": len(eligible),
+            "allowed_candidates_count": len(allowed),
+            "selected_for_exploration_count": len(selected),
+            "selection_exclusions": dict(sorted(exclusion_reasons.items())),
+            "selected_for_exploration": [
+                candidate.to_dict() for candidate in selected
+            ],
+        }
 
     def discover_review_candidates(
         self,
@@ -264,6 +347,14 @@ class EventCandidateDiscovery:
         if not self.enabled:
             return []
 
+        raw_candidates = self._build_raw_candidates(screen_data)
+        candidates = self._deduplicate(raw_candidates)
+        return self._filter_eligible_candidates(candidates, screen_data)
+
+    def _build_raw_candidates(
+        self,
+        screen_data: dict[str, Any],
+    ) -> list[EventCandidate]:
         raw_candidates: list[EventCandidate] = []
         raw_candidates.extend(self._from_links(screen_data.get("links", [])))
         raw_candidates.extend(self._from_buttons(screen_data.get("buttons", [])))
@@ -272,11 +363,17 @@ class EventCandidateDiscovery:
                 screen_data.get("custom_interactives", [])
             )
         )
+        return raw_candidates
 
-        candidates = self._deduplicate(raw_candidates)
+    def _filter_eligible_candidates(
+        self,
+        candidates: list[EventCandidate],
+        screen_data: dict[str, Any],
+    ) -> list[EventCandidate]:
         screen_path = str(screen_data.get("path") or "")
         for candidate in candidates:
             candidate.metadata.setdefault("screen_path", screen_path)
+
         return [
             candidate
             for candidate in candidates
@@ -301,6 +398,7 @@ class EventCandidateDiscovery:
                     "href": item.get("href"),
                     "absolute_href": item.get("absolute_href"),
                     "region": item.get("region", "main_content"),
+                    "within_table": item.get("within_table", False),
                 },
             )
             self._finalize_candidate(candidate, item)
@@ -326,8 +424,12 @@ class EventCandidateDiscovery:
                     "title": item.get("title"),
                     "aria_expanded": item.get("aria_expanded"),
                     "aria_selected": item.get("aria_selected"),
+                    "aria_controls": item.get("aria_controls"),
                     "disabled": item.get("disabled"),
                     "region": item.get("region", "main_content"),
+                    "within_table": item.get("within_table", False),
+                    "form_method": item.get("form_method"),
+                    "form_action": item.get("form_action"),
                 },
             )
 
@@ -365,6 +467,13 @@ class EventCandidateDiscovery:
                     "type": item.get("type"),
                     "disabled": item.get("disabled"),
                     "region": item.get("region", "main_content"),
+                    "href": item.get("href"),
+                    "absolute_href": item.get("absolute_href"),
+                    "aria_label": item.get("aria_label"),
+                    "title": item.get("title"),
+                    "within_table": item.get("within_table", False),
+                    "form_method": item.get("form_method"),
+                    "form_action": item.get("form_action"),
                 },
             )
             self._finalize_candidate(candidate, item)
@@ -526,7 +635,13 @@ class EventCandidateDiscovery:
         ):
             return UIEventType.NAVIGATION_LINK
 
-        if role == "tab" or "role='tab'" in selector or "[role=tab]" in selector:
+        if self._is_date_picker_control(candidate, item, combined):
+            return UIEventType.OPEN_DATE_PICKER
+
+        if self._is_table_row_control(candidate, item, selector, combined):
+            return UIEventType.EXPAND_ROW
+
+        if role == "tab" or self._selector_has_tab_semantics(selector):
             return UIEventType.ACTIVATE_TAB
 
         if role in {"combobox", "listbox"} or tag in {"select", "mat-select"}:
@@ -551,7 +666,7 @@ class EventCandidateDiscovery:
                 return UIEventType.COLLAPSE_MENU
             return UIEventType.EXPAND_MENU
 
-        if role == "tab" or "tab" in selector:
+        if role == "tab" or self._selector_has_tab_semantics(selector):
             return UIEventType.ACTIVATE_TAB
 
         if label_words.intersection(self.CLOSE_WORDS):
@@ -582,9 +697,11 @@ class EventCandidateDiscovery:
         role = (item.get("role") or "").lower()
         aria_expanded = item.get("aria_expanded")
 
+        if self._is_table_row_context(item, selector) and aria_expanded is not None:
+            return "expand_row"
         if aria_expanded is not None:
             return "expand_or_collapse"
-        if role == "tab" or "tab" in selector:
+        if role == "tab" or self._selector_has_tab_semantics(selector):
             return "tab_click"
         if role == "menuitem":
             return "menu_item_click"
@@ -665,16 +782,185 @@ class EventCandidateDiscovery:
     def _looks_like_low_value_label(self, label: str) -> bool:
         return label.lower().strip() in self.LOW_VALUE_LABELS
 
+    def _parse_category_limits(self, value: Any) -> dict[str, int]:
+        if not isinstance(value, dict):
+            return {}
+        result: dict[str, int] = {}
+        for key, raw_limit in value.items():
+            try:
+                limit = int(raw_limit)
+            except (TypeError, ValueError):
+                continue
+            result[str(key)] = max(0, limit)
+        return result
+
+    def _select_for_exploration(
+        self,
+        candidates: list[EventCandidate],
+        screen_data: dict[str, Any],
+    ) -> tuple[list[EventCandidate], dict[str, int]]:
+        from collections import Counter
+
+        selected: list[EventCandidate] = []
+        exclusions: Counter[str] = Counter()
+        category_counts: Counter[str] = Counter()
+        path = str(screen_data.get("path") or "")
+        is_home = bool(self.home_route and path == self.home_route)
+        limits = dict(self.category_limits)
+        if is_home:
+            limits.update(self.home_category_limits)
+
+        ordered = sorted(candidates, key=self._exploration_sort_key)
+        for candidate in ordered:
+            region = str(candidate.metadata.get("region") or "main_content")
+            category = candidate.event_category
+
+            if not candidate.selector:
+                exclusions["missing_selector"] += 1
+                continue
+
+            if self.skip_link_navigation and category == UIEventType.NAVIGATION_LINK.value:
+                exclusions["navigation_handled_by_route_crawler"] += 1
+                continue
+
+            if (
+                self.exclude_global_navigation_outside_home
+                and not is_home
+                and region == "global_navigation"
+            ):
+                exclusions["global_navigation_outside_home"] += 1
+                continue
+
+            limit = limits.get(category)
+            if limit is not None and category_counts[category] >= limit:
+                exclusions[f"category_budget:{category}"] += 1
+                continue
+
+            if len(selected) >= self.max_events_per_state:
+                exclusions["state_event_budget"] += 1
+                continue
+
+            selected.append(candidate)
+            category_counts[category] += 1
+
+        return selected, dict(exclusions)
+
+    def _selector_has_tab_semantics(self, selector: str) -> bool:
+        """Reconoce tabs sin confundir la palabra CSS ``table`` con ``tab``."""
+        normalized = self._normalize_for_matching(selector)
+        patterns = (
+            r"(?:^|[^a-z0-9])tab(?:[^a-z0-9]|$)",
+            r"(?:^|[^a-z0-9])tabs(?:[^a-z0-9]|$)",
+            r"mat-tab",
+            r"tab-group",
+            r"tab-label",
+            r'role=[\'"]?tab',
+        )
+        return any(re.search(pattern, normalized) for pattern in patterns)
+
+    def _is_table_row_context(
+        self,
+        item: dict[str, Any],
+        selector: str,
+    ) -> bool:
+        if bool(item.get("within_table")):
+            return True
+        return bool(
+            re.search(
+                r"(?:^|[ >.#:\[])"
+                r"(?:table|tbody|thead|tfoot|tr|td|th)"
+                r"(?:$|[ >.#:\[])",
+                selector,
+            )
+        )
+
+    def _is_table_row_control(
+        self,
+        candidate: EventCandidate,
+        item: dict[str, Any],
+        selector: str,
+        combined: str,
+    ) -> bool:
+        if not self._is_table_row_context(item, selector):
+            return False
+        aria_expanded = item.get("aria_expanded")
+        if aria_expanded is not None:
+            return True
+        normalized_label = self._normalize_for_matching(candidate.label)
+        return any(
+            word in f"{normalized_label} {combined}"
+            for word in ("expand row", "expandir fila", "row detail", "detalle fila")
+        )
+
+    def _is_date_picker_control(
+        self,
+        candidate: EventCandidate,
+        item: dict[str, Any],
+        combined: str,
+    ) -> bool:
+        values = " ".join(
+            [
+                self._normalize_for_matching(candidate.label),
+                self._normalize_for_matching(item.get("aria_label")),
+                self._normalize_for_matching(item.get("title")),
+                combined,
+            ]
+        )
+        return any(word in values for word in self.DATE_PICKER_WORDS)
+
+    def _candidate_quality(self, candidate: EventCandidate) -> tuple[int, int, int, int, int]:
+        source_priority = {"links": 3, "buttons": 2, "custom_interactives": 1}
+        return (
+            1 if candidate.metadata.get("href") else 0,
+            1 if candidate.label else 0,
+            source_priority.get(candidate.source, 0),
+            1 if candidate.tag in {"a", "button", "select"} else 0,
+            candidate.score,
+        )
+
     def _deduplicate(self, candidates: list[EventCandidate]) -> list[EventCandidate]:
         best_by_key: dict[str, EventCandidate] = {}
         for candidate in candidates:
             key = self._candidate_key(candidate)
             existing = best_by_key.get(key)
-            if existing is None or candidate.score > existing.score:
+
+            # Dos enlaces con el mismo texto pero destinos distintos deben
+            # conservarse. Un candidato DOM sin href sí se fusiona con el
+            # enlace nativo equivalente y pierde frente a la evidencia más rica.
+            if (
+                existing is not None
+                and candidate.event_category == UIEventType.NAVIGATION_LINK.value
+            ):
+                existing_href = str(existing.metadata.get("href") or "").strip()
+                candidate_href = str(candidate.metadata.get("href") or "").strip()
+                if (
+                    existing_href
+                    and candidate_href
+                    and existing_href != candidate_href
+                ):
+                    key = f"{key}::href::{candidate_href.lower()}"
+                    existing = best_by_key.get(key)
+
+            if (
+                existing is None
+                or self._candidate_quality(candidate)
+                > self._candidate_quality(existing)
+            ):
                 best_by_key[key] = candidate
         return list(best_by_key.values())
 
     def _candidate_key(self, candidate: EventCandidate) -> str:
+        if self._is_table_row_context(candidate.metadata, candidate.selector):
+            region = str(candidate.metadata.get("region") or "main_content")
+            label = self._normalize_for_matching(candidate.label)
+            selector_template = self._normalize_table_selector(
+                candidate.selector
+            )
+            return (
+                f"table::{candidate.event_category}::{region}::"
+                f"{label}::{selector_template}"
+            )
+
         semantic_categories = {
             UIEventType.NAVIGATION_LINK.value,
             UIEventType.EXPAND_MENU.value,
@@ -682,16 +968,33 @@ class EventCandidateDiscovery:
             UIEventType.ACTIVATE_TAB.value,
         }
         if candidate.label and candidate.event_category in semantic_categories:
-            href = str(candidate.metadata.get("href") or "").strip().lower()
+            region = str(candidate.metadata.get("region") or "main_content")
+            label = self._normalize_for_matching(candidate.label)
             return (
                 f"semantic::{candidate.event_category}::"
-                f"{candidate.label.lower()}::{href}"
+                f"{region}::{label}"
             )
         if candidate.selector:
             return f"selector::{candidate.selector}"
         if candidate.label:
-            return f"label::{candidate.label.lower()}::{candidate.tag}"
+            label = self._normalize_for_matching(candidate.label)
+            return f"label::{label}::{candidate.tag}"
         return f"unknown::{candidate.tag}::{candidate.source}"
+
+    def _normalize_table_selector(self, selector: str) -> str:
+        """Convierte selectores de filas repetidas en una plantilla funcional."""
+        normalized = self._normalize_for_matching(selector)
+        normalized = re.sub(
+            r"\b(tr|mat-row):nth-of-type\(\d+\)",
+            r"\1:nth-of-type(*)",
+            normalized,
+        )
+        normalized = re.sub(
+            r'\b(tr|mat-row)\[data-(?:row)?index=[\'"]?\d+[\'"]?\]',
+            r"\1[data-rowindex=*]",
+            normalized,
+        )
+        return normalized
 
     def _audit_sort_key(self, candidate: EventCandidate) -> tuple[int, int, str]:
         # Se priorizan elementos nativos/locales frente a contenedores globales.
@@ -706,11 +1009,12 @@ class EventCandidateDiscovery:
         category_priority = {
             UIEventType.ACTIVATE_TAB.value: 0,
             UIEventType.OPEN_READONLY_VIEW.value: 1,
-            UIEventType.SUBMIT_SEARCH.value: 2,
+            UIEventType.OPEN_DATE_PICKER.value: 2,
             UIEventType.OPEN_MODAL.value: 3,
             UIEventType.OPEN_DROPDOWN.value: 4,
-            UIEventType.CHANGE_PAGINATION.value: 5,
-            UIEventType.EXPAND_MENU.value: 6,
+            UIEventType.SUBMIT_SEARCH.value: 5,
+            UIEventType.CHANGE_PAGINATION.value: 6,
+            UIEventType.EXPAND_MENU.value: 7,
             UIEventType.CLOSE_MODAL.value: 7,
             UIEventType.NAVIGATION_LINK.value: 8,
         }

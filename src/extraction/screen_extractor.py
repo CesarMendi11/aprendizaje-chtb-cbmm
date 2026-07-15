@@ -279,11 +279,22 @@ class ScreenExtractor:
             };
 
             const limit = (items, max = 300) => items.slice(0, max);
-            const baseItem = (element) => ({
-                selector: cssPath(element),
-                tag: element.tagName.toLowerCase(),
-                region: regionOf(element),
-            });
+            const baseItem = (element) => {
+                const form = element.closest ? element.closest("form") : null;
+                return {
+                    selector: cssPath(element),
+                    tag: element.tagName.toLowerCase(),
+                    region: regionOf(element),
+                    within_table: Boolean(element.closest && element.closest("table")),
+                    within_form: Boolean(form),
+                    form_method: form
+                        ? normalizeText(form.getAttribute("method") || "get").toLowerCase()
+                        : null,
+                    form_action: form
+                        ? form.getAttribute("action") || window.location.pathname
+                        : null,
+                };
+            };
 
             const links = limit(
                 Array.from(document.querySelectorAll("a[href]"))
@@ -395,6 +406,10 @@ class ScreenExtractor:
                         aria_selected: element.getAttribute("aria-selected"),
                         aria_controls: element.getAttribute("aria-controls"),
                         aria_hidden: element.getAttribute("aria-hidden"),
+                        aria_label: element.getAttribute("aria-label"),
+                        title: element.getAttribute("title"),
+                        href: element.getAttribute("href"),
+                        absolute_href: element.href || null,
                         type: element.getAttribute("type"),
                         disabled: Boolean(
                             element.disabled || element.getAttribute("aria-disabled") === "true"
