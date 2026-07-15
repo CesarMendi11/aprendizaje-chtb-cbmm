@@ -270,3 +270,93 @@ def test_state_signature_detects_active_tab_change():
     after = builder.build(active)
 
     assert builder.has_changed(before, after)
+
+
+def test_structural_signature_ignores_header_and_volatile_region_changes():
+    builder = StateSignatureBuilder()
+
+    base = {
+        "path": "/admin/facturas",
+        "title": "Dashboard",
+        "functional_title": "Facturas",
+        "visible_text": "Usuario Ana Facturas Historial 10:00 10.0.0.1",
+        "main_visible_text": "Facturas Consulta de facturas",
+        "regions": {
+            "main_content": {"visible_text": "Facturas Consulta de facturas", "elements_count": 1},
+            "dialog": {"visible_text": "", "elements_count": 0},
+            "header": {"visible_text": "Usuario Ana", "elements_count": 1},
+            "volatile": {"visible_text": "Historial 10:00 10.0.0.1", "elements_count": 1},
+        },
+        "links": [],
+        "buttons": [
+            {"text": "Buscar", "tag": "button", "region": "main_content"}
+        ],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [],
+        "dialogs": [],
+    }
+    changed_noise = {
+        **base,
+        "visible_text": "Usuario Luis Facturas Historial 11:00 192.168.1.8",
+        "regions": {
+            **base["regions"],
+            "header": {"visible_text": "Usuario Luis", "elements_count": 1},
+            "volatile": {"visible_text": "Historial 11:00 192.168.1.8", "elements_count": 4},
+        },
+    }
+
+    first = builder.build(base)
+    second = builder.build(changed_noise)
+
+    assert first.exact_fingerprint != second.exact_fingerprint
+    assert first.structural_fingerprint == second.structural_fingerprint
+
+
+def test_structural_signature_keeps_global_navigation_expansion_state():
+    builder = StateSignatureBuilder()
+
+    closed = {
+        "path": "/admin/home",
+        "functional_title": "Dashboard",
+        "visible_text": "Dashboard Cuentas por cobrar",
+        "main_visible_text": "Dashboard",
+        "regions": {
+            "main_content": {"visible_text": "Dashboard", "elements_count": 0},
+            "dialog": {"visible_text": "", "elements_count": 0},
+        },
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "custom_interactives": [
+            {
+                "text": "Cuentas por cobrar",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "aria_expanded": "false",
+                "region": "global_navigation",
+            }
+        ],
+    }
+    opened = {
+        **closed,
+        "links": [
+            {
+                "text": "Retenciones",
+                "href": "/admin/retenciones",
+                "tag": "a",
+                "region": "global_navigation",
+            }
+        ],
+        "custom_interactives": [
+            {
+                "text": "Cuentas por cobrar",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "aria_expanded": "true",
+                "region": "global_navigation",
+            }
+        ],
+    }
+
+    assert builder.has_changed(builder.build(closed), builder.build(opened))

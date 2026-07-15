@@ -349,3 +349,38 @@ def test_discovery_classifies_accented_open_menu_as_safe_expand_menu():
     assert candidates[0].event_category == "expand_menu"
     assert candidates[0].decision == "allow"
 
+
+
+def test_safe_candidates_prioritize_local_controls_outside_home():
+    discovery = build_discovery()
+    discovery.home_route = "/admin/home"
+
+    screen_data = {
+        "path": "/admin/facturas",
+        "buttons": [
+            {
+                "text": "Buscar",
+                "tag": "button",
+                "type": None,
+                "selector": "main button.search",
+                "region": "main_content",
+            },
+            {
+                "text": "Abrir menú",
+                "tag": "button",
+                "type": None,
+                "selector": "aside button.open-menu",
+                "region": "global_navigation",
+            },
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_safe_candidates(screen_data)
+
+    assert [candidate.label for candidate in candidates[:2]] == [
+        "Buscar",
+        "Abrir menú",
+    ]
+    assert candidates[0].metadata["region"] == "main_content"

@@ -56,6 +56,9 @@ class StateSignatureBuilder:
         r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",
         # Horas.
         r"\b\d{1,2}:\d{2}(?::\d{2})?(?:\s?[ap]\.?m\.?)?\b",
+        # Direcciones IPv4 e IPv6 observadas en historiales de acceso.
+        r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
+        r"\b(?:[0-9a-f]{1,4}:){2,7}[0-9a-f]{1,4}\b",
         # Tokens/hexadecimales largos.
         r"\b[0-9a-f]{24,}\b",
         # Identificadores numéricos largos; se conservan números cortos de UI.
@@ -70,8 +73,9 @@ class StateSignatureBuilder:
         ignore_table_row_count: bool = True,
     ):
         self.visible_text_limit = visible_text_limit
+        custom_patterns = tuple(volatile_text_patterns or ())
         self.volatile_text_patterns = tuple(
-            volatile_text_patterns or self.DEFAULT_VOLATILE_PATTERNS
+            dict.fromkeys((*self.DEFAULT_VOLATILE_PATTERNS, *custom_patterns))
         )
         self.ignore_query_values = ignore_query_values
         self.ignore_table_row_count = ignore_table_row_count
@@ -97,7 +101,11 @@ class StateSignatureBuilder:
 
     def build(self, screen_data: dict[str, Any]) -> StateSignature:
         route = screen_data.get("path") or ""
-        title = screen_data.get("title") or ""
+        title = (
+            screen_data.get("functional_title")
+            or screen_data.get("title")
+            or ""
+        )
 
         exact_summary = self._build_summary(screen_data, structural=False)
         structural_summary = self._build_summary(screen_data, structural=True)
@@ -131,37 +139,114 @@ class StateSignatureBuilder:
         screen_data: dict[str, Any],
         structural: bool,
     ) -> dict[str, Any]:
-        visible_text = (screen_data.get("visible_text") or "")[
-            : self.visible_text_limit
-        ]
+        has_regions = bool(screen_data.get("regions"))
+
+        if structural and has_regions:
+            visible_text = (
+                screen_data.get("main_visible_text")
+                or screen_data.get("regions", {})
+                .get("main_content", {})
+                .get("visible_text", "")
+            )[: self.visible_text_limit]
+            links = self._local_items(screen_data.get("links", []))
+            buttons = self._local_items(screen_data.get("buttons", []))
+            inputs = self._local_items(screen_data.get("inputs", []))
+            tables = self._local_items(screen_data.get("tables", []))
+            interactives = self._local_items(
+                screen_data.get("custom_interactives", [])
+            )
+        else:
+            visible_text = (screen_data.get("visible_text") or "")[
+                : self.visible_text_limit
+            ]
+            links = screen_data.get("links", [])
+            buttons = screen_data.get("buttons", [])
+            inputs = screen_data.get("inputs", [])
+            tables = screen_data.get("tables", [])
+            interactives = screen_data.get("custom_interactives", [])
 
         if structural:
             visible_text = self._normalize_structural_text(visible_text)
         else:
             visible_text = self._normalize_text(visible_text)
 
-        return {
+        summary = {
             "route": self._normalize_route(
                 screen_data.get("path") or "",
                 structural=structural,
             ),
-            "title": self._normalize_text(screen_data.get("title")),
+            "title": self._normalize_text(
+                screen_data.get("functional_title")
+                or screen_data.get("title")
+            ),
             "visible_text": visible_text,
-            "links": self._normalize_links(
-                screen_data.get("links", []),
-                structural=structural,
-            ),
-            "buttons": self._normalize_buttons(screen_data.get("buttons", [])),
-            "inputs": self._normalize_inputs(screen_data.get("inputs", [])),
-            "tables": self._normalize_tables(
-                screen_data.get("tables", []),
-                structural=structural,
-            ),
+            "links": self._normalize_links(links, structural=structural),
+            "buttons": self._normalize_buttons(buttons),
+            "inputs": self._normalize_inputs(inputs),
+            "tables": self._normalize_tables(tables, structural=structural),
             "custom_interactives": self._normalize_custom_interactives(
-                screen_data.get("custom_interactives", [])
+                interactives
             ),
             "dialogs": self._normalize_dialogs(screen_data.get("dialogs", [])),
         }
+
+        if structural and has_regions:
+            summary["navigation_state"] = self._normalize_navigation_state(
+                screen_data
+            )
+            summary["regions"] = self._normalize_region_summary(screen_data)
+
+        return summary
+
+    def _local_items(
+        self,
+        items: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [
+            item
+            for item in items
+            if item.get("region")
+            not in {"global_navigation", "header", "footer", "volatile"}
+        ]
+
+    def _normalize_navigation_state(
+        self,
+        screen_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        global_links = [
+            item
+            for item in screen_data.get("links", [])
+            if item.get("region") == "global_navigation"
+        ]
+        global_interactives = [
+            item
+            for item in screen_data.get("custom_interactives", [])
+            if item.get("region") == "global_navigation"
+            and (
+                item.get("aria_expanded") is not None
+                or item.get("aria_selected") is not None
+                or item.get("role") in {"tab", "menuitem"}
+            )
+        ]
+        return {
+            "links": self._normalize_links(global_links, structural=True),
+            "interactives": self._normalize_custom_interactives(
+                global_interactives
+            ),
+        }
+
+    def _normalize_region_summary(
+        self,
+        screen_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        regions = screen_data.get("regions", {})
+        result: dict[str, Any] = {}
+        for name in ("main_content", "dialog"):
+            data = regions.get(name, {})
+            result[name] = {
+                "elements_count": int(data.get("elements_count") or 0),
+            }
+        return result
 
     def _normalize_links(
         self,

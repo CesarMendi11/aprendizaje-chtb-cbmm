@@ -40,6 +40,7 @@ class LinkNormalizer:
                     "href": href,
                     "selector": link.get("selector", ""),
                     "tag": link.get("tag", ""),
+                    "region": link.get("region", "main_content"),
                 }
             )
 

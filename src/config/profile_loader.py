@@ -127,6 +127,38 @@ class ProfileLoader:
                 "state_detection.volatile_text_patterns debe ser una lista."
             )
 
+
+        extraction = profile.get("extraction", {})
+        regions = extraction.get("regions", {})
+        if regions and not isinstance(regions, dict):
+            raise ValueError("extraction.regions debe ser un objeto.")
+
+        for region_name, selectors in regions.items():
+            if not isinstance(selectors, list):
+                raise ValueError(
+                    f"extraction.regions.{region_name} debe ser una lista."
+                )
+            if not all(isinstance(selector, str) for selector in selectors):
+                raise ValueError(
+                    f"extraction.regions.{region_name} solo admite selectores de texto."
+                )
+
+        title_resolution = extraction.get("title_resolution", {})
+        if title_resolution and not isinstance(title_resolution, dict):
+            raise ValueError("extraction.title_resolution debe ser un objeto.")
+
+        route_titles = title_resolution.get("route_titles", {})
+        if route_titles and not isinstance(route_titles, dict):
+            raise ValueError(
+                "extraction.title_resolution.route_titles debe ser un objeto."
+            )
+
+        generic_titles = title_resolution.get("generic_document_titles", [])
+        if generic_titles and not isinstance(generic_titles, list):
+            raise ValueError(
+                "extraction.title_resolution.generic_document_titles debe ser una lista."
+            )
+
         state_replay = profile.get("state_replay", {})
         if state_replay and not isinstance(state_replay, dict):
             raise ValueError("state_replay debe ser un objeto.")

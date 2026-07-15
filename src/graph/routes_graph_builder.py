@@ -36,14 +36,22 @@ class RoutesGraphBuilder:
 
         if route in self._nodes:
             existing = self._nodes[route]
+            new_metadata = metadata or {}
+            existing_confidence = float(
+                existing.get("metadata", {}).get("title_confidence") or 0.0
+            )
+            new_confidence = float(new_metadata.get("title_confidence") or 0.0)
 
-            if title and not existing.get("title"):
+            if title and (
+                not existing.get("title")
+                or new_confidence >= existing_confidence
+            ):
                 existing["title"] = title
 
             if source_module and not existing.get("source_module"):
                 existing["source_module"] = source_module
 
-            existing["metadata"].update(metadata or {})
+            existing["metadata"].update(new_metadata)
             return
 
         self._nodes[route] = {

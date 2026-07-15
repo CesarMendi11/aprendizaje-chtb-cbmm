@@ -20,12 +20,16 @@ class CrawlTarget:
 
     reason:
         Motivo por el cual se agregó a la cola.
+
+    title_hint:
+        Nombre observado en el enlace o menú que descubrió la ruta.
     """
 
     route: str
     source: str
     depth: int = 0
     reason: str = "discovered"
+    title_hint: str = ""
 
 
 class Frontier:

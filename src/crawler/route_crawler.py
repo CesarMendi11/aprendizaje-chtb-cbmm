@@ -23,6 +23,7 @@ from src.models.crawl_path import CrawlPath, CrawlPathStep
 from src.models.transition import Transition
 from src.models.ui_state import UIState
 from src.policy.route_policy import RoutePolicy
+from src.review.event_policy_auditor import build_event_policy_audit
 from src.storage.artifact_storage import ArtifactStorage, safe_slug
 
 
@@ -112,6 +113,7 @@ class RouteCrawler:
         self.max_pages_total = exploration.get("max_pages_total", 300)
         self.page_wait_ms = exploration.get("page_wait_ms", 1500)
         self.start_modules = exploration.get("start_modules", [])
+        self.home_route = profile.get("navigation", {}).get("home_url", "")
 
         ui_events = profile.get("ui_events", {})
         self.ui_events_enabled = ui_events.get("enabled", True)
@@ -200,6 +202,7 @@ class RouteCrawler:
                     source=target.source,
                     depth=target.depth,
                     reason=target.reason,
+                    title_hint=target.title_hint,
                 )
 
             except Exception as error:
@@ -213,8 +216,14 @@ class RouteCrawler:
                     },
                 )
 
-    def _capture_current_screen(self, source: str, depth: int, reason: str) -> None:
-        screen_data = self.extractor.extract()
+    def _capture_current_screen(
+        self,
+        source: str,
+        depth: int,
+        reason: str,
+        title_hint: str = "",
+    ) -> None:
+        screen_data = self._extract_screen(title_hint=title_hint)
 
         route = screen_data.get("path") or self.navigator.current_path()
 
@@ -290,6 +299,16 @@ class RouteCrawler:
 
         self._checkpoint_outputs()
 
+
+    def _extract_screen(self, title_hint: str = "") -> dict[str, Any]:
+        """Mantiene compatibilidad con extractores personalizados antiguos."""
+        try:
+            return self.extractor.extract(title_hint=title_hint)
+        except TypeError as error:
+            if "title_hint" not in str(error):
+                raise
+            return self.extractor.extract()
+
     def _save_screen_artifacts(
         self,
         route: str,
@@ -339,12 +358,17 @@ class RouteCrawler:
     ) -> None:
         self.routes_graph.add_screen(
             route=route,
-            title=screen_data.get("title", ""),
+            title=(
+                screen_data.get("functional_title")
+                or screen_data.get("title", "")
+            ),
             source_module=source,
             status="discovered",
             metadata={
                 "reason": reason,
                 "depth": depth,
+                "title_source": screen_data.get("title_source", ""),
+                "title_confidence": screen_data.get("title_confidence", 0.0),
             },
         )
 
@@ -364,15 +388,28 @@ class RouteCrawler:
     ) -> None:
         for link in links:
             target_route = link["route"]
+            region = link.get("region", "main_content")
 
             if target_route == source_route:
                 continue
 
             if not self.policy.is_allowed_route(target_route):
                 continue
-            
-            if only_new_targets and self.routes_graph.has_screen(target_route):
-               continue
+
+            already_known = self.routes_graph.has_screen(target_route)
+            if only_new_targets and already_known:
+                continue
+
+            # El menú lateral se repite en casi todas las rutas. Conservar sus
+            # enlaces desde la raíz o cuando descubren una ruta nueva, pero no
+            # crear aristas cruzadas artificiales entre todas las pantallas.
+            repeated_global_link = (
+                region == "global_navigation"
+                and source_route != self.home_route
+                and already_known
+            )
+            if repeated_global_link:
+                continue
 
             self.routes_graph.add_screen(
                 route=target_route,
@@ -381,6 +418,9 @@ class RouteCrawler:
                 status="discovered",
                 metadata={
                     "discovered_from": source_route,
+                    "title_source": "discovery_link",
+                    "title_confidence": 0.90,
+                    "region": region,
                 },
             )
 
@@ -392,6 +432,7 @@ class RouteCrawler:
                 metadata={
                     "selector": link.get("selector", ""),
                     "href": link.get("href", ""),
+                    "region": region,
                 },
             )
 
@@ -401,6 +442,7 @@ class RouteCrawler:
                     source=source_route,
                     depth=depth + 1,
                     reason=reason,
+                    title_hint=link.get("text", ""),
                 )
             )
 
@@ -630,7 +672,10 @@ class RouteCrawler:
                     "restore_error": result.get("restore_error"),
                     "artifact_error": result.get("artifact_error"),
                     "after_summary": {
-                        "title": after_screen_data.get("title"),
+                        "title": (
+                            after_screen_data.get("functional_title")
+                            or after_screen_data.get("title")
+                        ),
                         "path": after_screen_data.get("path"),
                         "links_count": len(after_screen_data.get("links", [])),
                         "buttons_count": len(after_screen_data.get("buttons", [])),
@@ -716,7 +761,10 @@ class RouteCrawler:
             reason="uncertain_screen",
             extra={
                 "reasons": reasons,
-                "title": screen_data.get("title", ""),
+                "title": (
+                    screen_data.get("functional_title")
+                    or screen_data.get("title", "")
+                ),
                 "url": screen_data.get("url", ""),
                 "buttons": buttons,
                 "inputs": inputs,
@@ -789,6 +837,11 @@ class RouteCrawler:
         screen_index_path = self.storage.save_processed_structural_json(
             data=screen_index_data,
             filename="screen_index.json",
+        )
+
+        self.storage.save_processed_structural_json(
+            data=build_event_policy_audit(self.profile, screen_index_data),
+            filename="event_policy_audit.json",
         )
 
         self.storage.save_processed_structural_json(

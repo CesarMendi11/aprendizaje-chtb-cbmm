@@ -118,9 +118,51 @@ state_detection:
     - "\\b\\d{1,2}:\\d{2}(?::\\d{2})?\\b"
     - "\\b[0-9a-f]{24,}\\b"
     - "\\b\\d{6,}\\b"
+    - "historial de inicio de sesi[oó]n.*$"
 
 extraction:
   max_visible_text_chars: 8000
+  max_region_text_chars: 5000
+
+  # Estrategias generales; un nuevo ERP puede reemplazarlas desde su perfil.
+  regions:
+    global_navigation:
+      - "fuse-vertical-navigation"
+      - "[role='navigation']"
+      - "nav"
+      - "aside"
+      - "app-sidebar"
+      - ".sidebar"
+    header:
+      - "header"
+      - "[role='banner']"
+      - "mat-toolbar"
+      - ".app-header"
+      - ".topbar"
+    main_content:
+      - "main"
+      - "[role='main']"
+      - "router-outlet + *"
+      - "app-home"
+    footer:
+      - "footer"
+      - "[role='contentinfo']"
+    dialog:
+      - "dialog"
+      - "[role='dialog']"
+      - "[role='alertdialog']"
+      - "mat-dialog-container"
+      - ".modal.show"
+    volatile: []
+
+  title_resolution:
+    max_title_length: 120
+    generic_document_titles:
+      - "Dashboard"
+      - "ERP"
+      - "Inicio"
+    route_titles:
+      "/admin/home": "Dashboard"
   keep_table_headers: true
   keep_form_fields: true
   keep_buttons: true

@@ -1,0 +1,978 @@
+{
+  "profile": "cbmm",
+  "screens_count": 11,
+  "decision_totals": {
+    "allow": 278,
+    "deny": 6,
+    "review": 19
+  },
+  "category_totals": {
+    "activate_tab": 14,
+    "change_pagination": 24,
+    "expand_menu": 92,
+    "mutative_action": 6,
+    "navigation_link": 140,
+    "open_dropdown": 4,
+    "submit_search": 4,
+    "unknown": 19
+  },
+  "screens": [
+    {
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "candidates_count": 13,
+      "decisions": {
+        "allow": 12,
+        "review": 1
+      },
+      "categories": {
+        "expand_menu": 10,
+        "navigation_link": 2,
+        "unknown": 1
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Dashboard",
+      "candidates_count": 38,
+      "decisions": {
+        "allow": 36,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "navigation_link": 19,
+        "open_dropdown": 2,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Open calendar",
+          "selector": "div:nth-of-type(3) > ui-date-range > mat-form-field > div:nth-of-type(1) > div > div:nth-of-type(3) > mat-datepicker-toggle > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Open calendar",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Dashboard",
+      "candidates_count": 36,
+      "decisions": {
+        "allow": 30,
+        "deny": 2,
+        "review": 4
+      },
+      "categories": {
+        "expand_menu": 10,
+        "mutative_action": 2,
+        "navigation_link": 18,
+        "open_dropdown": 2,
+        "unknown": 4
+      },
+      "denied": [
+        {
+          "label": "Guardar sin firmar",
+          "selector": "cxc-punto-venta > div > div > form > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Guardar y Enviar SRI",
+          "selector": "cxc-punto-venta > div > div > form > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Conumidor Final",
+          "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Con datos cliente",
+          "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Open calendar",
+          "selector": "div:nth-of-type(2) > div:nth-of-type(1) > mat-form-field > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > mat-datepicker-toggle > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Open calendar",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Dashboard",
+      "candidates_count": 36,
+      "decisions": {
+        "allow": 34,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "navigation_link": 19,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-factura-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Dashboard",
+      "candidates_count": 36,
+      "decisions": {
+        "allow": 33,
+        "deny": 1,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 19,
+        "unknown": 2
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "app-notas-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-notas-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Dashboard",
+      "candidates_count": 36,
+      "decisions": {
+        "allow": 33,
+        "deny": 1,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 19,
+        "unknown": 2
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Agregar",
+          "selector": "div > div > div > div > div:nth-of-type(2) > div > div > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Dashboard",
+      "candidates_count": 47,
+      "decisions": {
+        "allow": 44,
+        "deny": 1,
+        "review": 2
+      },
+      "categories": {
+        "activate_tab": 10,
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 19,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "denied": [
+        {
+          "label": "Nueva retención",
+          "selector": "app-retencion-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-retencion-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Dashboard",
+      "candidates_count": 40,
+      "decisions": {
+        "allow": 37,
+        "deny": 1,
+        "review": 2
+      },
+      "categories": {
+        "activate_tab": 4,
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 19,
+        "unknown": 2
+      },
+      "denied": [
+        {
+          "label": "Nueva categoría",
+          "selector": "ng-component > ui-content-wrapper > div > div > ui-breadcrumbs > div > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Sincronizar",
+          "selector": "ng-component > ui-content-wrapper > div > div > ui-breadcrumbs > div > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Servicios Online",
+      "candidates_count": 0,
+      "decisions": {},
+      "categories": {},
+      "denied": [],
+      "review": []
+    },
+    {
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "Servicios Online",
+      "candidates_count": 0,
+      "decisions": {},
+      "categories": {},
+      "denied": [],
+      "review": []
+    },
+    {
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "Dashboard",
+      "candidates_count": 21,
+      "decisions": {
+        "allow": 19,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 6,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        },
+        {
+          "label": "Limpiar",
+          "selector": "div > div:nth-of-type(2) > app-sri > div > div > div:nth-of-type(2) > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "disabled": null
+          }
+        }
+      ]
+    }
+  ]
+}

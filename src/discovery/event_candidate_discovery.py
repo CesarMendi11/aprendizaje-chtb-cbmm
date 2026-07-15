@@ -206,6 +206,7 @@ class EventCandidateDiscovery:
         forms = profile.get("forms", {})
         self.forms_enabled = forms.get("enabled", False)
         self.forms_allow_submit = forms.get("allow_submit", False)
+        self.home_route = profile.get("navigation", {}).get("home_url", "")
 
     def discover_candidates(self, screen_data: dict[str, Any]) -> list[EventCandidate]:
         """Devuelve una muestra equilibrada para auditoría y revisión.
@@ -273,6 +274,9 @@ class EventCandidateDiscovery:
         )
 
         candidates = self._deduplicate(raw_candidates)
+        screen_path = str(screen_data.get("path") or "")
+        for candidate in candidates:
+            candidate.metadata.setdefault("screen_path", screen_path)
         return [
             candidate
             for candidate in candidates
@@ -296,6 +300,7 @@ class EventCandidateDiscovery:
                 metadata={
                     "href": item.get("href"),
                     "absolute_href": item.get("absolute_href"),
+                    "region": item.get("region", "main_content"),
                 },
             )
             self._finalize_candidate(candidate, item)
@@ -322,6 +327,7 @@ class EventCandidateDiscovery:
                     "aria_expanded": item.get("aria_expanded"),
                     "aria_selected": item.get("aria_selected"),
                     "disabled": item.get("disabled"),
+                    "region": item.get("region", "main_content"),
                 },
             )
 
@@ -358,6 +364,7 @@ class EventCandidateDiscovery:
                     "onclick": item.get("onclick"),
                     "type": item.get("type"),
                     "disabled": item.get("disabled"),
+                    "region": item.get("region", "main_content"),
                 },
             )
             self._finalize_candidate(candidate, item)
@@ -454,6 +461,10 @@ class EventCandidateDiscovery:
         if self._looks_like_collapsable(tag, selector, aria_expanded):
             candidate.score += 2
             candidate.reasons.append("collapsable_like_element")
+
+        region = str(raw_item.get("region") or "main_content")
+        candidate.metadata.setdefault("region", region)
+        candidate.reasons.append(f"region:{region}")
 
         if candidate.selector:
             candidate.score += 1
@@ -691,20 +702,38 @@ class EventCandidateDiscovery:
             candidate.label.lower(),
         )
 
-    def _exploration_sort_key(self, candidate: EventCandidate) -> tuple[int, int, str]:
+    def _exploration_sort_key(self, candidate: EventCandidate) -> tuple[int, int, int, str]:
         category_priority = {
             UIEventType.ACTIVATE_TAB.value: 0,
             UIEventType.OPEN_READONLY_VIEW.value: 1,
             UIEventType.SUBMIT_SEARCH.value: 2,
-            UIEventType.EXPAND_MENU.value: 3,
-            UIEventType.OPEN_MODAL.value: 4,
-            UIEventType.OPEN_DROPDOWN.value: 5,
-            UIEventType.CHANGE_PAGINATION.value: 6,
+            UIEventType.OPEN_MODAL.value: 3,
+            UIEventType.OPEN_DROPDOWN.value: 4,
+            UIEventType.CHANGE_PAGINATION.value: 5,
+            UIEventType.EXPAND_MENU.value: 6,
             UIEventType.CLOSE_MODAL.value: 7,
             UIEventType.NAVIGATION_LINK.value: 8,
         }
         return (
+            self._region_priority(candidate),
             category_priority.get(candidate.event_category, 9),
             -candidate.score,
             candidate.label.lower(),
         )
+
+    def _region_priority(self, candidate: EventCandidate) -> int:
+        """Prioriza controles locales sin perder módulos en la pantalla raíz."""
+        region = str(candidate.metadata.get("region") or "main_content")
+        path = str(candidate.metadata.get("screen_path") or "")
+
+        if region == "dialog":
+            return 0
+        if region == "main_content":
+            return 1
+        if region == "global_navigation":
+            return 1 if path == self.home_route else 4
+        if region == "header":
+            return 5
+        if region in {"footer", "volatile"}:
+            return 6
+        return 2
