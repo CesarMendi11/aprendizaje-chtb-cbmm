@@ -774,3 +774,49 @@ data/processed/structural/graph_for_neo4j.json
 ```
 
 Ese archivo será la base para importar el conocimiento estructural del ERP a Neo4j.
+
+## Backend FastAPI del asistente ERP (Fase 2B)
+
+Esta fase expone una API determinista sobre `data/processed/structural/screen_index.json`. No usa LLM, embeddings, bases vectoriales, Neo4j ni ejecuta acciones en el ERP.
+
+Terminal 1:
+
+```bash
+cd ~/Desktop/aprendizaje-chtb-cbmm
+source .venv/bin/activate
+python -m scripts.run_api
+```
+
+Terminal 2:
+
+```bash
+cd ~/Desktop/SiaCat/siacat_backend
+yarn start:dev
+```
+
+Terminal 3:
+
+```bash
+cd ~/Desktop/SiaCat/siacat_frontend
+npm run start:local
+```
+
+La configuración admite las variables opcionales `API_HOST`, `API_PORT`, `API_CORS_ORIGINS`, `SCREEN_INDEX_PATH`, `ROUTES_GRAPH_PATH`, `STATE_FLOW_GRAPH_PATH`, `SEARCH_MAX_RESULTS` y `SEARCH_MINIMUM_SCORE`. Las rutas relativas se resuelven desde la raíz del proyecto. CORS acepta por defecto únicamente `http://localhost:4200` y `http://127.0.0.1:4200`.
+
+```bash
+curl http://127.0.0.1:8000/api/health
+```
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "question": "¿Dónde consulto retenciones?",
+    "conversationId": "prueba-local",
+    "context": {
+      "currentRoute": "/admin/home"
+    }
+  }'
+```
+
+OpenAPI está disponible localmente en `http://127.0.0.1:8000/api/docs`.
