@@ -122,6 +122,36 @@ class ProfileLoader:
 
 
         ui_events = profile.get("ui_events", {})
+
+        max_event_depth = ui_events.get("max_event_depth")
+        if max_event_depth is not None and (
+            not isinstance(max_event_depth, int) or max_event_depth < 0
+        ):
+            raise ValueError(
+                "ui_events.max_event_depth debe ser un entero no negativo."
+            )
+
+        for field in [
+            "home_navigation_enabled",
+            "explore_local_route_roots",
+            "recursive_state_exploration",
+        ]:
+            value = ui_events.get(field)
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"ui_events.{field} debe ser booleano.")
+
+        for field in ["home_event_categories", "local_event_categories"]:
+            value = ui_events.get(field)
+            if value is not None and not isinstance(value, list):
+                raise ValueError(f"ui_events.{field} debe ser una lista.")
+            if isinstance(value, list):
+                unknown = sorted(set(value) - valid_event_categories)
+                if unknown:
+                    raise ValueError(
+                        f"ui_events.{field} contiene categorías desconocidas: "
+                        f"{unknown}"
+                    )
+
         exploration_budget = ui_events.get("exploration_budget", {})
         if exploration_budget and not isinstance(exploration_budget, dict):
             raise ValueError("ui_events.exploration_budget debe ser un objeto.")

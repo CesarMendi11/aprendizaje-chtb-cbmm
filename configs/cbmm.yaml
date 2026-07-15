@@ -215,7 +215,21 @@ ui_events:
   event_wait_ms: 400
   click_timeout_ms: 3000
   skip_link_navigation: true
-  max_event_depth: 0
+  # Profundidad 1: explora controles locales de cada pantalla raíz y registra
+  # el estado resultante, sin encadenar todavía eventos dentro de ese estado.
+  max_event_depth: 1
+  home_navigation_enabled: true
+  explore_local_route_roots: true
+  recursive_state_exploration: true
+  home_event_categories:
+    - "expand_menu"
+  local_event_categories:
+    - "activate_tab"
+    - "open_readonly_view"
+    - "open_date_picker"
+    - "open_modal"
+    - "open_dropdown"
+    - "change_pagination"
   restore_after_exploration: true
   capture_event_artifacts: true
   artifact_timeout_ms: 3000

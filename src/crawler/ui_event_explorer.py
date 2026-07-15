@@ -132,6 +132,7 @@ class UIEventExplorer:
         self,
         screen_data: dict[str, Any] | None = None,
         source_state: UIState | None = None,
+        allowed_categories: set[str] | None = None,
     ) -> list[UIEventResult]:
         if not self.enabled:
             return []
@@ -144,7 +145,10 @@ class UIEventExplorer:
         candidates = self.candidate_discovery.discover_exploration_candidates(
             current_screen_data
         )
-        candidates = self._filter_candidates_for_ui_events(candidates)
+        candidates = self._filter_candidates_for_ui_events(
+            candidates,
+            allowed_categories=allowed_categories,
+        )
         candidates = candidates[: self.max_events_per_state]
 
         isolated = source_state is not None and self.state_restorer is not None
@@ -202,6 +206,7 @@ class UIEventExplorer:
     def _filter_candidates_for_ui_events(
         self,
         candidates: list[EventCandidate],
+        allowed_categories: set[str] | None = None,
     ) -> list[EventCandidate]:
         filtered = []
 
@@ -213,6 +218,11 @@ class UIEventExplorer:
             if self.skip_link_navigation and (
                 candidate.action_kind == "link_navigation"
                 or candidate.event_category == "navigation_link"
+            ):
+                continue
+            if (
+                allowed_categories is not None
+                and candidate.event_category not in allowed_categories
             ):
                 continue
             filtered.append(candidate)

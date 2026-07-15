@@ -101,8 +101,25 @@ def main() -> int:
             print(f"   Rutas pendientes restantes: {summary.pending_count}")
             print(f"   Nodos estructurales: {summary.nodes_count}")
             print(f"   Relaciones estructurales: {summary.edges_count}")
+            print(f"   Estados UI observados: {summary.states_count}")
+            print(
+                "   Transiciones UI observadas: "
+                f"{summary.state_transitions_count}"
+            )
+            print(
+                "   Estados fuente explorados: "
+                f"{summary.state_frontier_explored_count}"
+            )
+            print(
+                "   Estados UI pendientes: "
+                f"{summary.state_frontier_pending_count}"
+            )
             print(f"   Grafo guardado en: {summary.routes_graph_path}")
             print(f"   Índice guardado en: {summary.screen_index_path}")
+            print(
+                "   State-flow graph: "
+                f"{summary.state_flow_graph_path}"
+            )
 
             print("=" * 80)
             print("PROCESO COMPLETADO CORRECTAMENTE")

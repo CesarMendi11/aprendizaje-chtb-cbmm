@@ -38,6 +38,8 @@ class CrawlSummary:
     states_count: int = 0
     state_transitions_count: int = 0
     state_flow_graph_path: str = ""
+    state_frontier_pending_count: int = 0
+    state_frontier_explored_count: int = 0
 
 
 class RouteCrawler:
@@ -117,7 +119,32 @@ class RouteCrawler:
 
         ui_events = profile.get("ui_events", {})
         self.ui_events_enabled = ui_events.get("enabled", True)
-        self.max_event_depth = ui_events.get("max_event_depth", 0)
+        self.max_event_depth = max(0, int(ui_events.get("max_event_depth", 0)))
+        self.home_navigation_enabled = bool(
+            ui_events.get("home_navigation_enabled", True)
+        )
+        self.explore_local_route_roots = bool(
+            ui_events.get("explore_local_route_roots", True)
+        )
+        self.recursive_state_exploration = bool(
+            ui_events.get("recursive_state_exploration", True)
+        )
+        self.home_event_categories = set(
+            ui_events.get("home_event_categories", ["expand_menu"])
+        )
+        self.local_event_categories = set(
+            ui_events.get(
+                "local_event_categories",
+                [
+                    "activate_tab",
+                    "open_readonly_view",
+                    "open_date_picker",
+                    "open_modal",
+                    "open_dropdown",
+                    "change_pagination",
+                ],
+            )
+        )
 
     def crawl(self) -> CrawlSummary:
         """
@@ -142,6 +169,7 @@ class RouteCrawler:
             self._checkpoint_outputs()
 
             self._crawl_pending_targets()
+            self._crawl_pending_states()
 
         except KeyboardInterrupt:
             print("\nInterrupción detectada dentro del crawler.")
@@ -250,7 +278,6 @@ class RouteCrawler:
             },
         ).state
         self.state_flow_graph.add_state(source_state)
-        self.state_frontier.mark_explored(source_state.state_id)
 
         screen_data["ui_state"] = source_state.to_dict()
         self.frontier.mark_visited(route)
@@ -283,13 +310,16 @@ class RouteCrawler:
             reason="href_discovered",
         )
 
-        if self.ui_events_enabled and depth <= self.max_event_depth:
+        if self._should_explore_route_root(route):
             self._explore_ui_events_from_screen(
                 route=route,
                 screen_data=screen_data,
                 source_state=source_state,
                 depth=depth,
+                allowed_categories=self._categories_for_state(source_state),
             )
+        else:
+            self.state_frontier.mark_explored(source_state.state_id)
 
         self._detect_and_store_uncertainty(
             route=route,
@@ -452,10 +482,12 @@ class RouteCrawler:
         screen_data: dict[str, Any],
         source_state: UIState,
         depth: int,
+        allowed_categories: set[str] | None = None,
     ) -> None:
         results = self.ui_event_explorer.explore_current_state(
             screen_data=screen_data,
             source_state=source_state,
+            allowed_categories=allowed_categories,
         )
 
         changed_results = [
@@ -465,6 +497,7 @@ class RouteCrawler:
         ]
 
         if not results:
+            self.state_frontier.mark_explored(source_state.state_id)
             return
 
         for result in changed_results:
@@ -523,8 +556,17 @@ class RouteCrawler:
                 result=result,
             )
 
+            if self._should_queue_dynamic_state(registration.is_new, target_state):
+                self.state_frontier.push_state(
+                    target_state,
+                    source_state_id=source_state.state_id,
+                    reason="ui_event_state_discovered",
+                )
+
+        self.state_frontier.mark_explored(source_state.state_id)
         self._save_ui_event_results(
             route=route,
+            source_state_id=source_state.state_id,
             results=[result.to_dict() for result in results],
         )
 
@@ -563,6 +605,9 @@ class RouteCrawler:
             "route": after_screen_data.get("path") or route,
             "source": route,
             "depth": depth,
+            "event_depth": (
+                target_state.path.depth if target_state.path else 0
+            ),
             "reason": "ui_event_state_change",
             "status": "discovered",
             "source_state_id": source_state.state_id,
@@ -647,6 +692,7 @@ class RouteCrawler:
     def _save_ui_event_results(
         self,
         route: str,
+        source_state_id: str,
         results: list[dict[str, Any]],
     ) -> None:
         slim_results = []
@@ -689,6 +735,7 @@ class RouteCrawler:
 
         payload = {
             "route": route,
+            "source_state_id": source_state_id,
             "status": "ui_events_explored",
             "results_count": len(slim_results),
             "results": slim_results,
@@ -696,7 +743,10 @@ class RouteCrawler:
 
         self.storage.save_uncertainty_json(
             data=payload,
-            prefix=f"{route}_ui_events",
+            prefix=(
+                f"{route}_ui_events_"
+                f"{safe_slug(source_state_id, fallback='state')[-24:]}"
+            ),
         )
 
     def _detect_and_store_uncertainty(
@@ -796,6 +846,97 @@ class RouteCrawler:
             prefix=f"{route}_{reason}",
         )
 
+    def _should_explore_route_root(self, route: str) -> bool:
+        if not self.ui_events_enabled:
+            return False
+        if route == self.home_route:
+            return self.home_navigation_enabled
+        return self.explore_local_route_roots and self.max_event_depth >= 1
+
+    def _categories_for_state(self, state: UIState) -> set[str]:
+        is_home_root = (
+            state.route == self.home_route
+            and (state.path is None or state.path.depth == 0)
+        )
+        if is_home_root:
+            return set(self.home_event_categories)
+        return set(self.local_event_categories)
+
+    def _should_queue_dynamic_state(
+        self,
+        is_new: bool,
+        state: UIState,
+    ) -> bool:
+        if not is_new or not self.recursive_state_exploration:
+            return False
+        if state.path is None:
+            return False
+        return state.path.depth < self.max_event_depth
+
+    def _crawl_pending_states(self) -> None:
+        """Explora estados reproducibles hasta la profundidad permitida."""
+        while self.state_frontier.has_pending():
+            target = self.state_frontier.pop()
+            if target is None:
+                break
+
+            if target.depth >= self.max_event_depth:
+                self.state_frontier.mark_explored(target.state_id)
+                continue
+
+            try:
+                state = self.state_registry.require(target.state_id)
+                restored = self.state_restorer.restore(state)
+                if not restored.success:
+                    self.state_frontier.mark_explored(state.state_id)
+                    self._save_uncertainty(
+                        route=state.route,
+                        reason="dynamic_state_restore_failed",
+                        extra={
+                            "state_id": state.state_id,
+                            "event_depth": target.depth,
+                            "source_state_id": target.source_state_id,
+                            "error": restored.error,
+                            "strategy": restored.strategy,
+                        },
+                    )
+                    continue
+
+                self._explore_ui_events_from_screen(
+                    route=state.route,
+                    screen_data=restored.screen_data,
+                    source_state=state,
+                    depth=target.depth,
+                    allowed_categories=self._categories_for_state(state),
+                )
+                self._checkpoint_outputs()
+
+            except Exception as error:
+                self.state_frontier.mark_explored(target.state_id)
+                registered_state = self.state_registry.get(target.state_id)
+                self._save_uncertainty(
+                    route=(registered_state.route if registered_state else ""),
+                    reason="dynamic_state_exploration_error",
+                    extra={
+                        "state_id": target.state_id,
+                        "event_depth": target.depth,
+                        "source_state_id": target.source_state_id,
+                        "error": str(error),
+                    },
+                )
+
+    def _state_exploration_summary(self) -> dict[str, Any]:
+        return {
+            "max_event_depth": self.max_event_depth,
+            "home_navigation_enabled": self.home_navigation_enabled,
+            "explore_local_route_roots": self.explore_local_route_roots,
+            "recursive_state_exploration": self.recursive_state_exploration,
+            "home_event_categories": sorted(self.home_event_categories),
+            "local_event_categories": sorted(self.local_event_categories),
+            "frontier_pending_count": self.state_frontier.pending_count(),
+            "frontier_explored_count": self.state_frontier.explored_count(),
+        }
+
     def _checkpoint_outputs(self) -> None:
         """
         Guarda una copia parcial del grafo y del índice.
@@ -821,6 +962,11 @@ class RouteCrawler:
         self.storage.save_processed_structural_json(
             data=self.state_flow_graph.to_dict(),
             filename="state_flow_graph.partial.json",
+        )
+
+        self.storage.save_processed_structural_json(
+            data=self._state_exploration_summary(),
+            filename="state_exploration_summary.partial.json",
         )
 
     def _save_outputs(self) -> CrawlSummary:
@@ -854,6 +1000,11 @@ class RouteCrawler:
             filename="state_flow_graph.json",
         )
 
+        self.storage.save_processed_structural_json(
+            data=self._state_exploration_summary(),
+            filename="state_exploration_summary.json",
+        )
+
         return CrawlSummary(
             visited_count=self.frontier.visited_count(),
             pending_count=self.frontier.pending_count(),
@@ -864,6 +1015,8 @@ class RouteCrawler:
             states_count=self.state_flow_graph.state_count(),
             state_transitions_count=self.state_flow_graph.transition_count(),
             state_flow_graph_path=str(state_flow_graph_path),
+            state_frontier_pending_count=self.state_frontier.pending_count(),
+            state_frontier_explored_count=self.state_frontier.explored_count(),
         )
 
     def _build_artifact_prefix(self, route: str) -> str:

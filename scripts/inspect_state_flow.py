@@ -58,6 +58,18 @@ def main() -> None:
         )
         for transition in transitions
     )
+    depths = Counter(
+        (state.get("path") or {}).get("depth", 0)
+        for state in states
+    )
+    changed_routes = sum(
+        1 for transition in transitions if transition.get("changed_route")
+    )
+
+    summary_path = path.with_name("state_exploration_summary.json")
+    exploration_summary = {}
+    if summary_path.exists():
+        exploration_summary = load_graph(summary_path)
 
     print("State-flow graph inspeccionado correctamente.")
     print(f"Archivo: {path}")
@@ -65,8 +77,20 @@ def main() -> None:
     print(f"Estados raíz por ruta: {len(roots)}")
     print(f"Estados dinámicos: {len(dynamic)}")
     print(f"Transiciones observadas: {len(transitions)}")
+    print(f"Profundidades: {dict(sorted(depths.items()))}")
     print(f"Categorías: {dict(sorted(categories.items()))}")
     print(f"Restauración: {dict(sorted(restoration.items()))}")
+    print(f"Transiciones con cambio de ruta: {changed_routes}")
+    if exploration_summary:
+        print(
+            "Profundidad máxima configurada: "
+            f"{exploration_summary.get('max_event_depth')}"
+        )
+        print(
+            "Estados fuente explorados/pendientes: "
+            f"{exploration_summary.get('frontier_explored_count', 0)}/"
+            f"{exploration_summary.get('frontier_pending_count', 0)}"
+        )
 
 
 if __name__ == "__main__":

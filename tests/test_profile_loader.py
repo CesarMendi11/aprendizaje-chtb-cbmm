@@ -147,3 +147,96 @@ output:
         assert "enteros no negativos" in str(error)
     else:
         raise AssertionError("El presupuesto inválido debía ser rechazado.")
+
+
+def test_profile_loader_accepts_state_exploration_scope():
+    profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
+    ui_events = profile["ui_events"]
+
+    assert ui_events["max_event_depth"] == 1
+    assert ui_events["home_navigation_enabled"] is True
+    assert ui_events["explore_local_route_roots"] is True
+    assert "open_dropdown" in ui_events["local_event_categories"]
+
+
+def test_profile_loader_rejects_unknown_local_event_category(tmp_path):
+    profile_path = tmp_path / "invalid_local_categories.yaml"
+    profile_path.write_text(
+        """
+erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+ui_events:
+  max_event_depth: 1
+  local_event_categories: [categoria_inexistente]
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        ProfileLoader(profile_path).load()
+    except ValueError as error:
+        assert "categorías desconocidas" in str(error)
+    else:
+        raise AssertionError("La categoría local inválida debía rechazarse.")
+
+
+def test_profile_loader_rejects_negative_max_event_depth(tmp_path):
+    profile_path = tmp_path / "invalid_event_depth.yaml"
+    profile_path.write_text(
+        """
+erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+ui_events:
+  max_event_depth: -1
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        ProfileLoader(profile_path).load()
+    except ValueError as error:
+        assert "max_event_depth" in str(error)
+    else:
+        raise AssertionError("La profundidad negativa debía rechazarse.")
