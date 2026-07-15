@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from playwright.sync_api import Page
@@ -8,6 +8,7 @@ from playwright.sync_api import Page
 from src.browser.interaction_executor import BrowserInteractionExecutor
 
 from src.browser.navigator import ERPNavigator
+from src.crawler.state_observer import StableStateObserver
 from src.crawler.state_registry import StateRegistry
 from src.crawler.state_signature import StateSignature, StateSignatureBuilder
 from src.extraction.screen_extractor import ScreenExtractor
@@ -27,6 +28,7 @@ class ReplayResult:
     screen_data: dict[str, Any]
     signature: StateSignature | None
     error: str | None = None
+    observation: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -38,6 +40,7 @@ class ReplayResult:
             "screen_data": self.screen_data,
             "signature": self.signature.to_dict() if self.signature else None,
             "error": self.error,
+            "observation": self.observation or {},
         }
 
 
@@ -96,14 +99,21 @@ class PathReplayer:
         screen_data: dict[str, Any] = {}
         signature: StateSignature | None = None
         completed_steps = 0
+        observation_diagnostics: dict[str, Any] = {}
 
         try:
             root_state = self.registry.require(path.root_state_id)
             self.navigator.goto_path(root_state.route)
             self._wait(self.page_wait_ms)
 
-            screen_data = self.extractor.extract()
-            signature = self.signature_builder.build(screen_data)
+            observation = self._observe(
+                title_hint=self._state_title_hint(root_state),
+                canonical_title=root_state.title,
+            )
+            observation_diagnostics = observation.diagnostics()
+            self._assert_observation_stable(observation, "estado raíz")
+            screen_data = observation.screen_data
+            signature = observation.signature
             self._assert_matches_state(signature, root_state.state_id, "estado raíz")
 
             reached_state_id = root_state.state_id
@@ -113,8 +123,25 @@ class PathReplayer:
                 self._execute_event(step.event)
                 self._wait(self.step_wait_ms)
 
-                screen_data = self.extractor.extract()
-                signature = self.signature_builder.build(screen_data)
+                expected_state = (
+                    self.registry.get(step.target_state_id)
+                    if step.target_state_id
+                    else None
+                )
+                observation = self._observe(
+                    title_hint=(
+                        self._state_title_hint(expected_state)
+                        if expected_state
+                        else root_state.title
+                    ),
+                    canonical_title=(
+                        expected_state.title if expected_state else root_state.title
+                    ),
+                )
+                observation_diagnostics = observation.diagnostics()
+                self._assert_observation_stable(observation, "paso reproducido")
+                screen_data = observation.screen_data
+                signature = observation.signature
                 completed_steps += 1
 
                 reached_state_id = self._resolve_reached_state_id(
@@ -147,6 +174,7 @@ class PathReplayer:
                 screen_data=screen_data,
                 signature=signature,
                 error=str(error),
+                observation=observation_diagnostics,
             )
         except Exception as error:  # frontera defensiva del navegador
             return ReplayResult(
@@ -158,6 +186,43 @@ class PathReplayer:
                 screen_data=screen_data,
                 signature=signature,
                 error=f"unexpected_replay_error: {error}",
+                observation=observation_diagnostics,
+            )
+
+
+    def _observe(
+        self,
+        title_hint: str = "",
+        canonical_title: str | None = None,
+    ):
+        observer = StableStateObserver(
+            profile=self.profile,
+            extractor=self.extractor,
+            signature_builder=self.signature_builder,
+            wait_fn=self.page.wait_for_timeout,
+        )
+        return observer.observe(
+            title_hint=title_hint,
+            canonical_title=canonical_title,
+        )
+
+    @staticmethod
+    def _state_title_hint(state) -> str:
+        if state is None:
+            return ""
+        return str(
+            state.metadata.get("title_hint")
+            or state.metadata.get("canonical_title")
+            or state.title
+            or ""
+        )
+
+
+    @staticmethod
+    def _assert_observation_stable(observation, context: str) -> None:
+        if not observation.stable:
+            raise RuntimeError(
+                f"La observación de {context} no alcanzó una firma estable."
             )
 
     def _execute_event(self, event: UIEvent) -> None:

@@ -196,6 +196,40 @@ class ProfileLoader:
                 "state_detection.volatile_text_patterns debe ser una lista."
             )
 
+        navigation_state_routes = state_detection.get("navigation_state_routes")
+        if navigation_state_routes is not None:
+            if not isinstance(navigation_state_routes, list):
+                raise ValueError(
+                    "state_detection.navigation_state_routes debe ser una lista."
+                )
+            if not all(isinstance(route, str) for route in navigation_state_routes):
+                raise ValueError(
+                    "state_detection.navigation_state_routes solo admite rutas de texto."
+                )
+
+        stability = state_detection.get("stability", {})
+        if stability and not isinstance(stability, dict):
+            raise ValueError("state_detection.stability debe ser un objeto.")
+        enabled = stability.get("enabled")
+        if enabled is not None and not isinstance(enabled, bool):
+            raise ValueError("state_detection.stability.enabled debe ser booleano.")
+        for field in [
+            "timeout_ms",
+            "interval_ms",
+            "minimum_observation_ms",
+            "required_consecutive_samples",
+        ]:
+            value = stability.get(field)
+            if value is not None and (not isinstance(value, int) or value < 0):
+                raise ValueError(
+                    f"state_detection.stability.{field} debe ser un entero no negativo."
+                )
+        required_samples = stability.get("required_consecutive_samples")
+        if required_samples == 0:
+            raise ValueError(
+                "state_detection.stability.required_consecutive_samples debe ser mayor que cero."
+            )
+
 
         extraction = profile.get("extraction", {})
         regions = extraction.get("regions", {})

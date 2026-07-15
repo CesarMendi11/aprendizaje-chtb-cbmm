@@ -360,3 +360,87 @@ def test_structural_signature_keeps_global_navigation_expansion_state():
     }
 
     assert builder.has_changed(builder.build(closed), builder.build(opened))
+
+
+def test_profile_builder_uses_navigation_state_only_on_configured_routes():
+    profile = {
+        "navigation": {"home_url": "/admin/home"},
+        "state_detection": {"navigation_state_routes": ["/admin/home"]},
+    }
+    builder = StateSignatureBuilder.from_profile(profile)
+
+    def payload(path: str, opened: bool):
+        return {
+            "path": path,
+            "functional_title": "Pantalla",
+            "visible_text": "Pantalla",
+            "main_visible_text": "Pantalla",
+            "regions": {
+                "main_content": {"visible_text": "Pantalla", "elements_count": 1},
+                "dialog": {"visible_text": "", "elements_count": 0},
+            },
+            "links": (
+                [
+                    {
+                        "text": "Retenciones",
+                        "href": "/admin/retenciones",
+                        "tag": "a",
+                        "region": "global_navigation",
+                    }
+                ]
+                if opened
+                else []
+            ),
+            "buttons": [],
+            "inputs": [],
+            "tables": [],
+            "dialogs": [],
+            "custom_interactives": [
+                {
+                    "text": "Cuentas por cobrar",
+                    "tag": "fuse-vertical-navigation-collapsable-item",
+                    "aria_expanded": "true" if opened else "false",
+                    "region": "global_navigation",
+                }
+            ],
+        }
+
+    internal_closed = builder.build(payload("/admin/facturas", False))
+    internal_opened = builder.build(payload("/admin/facturas", True))
+    home_closed = builder.build(payload("/admin/home", False))
+    home_opened = builder.build(payload("/admin/home", True))
+
+    assert internal_closed.structural_fingerprint == internal_opened.structural_fingerprint
+    assert home_closed.structural_fingerprint != home_opened.structural_fingerprint
+
+
+def test_region_element_count_does_not_change_structural_signature():
+    builder = StateSignatureBuilder()
+    base = {
+        "path": "/admin/facturas",
+        "functional_title": "Facturas",
+        "visible_text": "Facturas",
+        "main_visible_text": "Facturas",
+        "regions": {
+            "main_content": {"visible_text": "Facturas", "elements_count": 2},
+            "dialog": {"visible_text": "", "elements_count": 0},
+        },
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "custom_interactives": [],
+    }
+    changed_count = {
+        **base,
+        "regions": {
+            "main_content": {"visible_text": "Facturas", "elements_count": 120},
+            "dialog": {"visible_text": "", "elements_count": 0},
+        },
+    }
+
+    assert (
+        builder.build(base).structural_fingerprint
+        == builder.build(changed_count).structural_fingerprint
+    )

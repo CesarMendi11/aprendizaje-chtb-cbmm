@@ -71,6 +71,7 @@ class StateSignatureBuilder:
         volatile_text_patterns: list[str] | tuple[str, ...] | None = None,
         ignore_query_values: bool = True,
         ignore_table_row_count: bool = True,
+        navigation_state_routes: list[str] | tuple[str, ...] | set[str] | None = None,
     ):
         self.visible_text_limit = visible_text_limit
         custom_patterns = tuple(volatile_text_patterns or ())
@@ -79,11 +80,25 @@ class StateSignatureBuilder:
         )
         self.ignore_query_values = ignore_query_values
         self.ignore_table_row_count = ignore_table_row_count
+        self.navigation_state_routes = (
+            None
+            if navigation_state_routes is None
+            else {
+                self._route_key(route)
+                for route in navigation_state_routes
+                if self._route_key(route)
+            }
+        )
 
     @classmethod
     def from_profile(cls, profile: dict[str, Any]) -> "StateSignatureBuilder":
         config = profile.get("state_detection", {})
         extraction = profile.get("extraction", {})
+
+        navigation_state_routes = config.get("navigation_state_routes")
+        if navigation_state_routes is None:
+            home_route = profile.get("navigation", {}).get("home_url")
+            navigation_state_routes = [home_route] if home_route else None
 
         return cls(
             visible_text_limit=int(
@@ -97,6 +112,7 @@ class StateSignatureBuilder:
             ignore_table_row_count=bool(
                 config.get("ignore_table_row_count", True)
             ),
+            navigation_state_routes=navigation_state_routes,
         )
 
     def build(self, screen_data: dict[str, Any]) -> StateSignature:
@@ -191,9 +207,10 @@ class StateSignatureBuilder:
         }
 
         if structural and has_regions:
-            summary["navigation_state"] = self._normalize_navigation_state(
-                screen_data
-            )
+            if self._should_include_navigation_state(screen_data.get("path") or ""):
+                summary["navigation_state"] = self._normalize_navigation_state(
+                    screen_data
+                )
             summary["regions"] = self._normalize_region_summary(screen_data)
 
         return summary
@@ -208,6 +225,17 @@ class StateSignatureBuilder:
             if item.get("region")
             not in {"global_navigation", "header", "footer", "volatile"}
         ]
+
+
+    def _should_include_navigation_state(self, route: str) -> bool:
+        if self.navigation_state_routes is None:
+            return True
+        return self._route_key(route) in self.navigation_state_routes
+
+    @staticmethod
+    def _route_key(route: Any) -> str:
+        value = str(route or "").split("?", 1)[0].rstrip("/")
+        return value or "/"
 
     def _normalize_navigation_state(
         self,
@@ -244,7 +272,10 @@ class StateSignatureBuilder:
         for name in ("main_content", "dialog"):
             data = regions.get(name, {})
             result[name] = {
-                "elements_count": int(data.get("elements_count") or 0),
+                "present": bool(
+                    data.get("visible_text")
+                    or int(data.get("elements_count") or 0)
+                ),
             }
         return result
 

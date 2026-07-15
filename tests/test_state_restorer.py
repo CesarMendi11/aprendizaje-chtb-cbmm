@@ -141,3 +141,87 @@ def test_state_restorer_replays_path_for_dynamic_state():
     assert result.success is True
     assert result.strategy == "path_replay"
     assert panel_visible is True
+
+
+def test_state_restorer_reuses_canonical_registered_title_on_direct_route():
+    cfg = {
+        "exploration": {"page_wait_ms": 0},
+        "state_detection": {"stability": {"enabled": False}},
+        "state_replay": {"page_wait_ms": 0, "restore_attempts": 1},
+    }
+    builder = StateSignatureBuilder()
+    registry = StateRegistry()
+
+    target_data = {
+        "path": "/admin/facturacion",
+        "title": "Dashboard",
+        "functional_title": "Facturación Electronica",
+        "visible_text": "Contenido estable",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [],
+        "dialogs": [],
+    }
+    signature = builder.build(target_data)
+    target_id = registry.build_state_id(signature.structural_fingerprint)
+    target = registry.register_signature(
+        signature,
+        path=CrawlPath(root_state_id=target_id),
+        metadata={
+            "kind": "route_root_state",
+            "title_hint": "Facturación Electronica",
+            "canonical_title": "Facturación Electronica",
+        },
+    ).state
+
+    current_data = {
+        **target_data,
+        "functional_title": "Facturacion",
+        "visible_text": "Otro estado abierto",
+    }
+    restored_data = {
+        **target_data,
+        "functional_title": "Facturacion",
+    }
+
+    class DummyPage:
+        def wait_for_timeout(self, milliseconds):
+            return None
+
+    class DummyNavigator:
+        def __init__(self):
+            self.page = DummyPage()
+            self.paths = []
+
+        def goto_path(self, path):
+            self.paths.append(path)
+
+    class SequenceExtractor:
+        def __init__(self):
+            self.values = [current_data, restored_data]
+            self.index = 0
+
+        def extract(self, title_hint=""):
+            value = self.values[min(self.index, len(self.values) - 1)]
+            self.index += 1
+            return dict(value)
+
+    navigator = DummyNavigator()
+    restorer = StateRestorer(
+        profile=cfg,
+        navigator=navigator,
+        extractor=SequenceExtractor(),
+        signature_builder=builder,
+        registry=registry,
+        path_replayer=object(),
+    )
+
+    result = restorer.restore(target)
+
+    assert result.success is True
+    assert result.strategy == "direct_route"
+    assert result.observed_title == "Facturación Electronica"
+    assert result.screen_data["observed_functional_title"] == "Facturacion"
+    assert navigator.paths == ["/admin/facturacion"]

@@ -240,3 +240,56 @@ output:
         assert "max_event_depth" in str(error)
     else:
         raise AssertionError("La profundidad negativa debía rechazarse.")
+
+
+def test_profile_loader_accepts_state_stability_configuration():
+    profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
+    detection = profile["state_detection"]
+
+    assert detection["navigation_state_routes"] == ["/admin/home"]
+    assert detection["stability"]["enabled"] is True
+    assert detection["stability"]["required_consecutive_samples"] == 2
+    assert detection["stability"]["minimum_observation_ms"] == 500
+
+
+def test_profile_loader_rejects_zero_required_stability_samples(tmp_path):
+    profile_path = tmp_path / "invalid_stability.yaml"
+    profile_path.write_text(
+        """
+erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+state_detection:
+  stability:
+    enabled: true
+    required_consecutive_samples: 0
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+""",
+        encoding="utf-8",
+    )
+
+    try:
+        ProfileLoader(profile_path).load()
+    except ValueError as error:
+        assert "required_consecutive_samples" in str(error)
+    else:
+        raise AssertionError("La estabilidad con cero muestras debía rechazarse.")

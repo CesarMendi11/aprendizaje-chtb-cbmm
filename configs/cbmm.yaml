@@ -112,6 +112,22 @@ state_detection:
   visible_text_limit: 4000
   ignore_query_values: true
   ignore_table_row_count: true
+
+  # El estado del menú global solo forma parte de la identidad en la pantalla
+  # donde se exploran módulos. En rutas internas se ignora para que expandir o
+  # contraer el sidebar no rompa la restauración del estado raíz.
+  navigation_state_routes:
+    - "/admin/home"
+
+  # Angular puede completar tablas y controles después de terminar la ruta.
+  # Se esperan dos firmas estructurales consecutivas antes de registrar o
+  # comparar un estado.
+  stability:
+    enabled: true
+    timeout_ms: 4000
+    interval_ms: 250
+    minimum_observation_ms: 500
+    required_consecutive_samples: 2
   volatile_text_patterns:
     - "\\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b"
     - "\\b\\d{4}-\\d{2}-\\d{2}\\b"

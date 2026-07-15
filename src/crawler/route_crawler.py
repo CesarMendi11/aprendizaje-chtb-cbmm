@@ -9,6 +9,7 @@ from src.browser.navigator import ERPNavigator
 from src.crawler.frontier import CrawlTarget, Frontier
 from src.crawler.path_replayer import PathReplayer
 from src.crawler.state_frontier import StateFrontier
+from src.crawler.state_observer import StableStateObserver
 from src.crawler.state_registry import StateRegistry
 from src.crawler.state_restorer import StateRestorer
 from src.crawler.state_signature import StateSignatureBuilder
@@ -251,7 +252,8 @@ class RouteCrawler:
         reason: str,
         title_hint: str = "",
     ) -> None:
-        screen_data = self._extract_screen(title_hint=title_hint)
+        observation = self._observe_screen(title_hint=title_hint)
+        screen_data = observation.screen_data
 
         route = screen_data.get("path") or self.navigator.current_path()
 
@@ -262,7 +264,7 @@ class RouteCrawler:
             return
 
 
-        signature = self.state_signature_builder.build(screen_data)
+        signature = observation.signature
         state_id = self.state_registry.build_state_id(
             signature.structural_fingerprint
         )
@@ -275,6 +277,9 @@ class RouteCrawler:
                 "depth": depth,
                 "reason": reason,
                 "kind": "route_root_state",
+                "title_hint": title_hint,
+                "canonical_title": signature.title,
+                "state_observation": observation.diagnostics(),
             },
         ).state
         self.state_flow_graph.add_state(source_state)
@@ -329,6 +334,22 @@ class RouteCrawler:
 
         self._checkpoint_outputs()
 
+
+    def _observe_screen(
+        self,
+        title_hint: str = "",
+        canonical_title: str | None = None,
+    ):
+        observer = StableStateObserver(
+            profile=self.profile,
+            extractor=self.extractor,
+            signature_builder=self.state_signature_builder,
+            wait_fn=self.page.wait_for_timeout,
+        )
+        return observer.observe(
+            title_hint=title_hint,
+            canonical_title=canonical_title,
+        )
 
     def _extract_screen(self, title_hint: str = "") -> dict[str, Any]:
         """Mantiene compatibilidad con extractores personalizados antiguos."""
@@ -716,6 +737,12 @@ class RouteCrawler:
                     "restored_before": result.get("restored_before"),
                     "restore_strategy": result.get("restore_strategy"),
                     "restore_error": result.get("restore_error"),
+                    "restore_diagnostics": result.get("restore_diagnostics", {}),
+                    "after_observation": result.get("after_observation", {}),
+                    "interaction_attempts": result.get("interaction_attempts", 0),
+                    "interaction_strategy": result.get("interaction_strategy"),
+                    "interaction_succeeded": result.get("interaction_succeeded", False),
+                    "outcome": result.get("outcome"),
                     "artifact_error": result.get("artifact_error"),
                     "after_summary": {
                         "title": (
@@ -733,11 +760,17 @@ class RouteCrawler:
                 }
             )
 
+        outcome_counts: dict[str, int] = {}
+        for result in slim_results:
+            outcome = str(result.get("outcome") or "unknown")
+            outcome_counts[outcome] = outcome_counts.get(outcome, 0) + 1
+
         payload = {
             "route": route,
             "source_state_id": source_state_id,
             "status": "ui_events_explored",
             "results_count": len(slim_results),
+            "outcomes": outcome_counts,
             "results": slim_results,
         }
 

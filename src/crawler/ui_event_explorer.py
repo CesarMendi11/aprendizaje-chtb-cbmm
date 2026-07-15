@@ -7,6 +7,7 @@ from playwright.sync_api import Page
 
 from src.browser.interaction_executor import BrowserInteractionExecutor
 
+from src.crawler.state_observer import StableStateObserver
 from src.crawler.state_restorer import RestoreResult, StateRestorer
 from src.crawler.state_signature import StateSignatureBuilder
 from src.discovery.event_candidate_discovery import (
@@ -42,6 +43,8 @@ class UIEventResult:
     interaction_attempts: int = 0
     interaction_strategy: str | None = None
     interaction_succeeded: bool = False
+    restore_diagnostics: dict[str, Any] = field(default_factory=dict)
+    after_observation: dict[str, Any] = field(default_factory=dict)
     after_html: str | None = field(default=None, repr=False)
     after_screenshot: bytes | None = field(default=None, repr=False)
 
@@ -67,9 +70,23 @@ class UIEventResult:
             "interaction_attempts": self.interaction_attempts,
             "interaction_strategy": self.interaction_strategy,
             "interaction_succeeded": self.interaction_succeeded,
+            "restore_diagnostics": self.restore_diagnostics,
+            "after_observation": self.after_observation,
+            "outcome": self.outcome(),
             "after_html_captured": self.after_html is not None,
             "after_screenshot_captured": self.after_screenshot is not None,
         }
+
+    def outcome(self) -> str:
+        if self.error == "state_restore_failed":
+            return "restore_failed"
+        if self.error and not self.interaction_succeeded:
+            return "interaction_failed"
+        if self.error:
+            return "execution_error"
+        if self.changed:
+            return "changed"
+        return "unchanged"
 
 
 class UIEventExplorer:
@@ -261,10 +278,42 @@ class UIEventExplorer:
             if self.event_wait_ms:
                 self.page.wait_for_timeout(self.event_wait_ms)
 
-            after_screen_data = self.extractor.extract()
-            after_signature = self.state_signature_builder.build(
-                after_screen_data
+            observer = StableStateObserver(
+                profile=self.profile,
+                extractor=self.extractor,
+                signature_builder=self.state_signature_builder,
+                wait_fn=self.page.wait_for_timeout,
             )
+            observation = observer.observe(
+                title_hint=(
+                    before_screen_data.get("functional_title")
+                    or before_screen_data.get("title")
+                    or ""
+                ),
+                canonical_title=(
+                    before_screen_data.get("functional_title")
+                    or before_screen_data.get("title")
+                    or None
+                ),
+            )
+            if not observation.stable:
+                return self._error_result(
+                    candidate=candidate,
+                    before_fingerprint=before_fingerprint,
+                    before_exact_fingerprint=before_exact_fingerprint,
+                    before_route=before_route,
+                    before_screen_data=observation.screen_data,
+                    error="state_observation_unstable",
+                    source_state_id=source_state_id,
+                    restore_result=restore_result,
+                    interaction_attempts=interaction.attempts,
+                    interaction_strategy=interaction.strategy,
+                    interaction_succeeded=True,
+                    after_observation=observation.diagnostics(),
+                )
+
+            after_screen_data = observation.screen_data
+            after_signature = observation.signature
             changed = (
                 before_fingerprint
                 != after_signature.structural_fingerprint
@@ -304,6 +353,10 @@ class UIEventExplorer:
                 interaction_attempts=interaction.attempts,
                 interaction_strategy=interaction.strategy,
                 interaction_succeeded=True,
+                restore_diagnostics=(
+                    restore_result.diagnostics() if restore_result else {}
+                ),
+                after_observation=observation.diagnostics(),
             )
 
         except Exception as error:
@@ -368,6 +421,7 @@ class UIEventExplorer:
             restored_before=False,
             restore_strategy=restore_result.strategy,
             restore_error=restore_result.error,
+            restore_diagnostics=restore_result.diagnostics(),
         )
 
     def _error_result(
@@ -383,6 +437,7 @@ class UIEventExplorer:
         interaction_attempts: int = 0,
         interaction_strategy: str | None = None,
         interaction_succeeded: bool = False,
+        after_observation: dict[str, Any] | None = None,
     ) -> UIEventResult:
         return UIEventResult(
             event=candidate.to_ui_event(),
@@ -402,4 +457,8 @@ class UIEventExplorer:
             interaction_attempts=interaction_attempts,
             interaction_strategy=interaction_strategy,
             interaction_succeeded=interaction_succeeded,
+            restore_diagnostics=(
+                restore_result.diagnostics() if restore_result else {}
+            ),
+            after_observation=after_observation or {},
         )
