@@ -1,0 +1,297 @@
+{
+  "route": "/admin/home",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "after_fingerprint": "4058a34262a8d57647388d89e1c0751f1ff6b66ca78a1c9c78130ef56e75884d",
+      "before_exact_fingerprint": "55ba207c530abe7f07c678fe3f389b23aa7fceaae6b89d05979873022c1a1cfc",
+      "after_exact_fingerprint": "07a27e3dbfb544240864c9da007c3d277515fdcba654e465e5f7ba526ee7301e",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "source_state_id": "ui_state:f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "target_state_id": "ui_state:4058a34262a8d57647388d89e1c0751f1ff6b66ca78a1c9c78130ef56e75884d",
+      "restored_before": true,
+      "restore_strategy": "already_current",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 9,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 109
+      }
+    },
+    {
+      "candidate": {
+        "label": "General",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "after_fingerprint": "e86d5c3faed91ca762ed47ddb89af4d66425c8ca9c191d1429cf616fa1772e43",
+      "before_exact_fingerprint": "55ba207c530abe7f07c678fe3f389b23aa7fceaae6b89d05979873022c1a1cfc",
+      "after_exact_fingerprint": "c97e3509eb91bac6b05b3e46ba7db1ec4e7dd42f21dfb7a7d386d546a3f4650b",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "source_state_id": "ui_state:f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "target_state_id": "ui_state:e86d5c3faed91ca762ed47ddb89af4d66425c8ca9c191d1429cf616fa1772e43",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 6,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 94
+      }
+    },
+    {
+      "candidate": {
+        "label": "Gerencial",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "after_fingerprint": "652ff0de61c7dc320463daec9822c259dbcfef3eea6d609602a4117c2f160bb2",
+      "before_exact_fingerprint": "55ba207c530abe7f07c678fe3f389b23aa7fceaae6b89d05979873022c1a1cfc",
+      "after_exact_fingerprint": "d847e135cf3aa0e0cf86fe2fa98a9f0a81f3d7edd61ec1e5494db1323480c899",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "source_state_id": "ui_state:f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "target_state_id": "ui_state:652ff0de61c7dc320463daec9822c259dbcfef3eea6d609602a4117c2f160bb2",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 4,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 84
+      }
+    },
+    {
+      "candidate": {
+        "label": "Permisos",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "after_fingerprint": "6d90a4798a84944562d55c1dc25f9f177cd03e21681411fa1bd6f4dfdf0cf345",
+      "before_exact_fingerprint": "55ba207c530abe7f07c678fe3f389b23aa7fceaae6b89d05979873022c1a1cfc",
+      "after_exact_fingerprint": "1f60cff5c150587fdeb206bb160f349f2c68881b33399c72cd05e5c477a9c5f2",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "source_state_id": "ui_state:f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "target_state_id": "ui_state:6d90a4798a84944562d55c1dc25f9f177cd03e21681411fa1bd6f4dfdf0cf345",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 6,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 99
+      }
+    },
+    {
+      "candidate": {
+        "label": "Prevencion Riesgo",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "after_fingerprint": "f224983254bf60c30a4977905a4b81ffc84e5bdc0e500646ee60b3c8035c7e08",
+      "before_exact_fingerprint": "55ba207c530abe7f07c678fe3f389b23aa7fceaae6b89d05979873022c1a1cfc",
+      "after_exact_fingerprint": "a93084b166dd7849b0cc386ce9c56732a76e142b8dde65da4bc1016132e48e7f",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "source_state_id": "ui_state:f43367d710751dc08522da84e191d043b2aaf2d4db120fe41d351c1b9f13a640",
+      "target_state_id": "ui_state:f224983254bf60c30a4977905a4b81ffc84e5bdc0e500646ee60b3c8035c7e08",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 3,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 79
+      }
+    }
+  ]
+}

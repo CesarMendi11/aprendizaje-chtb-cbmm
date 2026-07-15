@@ -1,0 +1,1240 @@
+{
+  "plan_type": "safe_ui_event_execution_preview",
+  "max_event_depth": 1,
+  "screens_count": 19,
+  "selected_events_count": 23,
+  "categories": {
+    "change_pagination": 6,
+    "expand_menu": 5,
+    "open_date_picker": 2,
+    "open_dropdown": 10
+  },
+  "screens": [
+    {
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "allowed_categories": [
+        "expand_menu"
+      ],
+      "selected_count": 5,
+      "events": [
+        {
+          "label": "Cuentas por cobrar",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        {
+          "label": "General",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        {
+          "label": "Gerencial",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        {
+          "label": "Permisos",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        {
+          "label": "Prevencion Riesgo",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes eléctronicos emitidos",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 3,
+      "events": [
+        {
+          "label": "Open calendar",
+          "selector": "div:nth-of-type(3) > ui-date-range > mat-form-field > div:nth-of-type(1) > div > div:nth-of-type(3) > mat-datepicker-toggle > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "open_date_picker",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Open calendar",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        },
+        {
+          "label": "--Seleccione--",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        },
+        {
+          "label": "--Seleccione--",
+          "selector": "mat-select#mat-select-2",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Facturación Electronica",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 3,
+      "events": [
+        {
+          "label": "Open calendar",
+          "selector": "div:nth-of-type(2) > div:nth-of-type(1) > mat-form-field > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > mat-datepicker-toggle > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "open_date_picker",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Open calendar",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        },
+        {
+          "label": "SIN UTILIZACIÓN DE SISTEMA FINANCIERO",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        },
+        {
+          "label": "Number",
+          "selector": "input#mat-input-5",
+          "tag": "input",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 9,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": "text",
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": "Number",
+            "title": null,
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Forma pago",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Lista de facturas",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "Siguiente página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Puntos de emisión",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "Siguiente página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Categorías",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/general/anios",
+      "title": "Año",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/areas",
+      "title": "Opciones del sistema",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/general/cargo-funcional",
+      "title": "Cargo Funcional",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/estado-seguimiento",
+      "title": "Estado Seguimiento",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 3,
+      "events": [
+        {
+          "label": "--Seleccione--",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "--Seleccione--",
+          "selector": "mat-select#mat-select-2",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/personas",
+      "title": "Personas",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Actividad portal ciudadano",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "--seleccione--",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/actividad-portal"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/talento-humano",
+      "title": "Talento humano",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 2,
+      "events": [
+        {
+          "label": "--seleccione--",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/talento-humano"
+          }
+        },
+        {
+          "label": "--seleccione--",
+          "selector": "mat-select#mat-select-2",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/talento-humano"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/tramites",
+      "title": "Trámites",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 1,
+      "events": [
+        {
+          "label": "--seleccione--",
+          "selector": "mat-select#mat-select-0",
+          "tag": "mat-select",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "open_dropdown",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 10,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "has_aria_expanded",
+            "custom_element",
+            "collapsable_like_element",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": "combobox",
+            "aria_expanded": "false",
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "main_content",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/tramites"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "Consulta de pagos por cliente",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    },
+    {
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "Consulta de información SRI",
+      "allowed_categories": [
+        "activate_tab",
+        "change_pagination",
+        "open_date_picker",
+        "open_dropdown",
+        "open_modal",
+        "open_readonly_view"
+      ],
+      "selected_count": 0,
+      "events": []
+    }
+  ]
+}

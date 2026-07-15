@@ -1,0 +1,70 @@
+{
+  "route": "/admin/general/cargo-funcional",
+  "source_state_id": "ui_state:ddaa4e18dead589c690e60189fa82eaa7aeacb993b7d899640a3f62fe7f99abf",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "Siguiente página",
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "change_pagination",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Siguiente página",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/cargo-funcional"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "ddaa4e18dead589c690e60189fa82eaa7aeacb993b7d899640a3f62fe7f99abf",
+      "after_fingerprint": "518809c9fc643e890a1b4fadae076d7203a9d42176c31f67e0e8f45141cfc1f1",
+      "before_exact_fingerprint": "9cc7d50684cb626fb65cea5d449ea07b3d0af1c49b59f10787043ae351a63f7a",
+      "after_exact_fingerprint": "903610015d2cdce46b053a1e054d872f227c8738515b75df28c7faf919c1b857",
+      "before_route": "/admin/general/cargo-funcional",
+      "after_route": "/admin/general/cargo-funcional",
+      "error": null,
+      "source_state_id": "ui_state:ddaa4e18dead589c690e60189fa82eaa7aeacb993b7d899640a3f62fe7f99abf",
+      "target_state_id": "ui_state:518809c9fc643e890a1b4fadae076d7203a9d42176c31f67e0e8f45141cfc1f1",
+      "restored_before": true,
+      "restore_strategy": "already_current",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Cargo funcional",
+        "path": "/admin/general/cargo-funcional",
+        "links_count": 7,
+        "buttons_count": 31,
+        "inputs_count": 0,
+        "custom_interactives_count": 102
+      }
+    }
+  ]
+}

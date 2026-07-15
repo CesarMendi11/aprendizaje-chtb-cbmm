@@ -1,0 +1,5387 @@
+{
+  "profile": "cbmm",
+  "screens_count": 19,
+  "decision_totals": {
+    "allow": 388,
+    "deny": 43,
+    "review": 54
+  },
+  "category_totals": {
+    "change_pagination": 44,
+    "expand_menu": 215,
+    "mutative_action": 11,
+    "navigation_link": 137,
+    "open_date_picker": 2,
+    "open_dropdown": 13,
+    "submit_search": 9,
+    "unknown": 54
+  },
+  "region_totals": {
+    "global_navigation": 331,
+    "main_content": 154
+  },
+  "pipeline_totals": {
+    "allowed_candidates_count": 388,
+    "deduplicated_candidates_count": 558,
+    "duplicates_removed_count": 1748,
+    "eligible_candidates_count": 485,
+    "raw_candidates_count": 2306,
+    "selected_for_exploration_count": 23
+  },
+  "selection_exclusion_totals": {
+    "category_budget:change_pagination": 6,
+    "category_budget:expand_menu": 5,
+    "category_budget:open_dropdown": 3,
+    "category_budget:submit_search": 9,
+    "global_navigation_outside_home": 200,
+    "navigation_handled_by_route_crawler": 137,
+    "state_event_budget": 5
+  },
+  "screens": [
+    {
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "title_source": "route_override",
+      "candidates_count": 12,
+      "pipeline": {
+        "raw_candidates_count": 70,
+        "deduplicated_candidates_count": 15,
+        "duplicates_removed_count": 55,
+        "eligible_candidates_count": 12,
+        "allowed_candidates_count": 11,
+        "selected_for_exploration_count": 5,
+        "selection_exclusions": {
+          "navigation_handled_by_route_crawler": 1,
+          "state_event_budget": 5
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Cuentas por cobrar",
+            "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "expand_menu",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 12,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "navigation_like_selector",
+              "high_value_navigation_area",
+              "custom_element",
+              "collapsable_like_element",
+              "region:global_navigation",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "global_navigation",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/home"
+            }
+          },
+          {
+            "label": "General",
+            "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "expand_menu",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 12,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "navigation_like_selector",
+              "high_value_navigation_area",
+              "custom_element",
+              "collapsable_like_element",
+              "region:global_navigation",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "global_navigation",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/home"
+            }
+          },
+          {
+            "label": "Gerencial",
+            "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "expand_menu",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 12,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "navigation_like_selector",
+              "high_value_navigation_area",
+              "custom_element",
+              "collapsable_like_element",
+              "region:global_navigation",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "global_navigation",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/home"
+            }
+          },
+          {
+            "label": "Permisos",
+            "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "expand_menu",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 12,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "navigation_like_selector",
+              "high_value_navigation_area",
+              "custom_element",
+              "collapsable_like_element",
+              "region:global_navigation",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "global_navigation",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/home"
+            }
+          },
+          {
+            "label": "Prevencion Riesgo",
+            "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "expand_menu",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 12,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "navigation_like_selector",
+              "high_value_navigation_area",
+              "custom_element",
+              "collapsable_like_element",
+              "region:global_navigation",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "global_navigation",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/home"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 11,
+        "review": 1
+      },
+      "categories": {
+        "expand_menu": 10,
+        "navigation_link": 1,
+        "unknown": 1
+      },
+      "regions": {
+        "global_navigation": 11,
+        "main_content": 1
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes eléctronicos emitidos",
+      "title_source": "main_heading",
+      "candidates_count": 29,
+      "pipeline": {
+        "raw_candidates_count": 133,
+        "deduplicated_candidates_count": 34,
+        "duplicates_removed_count": 99,
+        "eligible_candidates_count": 29,
+        "allowed_candidates_count": 24,
+        "selected_for_exploration_count": 3,
+        "selection_exclusions": {
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Open calendar",
+            "selector": "div:nth-of-type(3) > ui-date-range > mat-form-field > div:nth-of-type(1) > div > div:nth-of-type(3) > mat-datepicker-toggle > button",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "open_date_picker",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Open calendar",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/cuentasxcobrar/comprobantes"
+            }
+          },
+          {
+            "label": "--Seleccione--",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/cuentasxcobrar/comprobantes"
+            }
+          },
+          {
+            "label": "--Seleccione--",
+            "selector": "mat-select#mat-select-2",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/cuentasxcobrar/comprobantes"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 24,
+        "deny": 4,
+        "review": 1
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "navigation_link": 10,
+        "open_date_picker": 1,
+        "open_dropdown": 2,
+        "submit_search": 1,
+        "unknown": 1
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 10
+      },
+      "denied": [
+        {
+          "label": "Primera página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        },
+        {
+          "label": "Última página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Última página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/comprobantes"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Facturación Electronica",
+      "title_source": "discovery_hint",
+      "candidates_count": 27,
+      "pipeline": {
+        "raw_candidates_count": 127,
+        "deduplicated_candidates_count": 32,
+        "duplicates_removed_count": 95,
+        "eligible_candidates_count": 27,
+        "allowed_candidates_count": 22,
+        "selected_for_exploration_count": 3,
+        "selection_exclusions": {
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 9
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Open calendar",
+            "selector": "div:nth-of-type(2) > div:nth-of-type(1) > mat-form-field > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > mat-datepicker-toggle > button",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "open_date_picker",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Open calendar",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": "get",
+              "form_action": "/admin/cuentasxcobrar/facturacion",
+              "screen_path": "/admin/cuentasxcobrar/facturacion"
+            }
+          },
+          {
+            "label": "SIN UTILIZACIÓN DE SISTEMA FINANCIERO",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": "get",
+              "form_action": "/admin/cuentasxcobrar/facturacion",
+              "screen_path": "/admin/cuentasxcobrar/facturacion"
+            }
+          },
+          {
+            "label": "Number",
+            "selector": "input#mat-input-5",
+            "tag": "input",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 9,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": "text",
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": "Number",
+              "title": null,
+              "within_table": false,
+              "form_method": "get",
+              "form_action": "/admin/cuentasxcobrar/facturacion",
+              "screen_path": "/admin/cuentasxcobrar/facturacion"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 22,
+        "deny": 2,
+        "review": 3
+      },
+      "categories": {
+        "expand_menu": 10,
+        "mutative_action": 2,
+        "navigation_link": 9,
+        "open_date_picker": 1,
+        "open_dropdown": 2,
+        "unknown": 3
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 8
+      },
+      "denied": [
+        {
+          "label": "Guardar sin firmar",
+          "selector": "cxc-punto-venta > div > div > form > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        },
+        {
+          "label": "Guardar y Enviar SRI",
+          "selector": "cxc-punto-venta > div > div > form > div:nth-of-type(2) > div > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        },
+        {
+          "label": "Conumidor Final",
+          "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        },
+        {
+          "label": "Con datos cliente",
+          "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": "get",
+            "form_action": "/admin/cuentasxcobrar/facturacion",
+            "screen_path": "/admin/cuentasxcobrar/facturacion"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Forma pago",
+      "title_source": "discovery_hint",
+      "candidates_count": 27,
+      "pipeline": {
+        "raw_candidates_count": 138,
+        "deduplicated_candidates_count": 32,
+        "duplicates_removed_count": 106,
+        "eligible_candidates_count": 27,
+        "allowed_candidates_count": 20,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 20,
+        "deny": 5,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 10,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 8
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        },
+        {
+          "label": "Última página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Última página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        },
+        {
+          "label": "Agregar",
+          "selector": "div > div > div > div > div:nth-of-type(2) > div > div > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/forma-pago"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Lista de facturas",
+      "title_source": "discovery_hint",
+      "candidates_count": 30,
+      "pipeline": {
+        "raw_candidates_count": 181,
+        "deduplicated_candidates_count": 35,
+        "duplicates_removed_count": 146,
+        "eligible_candidates_count": 30,
+        "allowed_candidates_count": 23,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Siguiente página",
+            "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 23,
+        "deny": 2,
+        "review": 5
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "navigation_link": 10,
+        "submit_search": 1,
+        "unknown": 5
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 11
+      },
+      "denied": [
+        {
+          "label": "Primera página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-factura-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div:nth-of-type(3) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > div > ui-button > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div:nth-of-type(3) > table > tbody > tr:nth-of-type(9) > td:nth-of-type(1) > div > ui-button:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div:nth-of-type(3) > table > tbody > tr:nth-of-type(9) > td:nth-of-type(1) > div > ui-button:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/lista-facturas"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito",
+      "title_source": "discovery_hint",
+      "candidates_count": 27,
+      "pipeline": {
+        "raw_candidates_count": 131,
+        "deduplicated_candidates_count": 32,
+        "duplicates_removed_count": 99,
+        "eligible_candidates_count": 27,
+        "allowed_candidates_count": 20,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 20,
+        "deny": 5,
+        "review": 2
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 10,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 8
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "app-notas-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        },
+        {
+          "label": "Última página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Última página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-notas-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/notas-credito"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Puntos de emisión",
+      "title_source": "discovery_hint",
+      "candidates_count": 31,
+      "pipeline": {
+        "raw_candidates_count": 148,
+        "deduplicated_candidates_count": 36,
+        "duplicates_removed_count": 112,
+        "eligible_candidates_count": 31,
+        "allowed_candidates_count": 20,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 20,
+        "deny": 5,
+        "review": 6
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 10,
+        "unknown": 6
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 12
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "Última página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Última página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "Agregar",
+          "selector": "div > div > div > div > div:nth-of-type(2) > div > div > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(8) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(8) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/puntos-emision"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones",
+      "title_source": "discovery_hint",
+      "candidates_count": 29,
+      "pipeline": {
+        "raw_candidates_count": 142,
+        "deduplicated_candidates_count": 34,
+        "duplicates_removed_count": 108,
+        "eligible_candidates_count": 29,
+        "allowed_candidates_count": 23,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Siguiente página",
+            "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/cuentasxcobrar/retenciones"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 23,
+        "deny": 3,
+        "review": 3
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 10,
+        "submit_search": 1,
+        "unknown": 3
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 10
+      },
+      "denied": [
+        {
+          "label": "Nueva retención",
+          "selector": "app-retencion-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        },
+        {
+          "label": "",
+          "selector": "app-retencion-list > ui-content-wrapper > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div:nth-of-type(3) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > div > ui-button > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/retenciones"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Categorías",
+      "title_source": "main_heading",
+      "candidates_count": 29,
+      "pipeline": {
+        "raw_candidates_count": 134,
+        "deduplicated_candidates_count": 34,
+        "duplicates_removed_count": 100,
+        "eligible_candidates_count": 29,
+        "allowed_candidates_count": 20,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "global_navigation_outside_home": 10,
+          "navigation_handled_by_route_crawler": 10
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 20,
+        "deny": 5,
+        "review": 4
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 10,
+        "mutative_action": 1,
+        "navigation_link": 10,
+        "unknown": 4
+      },
+      "regions": {
+        "global_navigation": 19,
+        "main_content": 10
+      },
+      "denied": [
+        {
+          "label": "Nueva categoría",
+          "selector": "ng-component > ui-content-wrapper > div > div > ui-breadcrumbs > div > div:nth-of-type(2) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "Siguiente página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Siguiente página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "Última página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(4)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Última página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "Sincronizar",
+          "selector": "ng-component > ui-content-wrapper > div > div > ui-breadcrumbs > div > div:nth-of-type(2) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/cuentasxcobrar/tipo-pago"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/anios",
+      "title": "Año",
+      "title_source": "discovery_hint",
+      "candidates_count": 27,
+      "pipeline": {
+        "raw_candidates_count": 131,
+        "deduplicated_candidates_count": 30,
+        "duplicates_removed_count": 101,
+        "eligible_candidates_count": 27,
+        "allowed_candidates_count": 21,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 7
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Siguiente página",
+            "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/anios"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 21,
+        "deny": 3,
+        "review": 3
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 12,
+        "mutative_action": 1,
+        "navigation_link": 7,
+        "unknown": 3
+      },
+      "regions": {
+        "global_navigation": 18,
+        "main_content": 9
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/anios"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/areas",
+      "title": "Opciones del sistema",
+      "title_source": "main_heading",
+      "candidates_count": 26,
+      "pipeline": {
+        "raw_candidates_count": 110,
+        "deduplicated_candidates_count": 29,
+        "duplicates_removed_count": 81,
+        "eligible_candidates_count": 26,
+        "allowed_candidates_count": 24,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "category_budget:expand_menu": 5,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 7
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 24,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 17,
+        "navigation_link": 7,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 18,
+        "main_content": 8
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/areas"
+          }
+        },
+        {
+          "label": "Agregar módulo",
+          "selector": "div:nth-of-type(2) > app-area > ui-content-wrapper > div > div > div > div > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/areas"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/cargo-funcional",
+      "title": "Cargo Funcional",
+      "title_source": "discovery_hint",
+      "candidates_count": 30,
+      "pipeline": {
+        "raw_candidates_count": 142,
+        "deduplicated_candidates_count": 33,
+        "duplicates_removed_count": 109,
+        "eligible_candidates_count": 30,
+        "allowed_candidates_count": 21,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 7
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Siguiente página",
+            "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/cargo-funcional"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 21,
+        "deny": 3,
+        "review": 6
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 12,
+        "mutative_action": 1,
+        "navigation_link": 7,
+        "unknown": 6
+      },
+      "regions": {
+        "global_navigation": 18,
+        "main_content": 12
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "Agregar",
+          "selector": "div > div > div > div > div:nth-of-type(2) > div > div > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr > td:nth-of-type(3) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/cargo-funcional"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/estado-seguimiento",
+      "title": "Estado Seguimiento",
+      "title_source": "discovery_hint",
+      "candidates_count": 30,
+      "pipeline": {
+        "raw_candidates_count": 134,
+        "deduplicated_candidates_count": 33,
+        "duplicates_removed_count": 101,
+        "eligible_candidates_count": 30,
+        "allowed_candidates_count": 24,
+        "selected_for_exploration_count": 3,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 7
+        },
+        "selected_for_exploration": [
+          {
+            "label": "--Seleccione--",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/estado-seguimiento"
+            }
+          },
+          {
+            "label": "--Seleccione--",
+            "selector": "mat-select#mat-select-2",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/estado-seguimiento"
+            }
+          },
+          {
+            "label": "Siguiente página",
+            "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/estado-seguimiento"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 24,
+        "deny": 3,
+        "review": 3
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 12,
+        "mutative_action": 1,
+        "navigation_link": 7,
+        "open_dropdown": 2,
+        "submit_search": 1,
+        "unknown": 3
+      },
+      "regions": {
+        "global_navigation": 18,
+        "main_content": 12
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/estado-seguimiento"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/general/personas",
+      "title": "Personas",
+      "title_source": "discovery_hint",
+      "candidates_count": 27,
+      "pipeline": {
+        "raw_candidates_count": 131,
+        "deduplicated_candidates_count": 30,
+        "duplicates_removed_count": 101,
+        "eligible_candidates_count": 27,
+        "allowed_candidates_count": 21,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:change_pagination": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 7
+        },
+        "selected_for_exploration": [
+          {
+            "label": "Siguiente página",
+            "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+            "tag": "button",
+            "source": "buttons",
+            "event_type": "click",
+            "action_kind": "button_click",
+            "event_category": "change_pagination",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 6,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "native_interactive_tag",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "type": "button",
+              "role": null,
+              "aria_label": "Siguiente página",
+              "title": null,
+              "aria_expanded": null,
+              "aria_selected": null,
+              "aria_controls": null,
+              "disabled": false,
+              "region": "main_content",
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/general/personas"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 21,
+        "deny": 3,
+        "review": 3
+      },
+      "categories": {
+        "change_pagination": 4,
+        "expand_menu": 12,
+        "mutative_action": 1,
+        "navigation_link": 7,
+        "unknown": 3
+      },
+      "regions": {
+        "global_navigation": 18,
+        "main_content": 9
+      },
+      "denied": [
+        {
+          "label": "Nuevo",
+          "selector": "div > div > div > div > div > div > div:nth-of-type(2) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "mutative_action",
+          "decision": "deny",
+          "risk_level": "critical",
+          "score": 1,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "dangerous_text_detected"
+          ],
+          "policy_reasons": [
+            "dangerous_text_or_signal_detected"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        },
+        {
+          "label": "Primera página",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Primera página",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        },
+        {
+          "label": "Página anterior",
+          "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "change_pagination",
+          "decision": "deny",
+          "risk_level": "low",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "element_disabled"
+          ],
+          "dangerous": true,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": "Página anterior",
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": true,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        }
+      ],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(9) > div:nth-of-type(1) > button:nth-of-type(1)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        },
+        {
+          "label": "",
+          "selector": "div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(9) > div:nth-of-type(1) > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 5,
+          "reasons": [
+            "native_interactive_tag",
+            "navigation_like_selector",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": true,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/general/personas"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Actividad portal ciudadano",
+      "title_source": "discovery_hint",
+      "candidates_count": 21,
+      "pipeline": {
+        "raw_candidates_count": 93,
+        "deduplicated_candidates_count": 24,
+        "duplicates_removed_count": 69,
+        "eligible_candidates_count": 21,
+        "allowed_candidates_count": 19,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 5
+        },
+        "selected_for_exploration": [
+          {
+            "label": "--seleccione--",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/gerencial/actividad-portal"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 19,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 5,
+        "open_dropdown": 1,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 16,
+        "main_content": 5
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/actividad-portal"
+          }
+        },
+        {
+          "label": "Limpiar filtros",
+          "selector": "app-actividad-portal > ui-content-wrapper > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 7,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "safe_text_detected"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/actividad-portal"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/talento-humano",
+      "title": "Talento humano",
+      "title_source": "discovery_hint",
+      "candidates_count": 25,
+      "pipeline": {
+        "raw_candidates_count": 97,
+        "deduplicated_candidates_count": 28,
+        "duplicates_removed_count": 69,
+        "eligible_candidates_count": 25,
+        "allowed_candidates_count": 23,
+        "selected_for_exploration_count": 2,
+        "selection_exclusions": {
+          "category_budget:open_dropdown": 3,
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 5
+        },
+        "selected_for_exploration": [
+          {
+            "label": "--seleccione--",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/gerencial/talento-humano"
+            }
+          },
+          {
+            "label": "--seleccione--",
+            "selector": "mat-select#mat-select-2",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/gerencial/talento-humano"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 23,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 5,
+        "open_dropdown": 5,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 16,
+        "main_content": 9
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/talento-humano"
+          }
+        },
+        {
+          "label": "Limpiar filtros",
+          "selector": "app-talento-humano > ui-content-wrapper > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(7) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 7,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "safe_text_detected"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/talento-humano"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/gerencial/tramites",
+      "title": "Trámites",
+      "title_source": "discovery_hint",
+      "candidates_count": 21,
+      "pipeline": {
+        "raw_candidates_count": 93,
+        "deduplicated_candidates_count": 24,
+        "duplicates_removed_count": 69,
+        "eligible_candidates_count": 21,
+        "allowed_candidates_count": 19,
+        "selected_for_exploration_count": 1,
+        "selection_exclusions": {
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 5
+        },
+        "selected_for_exploration": [
+          {
+            "label": "--seleccione--",
+            "selector": "mat-select#mat-select-0",
+            "tag": "mat-select",
+            "source": "custom_interactives",
+            "event_type": "click",
+            "action_kind": "expand_or_collapse",
+            "event_category": "open_dropdown",
+            "decision": "allow",
+            "risk_level": "low",
+            "score": 10,
+            "reasons": [
+              "has_label",
+              "label_length_ok",
+              "has_aria_expanded",
+              "custom_element",
+              "collapsable_like_element",
+              "region:main_content",
+              "has_selector"
+            ],
+            "policy_reasons": [
+              "event_category_explicitly_allowed"
+            ],
+            "dangerous": false,
+            "metadata": {
+              "role": "combobox",
+              "aria_expanded": "false",
+              "aria_selected": null,
+              "aria_controls": null,
+              "onclick": false,
+              "type": null,
+              "disabled": false,
+              "region": "main_content",
+              "href": null,
+              "absolute_href": null,
+              "aria_label": null,
+              "title": null,
+              "within_table": false,
+              "form_method": null,
+              "form_action": null,
+              "screen_path": "/admin/gerencial/tramites"
+            }
+          }
+        ]
+      },
+      "decisions": {
+        "allow": 19,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 5,
+        "open_dropdown": 1,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 16,
+        "main_content": 5
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/tramites"
+          }
+        },
+        {
+          "label": "Limpiar filtros",
+          "selector": "app-tramites > ui-content-wrapper > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(3) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 7,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector",
+            "safe_text_detected"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/gerencial/tramites"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "Consulta de pagos por cliente",
+      "title_source": "main_heading",
+      "candidates_count": 19,
+      "pipeline": {
+        "raw_candidates_count": 86,
+        "deduplicated_candidates_count": 22,
+        "duplicates_removed_count": 64,
+        "eligible_candidates_count": 19,
+        "allowed_candidates_count": 17,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 4
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 17,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 4,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 15,
+        "main_content": 4
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/prevencion-riesgo/consulta-pago-cliente"
+          }
+        },
+        {
+          "label": "Limpiar",
+          "selector": "ui-content-wrapper > div > div > div > section > div:nth-of-type(2) > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/prevencion-riesgo/consulta-pago-cliente"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "Consulta de información SRI",
+      "title_source": "main_heading",
+      "candidates_count": 18,
+      "pipeline": {
+        "raw_candidates_count": 85,
+        "deduplicated_candidates_count": 21,
+        "duplicates_removed_count": 64,
+        "eligible_candidates_count": 18,
+        "allowed_candidates_count": 16,
+        "selected_for_exploration_count": 0,
+        "selection_exclusions": {
+          "category_budget:submit_search": 1,
+          "global_navigation_outside_home": 12,
+          "navigation_handled_by_route_crawler": 3
+        },
+        "selected_for_exploration": []
+      },
+      "decisions": {
+        "allow": 16,
+        "review": 2
+      },
+      "categories": {
+        "expand_menu": 12,
+        "navigation_link": 3,
+        "submit_search": 1,
+        "unknown": 2
+      },
+      "regions": {
+        "global_navigation": 15,
+        "main_content": 3
+      },
+      "denied": [],
+      "review": [
+        {
+          "label": "",
+          "selector": "html > body > app-root > layout > admin-layout > div > div:nth-of-type(1) > button",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 3,
+          "reasons": [
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": null,
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/prevencion-riesgo/sri"
+          }
+        },
+        {
+          "label": "Limpiar",
+          "selector": "div > div:nth-of-type(2) > app-sri > div > div > div:nth-of-type(2) > div > button:nth-of-type(2)",
+          "tag": "button",
+          "source": "buttons",
+          "event_type": "click",
+          "action_kind": "button_click",
+          "event_category": "unknown",
+          "decision": "review",
+          "risk_level": "medium",
+          "score": 6,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "native_interactive_tag",
+            "region:main_content",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_requires_review"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "type": "button",
+            "role": null,
+            "aria_label": null,
+            "title": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "disabled": false,
+            "region": "main_content",
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/prevencion-riesgo/sri"
+          }
+        }
+      ]
+    }
+  ]
+}

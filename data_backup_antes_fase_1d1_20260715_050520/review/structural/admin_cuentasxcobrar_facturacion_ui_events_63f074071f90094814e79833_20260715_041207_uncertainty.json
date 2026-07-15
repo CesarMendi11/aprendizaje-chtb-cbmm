@@ -1,0 +1,203 @@
+{
+  "route": "/admin/cuentasxcobrar/facturacion",
+  "source_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+  "status": "ui_events_explored",
+  "results_count": 3,
+  "results": [
+    {
+      "candidate": {
+        "label": "Open calendar",
+        "selector": "div:nth-of-type(2) > div:nth-of-type(1) > mat-form-field > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > mat-datepicker-toggle > button",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "open_date_picker",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Open calendar",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": "get",
+          "form_action": "/admin/cuentasxcobrar/facturacion",
+          "screen_path": "/admin/cuentasxcobrar/facturacion"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "after_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "before_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "after_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "before_route": "/admin/cuentasxcobrar/facturacion",
+      "after_route": "/admin/cuentasxcobrar/facturacion",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Facturacion",
+        "path": "/admin/cuentasxcobrar/facturacion",
+        "links_count": 9,
+        "buttons_count": 6,
+        "inputs_count": 6,
+        "custom_interactives_count": 112
+      }
+    },
+    {
+      "candidate": {
+        "label": "SIN UTILIZACIÓN DE SISTEMA FINANCIERO",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": "get",
+          "form_action": "/admin/cuentasxcobrar/facturacion",
+          "screen_path": "/admin/cuentasxcobrar/facturacion"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "after_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "before_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "after_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "before_route": "/admin/cuentasxcobrar/facturacion",
+      "after_route": "/admin/cuentasxcobrar/facturacion",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Facturacion",
+        "path": "/admin/cuentasxcobrar/facturacion",
+        "links_count": 9,
+        "buttons_count": 6,
+        "inputs_count": 6,
+        "custom_interactives_count": 112
+      }
+    },
+    {
+      "candidate": {
+        "label": "Number",
+        "selector": "input#mat-input-5",
+        "tag": "input",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 9,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": "text",
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": "Number",
+          "title": null,
+          "within_table": false,
+          "form_method": "get",
+          "form_action": "/admin/cuentasxcobrar/facturacion",
+          "screen_path": "/admin/cuentasxcobrar/facturacion"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "after_fingerprint": "1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "before_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "after_exact_fingerprint": "68ee9e939315a015ad6042b4023c1b7e524225c773c86fdd9ef8e12f267a41a6",
+      "before_route": "/admin/cuentasxcobrar/facturacion",
+      "after_route": "/admin/cuentasxcobrar/facturacion",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:1b3fb2df3edee88927f819d95f67909fd5f0bd9b63f074071f90094814e79833",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Facturacion",
+        "path": "/admin/cuentasxcobrar/facturacion",
+        "links_count": 9,
+        "buttons_count": 6,
+        "inputs_count": 6,
+        "custom_interactives_count": 112
+      }
+    }
+  ]
+}

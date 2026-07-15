@@ -1,0 +1,142 @@
+{
+  "route": "/admin/gerencial/talento-humano",
+  "source_state_id": "ui_state:ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+  "status": "ui_events_explored",
+  "results_count": 2,
+  "results": [
+    {
+      "candidate": {
+        "label": "--seleccione--",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/gerencial/talento-humano"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "after_fingerprint": "ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "before_exact_fingerprint": "c248aec9cc5d607fa4e183cb75de9a3ca7084bf8ff2109cd93b8b98b3d17f019",
+      "after_exact_fingerprint": "c248aec9cc5d607fa4e183cb75de9a3ca7084bf8ff2109cd93b8b98b3d17f019",
+      "before_route": "/admin/gerencial/talento-humano",
+      "after_route": "/admin/gerencial/talento-humano",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Talento humano",
+        "path": "/admin/gerencial/talento-humano",
+        "links_count": 5,
+        "buttons_count": 3,
+        "inputs_count": 0,
+        "custom_interactives_count": 89
+      }
+    },
+    {
+      "candidate": {
+        "label": "--seleccione--",
+        "selector": "mat-select#mat-select-2",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/gerencial/talento-humano"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "after_fingerprint": "ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "before_exact_fingerprint": "c248aec9cc5d607fa4e183cb75de9a3ca7084bf8ff2109cd93b8b98b3d17f019",
+      "after_exact_fingerprint": "c248aec9cc5d607fa4e183cb75de9a3ca7084bf8ff2109cd93b8b98b3d17f019",
+      "before_route": "/admin/gerencial/talento-humano",
+      "after_route": "/admin/gerencial/talento-humano",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:ab76cd1c53cca23c87ef73762f1f58a992cefa6d757887d54537db8e992805f4",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Talento humano",
+        "path": "/admin/gerencial/talento-humano",
+        "links_count": 5,
+        "buttons_count": 3,
+        "inputs_count": 0,
+        "custom_interactives_count": 89
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "route": "/admin/general/personas",
+  "source_state_id": "ui_state:15e3551f3d295f89c82d8aa29e43897a345d322436b71814d82952b206955f38",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "Siguiente página",
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "change_pagination",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Siguiente página",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/personas"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "15e3551f3d295f89c82d8aa29e43897a345d322436b71814d82952b206955f38",
+      "after_fingerprint": "89d39ce1e135cd591b4fa57a1c466f67cf4e7b69fb409b974fd5ab45d0358410",
+      "before_exact_fingerprint": "1033646195706b01242732ec827743f00b65125568f34294c6c84828c448cefc",
+      "after_exact_fingerprint": "c669f406017e42ceb67d4b52d243adf5058aaf2373f972e0dff2cecf3a4f7377",
+      "before_route": "/admin/general/personas",
+      "after_route": "/admin/general/personas",
+      "error": null,
+      "source_state_id": "ui_state:15e3551f3d295f89c82d8aa29e43897a345d322436b71814d82952b206955f38",
+      "target_state_id": "ui_state:89d39ce1e135cd591b4fa57a1c466f67cf4e7b69fb409b974fd5ab45d0358410",
+      "restored_before": true,
+      "restore_strategy": "already_current",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Personas",
+        "path": "/admin/general/personas",
+        "links_count": 7,
+        "buttons_count": 26,
+        "inputs_count": 0,
+        "custom_interactives_count": 98
+      }
+    }
+  ]
+}

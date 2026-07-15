@@ -1,0 +1,204 @@
+{
+  "route": "/admin/general/estado-seguimiento",
+  "source_state_id": "ui_state:72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+  "status": "ui_events_explored",
+  "results_count": 3,
+  "results": [
+    {
+      "candidate": {
+        "label": "--Seleccione--",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/estado-seguimiento"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "after_fingerprint": "6394adef8643e2179cfa2e325d44c5a1991b0ec322e239bbdf77e9a8bb8e9a38",
+      "before_exact_fingerprint": "24110152fd34ea89d4c0cfadb1e0f0a1b60ff7bf03eb07e704d7ca3a48d633ac",
+      "after_exact_fingerprint": "753763d77a7887ca231a1d0ee47b06223f4baed0baf9f4b5680d6a452ac8a69c",
+      "before_route": "/admin/general/estado-seguimiento",
+      "after_route": "/admin/general/estado-seguimiento",
+      "error": null,
+      "source_state_id": "ui_state:72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "target_state_id": "ui_state:6394adef8643e2179cfa2e325d44c5a1991b0ec322e239bbdf77e9a8bb8e9a38",
+      "restored_before": true,
+      "restore_strategy": "already_current",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Estado seguimiento",
+        "path": "/admin/general/estado-seguimiento",
+        "links_count": 7,
+        "buttons_count": 27,
+        "inputs_count": 1,
+        "custom_interactives_count": 104
+      }
+    },
+    {
+      "candidate": {
+        "label": "--Seleccione--",
+        "selector": "mat-select#mat-select-2",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/estado-seguimiento"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "after_fingerprint": "6394adef8643e2179cfa2e325d44c5a1991b0ec322e239bbdf77e9a8bb8e9a38",
+      "before_exact_fingerprint": "24110152fd34ea89d4c0cfadb1e0f0a1b60ff7bf03eb07e704d7ca3a48d633ac",
+      "after_exact_fingerprint": "753763d77a7887ca231a1d0ee47b06223f4baed0baf9f4b5680d6a452ac8a69c",
+      "before_route": "/admin/general/estado-seguimiento",
+      "after_route": "/admin/general/estado-seguimiento",
+      "error": null,
+      "source_state_id": "ui_state:72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "target_state_id": "ui_state:6394adef8643e2179cfa2e325d44c5a1991b0ec322e239bbdf77e9a8bb8e9a38",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Estado seguimiento",
+        "path": "/admin/general/estado-seguimiento",
+        "links_count": 7,
+        "buttons_count": 27,
+        "inputs_count": 1,
+        "custom_interactives_count": 104
+      }
+    },
+    {
+      "candidate": {
+        "label": "Siguiente página",
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "change_pagination",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Siguiente página",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/estado-seguimiento"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "after_fingerprint": "6a3db1d2c7455040e24474c633d2d5be390b1742c5ee0465a613c8545f96c02d",
+      "before_exact_fingerprint": "24110152fd34ea89d4c0cfadb1e0f0a1b60ff7bf03eb07e704d7ca3a48d633ac",
+      "after_exact_fingerprint": "302d4ccccb63ea8215a18799fe39cf8bccfdc1ad1e1e4017aa0f41edbe7e78ad",
+      "before_route": "/admin/general/estado-seguimiento",
+      "after_route": "/admin/general/estado-seguimiento",
+      "error": null,
+      "source_state_id": "ui_state:72f68bbd9965f294bc60dbf85a8505503e6758ff2c1c0dc3faf33608f483418e",
+      "target_state_id": "ui_state:6a3db1d2c7455040e24474c633d2d5be390b1742c5ee0465a613c8545f96c02d",
+      "restored_before": true,
+      "restore_strategy": "direct_route",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Estado seguimiento",
+        "path": "/admin/general/estado-seguimiento",
+        "links_count": 7,
+        "buttons_count": 25,
+        "inputs_count": 1,
+        "custom_interactives_count": 100
+      }
+    }
+  ]
+}

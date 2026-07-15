@@ -1,0 +1,1131 @@
+{
+  "graph_type": "erp_navigation_graph",
+  "nodes": [
+    {
+      "id": "/admin/home",
+      "type": "screen",
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "source_module": "root",
+      "status": "discovered",
+      "metadata": {
+        "reason": "home_url",
+        "depth": 0,
+        "title_source": "route_override",
+        "title_confidence": 1.0
+      }
+    },
+    {
+      "id": "/admin/home#state:0d7661f7e713",
+      "type": "screen",
+      "route": "/admin/home#state:0d7661f7e713",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+        "base_route": "/admin/home",
+        "before_fingerprint": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "after_fingerprint": "0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+        "candidate": {
+          "label": "Cuentas por cobrar",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "path": {
+          "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+          "target_state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+          "depth": 1,
+          "steps": [
+            {
+              "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+              "event": {
+                "event_type": "expand_menu",
+                "label": "Cuentas por cobrar",
+                "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+                "decision": "allow",
+                "risk_level": "low",
+                "source": "custom_interactives",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "reasons": [
+                  "has_label",
+                  "label_length_ok",
+                  "navigation_like_selector",
+                  "high_value_navigation_area",
+                  "custom_element",
+                  "collapsable_like_element",
+                  "region:global_navigation",
+                  "has_selector",
+                  "event_category_explicitly_allowed"
+                ],
+                "metadata": {
+                  "role": null,
+                  "aria_expanded": null,
+                  "aria_selected": null,
+                  "aria_controls": null,
+                  "onclick": false,
+                  "type": null,
+                  "disabled": false,
+                  "region": "global_navigation",
+                  "href": null,
+                  "absolute_href": null,
+                  "aria_label": null,
+                  "title": null,
+                  "within_table": false,
+                  "form_method": null,
+                  "form_action": null,
+                  "screen_path": "/admin/home"
+                }
+              },
+              "target_state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7"
+            }
+          ],
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/comprobantes",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes eléctronicos emitidos",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "main_heading",
+        "title_confidence": 0.98,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/facturacion",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Facturación Electronica",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/forma-pago",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Forma pago",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/lista-facturas",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Lista de facturas",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/notas-credito",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/puntos-emision",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Puntos de emisión",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/retenciones",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/tipo-pago",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Categorías",
+      "source_module": "/admin/home#state:0d7661f7e713",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:0d7661f7e713",
+        "title_source": "main_heading",
+        "title_confidence": 0.98,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/home#state:75f588ddc75b",
+      "type": "screen",
+      "route": "/admin/home#state:75f588ddc75b",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "state_id": "ui_state:75f588ddc75bb30c733f241fbbdb6eea83ab1907680eef7750298a1725db333e",
+        "base_route": "/admin/home",
+        "before_fingerprint": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "after_fingerprint": "75f588ddc75bb30c733f241fbbdb6eea83ab1907680eef7750298a1725db333e",
+        "candidate": {
+          "label": "General",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "path": {
+          "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+          "target_state_id": "ui_state:75f588ddc75bb30c733f241fbbdb6eea83ab1907680eef7750298a1725db333e",
+          "depth": 1,
+          "steps": [
+            {
+              "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+              "event": {
+                "event_type": "expand_menu",
+                "label": "General",
+                "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+                "decision": "allow",
+                "risk_level": "low",
+                "source": "custom_interactives",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "reasons": [
+                  "has_label",
+                  "label_length_ok",
+                  "navigation_like_selector",
+                  "high_value_navigation_area",
+                  "custom_element",
+                  "collapsable_like_element",
+                  "region:global_navigation",
+                  "has_selector",
+                  "event_category_explicitly_allowed"
+                ],
+                "metadata": {
+                  "role": null,
+                  "aria_expanded": null,
+                  "aria_selected": null,
+                  "aria_controls": null,
+                  "onclick": false,
+                  "type": null,
+                  "disabled": false,
+                  "region": "global_navigation",
+                  "href": null,
+                  "absolute_href": null,
+                  "aria_label": null,
+                  "title": null,
+                  "within_table": false,
+                  "form_method": null,
+                  "form_action": null,
+                  "screen_path": "/admin/home"
+                }
+              },
+              "target_state_id": "ui_state:75f588ddc75bb30c733f241fbbdb6eea83ab1907680eef7750298a1725db333e"
+            }
+          ],
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "id": "/admin/general/anios",
+      "type": "screen",
+      "route": "/admin/general/anios",
+      "title": "Año",
+      "source_module": "/admin/home#state:75f588ddc75b",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:75f588ddc75b",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/general/areas",
+      "type": "screen",
+      "route": "/admin/general/areas",
+      "title": "Opciones del sistema",
+      "source_module": "/admin/home#state:75f588ddc75b",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:75f588ddc75b",
+        "title_source": "main_heading",
+        "title_confidence": 0.98,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/general/cargo-funcional",
+      "type": "screen",
+      "route": "/admin/general/cargo-funcional",
+      "title": "Cargo Funcional",
+      "source_module": "/admin/home#state:75f588ddc75b",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:75f588ddc75b",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/general/estado-seguimiento",
+      "type": "screen",
+      "route": "/admin/general/estado-seguimiento",
+      "title": "Estado Seguimiento",
+      "source_module": "/admin/home#state:75f588ddc75b",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:75f588ddc75b",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/general/personas",
+      "type": "screen",
+      "route": "/admin/general/personas",
+      "title": "Personas",
+      "source_module": "/admin/home#state:75f588ddc75b",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:75f588ddc75b",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/home#state:5dd7f9daba96",
+      "type": "screen",
+      "route": "/admin/home#state:5dd7f9daba96",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "state_id": "ui_state:5dd7f9daba96d270b780ece9253d1d157137490800c76a1174d233808a7dde16",
+        "base_route": "/admin/home",
+        "before_fingerprint": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "after_fingerprint": "5dd7f9daba96d270b780ece9253d1d157137490800c76a1174d233808a7dde16",
+        "candidate": {
+          "label": "Gerencial",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "path": {
+          "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+          "target_state_id": "ui_state:5dd7f9daba96d270b780ece9253d1d157137490800c76a1174d233808a7dde16",
+          "depth": 1,
+          "steps": [
+            {
+              "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+              "event": {
+                "event_type": "expand_menu",
+                "label": "Gerencial",
+                "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+                "decision": "allow",
+                "risk_level": "low",
+                "source": "custom_interactives",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "reasons": [
+                  "has_label",
+                  "label_length_ok",
+                  "navigation_like_selector",
+                  "high_value_navigation_area",
+                  "custom_element",
+                  "collapsable_like_element",
+                  "region:global_navigation",
+                  "has_selector",
+                  "event_category_explicitly_allowed"
+                ],
+                "metadata": {
+                  "role": null,
+                  "aria_expanded": null,
+                  "aria_selected": null,
+                  "aria_controls": null,
+                  "onclick": false,
+                  "type": null,
+                  "disabled": false,
+                  "region": "global_navigation",
+                  "href": null,
+                  "absolute_href": null,
+                  "aria_label": null,
+                  "title": null,
+                  "within_table": false,
+                  "form_method": null,
+                  "form_action": null,
+                  "screen_path": "/admin/home"
+                }
+              },
+              "target_state_id": "ui_state:5dd7f9daba96d270b780ece9253d1d157137490800c76a1174d233808a7dde16"
+            }
+          ],
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "id": "/admin/gerencial/actividad-portal",
+      "type": "screen",
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Actividad portal ciudadano",
+      "source_module": "/admin/home#state:5dd7f9daba96",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:5dd7f9daba96",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/gerencial/talento-humano",
+      "type": "screen",
+      "route": "/admin/gerencial/talento-humano",
+      "title": "Talento humano",
+      "source_module": "/admin/home#state:5dd7f9daba96",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:5dd7f9daba96",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/gerencial/tramites",
+      "type": "screen",
+      "route": "/admin/gerencial/tramites",
+      "title": "Trámites",
+      "source_module": "/admin/home#state:5dd7f9daba96",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:5dd7f9daba96",
+        "title_source": "discovery_hint",
+        "title_confidence": 0.9,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/home#state:0ed6a860d323",
+      "type": "screen",
+      "route": "/admin/home#state:0ed6a860d323",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+        "base_route": "/admin/home",
+        "before_fingerprint": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "after_fingerprint": "0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+        "candidate": {
+          "label": "Permisos",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "path": {
+          "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+          "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+          "depth": 1,
+          "steps": [
+            {
+              "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+              "event": {
+                "event_type": "expand_menu",
+                "label": "Permisos",
+                "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+                "decision": "allow",
+                "risk_level": "low",
+                "source": "custom_interactives",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "reasons": [
+                  "has_label",
+                  "label_length_ok",
+                  "navigation_like_selector",
+                  "high_value_navigation_area",
+                  "custom_element",
+                  "collapsable_like_element",
+                  "region:global_navigation",
+                  "has_selector",
+                  "event_category_explicitly_allowed"
+                ],
+                "metadata": {
+                  "role": null,
+                  "aria_expanded": null,
+                  "aria_selected": null,
+                  "aria_controls": null,
+                  "onclick": false,
+                  "type": null,
+                  "disabled": false,
+                  "region": "global_navigation",
+                  "href": null,
+                  "absolute_href": null,
+                  "aria_label": null,
+                  "title": null,
+                  "within_table": false,
+                  "form_method": null,
+                  "form_action": null,
+                  "screen_path": "/admin/home"
+                }
+              },
+              "target_state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0"
+            }
+          ],
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "id": "/admin/home#state:bd6d41321665",
+      "type": "screen",
+      "route": "/admin/home#state:bd6d41321665",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "state_id": "ui_state:bd6d4132166530ecd9f2e291098277bd6836897d6b0f60b2cf8f66d0276d7c0f",
+        "base_route": "/admin/home",
+        "before_fingerprint": "664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+        "after_fingerprint": "bd6d4132166530ecd9f2e291098277bd6836897d6b0f60b2cf8f66d0276d7c0f",
+        "candidate": {
+          "label": "Prevencion Riesgo",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "event_category": "expand_menu",
+          "decision": "allow",
+          "risk_level": "low",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "region:global_navigation",
+            "has_selector"
+          ],
+          "policy_reasons": [
+            "event_category_explicitly_allowed"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "aria_selected": null,
+            "aria_controls": null,
+            "onclick": false,
+            "type": null,
+            "disabled": false,
+            "region": "global_navigation",
+            "href": null,
+            "absolute_href": null,
+            "aria_label": null,
+            "title": null,
+            "within_table": false,
+            "form_method": null,
+            "form_action": null,
+            "screen_path": "/admin/home"
+          }
+        },
+        "path": {
+          "root_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+          "target_state_id": "ui_state:bd6d4132166530ecd9f2e291098277bd6836897d6b0f60b2cf8f66d0276d7c0f",
+          "depth": 1,
+          "steps": [
+            {
+              "source_state_id": "ui_state:664504edf9cbf655d0a6f3f908d8bb9754b3b7a10be1ae5464cbec8c91f792a1",
+              "event": {
+                "event_type": "expand_menu",
+                "label": "Prevencion Riesgo",
+                "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+                "decision": "allow",
+                "risk_level": "low",
+                "source": "custom_interactives",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "reasons": [
+                  "has_label",
+                  "label_length_ok",
+                  "navigation_like_selector",
+                  "high_value_navigation_area",
+                  "custom_element",
+                  "collapsable_like_element",
+                  "region:global_navigation",
+                  "has_selector",
+                  "event_category_explicitly_allowed"
+                ],
+                "metadata": {
+                  "role": null,
+                  "aria_expanded": null,
+                  "aria_selected": null,
+                  "aria_controls": null,
+                  "onclick": false,
+                  "type": null,
+                  "disabled": false,
+                  "region": "global_navigation",
+                  "href": null,
+                  "absolute_href": null,
+                  "aria_label": null,
+                  "title": null,
+                  "within_table": false,
+                  "form_method": null,
+                  "form_action": null,
+                  "screen_path": "/admin/home"
+                }
+              },
+              "target_state_id": "ui_state:bd6d4132166530ecd9f2e291098277bd6836897d6b0f60b2cf8f66d0276d7c0f"
+            }
+          ],
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "id": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "type": "screen",
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "Consulta de pagos por cliente",
+      "source_module": "/admin/home#state:bd6d41321665",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:bd6d41321665",
+        "title_source": "main_heading",
+        "title_confidence": 0.98,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/prevencion-riesgo/sri",
+      "type": "screen",
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "Consulta de información SRI",
+      "source_module": "/admin/home#state:bd6d41321665",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:bd6d41321665",
+        "title_source": "main_heading",
+        "title_confidence": 0.98,
+        "region": "global_navigation",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:0d7661f7e713",
+      "label": "Cuentas por cobrar",
+      "kind": "ui_event",
+      "metadata": {
+        "state_id": "ui_state:0d7661f7e713024dbb0c7b7fb9e737eee9dd4c72d2990d62a65de50b1809b2b7",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:0d7661f7e713",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:75f588ddc75b",
+      "label": "General",
+      "kind": "ui_event",
+      "metadata": {
+        "state_id": "ui_state:75f588ddc75bb30c733f241fbbdb6eea83ab1907680eef7750298a1725db333e",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)"
+      }
+    },
+    {
+      "source": "/admin/home#state:75f588ddc75b",
+      "target": "/admin/general/anios",
+      "label": "Año",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/general/anios",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:75f588ddc75b",
+      "target": "/admin/general/areas",
+      "label": "Area",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/general/areas",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:75f588ddc75b",
+      "target": "/admin/general/cargo-funcional",
+      "label": "Cargo Funcional",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/general/cargo-funcional",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:75f588ddc75b",
+      "target": "/admin/general/estado-seguimiento",
+      "label": "Estado Seguimiento",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/general/estado-seguimiento",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:75f588ddc75b",
+      "target": "/admin/general/personas",
+      "label": "Personas",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/general/personas",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:5dd7f9daba96",
+      "label": "Gerencial",
+      "kind": "ui_event",
+      "metadata": {
+        "state_id": "ui_state:5dd7f9daba96d270b780ece9253d1d157137490800c76a1174d233808a7dde16",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)"
+      }
+    },
+    {
+      "source": "/admin/home#state:5dd7f9daba96",
+      "target": "/admin/gerencial/actividad-portal",
+      "label": "Actividad portal ciudadano",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/gerencial/actividad-portal",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:5dd7f9daba96",
+      "target": "/admin/gerencial/talento-humano",
+      "label": "Talento humano",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/gerencial/talento-humano",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:5dd7f9daba96",
+      "target": "/admin/gerencial/tramites",
+      "label": "Trámites",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/gerencial/tramites",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:0ed6a860d323",
+      "label": "Permisos",
+      "kind": "ui_event",
+      "metadata": {
+        "state_id": "ui_state:0ed6a860d3234cc23c16039ccb06ed956583d6a2ef19fd1fd4e54332db817ac0",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:bd6d41321665",
+      "label": "Prevencion Riesgo",
+      "kind": "ui_event",
+      "metadata": {
+        "state_id": "ui_state:bd6d4132166530ecd9f2e291098277bd6836897d6b0f60b2cf8f66d0276d7c0f",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "expand_menu",
+        "decision": "allow",
+        "risk_level": "low",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)"
+      }
+    },
+    {
+      "source": "/admin/home#state:bd6d41321665",
+      "target": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "label": "pagos cliente",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/prevencion-riesgo/consulta-pago-cliente",
+        "region": "global_navigation"
+      }
+    },
+    {
+      "source": "/admin/home#state:bd6d41321665",
+      "target": "/admin/prevencion-riesgo/sri",
+      "label": "SRI",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/prevencion-riesgo/sri",
+        "region": "global_navigation"
+      }
+    }
+  ],
+  "summary": {
+    "nodes_count": 24,
+    "edges_count": 23
+  }
+}

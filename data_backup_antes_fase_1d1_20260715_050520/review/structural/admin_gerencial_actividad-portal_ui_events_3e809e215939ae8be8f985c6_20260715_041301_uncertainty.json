@@ -1,0 +1,75 @@
+{
+  "route": "/admin/gerencial/actividad-portal",
+  "source_state_id": "ui_state:a68e22a916d9513b0f87ceeb2940d566444dd74d3e809e215939ae8be8f985c6",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "--seleccione--",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/gerencial/actividad-portal"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "a68e22a916d9513b0f87ceeb2940d566444dd74d3e809e215939ae8be8f985c6",
+      "after_fingerprint": "a68e22a916d9513b0f87ceeb2940d566444dd74d3e809e215939ae8be8f985c6",
+      "before_exact_fingerprint": "caf372b9265f89f676de3347a3afb36eae377e83b219b6aaa257d604891a4a84",
+      "after_exact_fingerprint": "caf372b9265f89f676de3347a3afb36eae377e83b219b6aaa257d604891a4a84",
+      "before_route": "/admin/gerencial/actividad-portal",
+      "after_route": "/admin/gerencial/actividad-portal",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:a68e22a916d9513b0f87ceeb2940d566444dd74d3e809e215939ae8be8f985c6",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Actividad portal",
+        "path": "/admin/gerencial/actividad-portal",
+        "links_count": 5,
+        "buttons_count": 3,
+        "inputs_count": 0,
+        "custom_interactives_count": 85
+      }
+    }
+  ]
+}

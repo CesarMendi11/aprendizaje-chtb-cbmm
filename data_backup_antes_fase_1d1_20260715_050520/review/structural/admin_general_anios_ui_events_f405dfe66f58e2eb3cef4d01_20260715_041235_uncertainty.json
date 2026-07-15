@@ -1,0 +1,70 @@
+{
+  "route": "/admin/general/anios",
+  "source_state_id": "ui_state:b4d98ebece45ea0d8960539f545bf7dbfa7043cbf405dfe66f58e2eb3cef4d01",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "Siguiente página",
+        "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "change_pagination",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Siguiente página",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/general/anios"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "b4d98ebece45ea0d8960539f545bf7dbfa7043cbf405dfe66f58e2eb3cef4d01",
+      "after_fingerprint": "b4d98ebece45ea0d8960539f545bf7dbfa7043cbf405dfe66f58e2eb3cef4d01",
+      "before_exact_fingerprint": "408b30e880a81c786cd96b34ed8ca6a986ed4c54748e0c22bbaff1d7457aa2b0",
+      "after_exact_fingerprint": "408b30e880a81c786cd96b34ed8ca6a986ed4c54748e0c22bbaff1d7457aa2b0",
+      "before_route": "/admin/general/anios",
+      "after_route": "/admin/general/anios",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:b4d98ebece45ea0d8960539f545bf7dbfa7043cbf405dfe66f58e2eb3cef4d01",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Anios",
+        "path": "/admin/general/anios",
+        "links_count": 7,
+        "buttons_count": 26,
+        "inputs_count": 0,
+        "custom_interactives_count": 98
+      }
+    }
+  ]
+}

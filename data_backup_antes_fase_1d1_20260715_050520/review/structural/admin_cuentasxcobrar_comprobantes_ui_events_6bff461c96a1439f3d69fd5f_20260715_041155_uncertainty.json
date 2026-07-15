@@ -1,0 +1,204 @@
+{
+  "route": "/admin/cuentasxcobrar/comprobantes",
+  "source_state_id": "ui_state:96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+  "status": "ui_events_explored",
+  "results_count": 3,
+  "results": [
+    {
+      "candidate": {
+        "label": "Open calendar",
+        "selector": "div:nth-of-type(3) > ui-date-range > mat-form-field > div:nth-of-type(1) > div > div:nth-of-type(3) > mat-datepicker-toggle > button",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "open_date_picker",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Open calendar",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/cuentasxcobrar/comprobantes"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "after_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "before_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "after_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "before_route": "/admin/cuentasxcobrar/comprobantes",
+      "after_route": "/admin/cuentasxcobrar/comprobantes",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Comprobantes eléctronicos emitidos",
+        "path": "/admin/cuentasxcobrar/comprobantes",
+        "links_count": 10,
+        "buttons_count": 9,
+        "inputs_count": 4,
+        "custom_interactives_count": 118
+      }
+    },
+    {
+      "candidate": {
+        "label": "--Seleccione--",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/cuentasxcobrar/comprobantes"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "after_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "before_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "after_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "before_route": "/admin/cuentasxcobrar/comprobantes",
+      "after_route": "/admin/cuentasxcobrar/comprobantes",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Comprobantes eléctronicos emitidos",
+        "path": "/admin/cuentasxcobrar/comprobantes",
+        "links_count": 10,
+        "buttons_count": 9,
+        "inputs_count": 4,
+        "custom_interactives_count": 118
+      }
+    },
+    {
+      "candidate": {
+        "label": "--Seleccione--",
+        "selector": "mat-select#mat-select-2",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/cuentasxcobrar/comprobantes"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "after_fingerprint": "96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "before_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "after_exact_fingerprint": "a2bba9baf171cc51ccddab5cef7c7577367f2494d287b60b2541daca22dd6bce",
+      "before_route": "/admin/cuentasxcobrar/comprobantes",
+      "after_route": "/admin/cuentasxcobrar/comprobantes",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:96b762b04980ce47740b469cfaea3cb0cae28d1b6bff461c96a1439f3d69fd5f",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Comprobantes eléctronicos emitidos",
+        "path": "/admin/cuentasxcobrar/comprobantes",
+        "links_count": 10,
+        "buttons_count": 9,
+        "inputs_count": 4,
+        "custom_interactives_count": 118
+      }
+    }
+  ]
+}

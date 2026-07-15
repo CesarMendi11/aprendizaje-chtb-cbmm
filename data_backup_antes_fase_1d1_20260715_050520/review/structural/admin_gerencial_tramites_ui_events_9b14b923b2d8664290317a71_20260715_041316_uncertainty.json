@@ -1,0 +1,75 @@
+{
+  "route": "/admin/gerencial/tramites",
+  "source_state_id": "ui_state:983a2c1c7077e7cf57a78d7677ced16d479f1df19b14b923b2d8664290317a71",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "--seleccione--",
+        "selector": "mat-select#mat-select-0",
+        "tag": "mat-select",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "event_category": "open_dropdown",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 10,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "has_aria_expanded",
+          "custom_element",
+          "collapsable_like_element",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": "combobox",
+          "aria_expanded": "false",
+          "aria_selected": null,
+          "aria_controls": null,
+          "onclick": false,
+          "type": null,
+          "disabled": false,
+          "region": "main_content",
+          "href": null,
+          "absolute_href": null,
+          "aria_label": null,
+          "title": null,
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/gerencial/tramites"
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "983a2c1c7077e7cf57a78d7677ced16d479f1df19b14b923b2d8664290317a71",
+      "after_fingerprint": "983a2c1c7077e7cf57a78d7677ced16d479f1df19b14b923b2d8664290317a71",
+      "before_exact_fingerprint": "070375084775a909427cc263106ebe7900dfe12d0a21d79257b8f81d29860809",
+      "after_exact_fingerprint": "070375084775a909427cc263106ebe7900dfe12d0a21d79257b8f81d29860809",
+      "before_route": "/admin/gerencial/tramites",
+      "after_route": "/admin/gerencial/tramites",
+      "error": "state_restore_failed",
+      "source_state_id": "ui_state:983a2c1c7077e7cf57a78d7677ced16d479f1df19b14b923b2d8664290317a71",
+      "target_state_id": null,
+      "restored_before": false,
+      "restore_strategy": "failed",
+      "restore_error": "La navegación directa llegó a una firma estructural diferente de la esperada.",
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Tramites",
+        "path": "/admin/gerencial/tramites",
+        "links_count": 5,
+        "buttons_count": 3,
+        "inputs_count": 0,
+        "custom_interactives_count": 85
+      }
+    }
+  ]
+}

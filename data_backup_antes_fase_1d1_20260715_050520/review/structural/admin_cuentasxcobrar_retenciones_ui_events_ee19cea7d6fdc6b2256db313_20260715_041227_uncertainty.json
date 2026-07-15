@@ -1,0 +1,70 @@
+{
+  "route": "/admin/cuentasxcobrar/retenciones",
+  "source_state_id": "ui_state:5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+  "status": "ui_events_explored",
+  "results_count": 1,
+  "results": [
+    {
+      "candidate": {
+        "label": "Siguiente página",
+        "selector": "div > div > div:nth-of-type(2) > mat-paginator > div > div > div > button:nth-of-type(3)",
+        "tag": "button",
+        "source": "buttons",
+        "event_type": "click",
+        "action_kind": "button_click",
+        "event_category": "change_pagination",
+        "decision": "allow",
+        "risk_level": "low",
+        "score": 6,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "native_interactive_tag",
+          "region:main_content",
+          "has_selector"
+        ],
+        "policy_reasons": [
+          "event_category_explicitly_allowed"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "type": "button",
+          "role": null,
+          "aria_label": "Siguiente página",
+          "title": null,
+          "aria_expanded": null,
+          "aria_selected": null,
+          "aria_controls": null,
+          "disabled": false,
+          "region": "main_content",
+          "within_table": false,
+          "form_method": null,
+          "form_action": null,
+          "screen_path": "/admin/cuentasxcobrar/retenciones"
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+      "after_fingerprint": "903631a7630da48bc200af6d6ff28689afa6511ee85ff22d9d06eb77856096bc",
+      "before_exact_fingerprint": "2dbe3062479d9245f003cb6ad9db6f93aab2aa87b3089fd9d049c4239c290d6e",
+      "after_exact_fingerprint": "f94471355427672974f5ff2b39ecf259daf67eb3be4ebb033fec7aa12c49915b",
+      "before_route": "/admin/cuentasxcobrar/retenciones",
+      "after_route": "/admin/cuentasxcobrar/retenciones",
+      "error": null,
+      "source_state_id": "ui_state:5665f30330f4053857578e3f5292cae45c029321ee19cea7d6fdc6b2256db313",
+      "target_state_id": "ui_state:903631a7630da48bc200af6d6ff28689afa6511ee85ff22d9d06eb77856096bc",
+      "restored_before": true,
+      "restore_strategy": "already_current",
+      "restore_error": null,
+      "artifact_error": null,
+      "after_summary": {
+        "title": "Retenciones",
+        "path": "/admin/cuentasxcobrar/retenciones",
+        "links_count": 10,
+        "buttons_count": 19,
+        "inputs_count": 3,
+        "custom_interactives_count": 114
+      }
+    }
+  ]
+}

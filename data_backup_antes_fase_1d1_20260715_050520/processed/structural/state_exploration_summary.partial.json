@@ -1,0 +1,19 @@
+{
+  "max_event_depth": 1,
+  "home_navigation_enabled": true,
+  "explore_local_route_roots": true,
+  "recursive_state_exploration": true,
+  "home_event_categories": [
+    "expand_menu"
+  ],
+  "local_event_categories": [
+    "activate_tab",
+    "change_pagination",
+    "open_date_picker",
+    "open_dropdown",
+    "open_modal",
+    "open_readonly_view"
+  ],
+  "frontier_pending_count": 0,
+  "frontier_explored_count": 19
+}
