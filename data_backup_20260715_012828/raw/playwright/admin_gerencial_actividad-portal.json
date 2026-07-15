@@ -1,0 +1,23 @@
+{
+  "url": "http://177.234.239.116:8084/admin/gerencial/actividad-portal",
+  "path": "/admin/gerencial/actividad-portal",
+  "title": "Servicios Online",
+  "visible_text": "",
+  "links": [],
+  "buttons": [],
+  "inputs": [],
+  "tables": [],
+  "custom_interactives": [],
+  "visible_text_truncated": false,
+  "artifacts": {
+    "html": "data/raw/html/admin_gerencial_actividad-portal.html",
+    "screenshot": "data/raw/screenshots/admin_gerencial_actividad-portal.png"
+  },
+  "crawler": {
+    "route": "/admin/gerencial/actividad-portal",
+    "source": "/admin/home#state:9397bb643098",
+    "depth": 1,
+    "reason": "ui_event_discovered_href",
+    "status": "discovered"
+  }
+}

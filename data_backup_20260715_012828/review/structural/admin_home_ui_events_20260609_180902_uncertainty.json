@@ -1,0 +1,207 @@
+{
+  "route": "/admin/home",
+  "status": "ui_events_explored",
+  "results_count": 5,
+  "results": [
+    {
+      "candidate": {
+        "label": "Cuentas por cobrar",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "2a27d0f17f818db6237a11cff935922a387d0b2daf48715ab3583d57dcfeea28",
+      "after_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 9,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 109
+      }
+    },
+    {
+      "candidate": {
+        "label": "General",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": false,
+      "before_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+      "after_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": "timeout: Locator.click: Timeout 1000ms exceeded.\nCall log:\n  - waiting for locator(\"app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(2)\").first\n    - locator resolved to <fuse-vertical-navigation-collapsable-item class=\"fuse-vertical-navigation-item-collapsed ng-tns-c4255854719-5\">…</fuse-vertical-navigation-collapsable-item>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"loader-container svelte-jutlet\">…</div> from <fuse-loading-bar>…</fuse-loading-bar> subtree intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"loader-container svelte-jutlet\">…</div> from <fuse-loading-bar>…</fuse-loading-bar> subtree intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <div class=\"loader-container svelte-jutlet\">…</div> from <fuse-loading-bar>…</fuse-loading-bar> subtree intercepts pointer events\n    - retrying click action\n      - waiting 500ms\n",
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 9,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 109
+      }
+    },
+    {
+      "candidate": {
+        "label": "Gerencial",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+      "after_fingerprint": "9397bb6430986f1d654ac252012b5509d0bb279a6cb6b9e4a5fe802ddfd1b2ca",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 4,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 84
+      }
+    },
+    {
+      "candidate": {
+        "label": "Permisos",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "9397bb6430986f1d654ac252012b5509d0bb279a6cb6b9e4a5fe802ddfd1b2ca",
+      "after_fingerprint": "8ea83f55266687616f5cf8aea484cb2a0bfbe6feacf628d73e2edc5e21ab8ce7",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 6,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 99
+      }
+    },
+    {
+      "candidate": {
+        "label": "Prevencion Riesgo",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+        "tag": "fuse-vertical-navigation-collapsable-item",
+        "source": "custom_interactives",
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "score": 12,
+        "reasons": [
+          "has_label",
+          "label_length_ok",
+          "navigation_like_selector",
+          "high_value_navigation_area",
+          "custom_element",
+          "collapsable_like_element",
+          "has_selector"
+        ],
+        "dangerous": false,
+        "metadata": {
+          "role": null,
+          "aria_expanded": null,
+          "onclick": false
+        }
+      },
+      "changed": true,
+      "before_fingerprint": "8ea83f55266687616f5cf8aea484cb2a0bfbe6feacf628d73e2edc5e21ab8ce7",
+      "after_fingerprint": "37557f13ac654f691178d739ef0eb65786eb9b01133cb2ce519ae6b18bbdf067",
+      "before_route": "/admin/home",
+      "after_route": "/admin/home",
+      "error": null,
+      "after_summary": {
+        "title": "Dashboard",
+        "path": "/admin/home",
+        "links_count": 3,
+        "buttons_count": 1,
+        "inputs_count": 0,
+        "custom_interactives_count": 79
+      }
+    }
+  ]
+}

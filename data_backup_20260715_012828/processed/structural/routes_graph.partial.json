@@ -1,0 +1,1093 @@
+{
+  "graph_type": "erp_navigation_graph",
+  "nodes": [
+    {
+      "id": "/admin/home",
+      "type": "screen",
+      "route": "/admin/home",
+      "title": "Dashboard",
+      "source_module": "root",
+      "status": "discovered",
+      "metadata": {
+        "reason": "home_url",
+        "depth": 0,
+        "discovered_from": "/admin/prevencion-riesgo/sri"
+      }
+    },
+    {
+      "id": "/admin/home#state:c0f56f41e1fe",
+      "type": "screen",
+      "route": "/admin/home#state:c0f56f41e1fe",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "base_route": "/admin/home",
+        "before_fingerprint": "2a27d0f17f818db6237a11cff935922a387d0b2daf48715ab3583d57dcfeea28",
+        "after_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+        "candidate": {
+          "label": "Cuentas por cobrar",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "has_selector"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "onclick": false
+          }
+        }
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/comprobantes",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/facturacion",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": "Facturación Electronica",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/forma-pago",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Forma pago",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/lista-facturas",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Lista de facturas",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/notas-credito",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/puntos-emision",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": "Puntos de emisión",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/retenciones",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/tipo-pago",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/cuentasxcobrar/tipo-pago",
+      "type": "screen",
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Tipo pago",
+      "source_module": "/admin/home#state:c0f56f41e1fe",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/cuentasxcobrar/retenciones",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/home#state:9397bb643098",
+      "type": "screen",
+      "route": "/admin/home#state:9397bb643098",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "base_route": "/admin/home",
+        "before_fingerprint": "c0f56f41e1fe231863295ed1281613ae80fa89aca91bad0ee49fae75a6931427",
+        "after_fingerprint": "9397bb6430986f1d654ac252012b5509d0bb279a6cb6b9e4a5fe802ddfd1b2ca",
+        "candidate": {
+          "label": "Gerencial",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "has_selector"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "onclick": false
+          }
+        }
+      }
+    },
+    {
+      "id": "/admin/gerencial/actividad-portal",
+      "type": "screen",
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Actividad portal ciudadano",
+      "source_module": "/admin/home#state:9397bb643098",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:9397bb643098",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/gerencial/talento-humano",
+      "type": "screen",
+      "route": "/admin/gerencial/talento-humano",
+      "title": "Talento humano",
+      "source_module": "/admin/home#state:9397bb643098",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:9397bb643098"
+      }
+    },
+    {
+      "id": "/admin/gerencial/tramites",
+      "type": "screen",
+      "route": "/admin/gerencial/tramites",
+      "title": "Trámites",
+      "source_module": "/admin/home#state:9397bb643098",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:9397bb643098"
+      }
+    },
+    {
+      "id": "/admin/home#state:8ea83f552666",
+      "type": "screen",
+      "route": "/admin/home#state:8ea83f552666",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "base_route": "/admin/home",
+        "before_fingerprint": "9397bb6430986f1d654ac252012b5509d0bb279a6cb6b9e4a5fe802ddfd1b2ca",
+        "after_fingerprint": "8ea83f55266687616f5cf8aea484cb2a0bfbe6feacf628d73e2edc5e21ab8ce7",
+        "candidate": {
+          "label": "Permisos",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "has_selector"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "onclick": false
+          }
+        }
+      }
+    },
+    {
+      "id": "/admin/home#state:37557f13ac65",
+      "type": "screen",
+      "route": "/admin/home#state:37557f13ac65",
+      "title": "Dashboard",
+      "source_module": "/admin/home",
+      "status": "discovered",
+      "metadata": {
+        "kind": "ui_state",
+        "base_route": "/admin/home",
+        "before_fingerprint": "8ea83f55266687616f5cf8aea484cb2a0bfbe6feacf628d73e2edc5e21ab8ce7",
+        "after_fingerprint": "37557f13ac654f691178d739ef0eb65786eb9b01133cb2ce519ae6b18bbdf067",
+        "candidate": {
+          "label": "Prevencion Riesgo",
+          "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)",
+          "tag": "fuse-vertical-navigation-collapsable-item",
+          "source": "custom_interactives",
+          "event_type": "click",
+          "action_kind": "expand_or_collapse",
+          "score": 12,
+          "reasons": [
+            "has_label",
+            "label_length_ok",
+            "navigation_like_selector",
+            "high_value_navigation_area",
+            "custom_element",
+            "collapsable_like_element",
+            "has_selector"
+          ],
+          "dangerous": false,
+          "metadata": {
+            "role": null,
+            "aria_expanded": null,
+            "onclick": false
+          }
+        }
+      }
+    },
+    {
+      "id": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "type": "screen",
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "pagos cliente",
+      "source_module": "/admin/home#state:37557f13ac65",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/prevencion-riesgo/sri",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    },
+    {
+      "id": "/admin/prevencion-riesgo/sri",
+      "type": "screen",
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "SRI",
+      "source_module": "/admin/home#state:37557f13ac65",
+      "status": "discovered",
+      "metadata": {
+        "discovered_from": "/admin/home#state:37557f13ac65",
+        "reason": "ui_event_discovered_href",
+        "depth": 1
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:c0f56f41e1fe",
+      "label": "Cuentas por cobrar",
+      "kind": "ui_event",
+      "metadata": {
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1)"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/home#state:c0f56f41e1fe",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:9397bb643098",
+      "label": "Gerencial",
+      "kind": "ui_event",
+      "metadata": {
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3)"
+      }
+    },
+    {
+      "source": "/admin/home#state:9397bb643098",
+      "target": "/admin/gerencial/actividad-portal",
+      "label": "Actividad portal ciudadano",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/gerencial/actividad-portal"
+      }
+    },
+    {
+      "source": "/admin/home#state:9397bb643098",
+      "target": "/admin/gerencial/talento-humano",
+      "label": "Talento humano",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/gerencial/talento-humano"
+      }
+    },
+    {
+      "source": "/admin/home#state:9397bb643098",
+      "target": "/admin/gerencial/tramites",
+      "label": "Trámites",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(3) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/gerencial/tramites"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:8ea83f552666",
+      "label": "Permisos",
+      "kind": "ui_event",
+      "metadata": {
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(4)"
+      }
+    },
+    {
+      "source": "/admin/home",
+      "target": "/admin/home#state:37557f13ac65",
+      "label": "Prevencion Riesgo",
+      "kind": "ui_event",
+      "metadata": {
+        "event_type": "click",
+        "action_kind": "expand_or_collapse",
+        "selector": "app-root > layout > admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5)"
+      }
+    },
+    {
+      "source": "/admin/home#state:37557f13ac65",
+      "target": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "label": "pagos cliente",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/prevencion-riesgo/consulta-pago-cliente"
+      }
+    },
+    {
+      "source": "/admin/home#state:37557f13ac65",
+      "target": "/admin/prevencion-riesgo/sri",
+      "label": "SRI",
+      "kind": "ui_event_discovered_href",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/prevencion-riesgo/sri"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/comprobantes",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/facturacion",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/lista-facturas",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/notas-credito",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/puntos-emision",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/retenciones",
+      "target": "/admin/cuentasxcobrar/tipo-pago",
+      "label": "Tipo pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(8) > div > a",
+        "href": "/admin/cuentasxcobrar/tipo-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/comprobantes",
+      "label": "Comprobantes",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/cuentasxcobrar/comprobantes"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/facturacion",
+      "label": "Facturación Electronica",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(2) > div > a",
+        "href": "/admin/cuentasxcobrar/facturacion"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/forma-pago",
+      "label": "Forma pago",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(3) > div > a",
+        "href": "/admin/cuentasxcobrar/forma-pago"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/lista-facturas",
+      "label": "Lista de facturas",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(4) > div > a",
+        "href": "/admin/cuentasxcobrar/lista-facturas"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/notas-credito",
+      "label": "Notas de crédito",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(5) > div > a",
+        "href": "/admin/cuentasxcobrar/notas-credito"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/puntos-emision",
+      "label": "Puntos de emisión",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(6) > div > a",
+        "href": "/admin/cuentasxcobrar/puntos-emision"
+      }
+    },
+    {
+      "source": "/admin/cuentasxcobrar/tipo-pago",
+      "target": "/admin/cuentasxcobrar/retenciones",
+      "label": "Retenciones",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(1) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(7) > div > a",
+        "href": "/admin/cuentasxcobrar/retenciones"
+      }
+    },
+    {
+      "source": "/admin/prevencion-riesgo/sri",
+      "target": "/admin/home",
+      "label": "Dashboard",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-basic-item > div > a",
+        "href": "/admin/home"
+      }
+    },
+    {
+      "source": "/admin/prevencion-riesgo/sri",
+      "target": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "label": "pagos cliente",
+      "kind": "href_discovered",
+      "metadata": {
+        "selector": "div > div:nth-of-type(2) > fuse-vertical-navigation-group-item > fuse-vertical-navigation-collapsable-item:nth-of-type(5) > div:nth-of-type(2) > fuse-vertical-navigation-basic-item:nth-of-type(1) > div > a",
+        "href": "/admin/prevencion-riesgo/consulta-pago-cliente"
+      }
+    }
+  ],
+  "summary": {
+    "nodes_count": 18,
+    "edges_count": 75
+  }
+}

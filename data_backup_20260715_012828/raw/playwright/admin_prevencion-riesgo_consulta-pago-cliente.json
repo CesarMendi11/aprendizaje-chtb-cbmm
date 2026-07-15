@@ -1,0 +1,23 @@
+{
+  "url": "http://177.234.239.116:8084/admin/prevencion-riesgo/consulta-pago-cliente",
+  "path": "/admin/prevencion-riesgo/consulta-pago-cliente",
+  "title": "Servicios Online",
+  "visible_text": "",
+  "links": [],
+  "buttons": [],
+  "inputs": [],
+  "tables": [],
+  "custom_interactives": [],
+  "visible_text_truncated": false,
+  "artifacts": {
+    "html": "data/raw/html/admin_prevencion-riesgo_consulta-pago-cliente.html",
+    "screenshot": "data/raw/screenshots/admin_prevencion-riesgo_consulta-pago-cliente.png"
+  },
+  "crawler": {
+    "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+    "source": "/admin/home#state:37557f13ac65",
+    "depth": 1,
+    "reason": "ui_event_discovered_href",
+    "status": "discovered"
+  }
+}

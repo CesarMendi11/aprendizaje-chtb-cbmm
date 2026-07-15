@@ -7,6 +7,10 @@ from playwright.sync_api import Page
 
 from src.browser.navigator import ERPNavigator
 from src.crawler.frontier import CrawlTarget, Frontier
+from src.crawler.path_replayer import PathReplayer
+from src.crawler.state_frontier import StateFrontier
+from src.crawler.state_registry import StateRegistry
+from src.crawler.state_restorer import StateRestorer
 from src.crawler.state_signature import StateSignatureBuilder
 from src.crawler.ui_event_explorer import UIEventExplorer
 from src.discovery.event_candidate_discovery import EventCandidateDiscovery
@@ -14,6 +18,10 @@ from src.discovery.link_discovery import LinkDiscovery
 from src.extraction.screen_extractor import ScreenExtractor
 from src.graph.routes_graph_builder import RoutesGraphBuilder
 from src.graph.screen_index_builder import ScreenIndexBuilder
+from src.graph.state_flow_graph_builder import StateFlowGraphBuilder
+from src.models.crawl_path import CrawlPath, CrawlPathStep
+from src.models.transition import Transition
+from src.models.ui_state import UIState
 from src.policy.route_policy import RoutePolicy
 from src.storage.artifact_storage import ArtifactStorage, safe_slug
 
@@ -26,6 +34,9 @@ class CrawlSummary:
     edges_count: int
     routes_graph_path: str
     screen_index_path: str
+    states_count: int = 0
+    state_transitions_count: int = 0
+    state_flow_graph_path: str = ""
 
 
 class RouteCrawler:
@@ -62,12 +73,38 @@ class RouteCrawler:
 
         self.candidate_discovery = EventCandidateDiscovery(profile, self.policy)
         self.state_signature_builder = StateSignatureBuilder.from_profile(profile)
+
+        self.state_registry = StateRegistry()
+        self.state_frontier = StateFrontier()
+        self.state_flow_graph = StateFlowGraphBuilder()
+        self.state_replay_enabled = bool(
+            profile.get("state_replay", {}).get("enabled", True)
+        )
+        self.path_replayer = PathReplayer(
+            page=page,
+            profile=profile,
+            navigator=self.navigator,
+            extractor=self.extractor,
+            signature_builder=self.state_signature_builder,
+            registry=self.state_registry,
+        )
+        self.state_restorer = StateRestorer(
+            profile=profile,
+            navigator=self.navigator,
+            extractor=self.extractor,
+            signature_builder=self.state_signature_builder,
+            registry=self.state_registry,
+            path_replayer=self.path_replayer,
+        )
         self.ui_event_explorer = UIEventExplorer(
             page=page,
             profile=profile,
             extractor=self.extractor,
             candidate_discovery=self.candidate_discovery,
             state_signature_builder=self.state_signature_builder,
+            state_restorer=(
+                self.state_restorer if self.state_replay_enabled else None
+            ),
         )
 
         exploration = profile.get("exploration", {})
@@ -187,6 +224,26 @@ class RouteCrawler:
         if self.frontier.is_visited(route):
             return
 
+
+        signature = self.state_signature_builder.build(screen_data)
+        state_id = self.state_registry.build_state_id(
+            signature.structural_fingerprint
+        )
+        root_path = CrawlPath(root_state_id=state_id)
+        source_state = self.state_registry.register_signature(
+            signature=signature,
+            path=root_path,
+            metadata={
+                "source": source,
+                "depth": depth,
+                "reason": reason,
+                "kind": "route_root_state",
+            },
+        ).state
+        self.state_flow_graph.add_state(source_state)
+        self.state_frontier.mark_explored(source_state.state_id)
+
+        screen_data["ui_state"] = source_state.to_dict()
         self.frontier.mark_visited(route)
 
         prefix = self._build_artifact_prefix(route)
@@ -221,6 +278,7 @@ class RouteCrawler:
             self._explore_ui_events_from_screen(
                 route=route,
                 screen_data=screen_data,
+                source_state=source_state,
                 depth=depth,
             )
 
@@ -350,104 +408,199 @@ class RouteCrawler:
         self,
         route: str,
         screen_data: dict[str, Any],
+        source_state: UIState,
         depth: int,
     ) -> None:
-        results = self.ui_event_explorer.explore_current_state(screen_data)
+        results = self.ui_event_explorer.explore_current_state(
+            screen_data=screen_data,
+            source_state=source_state,
+        )
 
         changed_results = [
-            result for result in results
+            result
+            for result in results
             if result.changed and result.error is None
         ]
 
         if not results:
             return
 
+        for result in changed_results:
+            target_signature = self.state_signature_builder.build(
+                result.after_screen_data
+            )
+            target_state_id = self.state_registry.build_state_id(
+                target_signature.structural_fingerprint
+            )
+            source_path = source_state.path or CrawlPath(
+                root_state_id=source_state.state_id
+            )
+            target_path = source_path.append(
+                CrawlPathStep(
+                    source_state_id=source_state.state_id,
+                    event=result.event,
+                    target_state_id=target_state_id,
+                )
+            )
+            registration = self.state_registry.register_signature(
+                signature=target_signature,
+                path=target_path,
+                metadata={
+                    "kind": "ui_event_state",
+                    "base_route": route,
+                    "discovered_from": source_state.state_id,
+                    "candidate": result.candidate,
+                },
+            )
+            target_state = registration.state
+            result.target_state_id = target_state.state_id
+
+            self.state_flow_graph.add_state(source_state)
+            self.state_flow_graph.add_state(target_state)
+            self.state_flow_graph.add_transition(
+                Transition(
+                    source_state_id=source_state.state_id,
+                    target_state_id=target_state.state_id,
+                    event=result.event,
+                    changed_route=(
+                        result.before_route != result.after_route
+                    ),
+                    metadata={
+                        "candidate": result.candidate,
+                        "restored_before": result.restored_before,
+                        "restore_strategy": result.restore_strategy,
+                    },
+                )
+            )
+
+            self._persist_ui_event_state(
+                route=route,
+                depth=depth,
+                source_state=source_state,
+                target_state=target_state,
+                result=result,
+            )
+
         self._save_ui_event_results(
             route=route,
             results=[result.to_dict() for result in results],
         )
 
-        for result in changed_results:
-            event_prefix = self._build_ui_state_prefix(
-                route=route,
-                fingerprint=result.after_fingerprint,
-            )
+    def _persist_ui_event_state(
+        self,
+        route: str,
+        depth: int,
+        source_state: UIState,
+        target_state: UIState,
+        result,
+    ) -> None:
+        event_prefix = self._build_ui_state_prefix(
+            route=route,
+            fingerprint=result.after_fingerprint,
+        )
+        after_screen_data = result.after_screen_data
+        artifacts: dict[str, str] = {}
 
-            after_screen_data = result.after_screen_data
-
+        if result.after_html is not None:
             html_path = self.storage.save_html_content(
-                html=self.navigator.get_html(),
+                html=result.after_html,
                 prefix=event_prefix,
             )
+            artifacts["html"] = str(html_path)
 
+        if result.after_screenshot is not None:
             screenshot_path = self.storage.save_screenshot_bytes(
-                content=self.navigator.screenshot_bytes(full_page=True),
+                content=result.after_screenshot,
                 prefix=event_prefix,
             )
+            artifacts["screenshot"] = str(screenshot_path)
 
-            after_screen_data["artifacts"] = {
-                "html": str(html_path),
-                "screenshot": str(screenshot_path),
-            }
+        after_screen_data["artifacts"] = artifacts
+        after_screen_data["ui_state"] = target_state.to_dict()
+        after_screen_data["crawler"] = {
+            "route": after_screen_data.get("path") or route,
+            "source": route,
+            "depth": depth,
+            "reason": "ui_event_state_change",
+            "status": "discovered",
+            "source_state_id": source_state.state_id,
+            "target_state_id": target_state.state_id,
+            "ui_event_candidate": result.candidate,
+            "before_fingerprint": result.before_fingerprint,
+            "after_fingerprint": result.after_fingerprint,
+            "restored_before": result.restored_before,
+            "restore_strategy": result.restore_strategy,
+            "artifact_error": result.artifact_error,
+        }
 
-            after_screen_data["crawler"] = {
-                "route": after_screen_data.get("path") or route,
-                "source": route,
-                "depth": depth,
-                "reason": "ui_event_state_change",
-                "status": "discovered",
-                "ui_event_candidate": result.candidate,
+        raw_json_path = self.storage.save_raw_screen_json(
+            data=after_screen_data,
+            prefix=event_prefix,
+        )
+        after_screen_data["artifacts"]["raw_json"] = str(raw_json_path)
+
+        if result.artifact_error:
+            self._save_uncertainty(
+                route=route,
+                reason="ui_event_artifact_capture_error",
+                extra={
+                    "source_state_id": source_state.state_id,
+                    "target_state_id": target_state.state_id,
+                    "candidate": result.candidate,
+                    "error": result.artifact_error,
+                },
+            )
+
+        # Se conserva el identificador legado en routes_graph para no romper
+        # consumidores actuales. El state-flow graph usa el ID canónico.
+        event_node_id = f"{route}#state:{result.after_fingerprint[:12]}"
+
+        self.routes_graph.add_screen(
+            route=event_node_id,
+            title=after_screen_data.get("title", ""),
+            source_module=route,
+            status="discovered",
+            metadata={
+                "kind": "ui_state",
+                "state_id": target_state.state_id,
+                "base_route": route,
                 "before_fingerprint": result.before_fingerprint,
                 "after_fingerprint": result.after_fingerprint,
-            }
+                "candidate": result.candidate,
+                "path": (
+                    target_state.path.to_dict()
+                    if target_state.path
+                    else None
+                ),
+            },
+        )
 
-            raw_json_path = self.storage.save_raw_screen_json(
-                data=after_screen_data,
-                prefix=event_prefix,
-            )
+        self.routes_graph.add_transition(
+            source=route,
+            target=event_node_id,
+            label=result.candidate.get("label", ""),
+            kind="ui_event",
+            metadata={
+                "state_id": target_state.state_id,
+                "event_type": result.candidate.get("event_type"),
+                "action_kind": result.candidate.get("action_kind"),
+                "event_category": result.candidate.get("event_category"),
+                "decision": result.candidate.get("decision"),
+                "risk_level": result.candidate.get("risk_level"),
+                "selector": result.candidate.get("selector"),
+            },
+        )
 
-            after_screen_data["artifacts"]["raw_json"] = str(raw_json_path)
-
-            event_node_id = f"{route}#state:{result.after_fingerprint[:12]}"
-
-            self.routes_graph.add_screen(
-                route=event_node_id,
-                title=after_screen_data.get("title", ""),
-                source_module=route,
-                status="discovered",
-                metadata={
-                    "kind": "ui_state",
-                    "base_route": route,
-                    "before_fingerprint": result.before_fingerprint,
-                    "after_fingerprint": result.after_fingerprint,
-                    "candidate": result.candidate,
-                },
-            )
-
-            self.routes_graph.add_transition(
-                source=route,
-                target=event_node_id,
-                label=result.candidate.get("label", ""),
-                kind="ui_event",
-                metadata={
-                    "event_type": result.candidate.get("event_type"),
-                    "action_kind": result.candidate.get("action_kind"),
-                    "event_category": result.candidate.get("event_category"),
-                    "decision": result.candidate.get("decision"),
-                    "risk_level": result.candidate.get("risk_level"),
-                    "selector": result.candidate.get("selector"),
-                },
-            )
-
-            discovered_links = self.discovery.discover_allowed_links(after_screen_data)
-
-            self._register_discovered_links(
-                source_route=event_node_id,
-                links=discovered_links,
-                depth=depth,
-                reason="ui_event_discovered_href",
-                only_new_targets=True,
-            )
+        discovered_links = self.discovery.discover_allowed_links(
+            after_screen_data
+        )
+        self._register_discovered_links(
+            source_route=event_node_id,
+            links=discovered_links,
+            depth=depth,
+            reason="ui_event_discovered_href",
+            only_new_targets=True,
+        )
 
     def _save_ui_event_results(
         self,
@@ -470,6 +623,12 @@ class RouteCrawler:
                     "before_route": result.get("before_route"),
                     "after_route": result.get("after_route"),
                     "error": result.get("error"),
+                    "source_state_id": result.get("source_state_id"),
+                    "target_state_id": result.get("target_state_id"),
+                    "restored_before": result.get("restored_before"),
+                    "restore_strategy": result.get("restore_strategy"),
+                    "restore_error": result.get("restore_error"),
+                    "artifact_error": result.get("artifact_error"),
                     "after_summary": {
                         "title": after_screen_data.get("title"),
                         "path": after_screen_data.get("path"),
@@ -606,9 +765,21 @@ class RouteCrawler:
             filename="screen_index.partial.json",
         )
 
+        self.storage.save_processed_structural_json(
+            data=self.state_registry.to_dict(),
+            filename="state_registry.partial.json",
+        )
+
+        self.storage.save_processed_structural_json(
+            data=self.state_flow_graph.to_dict(),
+            filename="state_flow_graph.partial.json",
+        )
+
     def _save_outputs(self) -> CrawlSummary:
         routes_graph_data = self.routes_graph.to_dict()
         screen_index_data = self.screen_index.to_dict()
+        state_registry_data = self.state_registry.to_dict()
+        state_flow_graph_data = self.state_flow_graph.to_dict()
 
         routes_graph_path = self.storage.save_processed_structural_json(
             data=routes_graph_data,
@@ -620,6 +791,16 @@ class RouteCrawler:
             filename="screen_index.json",
         )
 
+        self.storage.save_processed_structural_json(
+            data=state_registry_data,
+            filename="state_registry.json",
+        )
+
+        state_flow_graph_path = self.storage.save_processed_structural_json(
+            data=state_flow_graph_data,
+            filename="state_flow_graph.json",
+        )
+
         return CrawlSummary(
             visited_count=self.frontier.visited_count(),
             pending_count=self.frontier.pending_count(),
@@ -627,6 +808,9 @@ class RouteCrawler:
             edges_count=self.routes_graph.edge_count(),
             routes_graph_path=str(routes_graph_path),
             screen_index_path=str(screen_index_path),
+            states_count=self.state_flow_graph.state_count(),
+            state_transitions_count=self.state_flow_graph.transition_count(),
+            state_flow_graph_path=str(state_flow_graph_path),
         )
 
     def _build_artifact_prefix(self, route: str) -> str:

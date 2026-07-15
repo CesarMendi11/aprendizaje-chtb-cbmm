@@ -126,3 +126,23 @@ class ProfileLoader:
             raise ValueError(
                 "state_detection.volatile_text_patterns debe ser una lista."
             )
+
+        state_replay = profile.get("state_replay", {})
+        if state_replay and not isinstance(state_replay, dict):
+            raise ValueError("state_replay debe ser un objeto.")
+
+        for field in [
+            "page_wait_ms",
+            "step_wait_ms",
+            "click_timeout_ms",
+            "restore_attempts",
+        ]:
+            value = state_replay.get(field)
+            if value is not None and (not isinstance(value, int) or value < 0):
+                raise ValueError(f"state_replay.{field} debe ser un entero no negativo.")
+
+        for field in ["enabled", "verify_each_step"]:
+            value = state_replay.get(field)
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"state_replay.{field} debe ser booleano.")
+
