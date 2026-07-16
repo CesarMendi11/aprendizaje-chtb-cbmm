@@ -5,6 +5,10 @@ El caso de estudio corresponde al sistema ERP del **Cuerpo de Bomberos Municipal
 
 El objetivo del sistema es construir semiautomáticamente conocimiento funcional del ERP a partir de su interfaz, representarlo estructuralmente mediante grafos, enriquecerlo semánticamente con modelos locales y utilizarlo posteriormente en un asistente basado en recuperación híbrida Graph RAG.
 
+## Modelo canónico (Fase 3A)
+
+Los artefactos estructurales pueden transformarse en un modelo tipado, versionado, trazable y validable sin cambiar la API actual. Consulta [docs/FASE_3A_MODELO_CANONICO.md](docs/FASE_3A_MODELO_CANONICO.md) para conocer entidades, privacidad, comandos y archivos generados.
+
 ---
 
 ## 1. Alcance del proyecto
