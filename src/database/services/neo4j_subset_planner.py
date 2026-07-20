@@ -237,6 +237,8 @@ class Neo4jSubsetPlanner:
                     continue
                 if self._is_global_region(item_payload.get("region")):
                     omitted.append((item, "global_scope_entity"))
+                elif entity_type == "control" and self._is_placeholder_control(item_payload):
+                    omitted.append((item, "placeholder_control_label"))
                 elif item_payload.get("screen_id") not in {None, screen_id}:
                     omitted.append((item, "screen_mismatch"))
                 elif item.parent_canonical_id not in {None, screen_id, *state_ids}:
@@ -267,6 +269,8 @@ class Neo4jSubsetPlanner:
                 omitted.append((item, "global_scope_entity"))
             elif item_payload.get("screen_id") not in {None, screen_id}:
                 omitted.append((item, "screen_mismatch"))
+            elif item_payload.get("target_route") == "/":
+                omitted.append((item, "root_navigation_link"))
             elif not self._safe_local_target(item_payload.get("target_route")):
                 omitted.append((item, "unsafe_link_target"))
             else:
@@ -487,6 +491,17 @@ class Neo4jSubsetPlanner:
             "sidebar",
             "navigation",
         }
+
+    @staticmethod
+    def _is_placeholder_control(payload):
+        label = payload.get("label")
+        normalized = payload.get("normalized_label")
+        label = label.strip() if isinstance(label, str) else ""
+        normalized = normalized.strip() if isinstance(normalized, str) else ""
+        if not label and not normalized:
+            return True
+        candidate = normalized or label
+        return candidate.casefold() == "unlabeled control"
 
     def _validate(self, selected, payload_getter, erp_id, knowledge_version):
         planned = []

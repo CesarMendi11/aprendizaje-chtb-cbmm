@@ -102,6 +102,56 @@ def _add_screen_complete_candidates(session):
     rows = [
         item(
             "control",
+            "control:synthetic-missing-label",
+            {
+                "id": "control:synthetic-missing-label",
+                "screen_id": screen.canonical_id,
+                "control_type": "button",
+                "region": "main_content",
+            },
+            screen.canonical_id,
+        ),
+        item(
+            "control",
+            "control:synthetic-empty-label",
+            {
+                "id": "control:synthetic-empty-label",
+                "screen_id": screen.canonical_id,
+                "label": "",
+                "normalized_label": "",
+                "control_type": "button",
+                "region": "main_content",
+            },
+            screen.canonical_id,
+        ),
+        item(
+            "control",
+            "control:synthetic-placeholder",
+            {
+                "id": "control:synthetic-placeholder",
+                "screen_id": screen.canonical_id,
+                "label": "unlabeled control",
+                "normalized_label": "unlabeled control",
+                "control_type": "button",
+                "region": "main_content",
+            },
+            screen.canonical_id,
+        ),
+        item(
+            "control",
+            "control:synthetic-placeholder-prefix",
+            {
+                "id": "control:synthetic-placeholder-prefix",
+                "screen_id": screen.canonical_id,
+                "label": "Unlabeled control settings",
+                "normalized_label": "unlabeled control settings",
+                "control_type": "button",
+                "region": "main_content",
+            },
+            screen.canonical_id,
+        ),
+        item(
+            "control",
             "control:synthetic-global",
             {
                 "id": "control:synthetic-global",
@@ -122,6 +172,19 @@ def _add_screen_complete_candidates(session):
                 "label": "Unsafe destination",
                 "normalized_label": "unsafe destination",
                 "target_route": "javascript:void(0)",
+            },
+            screen.canonical_id,
+        ),
+        item(
+            "link",
+            "link:synthetic-root",
+            {
+                "id": "link:synthetic-root",
+                "screen_id": screen.canonical_id,
+                "label": "Start location",
+                "normalized_label": "start location",
+                "target_route": "/",
+                "region": "main_content",
             },
             screen.canonical_id,
         ),
@@ -259,7 +322,7 @@ def test_screen_complete_selects_interactions_and_internal_dependencies(planner_
     types = [item["entity_type"] for item in report["selected_items"]]
     assert report["scope"] == "screen-complete"
     assert report["selected_items_by_type"] == {
-        "control": 1,
+        "control": 2,
         "erp_system": 1,
         "event": 1,
         "field": 1,
@@ -278,7 +341,7 @@ def test_screen_complete_selects_interactions_and_internal_dependencies(planner_
     assert report["expected_relationships"] == {
         "FROM_STATE": 2,
         "HAS_COLUMN": 2,
-        "HAS_CONTROL": 1,
+        "HAS_CONTROL": 2,
         "HAS_EVENT": 1,
         "HAS_FIELD": 1,
         "HAS_LINK": 1,
@@ -300,7 +363,9 @@ def test_screen_complete_reports_unsafe_or_orphaned_candidates_without_values(pl
     report = Neo4jSubsetPlanner(planner_session).plan(ROUTE, scope="screen-complete")
     omitted = {(item["entity_type"], item["reason_code"]) for item in report["omitted_items"]}
     assert ("link", "unsafe_link_target") in omitted
+    assert ("link", "root_navigation_link") in omitted
     assert ("control", "global_scope_entity") in omitted
+    assert ("control", "placeholder_control_label") in omitted
     assert ("event", "orphan_event") in omitted
     assert ("transition", "cross_screen_transition") in omitted
     assert ("table", "non_primary_table") in omitted
@@ -315,6 +380,33 @@ def test_screen_complete_reports_unsafe_or_orphaned_candidates_without_values(pl
         "javascript:",
     ):
         assert forbidden not in serialized
+
+
+def test_screen_complete_omits_only_exact_control_placeholders_and_root_links(planner_session):
+    report = Neo4jSubsetPlanner(planner_session).plan(ROUTE, scope="screen-complete")
+    selected_ids = {item["canonical_id"] for item in report["selected_items"]}
+    omitted = {item["canonical_id"]: item for item in report["omitted_items"]}
+
+    assert "control:synthetic-missing-label" not in selected_ids
+    assert "control:synthetic-empty-label" not in selected_ids
+    assert "control:synthetic-placeholder" not in selected_ids
+    assert omitted["control:synthetic-missing-label"]["reason_code"] == (
+        "placeholder_control_label"
+    )
+    assert omitted["control:synthetic-empty-label"]["reason_code"] == (
+        "placeholder_control_label"
+    )
+    assert omitted["control:synthetic-placeholder"]["reason_code"] == (
+        "placeholder_control_label"
+    )
+    assert "control:synthetic-placeholder-prefix" in selected_ids
+    assert "link:synthetic-root" not in selected_ids
+    assert omitted["link:synthetic-root"]["reason_code"] == "root_navigation_link"
+    assert any(
+        item["entity_type"] == "link" and item["safe_label"] == "Suppliers"
+        for item in report["selected_items"]
+    )
+    assert all("item_id" not in item for item in report["omitted_items"])
 
 
 def test_screen_complete_selection_and_order_are_deterministic(planner_session):
