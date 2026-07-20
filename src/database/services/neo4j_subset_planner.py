@@ -4,6 +4,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,6 +18,8 @@ from src.knowledge.canonical.privacy import contains_sensitive, sanitize_text
 from .effective_knowledge_service import EffectiveKnowledgeService
 
 SAFE_LABEL_FIELDS = ("name", "title", "label", "normalized_name", "normalized_title", "route")
+SCOPES = ("core", "screen-complete")
+ELIGIBLE_STATUSES = {"approved", "corrected"}
 
 
 class SubsetPlanningError(ValueError):
@@ -39,6 +42,17 @@ class PlannedItem:
         return self.__dict__.copy()
 
 
+@dataclass(frozen=True)
+class OmittedItem:
+    canonical_id: str
+    entity_type: str
+    safe_label: str
+    reason_code: str
+
+    def as_dict(self) -> dict[str, str]:
+        return self.__dict__.copy()
+
+
 class Neo4jSubsetPlanner:
     def __init__(self, session: Session, *, mapper: GraphMapper | None = None):
         self.session = session
@@ -46,7 +60,9 @@ class Neo4jSubsetPlanner:
         self.effective = EffectiveKnowledgeService(session)
         self.jobs = SyncJobRepository(session)
 
-    def plan(self, screen_route: str) -> dict[str, Any]:
+    def plan(self, screen_route: str, *, scope: str = "core") -> dict[str, Any]:
+        if scope not in SCOPES:
+            raise SubsetPlanningError("Scope de planificación no soportado")
         version = self._active_version()
         erp = self.session.get(ERPSystemRecord, version.erp_id)
         if not erp:
@@ -76,6 +92,7 @@ class Neo4jSubsetPlanner:
             return payload_cache[item.canonical_id]
 
         selected: list[KnowledgeItem] = []
+        omitted: list[tuple[KnowledgeItem, str]] = []
         missing: list[str] = []
         erp_item = self._exact(items, "erp_system", erp.id, "erp_system")
         selected.append(erp_item)
@@ -106,6 +123,12 @@ class Neo4jSubsetPlanner:
         else:
             missing.append("ui_state")
 
+        if scope == "screen-complete":
+            selected = [item for item in selected if item.entity_type != "ui_state"]
+            selected.extend(
+                sorted(states, key=lambda item: self._complete_state_key(item, payload(item)))
+            )
+
         tables = [
             item
             for item in items
@@ -131,25 +154,61 @@ class Neo4jSubsetPlanner:
         else:
             missing.extend(("table", "table_column"))
 
+        if scope == "screen-complete":
+            self._extend_screen_complete(
+                items=items,
+                selected=selected,
+                omitted=omitted,
+                payload_getter=payload,
+                screen=screen,
+                states=states,
+                table=table,
+            )
+
         planned, privacy_errors, mapper_errors, ready_ids = self._validate(
             selected, payload, erp.id, version.knowledge_version
         )
-        relation_counts = self._relationships(selected, payload, ready_ids)
+        relation_counts, skipped_relationships, skipped_reasons = self._relationships(
+            selected, payload, ready_ids
+        )
         job = self.jobs.get(version.id, SyncTarget.NEO4J)
         by_type = Counter(item.entity_type for item in selected)
+        omitted_by_type = Counter(item.entity_type for item, _ in omitted)
+        omitted_reasons = Counter(reason for _, reason in omitted)
+        status_counts = Counter(str(item.current_review_status) for item in selected)
         return {
             "erp_id": erp.id,
             "knowledge_version": version.knowledge_version,
             "screen_route": screen_route,
             "screen_title": self._safe_label(screen_payload),
+            "scope": scope,
             "current_total_items": len(items),
+            "candidate_items": len(selected) + len(omitted),
             "selected_items": [item.as_dict() for item in planned],
             "selected_items_by_type": dict(sorted(by_type.items())),
+            "omitted_items": [
+                OmittedItem(
+                    canonical_id=item.canonical_id,
+                    entity_type=item.entity_type,
+                    safe_label=self._safe_label(payload(item)),
+                    reason_code=reason,
+                ).as_dict()
+                for item, reason in omitted
+            ],
+            "omitted_items_by_type": dict(sorted(omitted_by_type.items())),
+            "omitted_reasons": dict(sorted(omitted_reasons.items())),
             "expected_nodes": len(ready_ids),
             "expected_relationships": dict(sorted(relation_counts.items())),
+            "expected_relationships_total": sum(relation_counts.values()),
+            "skipped_relationships": skipped_relationships,
+            "skipped_reasons": dict(sorted(skipped_reasons.items())),
             "missing_dependencies": sorted(set(missing)),
             "privacy_errors": dict(sorted(privacy_errors.items())),
             "mapper_errors": dict(sorted(mapper_errors.items())),
+            "already_eligible_items": sum(
+                status_counts[status] for status in ELIGIBLE_STATUSES
+            ),
+            "pending_review_items": status_counts["pending_review"],
             "current_sync_job": {
                 "id": str(job.id),
                 "status": str(job.status),
@@ -158,6 +217,137 @@ class Neo4jSubsetPlanner:
             if job
             else None,
         }
+
+    def _extend_screen_complete(
+        self, *, items, selected, omitted, payload_getter, screen, states, table
+    ):
+        screen_id = screen.canonical_id
+        state_ids = {item.canonical_id for item in states}
+        selected_ids = {item.canonical_id for item in selected}
+
+        def add_candidates(entity_type, key):
+            candidates = []
+            for item in items:
+                if item.entity_type != entity_type:
+                    continue
+                item_payload = payload_getter(item)
+                claimed = item_payload.get("screen_id") == screen_id
+                parent_claimed = item.parent_canonical_id in {screen_id, *state_ids}
+                if not (claimed or parent_claimed):
+                    continue
+                if self._is_global_region(item_payload.get("region")):
+                    omitted.append((item, "global_scope_entity"))
+                elif item_payload.get("screen_id") not in {None, screen_id}:
+                    omitted.append((item, "screen_mismatch"))
+                elif item.parent_canonical_id not in {None, screen_id, *state_ids}:
+                    omitted.append((item, "parent_not_selected"))
+                else:
+                    candidates.append(item)
+            for item in sorted(
+                candidates, key=lambda candidate: key(candidate, payload_getter(candidate))
+            ):
+                if item.canonical_id not in selected_ids:
+                    selected.append(item)
+                    selected_ids.add(item.canonical_id)
+
+        add_candidates("field", self._field_key)
+        add_candidates("control", self._control_key)
+
+        links = []
+        for item in items:
+            if item.entity_type != "link":
+                continue
+            item_payload = payload_getter(item)
+            if item_payload.get("screen_id") != screen_id and item.parent_canonical_id not in {
+                screen_id,
+                *state_ids,
+            }:
+                continue
+            if self._is_global_region(item_payload.get("region")):
+                omitted.append((item, "global_scope_entity"))
+            elif item_payload.get("screen_id") not in {None, screen_id}:
+                omitted.append((item, "screen_mismatch"))
+            elif not self._safe_local_target(item_payload.get("target_route")):
+                omitted.append((item, "unsafe_link_target"))
+            else:
+                links.append(item)
+        for item in sorted(
+            links,
+            key=lambda candidate: self._link_key(candidate, payload_getter(candidate)),
+        ):
+            selected.append(item)
+            selected_ids.add(item.canonical_id)
+
+        events = []
+        for item in items:
+            if item.entity_type != "event":
+                continue
+            item_payload = payload_getter(item)
+            references = {
+                item_payload.get("screen_id"),
+                item_payload.get("source_state_id"),
+                item_payload.get("control_id"),
+                item_payload.get("link_id"),
+            }
+            if not references.intersection({screen_id, *state_ids, *selected_ids}) and (
+                item.parent_canonical_id not in {screen_id, *state_ids}
+            ):
+                continue
+            source_state = item_payload.get("source_state_id")
+            if self._is_global_region(item_payload.get("region")):
+                omitted.append((item, "global_scope_entity"))
+            elif source_state and source_state not in state_ids:
+                omitted.append((item, "event_source_not_selected"))
+            elif item_payload.get("control_id") and (
+                item_payload.get("control_id") not in selected_ids
+            ):
+                omitted.append((item, "event_source_not_selected"))
+            elif item_payload.get("link_id") and item_payload.get("link_id") not in selected_ids:
+                omitted.append((item, "event_source_not_selected"))
+            elif item_payload.get("screen_id") not in {None, screen_id}:
+                omitted.append((item, "screen_mismatch"))
+            elif not references.intersection(selected_ids):
+                omitted.append((item, "orphan_event"))
+            else:
+                events.append(item)
+        for item in sorted(
+            events,
+            key=lambda candidate: self._event_key(candidate, payload_getter(candidate)),
+        ):
+            selected.append(item)
+            selected_ids.add(item.canonical_id)
+
+        transitions = []
+        for item in items:
+            if item.entity_type != "transition":
+                continue
+            item_payload = payload_getter(item)
+            source = item_payload.get("source_state_id")
+            target = item_payload.get("target_state_id")
+            if source not in state_ids and target not in state_ids:
+                continue
+            if source not in state_ids or target not in state_ids:
+                omitted.append((item, "cross_screen_transition"))
+            elif item_payload.get("event_id") and item_payload.get("event_id") not in selected_ids:
+                omitted.append((item, "transition_event_not_selected"))
+            else:
+                transitions.append(item)
+        for item in sorted(
+            transitions,
+            key=lambda candidate: self._transition_key(candidate, payload_getter(candidate)),
+        ):
+            selected.append(item)
+            selected_ids.add(item.canonical_id)
+
+        for item in items:
+            if (
+                item.entity_type == "table"
+                and payload_getter(item).get("screen_id") == screen_id
+                and (table is None or item.canonical_id != table.canonical_id)
+            ):
+                omitted.append((item, "non_primary_table"))
+
+        omitted.sort(key=lambda entry: (entry[0].entity_type, entry[0].canonical_id, entry[1]))
 
     def _active_version(self):
         versions = list(
@@ -207,6 +397,12 @@ class Neo4jSubsetPlanner:
         return (depth != 0, depth, item.canonical_id)
 
     @staticmethod
+    def _complete_state_key(item, payload):
+        depth = payload.get("depth")
+        depth = depth if isinstance(depth, int) else 2**31
+        return (depth != 0, depth, not bool(payload.get("is_route_root")), item.canonical_id)
+
+    @staticmethod
     def _table_key(item, payload):
         position = payload.get("position", payload.get("index"))
         position = position if isinstance(position, int) else 2**31
@@ -217,6 +413,80 @@ class Neo4jSubsetPlanner:
         position = payload.get("position")
         position = position if isinstance(position, int) else 2**31
         return (position, str(payload.get("normalized_name") or ""), item.canonical_id)
+
+    @staticmethod
+    def _ordered_position(payload):
+        position = payload.get("position", payload.get("index"))
+        return position if isinstance(position, int) else 2**31
+
+    @classmethod
+    def _field_key(cls, item, payload):
+        return (
+            cls._ordered_position(payload),
+            str(payload.get("normalized_label") or "\uffff"),
+            str(payload.get("normalized_name") or "\uffff"),
+            item.canonical_id,
+        )
+
+    @classmethod
+    def _control_key(cls, item, payload):
+        return (
+            cls._ordered_position(payload),
+            str(payload.get("control_type") or "\uffff"),
+            str(payload.get("normalized_label") or "\uffff"),
+            item.canonical_id,
+        )
+
+    @classmethod
+    def _link_key(cls, item, payload):
+        return (
+            cls._ordered_position(payload),
+            str(payload.get("normalized_label") or "\uffff"),
+            str(payload.get("route") or payload.get("target_route") or "\uffff"),
+            item.canonical_id,
+        )
+
+    @staticmethod
+    def _event_key(item, payload):
+        return (
+            str(payload.get("event_type") or payload.get("category") or "\uffff"),
+            str(
+                payload.get("source_state_id")
+                or payload.get("control_id")
+                or payload.get("link_id")
+                or payload.get("screen_id")
+                or "\uffff"
+            ),
+            item.canonical_id,
+        )
+
+    @staticmethod
+    def _transition_key(item, payload):
+        return (
+            str(payload.get("source_state_id") or "\uffff"),
+            str(payload.get("target_state_id") or "\uffff"),
+            str(payload.get("event_id") or "\uffff"),
+            item.canonical_id,
+        )
+
+    @staticmethod
+    def _safe_local_target(value):
+        if not isinstance(value, str) or not value.startswith("/") or value.startswith("//"):
+            return False
+        parsed = urlsplit(value)
+        return not parsed.scheme and not parsed.netloc and not parsed.query and not parsed.fragment
+
+    @staticmethod
+    def _is_global_region(value):
+        if not isinstance(value, str):
+            return False
+        return value.casefold() in {
+            "global_navigation",
+            "header",
+            "footer",
+            "sidebar",
+            "navigation",
+        }
 
     def _validate(self, selected, payload_getter, erp_id, knowledge_version):
         planned = []
@@ -269,6 +539,7 @@ class Neo4jSubsetPlanner:
 
     def _relationships(self, selected, payload_getter, ready_ids):
         counts = Counter()
+        skipped = Counter()
         for item in selected:
             if item.canonical_id not in ready_ids:
                 continue
@@ -277,7 +548,9 @@ class Neo4jSubsetPlanner:
             ):
                 if source_id in ready_ids and target_id in ready_ids:
                     counts[relation_type] += 1
-        return counts
+                else:
+                    skipped["endpoint_not_selected"] += 1
+        return counts, sum(skipped.values()), skipped
 
     @staticmethod
     def _safe_label(payload):

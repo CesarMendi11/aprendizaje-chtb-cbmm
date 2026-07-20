@@ -54,6 +54,20 @@ python -m scripts.plan_neo4j_subset \
   --screen-route "/ruta/funcional" --pretty
 ```
 
+El scope predeterminado `core` conserva ese subconjunto mínimo. El scope
+`screen-complete` añade únicamente campos, controles, links locales seguros,
+eventos, estados necesarios y transiciones internas de la misma pantalla:
+
+```bash
+python -m scripts.plan_neo4j_subset \
+  --screen-route "/ruta/funcional" --scope screen-complete --pretty
+```
+
+Ambos scopes son exclusivamente de planificación: no aprueban conocimiento,
+no escriben PostgreSQL, no modifican `sync_jobs` y no contactan Neo4j.
+`Evidence` queda fuera de esta etapa. Los estados operativos solo cambian
+mediante una revisión explícita posterior.
+
 El reporte solo contiene etiquetas estructurales sanitizadas, identificadores
 canónicos y conteos. Nunca imprime payloads completos ni contenido de pantalla.
 
