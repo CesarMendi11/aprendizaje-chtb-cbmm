@@ -6,6 +6,14 @@ estados ni historial. Solo se proyectan `approved` y `corrected`. Para estos
 últimos se usa siempre `effective_payload`. `pending_review` y `rejected` se
 excluyen.
 
+El motor es multi-ERP: identifica cada proyección mediante `erp_id` y
+`knowledge_version`, y selecciona pantallas por relaciones canónicas y rutas
+recibidas como parámetros. Retenciones fue una pantalla piloto, no una regla
+del motor. Los nombres de negocio y el conocimiento particular permanecen en
+los perfiles y datos canónicos; cada ERP puede aportar un adaptador de captura
+distinto. PostgreSQL y Neo4j admiten varios ERP y varias versiones sin que la
+lógica productiva dependa de nombres, rutas o identificadores concretos.
+
 ## Modelo y seguridad
 
 Cada nodo usa `:ERPAssistantEntity` y una etiqueta canónica fija. Su identidad

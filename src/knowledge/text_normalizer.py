@@ -35,15 +35,8 @@ STOP_WORDS = {
 }
 
 EQUIVALENCES = {
-    "facturas": "factura",
-    "retenciones": "retencion",
-    "campos": "campo",
-    "botones": "boton",
-    "pantallas": "pantalla",
     "modulo": "pantalla",
     "modulos": "pantalla",
-    "acciones": "accion",
-    "tablas": "tabla",
 }
 
 
@@ -56,7 +49,18 @@ def normalize_text(value: str) -> str:
 def tokens(value: str, *, remove_stop_words: bool = True) -> set[str]:
     words = normalize_text(value).replace("/", " ").split()
     return {
-        EQUIVALENCES.get(word, word)
+        EQUIVALENCES.get(word, _singularize(word))
         for word in words
         if not remove_stop_words or word not in STOP_WORDS
     }
+
+
+def _singularize(word: str) -> str:
+    """Apply conservative Spanish plural rules without business vocabulary."""
+    if len(word) > 6 and word.endswith("ciones"):
+        return f"{word[:-6]}cion"
+    if len(word) > 4 and word.endswith("es"):
+        return word[:-2]
+    if len(word) > 3 and word.endswith("s") and word[-2] in "aeiou":
+        return word[:-1]
+    return word

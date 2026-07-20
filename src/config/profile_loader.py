@@ -14,7 +14,7 @@ class ProfileLoader:
     Carga y valida el perfil YAML del ERP.
 
     Responsabilidad:
-    - Leer configs/cbmm.yaml.
+    - Leer el perfil YAML solicitado.
     - Validar secciones mínimas.
     - Cargar variables de entorno desde .env.
     """
@@ -280,4 +280,3 @@ class ProfileLoader:
             value = state_replay.get(field)
             if value is not None and not isinstance(value, bool):
                 raise ValueError(f"state_replay.{field} debe ser booleano.")
-
