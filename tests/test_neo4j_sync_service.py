@@ -136,6 +136,14 @@ def test_sync_job_transitions_idempotence_and_chromadb_is_untouched(graph_sessio
     chroma_job = graph_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB))
     assert first.status == "succeeded" and neo_job.status == SyncStatus.SUCCEEDED
     assert neo_job.attempt_count == 1 and neo_job.checkpoint["eligible_items"] == 2
+    assert first.summary["job_status"] == "succeeded"
+    assert first.summary["sync_job"] == {
+        "id": str(neo_job.id),
+        "status": "succeeded",
+        "attempt_count": 1,
+        "checkpoint": neo_job.checkpoint,
+    }
+    first_projection_hash = first.summary["projection_hash"]
     assert chroma_job.status == SyncStatus.PENDING and chroma_job.attempt_count == 0
     graph_session.commit()
     second = Neo4jSyncService(graph_session, repository=repo).run(batch_size=1)
@@ -145,6 +153,11 @@ def test_sync_job_transitions_idempotence_and_chromadb_is_untouched(graph_sessio
         and len(repo.relationships) == rel_count
     )
     assert neo_job.attempt_count == 2
+    assert second.summary["sync_job"]["status"] == "succeeded"
+    assert second.summary["sync_job"]["attempt_count"] == 2
+    assert second.summary["sync_job"]["checkpoint"] == neo_job.checkpoint
+    assert second.summary["projection_hash"] == first_projection_hash
+    assert second.summary["sync_job"]["checkpoint"]["projection_hash"] == first_projection_hash
     assert repo.replacements and repo.replacements[0][1] == first.summary["knowledge_version"]
 
 
@@ -155,5 +168,10 @@ def test_failure_is_sanitized_and_only_neo4j_job_fails(graph_session):
     neo_job = graph_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J))
     chroma_job = graph_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB))
     assert result.status == "failed" and neo_job.status == SyncStatus.FAILED
+    assert result.summary["job_status"] == "failed"
+    assert result.summary["sync_job"]["status"] == "failed"
+    assert result.summary["sync_job"]["attempt_count"] == 1
+    assert result.summary["sync_job"]["checkpoint"] == neo_job.checkpoint
     assert "synthetic-secret" not in (neo_job.error_summary or "")
+    assert "synthetic-secret" not in result.summary["error"]
     assert chroma_job.status == SyncStatus.PENDING

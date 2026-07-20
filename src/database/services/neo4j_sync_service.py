@@ -89,16 +89,18 @@ class Neo4jSyncService:
                 relationships=relationships,
             )
             self.session.flush()
-            return Neo4jSyncResult("succeeded", {**plan.summary(), "job_status": str(job.status)})
+            self.session.refresh(job)
+            return Neo4jSyncResult("succeeded", self._final_summary(plan, job))
         except Exception as exc:
             message, _ = sanitize_text(str(exc), 400)
             job.status = SyncStatus.FAILED
             job.finished_at = utcnow()
             job.error_summary = message or "Error Neo4j sanitizado"
             self.session.flush()
+            self.session.refresh(job)
             return Neo4jSyncResult(
                 "failed",
-                {**plan.summary(), "job_status": str(job.status), "error": job.error_summary},
+                {**self._final_summary(plan, job), "error": job.error_summary},
             )
 
     def _version(self, erp_id, knowledge_version):
@@ -132,3 +134,15 @@ class Neo4jSyncService:
             "batch_number": batch_number,
             "projection_hash": plan.projection_hash,
         }
+
+    @staticmethod
+    def _final_summary(plan, job):
+        summary = plan.summary()
+        summary["sync_job"] = {
+            "id": str(job.id),
+            "status": str(job.status),
+            "attempt_count": job.attempt_count,
+            "checkpoint": dict(job.checkpoint or {}),
+        }
+        summary["job_status"] = str(job.status)
+        return summary
