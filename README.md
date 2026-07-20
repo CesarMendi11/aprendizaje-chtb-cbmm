@@ -9,6 +9,14 @@ El objetivo del sistema es construir semiautomáticamente conocimiento funcional
 
 Los artefactos estructurales pueden transformarse en un modelo tipado, versionado, trazable y validable sin cambiar la API actual. Consulta [docs/FASE_3A_MODELO_CANONICO.md](docs/FASE_3A_MODELO_CANONICO.md) para conocer entidades, privacidad, comandos y archivos generados.
 
+## Persistencia y revisión (Fase 3B.1)
+
+PostgreSQL conserva versiones importadas, elementos canónicos, decisiones
+humanas append-only y trabajos futuros de sincronización. La API actual sigue
+funcionando sin base configurada. Consulta
+[docs/FASE_3B_POSTGRESQL_REVISION.md](docs/FASE_3B_POSTGRESQL_REVISION.md) para
+Docker, Alembic, importación, revisión, privacidad y diagnóstico.
+
 ---
 
 ## 1. Alcance del proyecto

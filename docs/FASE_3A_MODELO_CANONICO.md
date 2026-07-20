@@ -20,7 +20,11 @@ Los IDs derivados usan SHA-256 truncado sobre identidad funcional normalizada: E
 
 ## Evidencia y privacidad
 
-La evidencia referencia rutas y hashes de JSON, HTML o capturas originales; no copia HTML, imágenes ni cuerpos de red. El constructor excluye regiones sensibles o volátiles y filtra defensivamente correo, IPv4, IPv6, tokens, secretos y fechas/horas volátiles. Los reportes solo conservan conteos agregados.
+La evidencia referencia rutas y hashes de JSON, HTML o capturas originales; no copia HTML, imágenes ni cuerpos de red. Los artefactos estructurales crudos pueden contener evidencia sensible observada durante la navegación. Deben permanecer locales, ignorados por Git y protegidos con acceso restringido.
+
+`Screen.main_content_text` es un resumen estructural determinista, no una copia de la pantalla. Se forma únicamente con el título funcional y etiquetas extraídas de campos, placeholders seguros, controles, encabezados de tablas y enlaces locales. Nunca utiliza `main_visible_text`, `visible_text`, valores de inputs, filas, totales observados o cantidades de paginación. Si falta estructura, contiene solo el título o queda vacío.
+
+El constructor excluye regiones sensibles o volátiles y aplica detección defensiva a cada fragmento estructural. El validador rechaza valores concretos como identificadores, comprobantes, montos, fechas, teléfonos, correos, IP y tokens, pero permite etiquetas funcionales por sí solas. Los reportes conservan únicamente conteos agregados de fuentes o fragmentos excluidos, nunca sus valores.
 
 La inferencia de módulos usa evidencia del grafo, eventos de expansión y relaciones observadas. Si no hay evidencia suficiente, `module_id` queda nulo y se genera una advertencia.
 
@@ -42,7 +46,7 @@ El constructor admite `--output-dir`, `--strict`, `--pretty` y `--no-pretty`. La
 
 ## Preparación para persistencia
 
-Los modelos tipados y referencias por ID permiten mapear posteriormente entidades relacionales a PostgreSQL, relaciones y transiciones a Neo4j, y fragmentos revisados a ChromaDB. La evidencia y `review_status` permiten limitar las cargas futuras a contenido trazable y aprobado.
+Los modelos tipados y referencias por ID permiten mapear posteriormente entidades relacionales a PostgreSQL, relaciones y transiciones a Neo4j, y fragmentos revisados a ChromaDB. Los tres destinos reciben solamente conocimiento canónico sanitizado. Nunca se debe aprobar ni sincronizar un elemento que contenga filas reales o valores transaccionales concretos. La evidencia y `review_status` permiten limitar las cargas futuras a contenido trazable y aprobado.
 
 ## Fase 3B
 

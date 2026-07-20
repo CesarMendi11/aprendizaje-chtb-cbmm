@@ -13,11 +13,11 @@ from .models import (
     BuildWarning, CanonicalKnowledgeBase, Control, ERPSystem, Event, Evidence,
     FieldEntity, Link, Module, Screen, Table, TableColumn, Transition, UIState,
 )
-from .privacy import SENSITIVE_REGIONS, safe_metadata, sanitize_text
+from .privacy import SENSITIVE_REGIONS, build_safe_structural_text, safe_metadata, sanitize_text
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.0.0"
-GENERATOR_VERSION = "3A.1"
+GENERATOR_VERSION = "3A.2"
 ARTIFACT_NAMES = (
     "screen_index.json", "routes_graph.json", "state_registry.json",
     "state_flow_graph.json", "event_policy_audit.json", "ui_event_execution_audit.json",
@@ -67,13 +67,17 @@ class CanonicalKnowledgeBuilder:
         for raw in screen_payloads:
             route = normalize_route(raw.get("route"))
             screen_id = stable_id("screen", erp_id, route)
-            text, detections = sanitize_text(raw.get("main_visible_text", ""))
-            self.sensitive_exclusions += detections
+            if raw.get("main_visible_text") or raw.get("visible_text"):
+                # Count the excluded source, never inspect or report its values.
+                self.sensitive_exclusions += 1
+                self._omit("dynamic_text_sources")
             module_id = self._module_for_route(route, route_modules)
             if module_id is None:
                 self._warn("route_without_module", "Pantalla sin módulo inferible", "screen", screen_id)
             evidence_id = self._evidence(evidence, "screen", screen_id, "screen_index.json", hashes, EvidenceType.STRUCTURAL_JSON)
             title = str(raw.get("functional_title") or raw.get("title") or route)
+            text, exclusions = build_safe_structural_text(title, self._structural_labels(raw))
+            self.sensitive_exclusions += exclusions
             screen = Screen(id=screen_id, erp_id=erp_id, module_id=module_id, title=title, normalized_title=normalize_text(title), route=route, document_title=self._clean_optional(raw.get("document_title")), title_source=self._clean_optional(raw.get("title_source")), main_content_text=text, source_refs=["screen_index.json"], evidence_ids=[evidence_id], metadata=safe_metadata({"status": raw.get("status"), "knowledge_origin": raw.get("knowledge_origin")}))
             screens.append(screen)
             by_route[route] = screen
@@ -214,6 +218,47 @@ class CanonicalKnowledgeBuilder:
         if str(item.get("region") or "").casefold() in SENSITIVE_REGIONS:
             self.sensitive_exclusions += 1; self._omit("sensitive_elements"); return True
         return False
+
+    @classmethod
+    def _structural_labels(cls, screen):
+        labels: list[str] = []
+        for item in screen.get("inputs") or []:
+            if isinstance(item, dict) and not cls._is_sensitive_region(item):
+                label = cls._label_from_keys(item, ("label", "aria_label", "title"))
+                if label:
+                    labels.append(label)
+                placeholder = item.get("placeholder")
+                if placeholder:
+                    labels.append(str(placeholder).strip())
+        for item in screen.get("buttons") or []:
+            if isinstance(item, dict) and not cls._is_sensitive_region(item):
+                label = cls._label(item)
+                if label:
+                    labels.append(label)
+        for table in screen.get("tables") or []:
+            if not isinstance(table, dict) or cls._is_sensitive_region(table):
+                continue
+            name = cls._label_from_keys(table, ("label", "name", "title"))
+            if name:
+                labels.append(name)
+            for header in table.get("headers") or table.get("columns") or []:
+                value = header.get("name") if isinstance(header, dict) else header
+                if value:
+                    labels.append(str(value).strip())
+        for item in [*(screen.get("local_links") or []), *(screen.get("links") or [])]:
+            if isinstance(item, dict) and not cls._is_sensitive_region(item):
+                label = cls._label(item)
+                if label:
+                    labels.append(label)
+        return labels
+
+    @staticmethod
+    def _is_sensitive_region(item):
+        return str(item.get("region") or "").casefold() in SENSITIVE_REGIONS
+
+    @staticmethod
+    def _label_from_keys(item, keys):
+        return next((str(item.get(key)).strip() for key in keys if item.get(key) and str(item.get(key)).strip()), "")
 
     @staticmethod
     def _label(item):

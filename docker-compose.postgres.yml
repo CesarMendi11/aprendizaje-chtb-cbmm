@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: erp_assistant_postgres
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: erp_assistant
+      POSTGRES_USER: erp_assistant
+      POSTGRES_PASSWORD: ${ERP_ASSISTANT_POSTGRES_PASSWORD:-erp_assistant_local}
+    volumes:
+      - erp_assistant_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_assistant -d erp_assistant"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - erp_assistant_local
+
+volumes:
+  erp_assistant_postgres_data:
+
+networks:
+  erp_assistant_local:
+    driver: bridge

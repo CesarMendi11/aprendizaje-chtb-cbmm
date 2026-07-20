@@ -30,6 +30,51 @@ def test_privacy_removes_sensitive_and_volatile_content():
     assert all(item.label != "Secret" for item in kb.fields)
 
 
+def test_main_content_is_only_deduplicated_structural_text():
+    artifacts = fictional_artifacts()
+    artifacts["screen_index.json"]["screens"][1].update({
+        "main_visible_text": (
+            "Persona Ficticia 1799999999001 001-001-000000001 "
+            "31 dic 2025 $1,234.56 Total de registros: 47"
+        ),
+        "inputs": [
+            {"label": "RUC", "name": "tax_id", "value": "1799999999001"},
+            {"label": "RUC", "placeholder": "Buscar"},
+        ],
+        "buttons": [{"text": "Buscar"}],
+        "tables": [{
+            "name": "Resultados",
+            "headers": ["Fecha de emisión", "Número de factura", "Total retenido"],
+            "rows": [["Persona Ficticia", "001-001-000000001", "$1,234.56"]],
+            "row_count_observed": 47,
+        }],
+    })
+    first = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    second = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in first.screens if item.route == "/app/inventory/products")
+    assert screen.main_content_text == (
+        "Products | RUC | Buscar | Resultados | Fecha de emisión | "
+        "Número de factura | Total retenido | Suppliers"
+    )
+    assert screen.main_content_text == next(
+        item.main_content_text for item in second.screens if item.route == screen.route
+    )
+    assert "Persona Ficticia" not in screen.main_content_text
+    assert "Total de registros" not in screen.main_content_text
+    assert "47" not in screen.main_content_text
+    assert screen.main_content_text.count("RUC") == 1
+    assert screen.main_content_text.count("Buscar") == 1
+
+
+def test_build_report_counts_excluded_dynamic_sources_without_values():
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(fictional_profile(), fictional_artifacts())
+    report = builder.build_report(kb)
+    assert report["sensitive_regions_excluded"] == 2
+    assert report["omitted_entities"]["dynamic_text_sources"] == 1
+    assert "owner@example.test" not in json.dumps(report)
+
+
 def test_knowledge_version_is_deterministic():
     assert build().knowledge_version == build().knowledge_version
 
