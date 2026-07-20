@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes import chat, health
 from src.config.api_settings import ApiSettings
+from src.hybrid.factory import HybridRetrieverFactory
 from src.knowledge.answer_builder import AnswerBuilder
 from src.knowledge.structural_knowledge_repository import StructuralKnowledgeRepository
 from src.knowledge.structural_search_service import StructuralSearchService
@@ -22,6 +25,9 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         repository, settings.max_results, settings.minimum_score
     )
     app.state.answer_builder = AnswerBuilder()
+    app.state.hybrid_factory = (
+        HybridRetrieverFactory() if os.getenv("ERP_ASSISTANT_HYBRID_API") == "1" else None
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),

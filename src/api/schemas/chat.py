@@ -51,6 +51,11 @@ class ChatResponse(BaseModel):
     suggestions: list[str]
     status: Literal["answered", "not_found", "error"]
     sources: list[ChatSource]
+    answer_mode: str | None = None
+    intent: str | None = None
+    confidence: str | None = None
+    evidence_ids: list[str] = []
+    retrieval: dict[str, int] | None = None
 
 
 class HealthResponse(BaseModel):

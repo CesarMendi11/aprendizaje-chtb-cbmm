@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from src.api.dependencies import get_answer_builder, get_repository, get_search_service
 from src.api.schemas.chat import ChatRequest, ChatResponse, ChatSource
@@ -17,7 +17,40 @@ async def chat(
     repository: Annotated[StructuralKnowledgeRepository, Depends(get_repository)],
     search_service: Annotated[StructuralSearchService, Depends(get_search_service)],
     answer_builder: Annotated[AnswerBuilder, Depends(get_answer_builder)],
+    request: Request,
 ) -> ChatResponse:
+    hybrid = getattr(request.app.state, "hybrid_factory", None)
+    if hybrid is not None:
+        try:
+            with hybrid.create(generate=True) as retriever:
+                result = retriever.ask(payload.question, generate=True)
+            if result.get("answer_mode") in {
+                "deterministic_graph",
+                "policy_abstention",
+                "ollama_grounded",
+                "insufficient_evidence",
+            }:
+                return ChatResponse(
+                    answer=result["answer"],
+                    conversationId=payload.conversation_id,
+                    suggestions=[],
+                    status="answered"
+                    if result["answer_mode"] != "insufficient_evidence"
+                    else "not_found",
+                    sources=[
+                        ChatSource(title=s["safe_label"], route=s.get("screen_route") or "")
+                        for s in result.get("sources", [])[:10]
+                    ],
+                    answer_mode=result.get("answer_mode"),
+                    intent=result.get("intent"),
+                    confidence=result.get("confidence"),
+                    evidence_ids=result.get("evidence_ids", []),
+                    retrieval=result.get("retrieval"),
+                )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503, detail="Servicio de conocimiento temporalmente no disponible"
+            ) from exc
     if not repository.knowledge_loaded:
         return ChatResponse(
             answer=NOT_FOUND,

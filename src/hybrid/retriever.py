@@ -140,6 +140,9 @@ class HybridKnowledgeRetriever:
         plan = self.planner.plan(
             question, result["sources"], result.get("relations", []), result["sources"]
         )
+        result["intent"] = plan.get("intent")
+        result["confidence"] = plan.get("confidence")
+        result["evidence_ids"] = plan.get("evidence_ids", [])
         result["answer_mode"] = "insufficient_evidence"
         if plan["supported"]:
             result["answer"] = plan["answer"]
