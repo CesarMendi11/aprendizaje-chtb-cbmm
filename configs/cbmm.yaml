@@ -3,6 +3,18 @@ erp:
   code: "cbmm"
   base_url: "http://177.234.239.116:8084"
 
+semantic_aliases:
+  RUC:
+    - "identificación tributaria"
+    - "identificacion tributaria"
+    - "identificación fiscal"
+    - "identificacion fiscal"
+  Buscar:
+    - "búsqueda"
+    - "busqueda"
+    - "ejecutar búsqueda"
+    - "realizar búsqueda"
+
 browser:
   headless: false
   slow_mo: 150
