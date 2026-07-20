@@ -26,7 +26,7 @@ ALLOWED_PROPERTIES = {
     "erp_system": ("slug", "name", "profile_name", "adapter"),
     "module": ("name", "normalized_name", "route_prefix", "description"),
     "screen": ("title", "normalized_title", "route", "description"),
-    "ui_state": ("route", "depth", "title", "structural_fingerprint", "is_route_root"),
+    "ui_state": ("route", "depth", "title", "is_route_root"),
     "field": (
         "label",
         "normalized_label",
@@ -63,6 +63,22 @@ def node_key(erp_id: str, knowledge_version: str, canonical_id: str) -> str:
 
 
 class GraphMapper:
+    def projected_payload_properties(
+        self, entity_type: str, payload: dict[str, Any]
+    ) -> dict[str, str | bool | int | float]:
+        """Return the canonical payload properties eligible for Neo4j projection."""
+        if entity_type not in ALLOWED_PROPERTIES:
+            raise GraphMappingError("Tipo canónico no soportado")
+        projected: dict[str, str | bool | int | float] = {}
+        for name in ALLOWED_PROPERTIES[entity_type]:
+            value = payload.get(name)
+            if value is None:
+                continue
+            if not isinstance(value, (str, bool, int, float)):
+                raise GraphMappingError("Propiedad canónica no escalar")
+            projected[name] = value
+        return projected
+
     def map_node(
         self,
         *,
@@ -92,12 +108,7 @@ class GraphMapper:
             "review_status": review_status,
             "projected_at": projected_at,
         }
-        for name in ALLOWED_PROPERTIES[entity_type]:
-            value = payload.get(name)
-            if value is None:
-                continue
-            if not isinstance(value, (str, bool, int, float)):
-                raise GraphMappingError("Propiedad canónica no escalar")
+        for name, value in self.projected_payload_properties(entity_type, payload).items():
             if isinstance(value, str) and contains_sensitive(value):
                 raise GraphMappingError("Propiedad canónica sensible")
             properties[name] = value

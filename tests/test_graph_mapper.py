@@ -30,6 +30,7 @@ PAYLOADS = {
         "route": "/app/products",
         "title": "Products",
         "structural_fingerprint": "safe",
+        "exact_fingerprint": "technical-value-not-projected",
         "depth": 0,
     },
     "field": {
@@ -124,6 +125,35 @@ def test_mapper_rejects_unknown_types_and_sensitive_properties():
             knowledge_version="v",
             projected_at="now",
         )
+
+
+def test_mapper_minimizes_erp_and_ui_state_technical_properties():
+    mapper = GraphMapper()
+    erp = mapper.map_node(
+        entity_type="erp_system",
+        payload={**PAYLOADS["erp_system"], "base_url": "https://synthetic.invalid/1234567890"},
+        content_hash="a" * 64,
+        review_status="approved",
+        erp_id="erp:synthetic",
+        knowledge_version="version-one",
+        projected_at="2026-01-01T00:00:00+00:00",
+    )
+    state = mapper.map_node(
+        entity_type="ui_state",
+        payload={
+            **PAYLOADS["ui_state"],
+            "exact_fingerprint": "001-001-000000001",
+            "structural_fingerprint": "1234567890123",
+        },
+        content_hash="b" * 64,
+        review_status="approved",
+        erp_id="erp:synthetic",
+        knowledge_version="version-one",
+        projected_at="2026-01-01T00:00:00+00:00",
+    )
+    assert "base_url" not in erp.properties
+    assert "exact_fingerprint" not in state.properties
+    assert "structural_fingerprint" not in state.properties
     payload = {**PAYLOADS["screen"], "title": "001-001-000000001"}
     with pytest.raises(GraphMappingError, match="sensible"):
         GraphMapper().map_node(

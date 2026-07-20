@@ -44,6 +44,19 @@ python -m scripts.sync_approved_to_neo4j --pretty
 python -m scripts.inspect_neo4j_projection
 ```
 
+Antes de aprobar conocimiento real se genera un plan pequeño y conectado de
+solo lectura. El primer alcance selecciona ERP, módulo, pantalla, estado raíz,
+tabla principal y sus columnas; valida privacidad y simula el mapper sin cambiar
+estados, `sync_jobs` ni Neo4j:
+
+```bash
+python -m scripts.plan_neo4j_subset \
+  --screen-route "/ruta/funcional" --pretty
+```
+
+El reporte solo contiene etiquetas estructurales sanitizadas, identificadores
+canónicos y conteos. Nunca imprime payloads completos ni contenido de pantalla.
+
 El bootstrap crea constraints e índices administrados con `IF NOT EXISTS`, sin
 APOC. El dry-run consulta PostgreSQL y mapea el grafo sin conectarse a Neo4j ni
 modificar `sync_jobs`. Una ejecución vacía se rechaza salvo `--allow-empty`.
