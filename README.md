@@ -708,13 +708,31 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+data_backup_*/
+ZIP o TAR de transferencia
 ```
+
+Los artefactos estructurales vigentes en `data/processed/structural/` y los
+artefactos canónicos vigentes en `data/processed/canonical/` deben conservarse,
+aunque sean outputs locales ignorados. Los contenidos de `data/raw/`,
+`data/review/`, caches y artefactos intermedios son locales; algunos pueden
+reconstruirse, pero no deben borrarse si constituyen la única evidencia de una
+ejecución real.
+
+Para limpiar caches sin afectar el conocimiento vigente se pueden retirar
+`.pytest_cache/`, `.ruff_cache/` y los directorios `__pycache__/` bajo código y
+pruebas. Nunca se debe aplicar una limpieza recursiva indiscriminada sobre
+`data/` ni `docker/neo4j/data/`. Los ZIP futuros deben excluir `.git/`, entornos
+virtuales, caches, `data/raw/`, `data/review/`, `data_backup_*/` y volúmenes
+locales de Docker.
 
 Crear ZIP seguro:
 
 ```bash
 zip -r chat_cbmm_actual.zip . \
-  -x "venv/*" ".venv/*" ".git/*" "__pycache__/*" "*.pyc" ".env" "docker/neo4j/data/*"
+  -x "venv/*" ".venv/*" ".git/*" "*/__pycache__/*" "*.pyc" ".env" \
+     ".pytest_cache/*" ".ruff_cache/*" "data/raw/*" "data/review/*" \
+     "data_backup_*/*" "docker/neo4j/data/*" "docker/neo4j/logs/*"
 ```
 
 ---

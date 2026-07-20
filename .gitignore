@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 
 # Virtual environments
@@ -42,6 +43,15 @@ test-results/
 build/
 dist/
 *.egg-info/
+
+# Local transfers, temporary copies and obsolete phase backups
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tmp
+*.bak
+data_backup_*/
 
 # ChromaDB
 chroma_db/
