@@ -21,10 +21,10 @@ class SyncJobRepository:
             query = query.where(SyncJob.status == status)
         return list(self.session.scalars(query.order_by(SyncJob.requested_at.desc())))
 
-    def get(self, version_id: uuid.UUID, target: SyncTarget) -> SyncJob | None:
-        return self.session.scalar(
-            select(SyncJob).where(
+    def get(self, version_id: uuid.UUID, target: SyncTarget, *, for_update=False) -> SyncJob | None:
+        query = select(SyncJob).where(
                 SyncJob.knowledge_version_id == version_id, SyncJob.target == target
             )
-        )
-
+        if for_update:
+            query = query.with_for_update()
+        return self.session.scalar(query)

@@ -3,6 +3,9 @@ name = "aprendizaje-chtb-cbmm"
 version = "0.1.0"
 description = "Asistente inteligente ERP para el Cuerpo de Bomberos Municipal de Machala"
 requires-python = ">=3.11"
+dependencies = [
+    "neo4j>=6.0,<7",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -10,6 +13,7 @@ testpaths = ["tests"]
 addopts = "-q"
 markers = [
     "postgresql: pruebas de integración que requieren TEST_DATABASE_URL",
+    "neo4j: pruebas de integración que requieren TEST_NEO4J_URI",
 ]
 
 [tool.black]

@@ -33,7 +33,15 @@ class EffectiveKnowledgeService:
     def list_approved(self, *, version_id=None):
         result = []
         for status in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED):
-            result.extend(self.knowledge.list_items(version_id=version_id, status=status, limit=1000))
+            offset = 0
+            while True:
+                batch = self.knowledge.list_items(
+                    version_id=version_id, status=status, limit=1000, offset=offset
+                )
+                result.extend(batch)
+                if len(batch) < 1000:
+                    break
+                offset += len(batch)
         return result
 
     def projection_for_sync(self, *, version_id):
@@ -42,6 +50,7 @@ class EffectiveKnowledgeService:
                 "canonical_id": item.canonical_id,
                 "entity_type": item.entity_type,
                 "content_hash": item.content_hash,
+                "review_status": str(item.current_review_status),
                 "payload": self.describe(item.id)["effective_payload"],
             }
             for item in self.list_approved(version_id=version_id)

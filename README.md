@@ -469,11 +469,13 @@ Acceso web:
 http://localhost:7474
 ```
 
-Credenciales locales configuradas en `docker-compose.yml`:
+Configuración local, con la contraseña únicamente en el entorno:
 
-```text
-Usuario: neo4j
-Contraseña: Admin123.
+```bash
+export ERP_ASSISTANT_NEO4J_URI=bolt://127.0.0.1:7687
+export ERP_ASSISTANT_NEO4J_USER=neo4j
+export ERP_ASSISTANT_NEO4J_PASSWORD='contraseña-local'
+export ERP_ASSISTANT_NEO4J_DATABASE=neo4j
 ```
 
 ---
@@ -785,25 +787,23 @@ Pendiente:
 
 ---
 
-## 19. Próximo paso inmediato
+## 19. Proyección PostgreSQL → Neo4j
 
-El siguiente paso técnico recomendado es construir el normalizador estructural:
+Neo4j es una proyección reconstruible de los elementos `approved` y
+`corrected` de PostgreSQL. No consume filas del ERP ni elementos pendientes o
+rechazados. Comandos principales:
 
-```text
-src/graph/neo4j_graph_normalizer.py
-scripts/build_graph_for_neo4j.py
+```bash
+python -m scripts.neo4j_status
+python -m scripts.bootstrap_neo4j
+python -m scripts.sync_approved_to_neo4j --dry-run --pretty
+python -m scripts.sync_approved_to_neo4j --pretty
+python -m scripts.inspect_neo4j_projection
 ```
 
-Objetivo:
-
-```text
-data/processed/structural/screen_index.json
-data/processed/structural/routes_graph.json
-        ↓
-data/processed/structural/graph_for_neo4j.json
-```
-
-Ese archivo será la base para importar el conocimiento estructural del ERP a Neo4j.
+La sincronización normal hace upsert idempotente. `--replace-version` exige
+confirmación y solo elimina el namespace administrado del ERP y versión
+solicitados. Detalles en `docs/FASE_3C_NEO4J_PROJECTION.md`.
 
 ## Backend FastAPI del asistente ERP (Fase 2B)
 

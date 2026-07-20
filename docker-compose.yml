@@ -1,13 +1,13 @@
 services:
   neo4j:
-    image: neo4j:community
+    image: neo4j:2026.04.0
     container_name: cbmm_neo4j
     restart: unless-stopped
     ports:
       - "7474:7474"
       - "7687:7687"
     environment:
-      NEO4J_AUTH: neo4j/Admin123.
+      NEO4J_AUTH: "${ERP_ASSISTANT_NEO4J_USER:-neo4j}/${ERP_ASSISTANT_NEO4J_PASSWORD:?configure ERP_ASSISTANT_NEO4J_PASSWORD}"
     volumes:
       - ./docker/neo4j/data:/data
       - ./docker/neo4j/logs:/logs
