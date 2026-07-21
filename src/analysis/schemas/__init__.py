@@ -9,6 +9,13 @@ from .screen_evidence import (
     TransitionEvidence,
     UIStateEvidence,
 )
+from .screen_purpose_grounding_plan import ActionGroundingHint, ScreenPurposeGroundingPlan
+from .screen_purpose_inference import (
+    CapabilityClaim,
+    GeneratedScreenPurposeCandidate,
+    ScreenPurposeInference,
+)
+from .screen_purpose_prompt_evidence import ScreenPurposePromptEvidence
 
 __all__ = [
     "ColumnEvidence",
@@ -20,4 +27,10 @@ __all__ = [
     "TableEvidence",
     "TransitionEvidence",
     "UIStateEvidence",
+    "CapabilityClaim",
+    "GeneratedScreenPurposeCandidate",
+    "ScreenPurposeInference",
+    "ScreenPurposePromptEvidence",
+    "ActionGroundingHint",
+    "ScreenPurposeGroundingPlan",
 ]
