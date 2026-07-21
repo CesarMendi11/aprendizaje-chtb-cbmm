@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import case, func, select
+from sqlalchemy.orm import Session, joinedload
 
-from src.database.models import SemanticProposal
+from src.database.models import (
+    ERPSystemRecord,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SemanticProposal,
+    SemanticReviewAction,
+)
 from src.knowledge.canonical.enums import ReviewStatus
 
 
@@ -36,6 +42,79 @@ class SemanticProposalRepository:
         return self.session.scalar(
             select(SemanticProposal).where(SemanticProposal.semantic_id == semantic_id)
         )
+
+    def get_detail_by_semantic_id(self, semantic_id: str) -> SemanticProposal | None:
+        return self.session.scalar(
+            select(SemanticProposal)
+            .where(SemanticProposal.semantic_id == semantic_id)
+            .options(
+                joinedload(SemanticProposal.knowledge_version).joinedload(
+                    KnowledgeVersionRecord.erp
+                ),
+                joinedload(SemanticProposal.screen_knowledge_item),
+            )
+        )
+
+    def list_admin_page(
+        self,
+        *,
+        current_review_status: ReviewStatus | str | None = None,
+        semantic_type: str | None = None,
+        erp_id: str | None = None,
+        knowledge_version_id: uuid.UUID | None = None,
+        screen_id: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[tuple[SemanticProposal, int]], int]:
+        filters = []
+        if current_review_status is not None:
+            filters.append(
+                SemanticProposal.current_review_status == ReviewStatus(current_review_status)
+            )
+        if semantic_type is not None:
+            filters.append(SemanticProposal.semantic_type == semantic_type)
+        if erp_id is not None:
+            filters.append(ERPSystemRecord.id == erp_id)
+        if knowledge_version_id is not None:
+            filters.append(SemanticProposal.knowledge_version_id == knowledge_version_id)
+        if screen_id is not None:
+            filters.append(KnowledgeItem.canonical_id == screen_id)
+        base = (
+            select(SemanticProposal)
+            .join(SemanticProposal.knowledge_version)
+            .join(KnowledgeVersionRecord.erp)
+            .join(SemanticProposal.screen_knowledge_item)
+            .where(*filters)
+        )
+        total = self.session.scalar(
+            select(func.count()).select_from(base.subquery())
+        ) or 0
+        action_counts = (
+            select(
+                SemanticReviewAction.semantic_proposal_id.label("proposal_id"),
+                func.count(SemanticReviewAction.id).label("action_count"),
+            )
+            .group_by(SemanticReviewAction.semantic_proposal_id)
+            .subquery()
+        )
+        pending_first = case(
+            (SemanticProposal.current_review_status == ReviewStatus.PENDING_REVIEW, 0),
+            else_=1,
+        )
+        query = (
+            base.add_columns(func.coalesce(action_counts.c.action_count, 0))
+            .outerjoin(action_counts, action_counts.c.proposal_id == SemanticProposal.id)
+            .options(
+                joinedload(SemanticProposal.knowledge_version).joinedload(
+                    KnowledgeVersionRecord.erp
+                ),
+                joinedload(SemanticProposal.screen_knowledge_item),
+            )
+            .order_by(pending_first, SemanticProposal.created_at, SemanticProposal.semantic_id)
+            .offset(offset)
+            .limit(limit)
+        )
+        return [(row[0], int(row[1])) for row in self.session.execute(query)], int(total)
 
     def get_by_generation_identity(
         self,
