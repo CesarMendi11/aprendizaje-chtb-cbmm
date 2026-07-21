@@ -332,6 +332,32 @@ def _is_prudent(value):
     return any(phrase in normalized for phrase in PRUDENT_PHRASES)
 
 
+def validate_declared_capability(capability, hint, *, position: int) -> None:
+    """Validate that a draft statement describes exactly its declared action."""
+    location = ("supported_capabilities", position, "statement")
+    _validate_narrative(capability.statement, location, 3)
+    tokens = set(normalize_text(capability.statement).split())
+    actions = _actions(tokens) - {"manage"}
+    if capability.action == "view" and tokens.intersection(
+        {"muestra", "visualiza", "lista", "presenta"}
+    ):
+        actions.add("view")
+    if actions != {capability.action}:
+        _diagnostic(
+            InferenceUnsupportedActionError,
+            location,
+            "declared_action_statement_mismatch",
+            capability.statement,
+        )
+    if hint.narrative_rule == "prudent_only" and not _is_prudent(capability.statement):
+        _diagnostic(
+            InferenceUnsupportedActionError,
+            location,
+            "declared_action_requires_prudent_wording",
+            capability.statement,
+        )
+
+
 def _validate_purpose(summary, capability_support, package, forbidden_actions):
     location = ("purpose_summary",)
     _validate_narrative(summary, location, 4)

@@ -20,8 +20,11 @@ from .semantic_exceptions import (
     SemanticVersionMismatchError,
 )
 from .semantic_payloads import (
+    ValidatedSemanticEvidenceSnapshot,
     canonical_json_hash,
     normalize_evidence_ids,
+    semantic_evidence_hash,
+    semantic_evidence_snapshot_values,
     validate_semantic_payload,
     validate_sha256,
 )
@@ -40,7 +43,7 @@ class SemanticProposalService:
         screen_knowledge_item_id: uuid.UUID | str,
         semantic_type: SemanticType | str,
         source_payload: dict[str, Any],
-        evidence_payload: dict[str, Any],
+        evidence_payload: dict[str, Any] | ValidatedSemanticEvidenceSnapshot,
         evidence_ids: list[str],
         generation_model: str,
         prompt_version: str,
@@ -76,20 +79,24 @@ class SemanticProposalService:
             field="source_payload",
             require_purpose_summary=True,
         )
-        evidence = validate_semantic_payload(evidence_payload, field="evidence_payload")
         normalized_evidence_ids = normalize_evidence_ids(evidence_ids)
+        if isinstance(evidence_payload, ValidatedSemanticEvidenceSnapshot):
+            evidence, evidence_hash, snapshot_evidence_ids = (
+                semantic_evidence_snapshot_values(evidence_payload)
+            )
+            if snapshot_evidence_ids != normalized_evidence_ids:
+                raise SemanticPayloadError("evidence_ids no coincide con el snapshot validado")
+        else:
+            evidence = validate_semantic_payload(
+                evidence_payload, field="evidence_payload"
+            )
+            evidence_hash = semantic_evidence_hash(evidence, normalized_evidence_ids)
         parameters = validate_semantic_payload(
             generation_parameters,
             field="generation_parameters",
             allow_empty=True,
         )
         source_hash = canonical_json_hash(source)
-        evidence_hash = canonical_json_hash(
-            {
-                "evidence_payload": evidence,
-                "evidence_ids": normalized_evidence_ids,
-            }
-        )
         parameters_hash = canonical_json_hash(parameters)
         identity = {
             "knowledge_version_id": version.id,

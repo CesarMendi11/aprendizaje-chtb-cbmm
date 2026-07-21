@@ -44,3 +44,15 @@ class SemanticIdentityCollisionError(SemanticDomainError):
 
 class SemanticHistoryIntegrityError(SemanticDomainError):
     pass
+
+
+class SemanticWorkflowError(SemanticDomainError):
+    pass
+
+
+class SemanticVersionNotActiveError(SemanticWorkflowError):
+    pass
+
+
+class SemanticCandidateMismatchError(SemanticWorkflowError):
+    pass

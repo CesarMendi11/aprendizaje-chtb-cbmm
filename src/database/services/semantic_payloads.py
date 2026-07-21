@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import re
+from dataclasses import dataclass
 from typing import Any
 
 from src.database.services.payloads import MAX_CORRECTION_BYTES, validate_safe_json
@@ -85,9 +86,115 @@ def normalize_evidence_ids(values: Any) -> list[str]:
         if not clean or len(clean) > 240:
             raise SemanticPayloadError("evidence_id inválido o demasiado largo")
         normalized.add(clean)
-    if not normalized:
-        raise SemanticPayloadError("evidence_ids no puede estar vacío")
     return sorted(normalized)
+
+
+def semantic_evidence_hash(evidence_payload: dict[str, Any], evidence_ids: list[str]) -> str:
+    """Preserve the historical Phase 2 identity for ordinary evidence dictionaries."""
+    return canonical_json_hash(
+        {"evidence_payload": evidence_payload, "evidence_ids": evidence_ids}
+    )
+
+
+@dataclass(frozen=True, init=False)
+class ValidatedSemanticEvidenceSnapshot:
+    """Immutable, canonical JSON produced only from a validated screen evidence package."""
+
+    _canonical_json: str
+    _evidence_hash: str
+    _evidence_ids: tuple[str, ...]
+
+    def __new__(cls, *args, **kwargs):
+        raise TypeError(
+            "ValidatedSemanticEvidenceSnapshot solo puede construirse mediante su fábrica"
+        )
+
+    @property
+    def payload(self) -> dict[str, Any]:
+        payload, _, _ = semantic_evidence_snapshot_values(self)
+        return payload
+
+    @property
+    def evidence_hash(self) -> str:
+        _, evidence_hash, _ = semantic_evidence_snapshot_values(self)
+        return evidence_hash
+
+    @property
+    def evidence_ids(self) -> list[str]:
+        _, _, evidence_ids = semantic_evidence_snapshot_values(self)
+        return evidence_ids
+
+
+def semantic_evidence_snapshot_values(
+    snapshot: ValidatedSemanticEvidenceSnapshot,
+) -> tuple[dict[str, Any], str, list[str]]:
+    """Return validated detached values, sanitizing malformed snapshot instances."""
+    if not isinstance(snapshot, ValidatedSemanticEvidenceSnapshot):
+        raise SemanticPayloadError("El snapshot de evidencia no es válido")
+    try:
+        canonical_json = object.__getattribute__(snapshot, "_canonical_json")
+        evidence_hash = object.__getattribute__(snapshot, "_evidence_hash")
+        evidence_ids = object.__getattribute__(snapshot, "_evidence_ids")
+        payload = json.loads(canonical_json)
+    except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise SemanticPayloadError("El snapshot de evidencia no es válido") from exc
+    if not isinstance(payload, dict) or not payload:
+        raise SemanticPayloadError("El snapshot de evidencia no es válido")
+    digest = validate_sha256(evidence_hash, field="evidence_hash")
+    if not isinstance(evidence_ids, tuple):
+        raise SemanticPayloadError("El snapshot de evidencia no es válido")
+    normalized_ids = normalize_evidence_ids(list(evidence_ids))
+    embedded_ids = normalize_evidence_ids(payload.get("evidence_ids"))
+    if embedded_ids != normalized_ids or canonical_json_hash(payload) != digest:
+        raise SemanticPayloadError("El snapshot de evidencia no es válido")
+    return copy.deepcopy(payload), digest, list(normalized_ids)
+
+
+def validated_semantic_evidence_snapshot(package: Any) -> ValidatedSemanticEvidenceSnapshot:
+    from src.analysis.schemas import ScreenEvidencePackage
+
+    if not isinstance(package, ScreenEvidencePackage):
+        raise SemanticPayloadError("Se requiere un ScreenEvidencePackage validado")
+    validated = ScreenEvidencePackage.model_validate(package.model_dump(mode="python"))
+    value = validated.model_dump(mode="json", exclude={"evidence_hash"})
+    if not isinstance(value, dict) or not value:
+        raise SemanticPayloadError("evidence_payload no puede estar vacío")
+    try:
+        encoded = json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    except (TypeError, ValueError, UnicodeError) as exc:
+        raise SemanticPayloadError("evidence_payload no es JSON serializable") from exc
+    if len(encoded) > MAX_CORRECTION_BYTES:
+        raise SemanticPayloadError("evidence_payload excede el tamaño permitido")
+    forbidden = {"password", "passwd", "token", "cookie", "authorization", "html"}
+    for key, item in _walk_json(value):
+        lowered_key = key.casefold()
+        if lowered_key in forbidden:
+            raise SemanticSensitiveContentError("evidence_payload contiene una clave prohibida")
+        if isinstance(item, str) and (
+            "<script" in item.casefold() or "javascript:" in item.casefold()
+        ):
+            raise SemanticSensitiveContentError("evidence_payload contiene texto ejecutable")
+    normalized_ids = normalize_evidence_ids(list(validated.evidence_ids))
+    if normalized_ids != list(validated.evidence_ids):
+        raise SemanticPayloadError("evidence_ids no coincide con el paquete validado")
+    evidence_hash = validate_sha256(validated.evidence_hash, field="evidence_hash")
+    if canonical_json_hash(value) != evidence_hash:
+        raise SemanticPayloadError("evidence_hash no coincide con el paquete validado")
+    snapshot = object.__new__(ValidatedSemanticEvidenceSnapshot)
+    object.__setattr__(snapshot, "_canonical_json", encoded.decode("utf-8"))
+    object.__setattr__(snapshot, "_evidence_hash", evidence_hash)
+    object.__setattr__(snapshot, "_evidence_ids", tuple(normalized_ids))
+    return snapshot
+
+
+def _walk_json(value: Any):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            yield str(key), item
+            yield from _walk_json(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _walk_json(item)
 
 
 def semantic_review_action_payload(action: Any) -> dict[str, Any]:

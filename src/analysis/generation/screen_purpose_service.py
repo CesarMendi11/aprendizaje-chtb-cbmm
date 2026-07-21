@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from typing import Any
 
 from src.analysis.prompts import (
@@ -14,7 +15,6 @@ from src.analysis.prompts import (
 from src.analysis.schemas import (
     GeneratedScreenPurposeCandidate,
     ScreenEvidencePackage,
-    ScreenPurposeInference,
     ScreenPurposePromptEvidence,
 )
 from src.analysis.validators import parse_and_validate, validate_capability_grounding
@@ -24,6 +24,10 @@ from src.knowledge.canonical.privacy import contains_sensitive
 
 from .errors import InferenceSensitiveContentError
 from .ollama_structured_client import OllamaStructuredGenerationClient
+from .screen_purpose_generation import (
+    build_screen_purpose_generation_schema,
+    parse_generation_draft,
+)
 
 
 class ScreenPurposeInferenceService:
@@ -34,13 +38,25 @@ class ScreenPurposeInferenceService:
         package = ScreenEvidencePackage.model_validate(evidence_package.model_dump(mode="python"))
         prompt_evidence = ScreenPurposePromptEvidence.from_package(package)
         self._validate_package_safety(prompt_evidence.model_dump(mode="json"))
+        schema = build_screen_purpose_generation_schema(
+            prompt_evidence.grounding_plan,
+            screen_id=package.screen_id,
+        )
         response = self.client.generate(
             build_user_prompt(prompt_evidence),
             system=SYSTEM_PROMPT,
-            schema=ScreenPurposeInference.model_json_schema(),
+            schema=schema,
         )
-        inference = parse_and_validate(response.text, package)
-        validate_capability_grounding(inference, package)
+        inference = parse_generation_draft(
+            response.text,
+            screen_id=package.screen_id,
+            screen_title=package.screen_title,
+            grounding_plan=prompt_evidence.grounding_plan,
+        )
+        inference = parse_and_validate(
+            json.dumps(inference.model_dump(mode="json"), ensure_ascii=False), package
+        )
+        validate_capability_grounding(inference, package, prompt_evidence.grounding_plan)
         inference_payload = inference.model_dump(mode="json")
         return GeneratedScreenPurposeCandidate(
             inference=inference,
