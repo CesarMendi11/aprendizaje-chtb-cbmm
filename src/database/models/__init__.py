@@ -26,6 +26,7 @@ from ..enums import (
     KnowledgeVersionStatus,
     ReviewActionType,
     ReviewSource,
+    SemanticType,
     SyncStatus,
     SyncTarget,
 )
@@ -84,9 +85,7 @@ class KnowledgeVersionRecord(TimestampMixin, Base):
     )
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
     erp_id: Mapped[str] = mapped_column(ForeignKey("erp_systems.id"), index=True)
-    import_run_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("import_runs.id"), unique=True
-    )
+    import_run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("import_runs.id"), unique=True)
     schema_version: Mapped[str] = mapped_column(String(40))
     knowledge_version: Mapped[str] = mapped_column(String(120))
     canonical_hash: Mapped[str] = mapped_column(String(64))
@@ -95,12 +94,13 @@ class KnowledgeVersionRecord(TimestampMixin, Base):
     entity_counts: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     source_artifact_hashes: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     build_warnings: Mapped[list[Any]] = mapped_column(JSONType, default=list)
-    status: Mapped[KnowledgeVersionStatus] = mapped_column(
-        StringEnum(KnowledgeVersionStatus)
-    )
+    status: Mapped[KnowledgeVersionStatus] = mapped_column(StringEnum(KnowledgeVersionStatus))
     erp: Mapped[ERPSystemRecord] = relationship(back_populates="versions")
     import_run: Mapped[ImportRun] = relationship(back_populates="knowledge_version")
     items: Mapped[list["KnowledgeItem"]] = relationship(back_populates="knowledge_version")
+    semantic_proposals: Mapped[list["SemanticProposal"]] = relationship(
+        back_populates="knowledge_version"
+    )
     sync_jobs: Mapped[list["SyncJob"]] = relationship(back_populates="knowledge_version")
 
 
@@ -142,6 +142,9 @@ class KnowledgeItem(TimestampMixin, Base):
         order_by="ReviewAction.created_at",
         foreign_keys="ReviewAction.knowledge_item_id",
     )
+    semantic_proposals: Mapped[list["SemanticProposal"]] = relationship(
+        back_populates="screen_knowledge_item"
+    )
 
 
 class ReviewAction(TimestampMixin, Base):
@@ -151,9 +154,7 @@ class ReviewAction(TimestampMixin, Base):
     knowledge_item_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("knowledge_items.id"), nullable=False
     )
-    previous_item_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("knowledge_items.id")
-    )
+    previous_item_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("knowledge_items.id"))
     action: Mapped[ReviewActionType] = mapped_column(StringEnum(ReviewActionType))
     previous_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus))
     new_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus))
@@ -165,6 +166,132 @@ class ReviewAction(TimestampMixin, Base):
     knowledge_item: Mapped[KnowledgeItem] = relationship(
         back_populates="review_actions", foreign_keys=[knowledge_item_id]
     )
+
+
+class SemanticProposal(TimestampMixin, Base):
+    __tablename__ = "semantic_proposals"
+    __table_args__ = (
+        UniqueConstraint("semantic_id", name="uq_semantic_proposals_semantic_id"),
+        UniqueConstraint(
+            "knowledge_version_id",
+            "screen_knowledge_item_id",
+            "semantic_type",
+            "evidence_hash",
+            "prompt_hash",
+            "generation_model",
+            "generation_parameters_hash",
+            name="uq_semantic_proposals_generation_identity",
+        ),
+        CheckConstraint("trim(semantic_id) <> ''", name="semantic_id_nonempty"),
+        CheckConstraint("trim(semantic_type) <> ''", name="semantic_type_nonempty"),
+        CheckConstraint("semantic_type = 'screen_purpose'", name="semantic_type_supported"),
+        CheckConstraint("trim(generation_model) <> ''", name="generation_model_nonempty"),
+        CheckConstraint("trim(prompt_version) <> ''", name="prompt_version_nonempty"),
+        CheckConstraint("review_revision >= 0", name="review_revision_nonnegative"),
+        CheckConstraint("length(source_content_hash) = 64", name="source_hash_length"),
+        CheckConstraint("length(evidence_hash) = 64", name="evidence_hash_length"),
+        CheckConstraint("length(prompt_hash) = 64", name="prompt_hash_length"),
+        CheckConstraint(
+            "length(generation_parameters_hash) = 64",
+            name="generation_parameters_hash_length",
+        ),
+        CheckConstraint(
+            "current_review_status IN ('pending_review', 'approved', 'rejected', 'corrected')",
+            name="review_status_supported",
+        ),
+        Index(
+            "ix_semantic_proposals_version_status",
+            "knowledge_version_id",
+            "current_review_status",
+        ),
+        Index(
+            "ix_semantic_proposals_screen_type",
+            "screen_knowledge_item_id",
+            "semantic_type",
+        ),
+        Index(
+            "ix_semantic_proposals_version_type_status",
+            "knowledge_version_id",
+            "semantic_type",
+            "current_review_status",
+        ),
+        Index("ix_semantic_proposals_evidence_hash", "evidence_hash"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    semantic_id: Mapped[str] = mapped_column(String(240), nullable=False)
+    knowledge_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT"), nullable=False
+    )
+    screen_knowledge_item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_items.id", ondelete="RESTRICT"), nullable=False
+    )
+    semantic_type: Mapped[SemanticType] = mapped_column(StringEnum(SemanticType), nullable=False)
+    source_payload: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+    source_content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_payload: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+    evidence_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_ids: Mapped[list[Any]] = mapped_column(JSONType, nullable=False)
+    generation_model: Mapped[str] = mapped_column(String(120), nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(120), nullable=False)
+    prompt_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    generation_parameters: Mapped[dict[str, Any]] = mapped_column(
+        JSONType, default=dict, nullable=False
+    )
+    generation_parameters_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    current_review_status: Mapped[ReviewStatus] = mapped_column(
+        StringEnum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, nullable=False
+    )
+    review_revision: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+    knowledge_version: Mapped[KnowledgeVersionRecord] = relationship(
+        back_populates="semantic_proposals"
+    )
+    screen_knowledge_item: Mapped[KnowledgeItem] = relationship(back_populates="semantic_proposals")
+    review_actions: Mapped[list["SemanticReviewAction"]] = relationship(
+        back_populates="semantic_proposal",
+        order_by="SemanticReviewAction.created_at",
+    )
+
+
+class SemanticReviewAction(TimestampMixin, Base):
+    __tablename__ = "semantic_review_actions"
+    __table_args__ = (
+        CheckConstraint("trim(reviewer_subject) <> ''", name="reviewer_subject_nonempty"),
+        CheckConstraint("trim(source) <> ''", name="source_nonempty"),
+        CheckConstraint("length(proposal_content_hash) = 64", name="proposal_hash_length"),
+        CheckConstraint(
+            "action IN ('approve', 'reject', 'correct', 'reset_to_pending')",
+            name="action_supported",
+        ),
+        CheckConstraint(
+            "previous_status IN ('pending_review', 'approved', 'rejected', 'corrected')",
+            name="previous_status_supported",
+        ),
+        CheckConstraint(
+            "new_status IN ('pending_review', 'approved', 'rejected', 'corrected')",
+            name="new_status_supported",
+        ),
+        Index(
+            "ix_semantic_review_actions_proposal_created",
+            "semantic_proposal_id",
+            "created_at",
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    semantic_proposal_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("semantic_proposals.id", ondelete="RESTRICT"), nullable=False
+    )
+    action: Mapped[ReviewActionType] = mapped_column(StringEnum(ReviewActionType), nullable=False)
+    previous_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus), nullable=False)
+    new_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus), nullable=False)
+    corrected_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    review_notes: Mapped[str | None] = mapped_column(String(4000))
+    reviewer_subject: Mapped[str] = mapped_column(String(240), nullable=False)
+    proposal_content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    source: Mapped[str] = mapped_column(String(60), nullable=False)
+    semantic_proposal: Mapped[SemanticProposal] = relationship(back_populates="review_actions")
 
 
 class SyncJob(TimestampMixin, Base):
@@ -198,6 +325,30 @@ def _immutable_review_actions(*_: Any) -> None:
     raise ValueError("review_actions es un historial inmutable")
 
 
+@event.listens_for(SemanticReviewAction, "before_update")
+@event.listens_for(SemanticReviewAction, "before_delete")
+def _immutable_semantic_review_actions(*_: Any) -> None:
+    raise ValueError("semantic_review_actions es un historial inmutable")
+
+
+@event.listens_for(SemanticProposal, "before_update")
+def _immutable_semantic_proposal(_mapper: Any, _connection: Any, target: SemanticProposal) -> None:
+    state = inspect(target)
+    mutable = {"current_review_status", "review_revision", "updated_at"}
+    changed = {
+        attribute.key
+        for attribute in state.mapper.column_attrs
+        if attribute.key not in mutable and state.attrs[attribute.key].history.has_changes()
+    }
+    if changed:
+        raise ValueError("La identidad y procedencia de SemanticProposal son inmutables")
+
+
+@event.listens_for(SemanticProposal, "before_delete")
+def _prevent_semantic_proposal_delete(*_: Any) -> None:
+    raise ValueError("SemanticProposal no puede eliminarse")
+
+
 @event.listens_for(KnowledgeItem, "before_update")
 def _immutable_source_payload(_mapper: Any, _connection: Any, target: KnowledgeItem) -> None:
     if inspect(target).attrs.source_payload.history.has_changes():
@@ -225,5 +376,7 @@ __all__ = [
     "KnowledgeVersionRecord",
     "KnowledgeItem",
     "ReviewAction",
+    "SemanticProposal",
+    "SemanticReviewAction",
     "SyncJob",
 ]

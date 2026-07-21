@@ -29,6 +29,10 @@ class ReviewSource(StrEnum):
     CARRY_FORWARD = "carry_forward"
 
 
+class SemanticType(StrEnum):
+    SCREEN_PURPOSE = "screen_purpose"
+
+
 class SyncTarget(StrEnum):
     NEO4J = "neo4j"
     CHROMADB = "chromadb"
@@ -40,4 +44,3 @@ class SyncStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     CANCELLED = "cancelled"
-
