@@ -34,6 +34,10 @@ logs/
 
 # Node
 node_modules/
+admin-ui/node_modules/
+admin-ui/dist/
+admin-ui/.env
+admin-ui/.env.local
 
 # Playwright
 playwright-report/
