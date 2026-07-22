@@ -55,6 +55,7 @@ def create_app(
         from sqlalchemy.exc import DBAPIError
         from sqlalchemy.orm import sessionmaker
 
+        from src.api.routes.admin_knowledge import router as admin_knowledge_router
         from src.api.routes.semantic_review import (
             AdminSemanticApiError,
             admin_semantic_error_handler,
@@ -76,7 +77,7 @@ def create_app(
 
         @app.middleware("http")
         async def sanitize_admin_failures(request: Request, call_next):
-            is_admin = request.url.path.startswith("/api/admin/semantic-proposals")
+            is_admin = request.url.path.startswith("/api/admin/")
             client_host = request.client.host if request.client is not None else None
             if (
                 is_admin
@@ -112,6 +113,7 @@ def create_app(
             semantic_review_router,
             prefix="/api/admin",
         )
+        app.include_router(admin_knowledge_router, prefix="/api/admin")
     return app
 
 

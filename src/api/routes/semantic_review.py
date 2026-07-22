@@ -82,7 +82,7 @@ async def admin_semantic_error_handler(
 async def admin_validation_error_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    if not request.url.path.startswith("/api/admin/semantic-proposals"):
+    if not request.url.path.startswith("/api/admin/"):
         return await request_validation_exception_handler(request, exc)
     payload = SemanticApiErrorResponse(
         error_class="RequestValidationError",
