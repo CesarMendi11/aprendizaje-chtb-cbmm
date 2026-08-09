@@ -97,7 +97,12 @@ def main() -> int:
 
             print("-" * 80)
             print("3. Descubrimiento finalizado.")
-            print(f"   Pantallas visitadas: {summary.visited_count}")
+            print(f"   Rutas visitadas: {summary.visited_count}")
+            print(
+                "   Pantallas funcionales indexadas: "
+                f"{summary.functional_screen_count}"
+            )
+            print(f"   Rutas no disponibles: {summary.unavailable_count}")
             print(f"   Rutas pendientes restantes: {summary.pending_count}")
             print(f"   Nodos estructurales: {summary.nodes_count}")
             print(f"   Relaciones estructurales: {summary.edges_count}")

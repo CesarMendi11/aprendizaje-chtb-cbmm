@@ -234,6 +234,12 @@ class EventCandidateDiscovery:
         self.max_events_per_state = int(
             candidate_limits.get("max_events_per_state", 25)
         )
+        self.home_max_events_per_state = int(
+            exploration_budget.get(
+                "home_max_events_per_state",
+                self.max_events_per_state,
+            )
+        )
 
     def discover_candidates(self, screen_data: dict[str, Any]) -> list[EventCandidate]:
         """Devuelve una muestra equilibrada para auditoría y revisión.
@@ -620,6 +626,19 @@ class EventCandidateDiscovery:
                 )
             )
         )
+        local_combined = self._normalize_for_matching(
+            " ".join(
+                str(value or "")
+                for value in (
+                    candidate.label,
+                    self._selector_leaf(candidate.selector),
+                    candidate.tag,
+                    item.get("role"),
+                    item.get("title"),
+                    item.get("aria_label"),
+                )
+            )
+        )
 
         if candidate.dangerous or label_words.intersection(self.MUTATIVE_HINTS):
             return UIEventType.MUTATIVE_ACTION
@@ -680,7 +699,10 @@ class EventCandidateDiscovery:
         if any(word in combined for word in ("dialog", "modal")):
             return UIEventType.OPEN_MODAL
 
-        if self._looks_like_collapsable(tag, selector, aria_expanded) or "menu" in combined:
+        if (
+            self._looks_like_collapsable(tag, selector, aria_expanded)
+            or "menu" in local_combined
+        ):
             return UIEventType.EXPAND_MENU
 
         if label_words.intersection(self.READONLY_WORDS):
@@ -752,6 +774,18 @@ class EventCandidateDiscovery:
     def _is_custom_element(self, tag: str) -> bool:
         return "-" in tag
 
+    def _selector_leaf(self, selector: str) -> str:
+        """Devuelve solo el segmento que identifica al elemento objetivo.
+
+        Los selectores extraídos incluyen la cadena completa de ancestros.
+        Inferir semántica con toda esa cadena hace que un ``div`` hijo de un
+        acordeón herede falsamente la semántica ``collapsable`` del padre.
+        """
+        cleaned = self._clean_text(selector)
+        if not cleaned:
+            return ""
+        return cleaned.rsplit(">", 1)[-1].strip()
+
     def _looks_like_collapsable(
         self,
         tag: str,
@@ -760,7 +794,7 @@ class EventCandidateDiscovery:
     ) -> bool:
         if aria_expanded is not None:
             return True
-        values = f"{tag} {selector}".lower()
+        values = f"{tag} {self._selector_leaf(selector)}".lower()
         return any(
             word in values
             for word in (
@@ -810,6 +844,12 @@ class EventCandidateDiscovery:
         if is_home:
             limits.update(self.home_category_limits)
 
+        state_event_limit = (
+            self.home_max_events_per_state
+            if is_home
+            else self.max_events_per_state
+        )
+
         ordered = sorted(candidates, key=self._exploration_sort_key)
         for candidate in ordered:
             region = str(candidate.metadata.get("region") or "main_content")
@@ -836,7 +876,7 @@ class EventCandidateDiscovery:
                 exclusions[f"category_budget:{category}"] += 1
                 continue
 
-            if len(selected) >= self.max_events_per_state:
+            if len(selected) >= state_event_limit:
                 exclusions["state_event_budget"] += 1
                 continue
 
@@ -969,7 +1009,18 @@ class EventCandidateDiscovery:
         }
         if candidate.label and candidate.event_category in semantic_categories:
             region = str(candidate.metadata.get("region") or "main_content")
-            label = self._normalize_for_matching(candidate.label)
+
+            # Los grupos de navegación pueden diferenciarse visualmente solo
+            # por su capitalización (por ejemplo, dos módulos homónimos).
+            # Conservamos esa distinción sin dejar de normalizar espacios.
+            if candidate.event_category in {
+                UIEventType.EXPAND_MENU.value,
+                UIEventType.COLLAPSE_MENU.value,
+            }:
+                label = self._clean_text(candidate.label)
+            else:
+                label = self._normalize_for_matching(candidate.label)
+
             return (
                 f"semantic::{candidate.event_category}::"
                 f"{region}::{label}"

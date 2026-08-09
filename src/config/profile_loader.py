@@ -165,6 +165,21 @@ class ProfileLoader:
                 "exclude_global_navigation_outside_home debe ser booleano."
             )
 
+        home_max_events = exploration_budget.get(
+            "home_max_events_per_state"
+        )
+        if (
+            home_max_events is not None
+            and (
+                not isinstance(home_max_events, int)
+                or home_max_events < 0
+            )
+        ):
+            raise ValueError(
+                "ui_events.exploration_budget."
+                "home_max_events_per_state debe ser un entero no negativo."
+            )
+
         for field in ["category_limits", "home_category_limits"]:
             limits = exploration_budget.get(field, {})
             if limits and not isinstance(limits, dict):
@@ -188,6 +203,40 @@ class ProfileLoader:
                         f"ui_events.exploration_budget.{field} solo admite "
                         "enteros no negativos."
                     )
+
+        screen_availability = profile.get("screen_availability", {})
+        if screen_availability and not isinstance(screen_availability, dict):
+            raise ValueError("screen_availability debe ser un objeto.")
+
+        availability_enabled = screen_availability.get("enabled")
+        if availability_enabled is not None and not isinstance(availability_enabled, bool):
+            raise ValueError("screen_availability.enabled debe ser booleano.")
+
+        unavailable_patterns = screen_availability.get("unavailable_text_patterns")
+        if unavailable_patterns is not None:
+            if not isinstance(unavailable_patterns, list) or not all(
+                isinstance(item, str) and item.strip() for item in unavailable_patterns
+            ):
+                raise ValueError(
+                    "screen_availability.unavailable_text_patterns debe ser una lista "
+                    "de textos no vacíos."
+                )
+
+        min_pattern_matches = screen_availability.get("min_pattern_matches")
+        if min_pattern_matches is not None and (
+            not isinstance(min_pattern_matches, int) or min_pattern_matches < 1
+        ):
+            raise ValueError(
+                "screen_availability.min_pattern_matches debe ser un entero positivo."
+            )
+
+        unavailable_status = screen_availability.get("unavailable_status")
+        if unavailable_status is not None and (
+            not isinstance(unavailable_status, str) or not unavailable_status.strip()
+        ):
+            raise ValueError(
+                "screen_availability.unavailable_status debe ser texto no vacío."
+            )
 
         state_detection = profile.get("state_detection", {})
         volatile_patterns = state_detection.get("volatile_text_patterns")

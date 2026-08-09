@@ -3,11 +3,7 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 
-from sqlalchemy import select
-
-from src.database.models import KnowledgeItem
 from src.database.services import ChromaSyncService
-from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
@@ -232,21 +228,13 @@ class HybridKnowledgeRetriever:
         )
 
     def _validate(self, ids, version_id):
-        if not ids:
-            return []
-
-        query = select(KnowledgeItem).where(
-            KnowledgeItem.knowledge_version_id == version_id,
-            KnowledgeItem.canonical_id.in_(ids),
-            KnowledgeItem.current_review_status.in_(
-                [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
-            ),
-        )
-
-        items = list(self.session.scalars(query))
-        by_id = {item.canonical_id: item for item in items}
-
-        return [by_id[cid] for cid in ids if cid in by_id]
+        repo = ChromaSyncService(self.session).knowledge
+        return [
+            item
+            for item in repo.list_items(version_id=version_id, limit=1000)
+            if item.canonical_id in ids
+            and str(item.current_review_status) in {"approved", "corrected"}
+        ]
 
     def _effective(self, item_id):
         return ChromaSyncService(self.session).effective.describe(item_id)["effective_payload"]

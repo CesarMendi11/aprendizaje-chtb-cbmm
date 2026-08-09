@@ -72,7 +72,6 @@ ACTION_WORDS = {
     "manage": {"gestionar", "administrar"},
 }
 MUTATIVE_ACTIONS = {"create", "edit", "delete", "process"}
-VIEW_DETAIL_TERMS = {"detalle", "detalles"}
 PRUDENT_PHRASES = (
     "presenta una opcion",
     "muestra una opcion",
@@ -240,9 +239,6 @@ def validate_capability_grounding(
             )
             category = "unsupported_action:" + ",".join(sorted(unsupported))
             _diagnostic(error, location, category, claim.statement)
-
-        if "view" in actions:
-            _validate_view_scope(claim.statement, refs, location)
         for action in actions:
             level = (
                 _validate_mutative(action, claim.statement, refs, location)
@@ -299,41 +295,12 @@ def _validate_epistemic_negative(value, location):
         )
 
 
-def _validate_view_scope(statement, refs, location):
-    """Reject detail semantics unless cited evidence explicitly demonstrates detail."""
-    statement_tokens = set(normalize_text(statement).split())
-
-    if not statement_tokens.intersection(VIEW_DETAIL_TERMS):
-        return
-
-    reference_tokens = set()
-    for reference in refs:
-        reference_tokens |= _tokens(
-            " ".join(
-                str(reference.get(key) or "")
-                for key in ("label", "category", "type")
-            )
-        )
-
-    if reference_tokens.intersection(VIEW_DETAIL_TERMS):
-        return
-
-    _diagnostic(
-        InferenceGroundingError,
-        location,
-        "unsupported_view_detail_claim",
-        statement,
-    )
-
-
 def _supported_actions(refs, tokens):
     supported = set()
     if tokens & ACTION_WORDS["search"]:
         supported.update({"search", "view"})
     if tokens & ACTION_WORDS["navigate"]:
         supported.add("navigate")
-    if tokens & ACTION_WORDS["view"]:
-        supported.add("view")
     if any(ref["type"] in {"screen", "table", "field", "column"} for ref in refs):
         supported.add("view")
     for action in MUTATIVE_ACTIONS:

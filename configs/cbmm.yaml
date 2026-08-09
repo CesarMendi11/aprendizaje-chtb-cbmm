@@ -50,13 +50,21 @@ exploration:
     - "/admin/configuracion"
     - "/admin/usuarios"
     - "/admin/roles"
-    - "/admin/permisos"
+    - "/admin/seguridad"
 
   start_modules: []
 
   max_depth: 2
-  max_pages_total: 25
+  max_pages_total: 100
   page_wait_ms: 800
+
+screen_availability:
+  enabled: true
+  unavailable_status: "not_found"
+  min_pattern_matches: 2
+  unavailable_text_patterns:
+    - "PAGINA NO ENCONTRADA"
+    - "No hemos podido encontrar la página que buscas"
 
 safety:
   # Regla principal: una acción desconocida no se ejecuta automáticamente.
@@ -245,13 +253,14 @@ ui_events:
   skip_link_navigation: true
   # Profundidad 1: explora controles locales de cada pantalla raíz y registra
   # el estado resultante, sin encadenar todavía eventos dentro de ese estado.
-  max_event_depth: 1
+  max_event_depth: 2
   home_navigation_enabled: true
   explore_local_route_roots: true
   recursive_state_exploration: true
   home_event_categories:
     - "expand_menu"
   local_event_categories:
+    - "expand_menu"
     - "activate_tab"
     - "open_readonly_view"
     - "open_date_picker"
@@ -276,6 +285,7 @@ ui_events:
   # controles locales relevantes.
   exploration_budget:
     exclude_global_navigation_outside_home: true
+    home_max_events_per_state: 20
     category_limits:
       activate_tab: 3
       open_readonly_view: 2
@@ -286,7 +296,7 @@ ui_events:
       change_pagination: 1
       expand_menu: 0
     home_category_limits:
-      expand_menu: 10
+      expand_menu: 20
 
   click_candidates:
     include:

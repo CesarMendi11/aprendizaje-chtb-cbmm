@@ -116,12 +116,22 @@ class UIEventExplorer:
 
         ui_events = profile.get("ui_events", {})
         candidate_limits = ui_events.get("candidate_limits", {})
+        exploration_budget = ui_events.get("exploration_budget", {}) or {}
+        self.home_route = str(
+            profile.get("navigation", {}).get("home_url") or ""
+        )
 
         self.enabled = ui_events.get("enabled", True)
         self.event_wait_ms = ui_events.get("event_wait_ms", 800)
         self.click_timeout_ms = ui_events.get("click_timeout_ms", 2500)
-        self.max_events_per_state = candidate_limits.get(
-            "max_events_per_state", 25
+        self.max_events_per_state = int(
+            candidate_limits.get("max_events_per_state", 25)
+        )
+        self.home_max_events_per_state = int(
+            exploration_budget.get(
+                "home_max_events_per_state",
+                self.max_events_per_state,
+            )
         )
         self.skip_link_navigation = ui_events.get("skip_link_navigation", True)
         self.restore_after_exploration = ui_events.get(
@@ -165,8 +175,16 @@ class UIEventExplorer:
         candidates = self._filter_candidates_for_ui_events(
             candidates,
             allowed_categories=allowed_categories,
+            source_state=source_state,
         )
-        candidates = candidates[: self.max_events_per_state]
+
+        current_path = str(current_screen_data.get("path") or "")
+        state_event_limit = (
+            self.home_max_events_per_state
+            if self.home_route and current_path == self.home_route
+            else self.max_events_per_state
+        )
+        candidates = candidates[:state_event_limit]
 
         isolated = source_state is not None and self.state_restorer is not None
         results: list[UIEventResult] = []
@@ -224,8 +242,11 @@ class UIEventExplorer:
         self,
         candidates: list[EventCandidate],
         allowed_categories: set[str] | None = None,
+        source_state: UIState | None = None,
     ) -> list[EventCandidate]:
         filtered = []
+        traversed_menu_selectors = self._traversed_menu_selectors(source_state)
+        last_traversed_menu_selector = self._last_traversed_menu_selector(source_state)
 
         for candidate in candidates:
             if not candidate.selector:
@@ -242,9 +263,80 @@ class UIEventExplorer:
                 and candidate.event_category not in allowed_categories
             ):
                 continue
+            if candidate.event_category in {"expand_menu", "collapse_menu"}:
+                if candidate.selector in traversed_menu_selectors:
+                    continue
+                if (
+                    last_traversed_menu_selector
+                    and not self._selector_is_descendant(
+                        candidate.selector,
+                        last_traversed_menu_selector,
+                    )
+                ):
+                    continue
             filtered.append(candidate)
 
         return filtered
+
+    def _traversed_menu_selectors(self, source_state: UIState | None) -> set[str]:
+        """Evita volver a accionar el mismo menú usado para llegar al estado."""
+        if source_state is None or source_state.path is None:
+            return set()
+
+        return {
+            step.event.selector
+            for step in source_state.path.steps
+            if step.event.selector
+            and step.event.event_type.value in {"expand_menu", "collapse_menu"}
+        }
+
+
+    def _last_traversed_menu_selector(self, source_state: UIState | None) -> str:
+        """Devuelve el último menú de la rama usada para alcanzar el estado."""
+        if source_state is None or source_state.path is None:
+            return ""
+
+        for step in reversed(source_state.path.steps):
+            if (
+                step.event.selector
+                and step.event.event_type.value in {"expand_menu", "collapse_menu"}
+            ):
+                return step.event.selector
+        return ""
+
+    @staticmethod
+    def _selector_segments(selector: str) -> tuple[str, ...]:
+        return tuple(
+            segment.strip().lower()
+            for segment in str(selector or "").split(">")
+            if segment.strip()
+        )
+
+    @classmethod
+    def _selector_is_descendant(cls, candidate: str, ancestor: str) -> bool:
+        """Comprueba descendencia aun si el selector omite ancestros iniciales.
+
+        Los extractores pueden producir selectores equivalentes con distinto
+        punto de inicio. Se acepta cuando un sufijo del selector padre coincide
+        con el prefijo del candidato y el candidato añade segmentos propios.
+        """
+        candidate_segments = cls._selector_segments(candidate)
+        ancestor_segments = cls._selector_segments(ancestor)
+        if not candidate_segments or not ancestor_segments:
+            return False
+
+        if (
+            len(candidate_segments) > len(ancestor_segments)
+            and candidate_segments[: len(ancestor_segments)] == ancestor_segments
+        ):
+            return True
+
+        max_overlap = min(len(ancestor_segments), len(candidate_segments) - 1)
+        for overlap in range(max_overlap, 1, -1):
+            if ancestor_segments[-overlap:] == candidate_segments[:overlap]:
+                return True
+
+        return False
 
     def _try_candidate(
         self,

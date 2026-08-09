@@ -61,7 +61,18 @@ class CanonicalKnowledgeBuilder:
         transition_payloads = self._list(artifacts.get("state_flow_graph.json"), "transitions")
         audit_screens = self._list(artifacts.get("event_policy_audit.json"), "screens")
 
-        modules, route_modules = self._modules(erp_id, route_graph, transition_payloads, audit_screens, hashes, evidence)
+        home_route = normalize_route((profile.get("navigation") or {}).get("home_url") or "/")
+        functional_routes = {normalize_route(item.get("route")) for item in screen_payloads if item.get("route")}
+        modules, route_modules = self._modules(
+            erp_id,
+            route_graph,
+            transition_payloads,
+            audit_screens,
+            hashes,
+            evidence,
+            home_route=home_route,
+            functional_routes=functional_routes,
+        )
         screens: list[Screen] = []
         by_route: dict[str, Screen] = {}
         for raw in screen_payloads:
@@ -167,41 +178,193 @@ class CanonicalKnowledgeBuilder:
     def build_report(self, knowledge, issues=()):
         return {"schema_version": knowledge.schema_version, "knowledge_version": knowledge.knowledge_version, "warnings": [item.model_dump(mode="json") for item in knowledge.build_warnings], "errors": [item.model_dump(mode="json") for item in issues if item.severity == "error"], "unresolved_references": sum(item.code == "unresolved_reference" for item in issues), "duplicates": sum("duplicate" in item.code for item in issues), "routes_without_module": sum(item.code == "route_without_module" for item in knowledge.build_warnings), "incomplete_transitions": sum(item.code == "incomplete_transition" for item in knowledge.build_warnings), "missing_evidence": 0, "sensitive_regions_excluded": self.sensitive_exclusions, "omitted_entities": self.omitted, "statistics": knowledge.statistics}
 
-    def _modules(self, erp_id, graph, transitions, audit_screens, hashes, evidence):
-        candidates: dict[str, set[str]] = {}
-        state_modules: dict[str, str] = {}
-        for edge in self._list(graph, "edges"):
-            meta = edge.get("metadata") or {}
-            if meta.get("event_category") == "expand_menu" and edge.get("label"):
-                name = str(edge["label"])
-                candidates.setdefault(name, set())
-                if edge.get("target"):
-                    state_modules[str(edge["target"])] = name
-        for edge in self._list(graph, "edges"):
-            name = state_modules.get(str(edge.get("source")))
-            target = edge.get("target")
-            if name and isinstance(target, str) and "#state:" not in target:
-                candidates[name].add(normalize_route(target))
-        for screen in audit_screens:
-            for item in ((screen.get("pipeline") or {}).get("selected_for_exploration") or []):
-                if item.get("event_category") == "expand_menu" and item.get("label"):
-                    candidates.setdefault(str(item["label"]), set())
+    def _modules(
+        self,
+        erp_id,
+        graph,
+        transitions,
+        audit_screens,
+        hashes,
+        evidence,
+        *,
+        home_route="/",
+        functional_routes=None,
+    ):
+        functional_routes = {normalize_route(route) for route in (functional_routes or set())}
         nodes = self._list(graph, "nodes")
+        edges = self._list(graph, "edges")
+        node_by_id = {}
         for node in nodes:
-            module = node.get("source_module")
-            route = node.get("route")
-            # Some crawlers store a source route/state in source_module. It is
-            # provenance, not a functional module label.
-            if module and module != "root" and route and not str(module).startswith("/"):
-                candidates.setdefault(str(module), set()).add(normalize_route(route))
-        modules=[]; route_modules={}
-        for name in sorted(candidates, key=normalize_text):
-            module_id=stable_id("module", erp_id, normalize_text(name))
-            routes=sorted(candidates[name])
-            prefix=self._common_prefix(routes) if routes else None
-            ev=self._evidence(evidence, "module", module_id, "routes_graph.json", hashes, EvidenceType.STRUCTURAL_JSON)
-            modules.append(Module(id=module_id, erp_id=erp_id, name=name, normalized_name=normalize_text(name), route_prefix=prefix, source_refs=["routes_graph.json"], evidence_ids=[ev]))
-            for route in routes: route_modules[route]=module_id
+            for key in (node.get("id"), node.get("route")):
+                if key:
+                    node_by_id[str(key)] = node
+
+        def state_path(node):
+            metadata = (node or {}).get("metadata") or {}
+            path = metadata.get("path") or {}
+            return path if isinstance(path, dict) else {}
+
+        def first_path_event(node):
+            steps = state_path(node).get("steps") or []
+            if not steps or not isinstance(steps[0], dict):
+                return {}
+            event = steps[0].get("event") or {}
+            return event if isinstance(event, dict) else {}
+
+        # The crawler stores every UI event edge from the base route. Therefore
+        # edge.source alone cannot distinguish a top-level module from a nested
+        # submenu. UIState.path is the canonical hierarchy: depth=1 means the
+        # first expansion from Home; depth>=2 is a nested navigation group.
+        candidates = []
+        candidate_by_origin = {}
+        for edge in edges:
+            meta = edge.get("metadata") or {}
+            if meta.get("event_category") != "expand_menu" or not edge.get("label"):
+                continue
+            target = str(edge.get("target") or "")
+            state_node = node_by_id.get(target)
+            path = state_path(state_node)
+            state_meta = (state_node or {}).get("metadata") or {}
+            base_route = normalize_route(state_meta.get("base_route") or edge.get("source"))
+            try:
+                depth = int(path.get("depth") or 0)
+            except (TypeError, ValueError):
+                depth = 0
+            if base_route != normalize_route(home_route) or depth != 1:
+                continue
+
+            first_event = first_path_event(state_node)
+            selector = str(meta.get("selector") or first_event.get("selector") or "").strip()
+            origin = selector or target
+            candidate = {
+                "name": str(edge["label"]).strip(),
+                "origin": origin,
+                "routes": set(),
+            }
+            candidates.append(candidate)
+            candidate_by_origin[origin] = candidate
+
+        # Attribute links discovered from both top-level and nested Home states
+        # to the module identified by the first event in that state's path.
+        outgoing = {}
+        for edge in edges:
+            outgoing.setdefault(str(edge.get("source") or ""), []).append(edge)
+
+        if candidates:
+            for state_id, state_node in node_by_id.items():
+                metadata = (state_node or {}).get("metadata") or {}
+                if metadata.get("kind") != "ui_state":
+                    continue
+                if normalize_route(metadata.get("base_route") or "/") != normalize_route(home_route):
+                    continue
+                path = state_path(state_node)
+                try:
+                    depth = int(path.get("depth") or 0)
+                except (TypeError, ValueError):
+                    depth = 0
+                if depth < 1:
+                    continue
+                first_event = first_path_event(state_node)
+                origin = str(first_event.get("selector") or "").strip()
+                candidate = candidate_by_origin.get(origin)
+                if candidate is None:
+                    continue
+                for edge in outgoing.get(state_id, []):
+                    target = edge.get("target")
+                    if isinstance(target, str) and target.startswith("/") and "#state:" not in target:
+                        candidate["routes"].add(normalize_route(target))
+
+        # Backward-compatible fallback for structural fixtures/older crawls that
+        # do not persist UIState path hierarchy. Instance-specific labels are
+        # only consulted when no hierarchical module evidence is available.
+        if not candidates:
+            legacy: dict[str, set[str]] = {}
+            for screen in audit_screens:
+                for item in ((screen.get("pipeline") or {}).get("selected_for_exploration") or []):
+                    if item.get("event_category") == "expand_menu" and item.get("label"):
+                        legacy.setdefault(str(item["label"]), set())
+            for node in nodes:
+                module = node.get("source_module")
+                route = node.get("route")
+                if module and module != "root" and route and not str(module).startswith("/"):
+                    legacy.setdefault(str(module), set()).add(normalize_route(route))
+            candidates = [
+                {"name": name, "origin": f"legacy:{name}", "routes": routes}
+                for name, routes in legacy.items()
+            ]
+
+        # Canonical knowledge is functional: navigation groups whose observed
+        # branch contains no functional screen remain preserved in raw evidence
+        # but are not published as functional Module entities.
+        publishable = []
+        for candidate in candidates:
+            functional = set(candidate["routes"]) & functional_routes
+            if functional_routes and not functional:
+                self._warn(
+                    "module_without_functional_screen",
+                    f"Módulo omitido sin pantalla funcional observada: {candidate['name']}",
+                    "module",
+                )
+                self._omit("modules_without_functional_screen")
+                continue
+            publishable.append(candidate)
+
+        normalized_groups = {}
+        exact_groups = {}
+        for candidate in publishable:
+            normalized_groups.setdefault(normalize_text(candidate["name"]), []).append(candidate)
+            exact = " ".join(candidate["name"].strip().split())
+            exact_groups.setdefault(exact, []).append(candidate)
+
+        modules = []
+        route_modules = {}
+        for candidate in sorted(
+            publishable,
+            key=lambda item: (normalize_text(item["name"]), item["name"], item["origin"]),
+        ):
+            name = candidate["name"]
+            normalized_name = normalize_text(name)
+            id_parts = ["module", erp_id, normalized_name]
+            if len(normalized_groups.get(normalized_name, [])) > 1:
+                exact = " ".join(name.strip().split())
+                discriminator = content_hash(exact)[:12]
+                if len(exact_groups.get(exact, [])) > 1:
+                    discriminator = content_hash({"name": exact, "origin": candidate["origin"]})[:16]
+                id_parts.append(discriminator)
+            module_id = stable_id(*id_parts)
+            routes = sorted(candidate["routes"])
+            prefix = self._common_prefix(routes) if routes else None
+            ev = self._evidence(
+                evidence,
+                "module",
+                module_id,
+                "routes_graph.json",
+                hashes,
+                EvidenceType.STRUCTURAL_JSON,
+            )
+            modules.append(
+                Module(
+                    id=module_id,
+                    erp_id=erp_id,
+                    name=name,
+                    normalized_name=normalized_name,
+                    route_prefix=prefix,
+                    source_refs=["routes_graph.json"],
+                    evidence_ids=[ev],
+                    metadata=safe_metadata({"navigation_origin": candidate["origin"]}),
+                )
+            )
+            for route in routes:
+                existing = route_modules.get(route)
+                if existing and existing != module_id:
+                    self._warn(
+                        "ambiguous_module_route",
+                        f"Ruta observada bajo más de un módulo: {route}",
+                        "module",
+                        module_id,
+                    )
+                    continue
+                route_modules[route] = module_id
         return modules, route_modules
 
     def _module_for_route(self, route, mappings):

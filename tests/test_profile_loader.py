@@ -103,7 +103,7 @@ def test_profile_loader_accepts_exploration_budget():
 
     assert budget["exclude_global_navigation_outside_home"] is True
     assert budget["category_limits"]["open_dropdown"] == 2
-    assert budget["home_category_limits"]["expand_menu"] == 10
+    assert budget["home_category_limits"]["expand_menu"] == 20
 
 
 def test_profile_loader_rejects_negative_exploration_budget(tmp_path):
@@ -153,7 +153,7 @@ def test_profile_loader_accepts_state_exploration_scope():
     profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
     ui_events = profile["ui_events"]
 
-    assert ui_events["max_event_depth"] == 1
+    assert ui_events["max_event_depth"] == 2
     assert ui_events["home_navigation_enabled"] is True
     assert ui_events["explore_local_route_roots"] is True
     assert "open_dropdown" in ui_events["local_event_categories"]
@@ -293,3 +293,13 @@ output:
         assert "required_consecutive_samples" in str(error)
     else:
         raise AssertionError("La estabilidad con cero muestras debía rechazarse.")
+
+
+def test_profile_loader_accepts_screen_availability_configuration():
+    profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
+    availability = profile["screen_availability"]
+
+    assert availability["enabled"] is True
+    assert availability["unavailable_status"] == "not_found"
+    assert availability["min_pattern_matches"] == 2
+    assert len(availability["unavailable_text_patterns"]) == 2

@@ -46,38 +46,3 @@ def test_mutative_compatibility():
     ]
     assert p.plan("¿Cómo creo un producto?", [], rels, [])["supported"]
     assert not p.plan("¿Cómo elimino un producto?", [], rels, [])["supported"]
-
-
-def test_search_by_field_uses_validated_field_and_search_control():
-    planner = StructuralAnswerPlanner()
-
-    relations = [
-        {
-            "relationship_type": "HAS_FIELD",
-            "source_canonical_id": "screen:products",
-            "target_canonical_id": "field:sku",
-            "source_label": "Products",
-            "target_label": "SKU",
-        },
-        {
-            "relationship_type": "HAS_CONTROL",
-            "source_canonical_id": "screen:products",
-            "target_canonical_id": "control:search",
-            "source_label": "Products",
-            "target_label": "Search",
-        },
-    ]
-
-    result = planner.plan(
-        "¿Cómo puedo buscar un producto por SKU?",
-        [],
-        relations,
-        [],
-    )
-
-    assert result["supported"] is True
-    assert result["intent"] == "SEARCH_BY_FIELD"
-    assert result["confidence"] == "high"
-    assert "Products" in result["answer"]
-    assert "SKU" in result["answer"]
-    assert "Search" in result["answer"]

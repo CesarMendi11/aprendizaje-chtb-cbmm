@@ -134,3 +134,23 @@ def test_screen_index_builder_replaces_screen_if_added_again():
 
     assert screen is not None
     assert screen["title"] == "Inicio nuevo"
+
+def test_routes_graph_builder_updates_observed_non_discovered_status_without_downgrade():
+    builder = RoutesGraphBuilder()
+
+    builder.add_screen(route="/admin/conductores", title="Conductores")
+    builder.add_screen(
+        route="/admin/conductores",
+        title="Conductores",
+        status="not_found",
+        metadata={"availability": {"status": "not_found"}},
+    )
+    builder.add_screen(route="/admin/conductores", title="Conductores")
+
+    node = next(
+        item for item in builder.to_dict()["nodes"]
+        if item["route"] == "/admin/conductores"
+    )
+
+    assert node["status"] == "not_found"
+    assert node["metadata"]["availability"]["status"] == "not_found"

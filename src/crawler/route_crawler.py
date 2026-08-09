@@ -8,6 +8,7 @@ from playwright.sync_api import Page
 from src.browser.navigator import ERPNavigator
 from src.crawler.frontier import CrawlTarget, Frontier
 from src.crawler.path_replayer import PathReplayer
+from src.crawler.screen_availability import ScreenAvailabilityClassifier
 from src.crawler.state_frontier import StateFrontier
 from src.crawler.state_observer import StableStateObserver
 from src.crawler.state_registry import StateRegistry
@@ -41,6 +42,8 @@ class CrawlSummary:
     state_flow_graph_path: str = ""
     state_frontier_pending_count: int = 0
     state_frontier_explored_count: int = 0
+    functional_screen_count: int = 0
+    unavailable_count: int = 0
 
 
 class RouteCrawler:
@@ -70,8 +73,10 @@ class RouteCrawler:
         self.extractor = ScreenExtractor(page, profile)
         self.discovery = LinkDiscovery(self.policy)
         self.storage = ArtifactStorage(profile)
+        self.screen_availability = ScreenAvailabilityClassifier(profile)
 
         self.frontier = Frontier()
+        self._unavailable_routes: set[str] = set()
         self.routes_graph = RoutesGraphBuilder()
         self.screen_index = ScreenIndexBuilder()
 
@@ -169,8 +174,7 @@ class RouteCrawler:
             self._open_start_modules_if_configured()
             self._checkpoint_outputs()
 
-            self._crawl_pending_targets()
-            self._crawl_pending_states()
+            self._crawl_until_fixed_point()
 
         except KeyboardInterrupt:
             print("\nInterrupción detectada dentro del crawler.")
@@ -201,6 +205,62 @@ class RouteCrawler:
                 depth=0,
                 reason=f"opened_start_module:{module_name}",
             )
+
+    def _crawl_until_fixed_point(self) -> None:
+        """Alterna rutas y estados UI hasta agotar ambas fronteras.
+
+        Un estado UI puede revelar href que no existían durante el primer
+        recorrido de rutas. Esas rutas deben volver a consumirse antes de
+        considerar finalizado el descubrimiento.
+
+        El límite ``max_pages_total`` sigue siendo una condición de parada:
+        si se alcanza, las rutas restantes se conservan como pendientes en el
+        resumen en lugar de provocar un ciclo sin progreso.
+        """
+        while True:
+            can_process_routes = (
+                self.frontier.has_pending()
+                and self.frontier.visited_count() < self.max_pages_total
+            )
+            can_process_states = self.state_frontier.has_pending()
+
+            if not can_process_routes and not can_process_states:
+                break
+
+            before = (
+                self.frontier.visited_count(),
+                self.frontier.pending_count(),
+                self.state_frontier.explored_count(),
+                self.state_frontier.pending_count(),
+            )
+
+            if can_process_routes:
+                self._crawl_pending_targets()
+
+            # La exploración de rutas puede haber creado nuevos estados.
+            if self.state_frontier.has_pending():
+                self._crawl_pending_states()
+
+            after = (
+                self.frontier.visited_count(),
+                self.frontier.pending_count(),
+                self.state_frontier.explored_count(),
+                self.state_frontier.pending_count(),
+            )
+
+            if after == before:
+                self._save_uncertainty(
+                    route=self.navigator.current_path(),
+                    reason="crawl_fixed_point_stalled",
+                    extra={
+                        "visited_routes": after[0],
+                        "pending_routes": after[1],
+                        "explored_states": after[2],
+                        "pending_states": after[3],
+                        "max_pages_total": self.max_pages_total,
+                    },
+                )
+                break
 
     def _crawl_pending_targets(self) -> None:
         while self.frontier.has_pending():
@@ -263,6 +323,53 @@ class RouteCrawler:
         if self.frontier.is_visited(route):
             return
 
+        availability = self.screen_availability.classify(screen_data)
+        screen_data["availability"] = availability.to_dict()
+
+        if not availability.available:
+            self.frontier.mark_visited(route)
+            self._unavailable_routes.add(route)
+            prefix = self._build_artifact_prefix(route)
+            self._save_screen_artifacts(
+                route=route,
+                screen_data=screen_data,
+                prefix=prefix,
+                source=source,
+                depth=depth,
+                reason=reason,
+                status=availability.status,
+            )
+            self.routes_graph.add_screen(
+                route=route,
+                title=(
+                    screen_data.get("functional_title")
+                    or title_hint
+                    or screen_data.get("title", "")
+                ),
+                source_module=source,
+                status=availability.status,
+                metadata={
+                    "reason": reason,
+                    "depth": depth,
+                    "availability": availability.to_dict(),
+                    "title_source": screen_data.get("title_source", ""),
+                    "title_confidence": screen_data.get("title_confidence", 0.0),
+                },
+            )
+            self._save_uncertainty(
+                route=route,
+                reason="unavailable_screen",
+                extra={
+                    "availability_status": availability.status,
+                    "matched_patterns": list(availability.matched_patterns),
+                    "text_field": availability.text_field,
+                    "source": source,
+                    "depth": depth,
+                    "artifacts": screen_data.get("artifacts", {}),
+                },
+            )
+            self._checkpoint_outputs()
+            return
 
         signature = observation.signature
         state_id = self.state_registry.build_state_id(
@@ -368,6 +475,7 @@ class RouteCrawler:
         source: str,
         depth: int,
         reason: str,
+        status: str = "discovered",
     ) -> None:
         html_path = self.storage.save_html_content(
             html=self.navigator.get_html(),
@@ -389,7 +497,7 @@ class RouteCrawler:
             "source": source,
             "depth": depth,
             "reason": reason,
-            "status": "discovered",
+            "status": status,
         }
 
         raw_json_path = self.storage.save_raw_screen_json(
@@ -1050,6 +1158,8 @@ class RouteCrawler:
             state_flow_graph_path=str(state_flow_graph_path),
             state_frontier_pending_count=self.state_frontier.pending_count(),
             state_frontier_explored_count=self.state_frontier.explored_count(),
+            functional_screen_count=self.screen_index.screen_count(),
+            unavailable_count=len(self._unavailable_routes),
         )
 
     def _build_artifact_prefix(self, route: str) -> str:

@@ -179,9 +179,7 @@ def _tree(
                                 "erp_id": "erp:synthetic",
                                 "name": "ERP sintético",
                                 "slug": "synthetic",
-                                "active_knowledge_version_id": (
-                                    "00000000-0000-4000-8000-000000000001"
-                                ),
+                                "active_knowledge_version_id": "synthetic-version-id",
                                 "knowledge_version": "synthetic-v1",
                                 "modules": [],
                                 "unassigned_screens": [],

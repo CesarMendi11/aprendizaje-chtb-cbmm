@@ -4,6 +4,9 @@ from src.crawler.state_signature import StateSignatureBuilder
 from src.crawler.ui_event_explorer import UIEventExplorer
 from src.discovery.event_candidate_discovery import EventCandidateDiscovery
 from src.extraction.screen_extractor import ScreenExtractor
+from src.models.crawl_path import CrawlPath, CrawlPathStep
+from src.models.ui_event import EventDecision, RiskLevel, UIEvent, UIEventType
+from src.models.ui_state import UIState
 from src.policy.route_policy import RoutePolicy
 
 
@@ -299,3 +302,139 @@ def test_ui_event_explorer_reports_interaction_attempts_after_animation():
     assert changed
     assert changed[0].interaction_attempts >= 2
     assert changed[0].interaction_strategy == "validated_click"
+
+
+def test_ui_event_filter_skips_menu_selector_already_used_in_state_path():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    explorer.skip_link_navigation = True
+
+    prior_event = UIEvent(
+        event_type=UIEventType.EXPAND_MENU,
+        label="General",
+        selector="nav > collapsable-item:nth-of-type(2)",
+        decision=EventDecision.ALLOW,
+        risk_level=RiskLevel.LOW,
+    )
+    path = CrawlPath(root_state_id="root").append(
+        CrawlPathStep(source_state_id="root", event=prior_event, target_state_id="s1")
+    )
+    source_state = UIState(
+        state_id="s1",
+        route="/admin/home",
+        title="Dashboard",
+        exact_signature="exact",
+        structural_signature="struct",
+        summary={},
+        path=path,
+    )
+
+    repeated = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
+        {
+            "text": "General Año Personas",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "selector": "nav > collapsable-item:nth-of-type(2)",
+            "region": "global_navigation",
+        }
+    ])[0]
+    repeated.event_category = "expand_menu"
+    repeated.decision = "allow"
+
+    fresh = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
+        {
+            "text": "Solicitudes",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "selector": "nav > collapsable-item:nth-of-type(2) > collapsable-item:nth-of-type(1)",
+            "region": "global_navigation",
+        }
+    ])[0]
+    fresh.event_category = "expand_menu"
+    fresh.decision = "allow"
+
+    filtered = explorer._filter_candidates_for_ui_events(
+        [repeated, fresh],
+        allowed_categories={"expand_menu"},
+        source_state=source_state,
+    )
+
+    assert [candidate.label for candidate in filtered] == ["Solicitudes"]
+
+
+def test_ui_event_filter_keeps_only_descendant_menu_on_recursive_branch():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    explorer.skip_link_navigation = True
+
+    prior_event = UIEvent(
+        event_type=UIEventType.EXPAND_MENU,
+        label="Transporte",
+        selector=(
+            "app-root > layout > admin-layout > navigation > "
+            "collapsable-item:nth-of-type(11)"
+        ),
+        decision=EventDecision.ALLOW,
+        risk_level=RiskLevel.LOW,
+    )
+    path = CrawlPath(root_state_id="root").append(
+        CrawlPathStep(source_state_id="root", event=prior_event, target_state_id="s1")
+    )
+    source_state = UIState(
+        state_id="s1",
+        route="/admin/home",
+        title="Dashboard",
+        exact_signature="exact",
+        structural_signature="struct",
+        summary={},
+        path=path,
+    )
+
+    sibling = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
+        {
+            "text": "General",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "selector": (
+                "app-root > layout > admin-layout > navigation > "
+                "collapsable-item:nth-of-type(2)"
+            ),
+            "region": "global_navigation",
+        }
+    ])[0]
+    sibling.event_category = "expand_menu"
+    sibling.decision = "allow"
+
+    nested = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
+        {
+            "text": "Solicitudes",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "selector": (
+                "admin-layout > navigation > collapsable-item:nth-of-type(11) > "
+                "div:nth-of-type(2) > collapsable-item"
+            ),
+            "region": "global_navigation",
+        }
+    ])[0]
+    nested.event_category = "expand_menu"
+    nested.decision = "allow"
+
+    filtered = explorer._filter_candidates_for_ui_events(
+        [sibling, nested],
+        allowed_categories={"expand_menu"},
+        source_state=source_state,
+    )
+
+    assert [candidate.label for candidate in filtered] == ["Solicitudes"]
+
+
+def test_selector_descendant_accepts_shortened_equivalent_prefix():
+    ancestor = (
+        "app-root > layout > admin-layout > navigation > "
+        "collapsable-item:nth-of-type(11)"
+    )
+    candidate = (
+        "admin-layout > navigation > collapsable-item:nth-of-type(11) > "
+        "div > collapsable-item"
+    )
+
+    assert UIEventExplorer._selector_is_descendant(candidate, ancestor) is True
+    assert UIEventExplorer._selector_is_descendant(
+        "app-root > layout > admin-layout > navigation > collapsable-item:nth-of-type(2)",
+        ancestor,
+    ) is False

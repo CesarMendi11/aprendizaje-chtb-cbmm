@@ -105,3 +105,193 @@ def test_missing_and_corrupt_artifacts(tmp_path):
     (tmp_path/"profile.yaml").write_text("erp: [", encoding="utf-8")
     with pytest.raises(ArtifactLoadError, match="Perfil inválido"):
         builder.build_from_paths("profile.yaml")
+
+
+def test_nested_expand_menus_are_not_promoted_to_modules_and_keep_parent_module():
+    profile = {
+        "erp": {"name": "Fictional ERP", "code": "fictional"},
+        "navigation": {"home_url": "/app/home"},
+    }
+    root_state = "/app/home#state:root-sales"
+    nested_state = "/app/home#state:nested-tracking"
+    artifacts = {
+        "screen_index.json": {"screens": [
+            {"route": "/app/home", "title": "Home"},
+            {"route": "/app/sales/orders", "title": "Orders"},
+            {"route": "/app/sales/tracking/external", "title": "External tracking"},
+        ]},
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home", "source_module": "root"},
+                {
+                    "id": root_state,
+                    "route": root_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [{"event": {"event_type": "expand_menu", "label": "Sales", "selector": "nav > menu:nth(1)"}}],
+                        },
+                    },
+                },
+                {
+                    "id": nested_state,
+                    "route": nested_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 2,
+                            "steps": [
+                                {"event": {"event_type": "expand_menu", "label": "Sales", "selector": "nav > menu:nth(1)"}},
+                                {"event": {"event_type": "expand_menu", "label": "Tracking", "selector": "nav > menu:nth(1) > submenu"}},
+                            ],
+                        },
+                    },
+                },
+                {"id": "/app/sales/orders", "route": "/app/sales/orders"},
+                {"id": "/app/sales/tracking/external", "route": "/app/sales/tracking/external"},
+            ],
+            "edges": [
+                {
+                    "source": "/app/home",
+                    "target": root_state,
+                    "label": "Sales",
+                    "kind": "ui_event",
+                    "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(1)"},
+                },
+                {
+                    "source": root_state,
+                    "target": "/app/sales/orders",
+                    "label": "Orders",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+                {
+                    "source": "/app/home",
+                    "target": nested_state,
+                    "label": "Tracking",
+                    "kind": "ui_event",
+                    "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(1) > submenu"},
+                },
+                {
+                    "source": nested_state,
+                    "target": "/app/sales/tracking/external",
+                    "label": "External",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+            ],
+        },
+        "state_registry.json": {"states": []},
+        "state_flow_graph.json": {"states": [], "transitions": []},
+        "event_policy_audit.json": {"screens": []},
+        "ui_event_execution_audit.json": {},
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(profile, artifacts)
+    assert [module.name for module in kb.modules] == ["Sales"]
+    sales = kb.modules[0]
+    assert next(screen for screen in kb.screens if screen.route == "/app/sales/orders").module_id == sales.id
+    assert next(screen for screen in kb.screens if screen.route == "/app/sales/tracking/external").module_id == sales.id
+
+
+def test_case_distinct_top_level_modules_do_not_collide():
+    profile = {
+        "erp": {"name": "Fictional ERP", "code": "fictional"},
+        "navigation": {"home_url": "/app/home"},
+    }
+
+    def state_node(state_id, label, selector):
+        return {
+            "id": state_id,
+            "route": state_id,
+            "metadata": {
+                "kind": "ui_state",
+                "base_route": "/app/home",
+                "path": {
+                    "depth": 1,
+                    "steps": [{"event": {"event_type": "expand_menu", "label": label, "selector": selector}}],
+                },
+            },
+        }
+
+    lower = "/app/home#state:lower"
+    upper = "/app/home#state:upper"
+    artifacts = {
+        "screen_index.json": {"screens": [
+            {"route": "/app/home", "title": "Home"},
+            {"route": "/app/rentas/cajas", "title": "Boxes"},
+            {"route": "/app/rentas/conceptos", "title": "Concepts"},
+        ]},
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home", "source_module": "root"},
+                state_node(lower, "rentas", "nav > menu:nth(6)"),
+                state_node(upper, "Rentas", "nav > menu:nth(7)"),
+                {"id": "/app/rentas/cajas", "route": "/app/rentas/cajas"},
+                {"id": "/app/rentas/conceptos", "route": "/app/rentas/conceptos"},
+            ],
+            "edges": [
+                {"source": "/app/home", "target": lower, "label": "rentas", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(6)"}},
+                {"source": lower, "target": "/app/rentas/cajas", "label": "Boxes", "metadata": {}},
+                {"source": "/app/home", "target": upper, "label": "Rentas", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(7)"}},
+                {"source": upper, "target": "/app/rentas/conceptos", "label": "Concepts", "metadata": {}},
+            ],
+        },
+        "state_registry.json": {"states": []},
+        "state_flow_graph.json": {"states": [], "transitions": []},
+        "event_policy_audit.json": {"screens": []},
+        "ui_event_execution_audit.json": {},
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(profile, artifacts)
+    modules = {module.name: module for module in kb.modules}
+    assert set(modules) == {"rentas", "Rentas"}
+    assert modules["rentas"].id != modules["Rentas"].id
+    assert next(screen for screen in kb.screens if screen.route == "/app/rentas/cajas").module_id == modules["rentas"].id
+    assert next(screen for screen in kb.screens if screen.route == "/app/rentas/conceptos").module_id == modules["Rentas"].id
+
+
+def test_top_level_module_without_functional_screen_is_not_published():
+    profile = {
+        "erp": {"name": "Fictional ERP", "code": "fictional"},
+        "navigation": {"home_url": "/app/home"},
+    }
+    unavailable_state = "/app/home#state:unavailable"
+    artifacts = {
+        "screen_index.json": {"screens": [{"route": "/app/home", "title": "Home"}]},
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home", "source_module": "root"},
+                {
+                    "id": unavailable_state,
+                    "route": unavailable_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [{"event": {"event_type": "expand_menu", "label": "Unavailable", "selector": "nav > menu:nth(1)"}}],
+                        },
+                    },
+                },
+                {"id": "/app/unavailable/a", "route": "/app/unavailable/a", "status": "not_found"},
+            ],
+            "edges": [
+                {"source": "/app/home", "target": unavailable_state, "label": "Unavailable", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(1)"}},
+                {"source": unavailable_state, "target": "/app/unavailable/a", "label": "A", "metadata": {}},
+            ],
+        },
+        "state_registry.json": {"states": []},
+        "state_flow_graph.json": {"states": [], "transitions": []},
+        "event_policy_audit.json": {"screens": []},
+        "ui_event_execution_audit.json": {},
+    }
+
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(profile, artifacts)
+    assert kb.modules == []
+    assert any(warning.code == "module_without_functional_screen" for warning in kb.build_warnings)
+    assert builder.omitted["modules_without_functional_screen"] == 1

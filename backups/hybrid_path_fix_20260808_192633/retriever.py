@@ -3,11 +3,7 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 
-from sqlalchemy import select
-
-from src.database.models import KnowledgeItem
 from src.database.services import ChromaSyncService
-from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
@@ -81,7 +77,7 @@ class HybridKnowledgeRetriever:
         )
         seeds = [row["canonical_id"] for row in semantic]
         neighbors = self._expand(seeds, erp_id, knowledge_version, graph_limit)
-        ids = self._candidate_ids(seeds, neighbors)
+        ids = list(OrderedDict.fromkeys(seeds + [n["canonical_id"] for n in neighbors]))
         valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         graph_ids = {n["canonical_id"] for n in neighbors}
@@ -181,29 +177,6 @@ class HybridKnowledgeRetriever:
             result.pop("context", None)
         return result
 
-    @staticmethod
-    def _candidate_ids(seeds, neighbors):
-        endpoint_ids = [
-            row.get("canonical_id")
-            for row in neighbors
-            if row.get("canonical_id")
-        ]
-        path_ids = [
-            node_id
-            for row in neighbors
-            for edge in row.get("path_edges", [])
-            for node_id in (
-                edge.get("from_canonical_id"),
-                edge.get("to_canonical_id"),
-            )
-            if node_id
-        ]
-        return list(
-            OrderedDict.fromkeys(
-                list(seeds) + endpoint_ids + path_ids
-            )
-        )
-
     def _expand(self, seeds, erp_id, version, limit):
         if not seeds:
             return []
@@ -232,21 +205,13 @@ class HybridKnowledgeRetriever:
         )
 
     def _validate(self, ids, version_id):
-        if not ids:
-            return []
-
-        query = select(KnowledgeItem).where(
-            KnowledgeItem.knowledge_version_id == version_id,
-            KnowledgeItem.canonical_id.in_(ids),
-            KnowledgeItem.current_review_status.in_(
-                [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
-            ),
-        )
-
-        items = list(self.session.scalars(query))
-        by_id = {item.canonical_id: item for item in items}
-
-        return [by_id[cid] for cid in ids if cid in by_id]
+        repo = ChromaSyncService(self.session).knowledge
+        return [
+            item
+            for item in repo.list_items(version_id=version_id, limit=1000)
+            if item.canonical_id in ids
+            and str(item.current_review_status) in {"approved", "corrected"}
+        ]
 
     def _effective(self, item_id):
         return ChromaSyncService(self.session).effective.describe(item_id)["effective_payload"]

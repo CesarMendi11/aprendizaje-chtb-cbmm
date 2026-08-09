@@ -51,6 +51,12 @@ class RoutesGraphBuilder:
             if source_module and not existing.get("source_module"):
                 existing["source_module"] = source_module
 
+            # Un estado observado y explícito (por ejemplo ``not_found``)
+            # tiene más evidencia que el marcador provisional ``discovered``.
+            # Una redetección posterior del enlace no debe degradarlo.
+            if status != "discovered":
+                existing["status"] = status
+
             existing["metadata"].update(new_metadata)
             return
 

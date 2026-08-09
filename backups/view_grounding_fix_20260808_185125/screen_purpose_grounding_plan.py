@@ -111,12 +111,6 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
         hints["navigate"] = _hint("navigate", "direct", navigate_refs)
 
     view_refs = {package.screen_id}
-    for control in package.controls:
-        if _matches("view", control.label, control.control_type):
-            view_refs.add(control.control_id)
-    for event in package.events:
-        if _matches("view", event.label, event.category):
-            view_refs.add(event.event_id)
     for table in package.tables:
         view_refs.add(table.table_id)
         view_refs.update(column.column_id for column in table.columns)

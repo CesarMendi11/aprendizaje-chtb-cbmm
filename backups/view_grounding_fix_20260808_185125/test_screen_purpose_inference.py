@@ -242,7 +242,7 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v8"
+    assert PROMPT_VERSION == "screen-purpose-v7"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
@@ -682,36 +682,6 @@ def test_view_claim_rejects_unbacked_detail_semantics():
     assert captured.value.category == "unsupported_view_detail_claim"
 
 
-def test_view_detail_claim_accepts_explicit_detail_evidence():
-    evidence = grounding_package(
-        controls=[
-            ControlEvidence(
-                control_id="control:detail",
-                label="Ver detalle",
-                control_type="button",
-                mutative=False,
-            )
-        ]
-    )
-    value = valid_output(
-        supported_capabilities=[
-            {
-                "action": "view",
-                "statement": "Permite visualizar el detalle de una retención.",
-                "evidence_refs": ["control:detail"],
-            }
-        ]
-    )
-
-    candidate = ScreenPurposeInferenceService(
-        FakeClient(json.dumps(value, ensure_ascii=False))
-    ).generate(evidence)
-
-    assert candidate.inference.supported_capabilities[0].evidence_refs == [
-        "control:detail"
-    ]
-
-
 def test_table_statement_is_detected_as_view_and_uses_table_reference():
     evidence = grounding_package()
     value = valid_output(
@@ -736,11 +706,3 @@ def test_prudent_mutative_option_is_not_misclassified_as_view():
         mutative_package("review")
     )
     assert candidate.inference.supported_capabilities[0].evidence_refs == ["control:new"]
-
-def test_prompt_constrains_unbacked_view_detail_semantics():
-    prompt = build_user_prompt(grounding_package()).casefold()
-
-    assert "no una vista de detalle" in prompt
-    assert "alguna evidence_ref citada" in prompt
-    assert "detalle, detalles o ficha" in prompt
-

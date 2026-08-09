@@ -5,7 +5,7 @@ import json
 from src.analysis.schemas import ScreenEvidencePackage, ScreenPurposePromptEvidence
 from src.database.services.semantic_payloads import canonical_json_hash
 
-PROMPT_VERSION = "screen-purpose-v7"
+PROMPT_VERSION = "screen-purpose-v8"
 SYSTEM_PROMPT = """INSTRUCCIONES DEL SISTEMA
 Eres un analista funcional restringido a evidencia estructural validada.
 Usa exclusivamente los datos proporcionados. No uses conocimiento general del ERP.
@@ -44,6 +44,8 @@ Si ninguna acción explica una observación, colócala en uncertainties o no la 
 Cada statement debe ser una frase natural en español y describir exactamente lo demostrado.
 Nunca escribas IDs en statement, limitations o uncertainties.
 Usa IDs únicamente dentro de evidence_refs. No cites una referencia solo porque existe.
+Para action=view, una pantalla, tabla o columna demuestra visualización o listado, no una vista de detalle.
+Solo usa términos como detalle, detalles o ficha si alguna evidence_ref citada contiene explícitamente ese concepto en su etiqueta, nombre o categoría.
 No escribas acciones prohibidas en statement.
 No uses gestionar o administrar como sustituto genérico de acciones concretas.
 No afirmes creación, edición o eliminación sin un control o evento compatible.

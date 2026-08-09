@@ -657,3 +657,57 @@ def test_repeated_table_row_actions_are_deduplicated_by_selector_template():
     assert len(candidates) == 1
     assert candidates[0].event_category == "unknown"
     assert candidates[0].decision == "review"
+
+
+def test_descendant_of_collapsable_does_not_inherit_expand_menu_semantics():
+    discovery = build_discovery()
+    screen_data = {
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "Año Area Cargo Funcional Estado Seguimiento Personas",
+                "tag": "div",
+                "selector": (
+                    "fuse-vertical-navigation-collapsable-item:nth-of-type(2) "
+                    "> div:nth-of-type(2)"
+                ),
+                "role": None,
+                "aria_expanded": None,
+                "onclick": False,
+                "region": "global_navigation",
+            }
+        ],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category != "expand_menu"
+
+
+def test_nested_collapsable_target_keeps_expand_menu_semantics():
+    discovery = build_discovery()
+    screen_data = {
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "Solicitudes",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": (
+                    "fuse-vertical-navigation-collapsable-item:nth-of-type(11) "
+                    "> div > fuse-vertical-navigation-collapsable-item:nth-of-type(1)"
+                ),
+                "role": None,
+                "aria_expanded": None,
+                "onclick": False,
+                "region": "global_navigation",
+            }
+        ],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "expand_menu"
+    assert candidate.decision == "allow"

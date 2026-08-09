@@ -47,10 +47,18 @@ def test_content_hash_is_deterministic_and_ignores_review_metadata():
 
 
 def test_new_import_and_idempotency(session):
+    manifest = json.loads(
+        (CANONICAL / "manifest.json").read_text(encoding="utf-8")
+    )
+    expected_items = 1 + sum(manifest["entity_counts"].values())
+
     first = import_once(session)
     assert first.result == "imported"
-    assert first.items == 649
-    assert session.scalar(select(func.count()).select_from(KnowledgeItem)) == 649
+    assert first.items == expected_items
+    assert (
+        session.scalar(select(func.count()).select_from(KnowledgeItem))
+        == expected_items
+    )
     assert session.scalar(select(func.count()).select_from(SyncJob)) == 2
     session.rollback()
     second = import_once(session)

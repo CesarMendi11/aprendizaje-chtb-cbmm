@@ -300,3 +300,192 @@ def test_route_crawler_uses_ui_events_to_discover_hidden_links(tmp_path):
     ]
 
     assert ui_state_nodes
+
+def test_route_crawler_preserves_soft_404_evidence_but_excludes_functional_screen(tmp_path):
+    profile = build_profile(tmp_path)
+    profile["screen_availability"] = {
+        "enabled": True,
+        "unavailable_status": "not_found",
+        "min_pattern_matches": 2,
+        "unavailable_text_patterns": [
+            "PAGINA NO ENCONTRADA",
+            "No hemos podido encontrar la página que buscas",
+        ],
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+
+        def handler(route):
+            if route.request.url == f"{BASE_URL}/admin/home":
+                html = """
+                <!DOCTYPE html>
+                <html><head><title>Home</title></head><body>
+                  <h1>Panel principal</h1>
+                  <a href="/admin/conductores">Conductores</a>
+                </body></html>
+                """
+            else:
+                html = """
+                <!DOCTYPE html>
+                <html><head><title>Servicios Online</title></head><body>
+                  PAGINA NO ENCONTRADA
+                  No hemos podido encontrar la página que buscas.
+                  Regresar al Inicio
+                </body></html>
+                """
+            route.fulfill(
+                status=200,
+                content_type="text/html; charset=utf-8",
+                body=html.encode("utf-8"),
+            )
+
+        page.route(f"{BASE_URL}/**", handler)
+        crawler = RouteCrawler(page, profile)
+        summary = crawler.crawl()
+        browser.close()
+
+    assert summary.visited_count == 2
+    assert summary.functional_screen_count == 1
+    assert summary.unavailable_count == 1
+
+    graph = json.loads(
+        (tmp_path / "data/processed/structural/routes_graph.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    conductores = next(
+        node for node in graph["nodes"]
+        if node["route"] == "/admin/conductores"
+    )
+    assert conductores["status"] == "not_found"
+    assert conductores["metadata"]["availability"]["status"] == "not_found"
+
+    index = json.loads(
+        (tmp_path / "data/processed/structural/screen_index.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert {screen["route"] for screen in index["screens"]} == {"/admin/home"}
+
+    raw = json.loads(
+        (tmp_path / "data/raw/playwright/admin_conductores.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert raw["crawler"]["status"] == "not_found"
+    assert raw["availability"]["available"] is False
+
+    reviews = list((tmp_path / "data/review/structural").glob("*_uncertainty.json"))
+    assert any("unavailable_screen" in item.name for item in reviews)
+
+
+def test_route_crawler_alternates_frontiers_until_fixed_point():
+    class FakeRouteFrontier:
+        def __init__(self):
+            self.pending = 1
+            self.visited = 0
+
+        def has_pending(self):
+            return self.pending > 0
+
+        def pending_count(self):
+            return self.pending
+
+        def visited_count(self):
+            return self.visited
+
+    class FakeStateFrontier:
+        def __init__(self):
+            self.pending = 0
+            self.explored = 0
+
+        def has_pending(self):
+            return self.pending > 0
+
+        def pending_count(self):
+            return self.pending
+
+        def explored_count(self):
+            return self.explored
+
+    crawler = object.__new__(RouteCrawler)
+    crawler.frontier = FakeRouteFrontier()
+    crawler.state_frontier = FakeStateFrontier()
+    crawler.max_pages_total = 10
+    crawler.navigator = type(
+        "FakeNavigator",
+        (),
+        {"current_path": lambda self: "/admin/home"},
+    )()
+    crawler._save_uncertainty = lambda **kwargs: None
+
+    calls = []
+    route_pass = 0
+
+    def crawl_routes():
+        nonlocal route_pass
+        route_pass += 1
+        calls.append("routes")
+        crawler.frontier.pending = 0
+        crawler.frontier.visited += 1
+        if route_pass == 1:
+            # El primer recorrido de rutas descubre un estado dinámico.
+            crawler.state_frontier.pending = 1
+
+    def crawl_states():
+        calls.append("states")
+        crawler.state_frontier.pending = 0
+        crawler.state_frontier.explored += 1
+        # Ese estado revela una nueva ruta, como ocurre con un href dentro
+        # de un submenú anidado.
+        crawler.frontier.pending = 1
+
+    crawler._crawl_pending_targets = crawl_routes
+    crawler._crawl_pending_states = crawl_states
+
+    crawler._crawl_until_fixed_point()
+
+    assert calls == ["routes", "states", "routes"]
+    assert crawler.frontier.pending_count() == 0
+    assert crawler.state_frontier.pending_count() == 0
+    assert crawler.frontier.visited_count() == 2
+    assert crawler.state_frontier.explored_count() == 1
+
+
+def test_route_crawler_fixed_point_stops_when_page_budget_is_exhausted():
+    class FakeRouteFrontier:
+        def has_pending(self):
+            return True
+
+        def pending_count(self):
+            return 3
+
+        def visited_count(self):
+            return 10
+
+    class FakeStateFrontier:
+        def has_pending(self):
+            return False
+
+        def pending_count(self):
+            return 0
+
+        def explored_count(self):
+            return 4
+
+    crawler = object.__new__(RouteCrawler)
+    crawler.frontier = FakeRouteFrontier()
+    crawler.state_frontier = FakeStateFrontier()
+    crawler.max_pages_total = 10
+    crawler._crawl_pending_targets = lambda: (_ for _ in ()).throw(
+        AssertionError("No debe procesar rutas después de alcanzar el presupuesto.")
+    )
+    crawler._crawl_pending_states = lambda: (_ for _ in ()).throw(
+        AssertionError("No hay estados pendientes.")
+    )
+
+    crawler._crawl_until_fixed_point()
+
+    assert crawler.frontier.pending_count() == 3

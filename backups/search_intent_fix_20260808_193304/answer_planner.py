@@ -58,40 +58,6 @@ class StructuralAnswerPlanner:
             r for r in relations if r.get("source_canonical_id") and r.get("target_canonical_id")
         ]
         focal = self._select_focal_screen(question, sources, rels, semantic_hits)
-        if intent == "SEARCH_BY_FIELD":
-            fields = [
-                r
-                for r in rels
-                if r.get("relationship_type") == "HAS_FIELD"
-                and r.get("source_canonical_id") == focal
-                and self._matches(question, r.get("target_label", ""))
-            ]
-            controls = [
-                r
-                for r in rels
-                if r.get("relationship_type") == "HAS_CONTROL"
-                and r.get("source_canonical_id") == focal
-                and any(
-                    word in self._norm(r.get("target_label", ""))
-                    for word in ("buscar", "search", "filtrar", "filtro")
-                )
-            ]
-            if fields and controls:
-                field = fields[0]
-                control = controls[0]
-                answer = (
-                    f'Para buscar por "{field["target_label"]}", '
-                    f'la pantalla "{field["source_label"]}" dispone del campo '
-                    f'"{field["target_label"]}" y del control '
-                    f'"{control["target_label"]}".'
-                )
-                return self._ok(
-                    intent,
-                    answer,
-                    [field, control],
-                    "high",
-                )
-
         if intent == "LIST_FIELDS":
             fields = [
                 r
@@ -303,11 +269,6 @@ class StructuralAnswerPlanner:
         q = question.casefold()
         if re.search(r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)", q):
             return "MUTATIVE_ACTION"
-        if re.search(
-            r"\b(buscar|busco|busca|búsqueda|busqueda|filtrar)\b",
-            q,
-        ):
-            return "SEARCH_BY_FIELD"
         if re.search(r"\b(campo|campos|filtro|filtros)\b", q):
             return "LIST_FIELDS"
         if re.search(r"\b(dónde|donde|ingreso|aparece)\b.*\b(campo|ruc|identificaci)", q):
