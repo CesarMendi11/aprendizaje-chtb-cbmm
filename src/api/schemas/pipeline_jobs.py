@@ -65,3 +65,7 @@ class CrawlPipelineJobCreateRequest(BaseModel):
         elif self.target is not None:
             raise ValueError("scope=full no acepta target")
         return self
+
+
+class CanonicalBuildPipelineJobCreateRequest(BaseModel):
+    source_crawl_job_id: uuid.UUID

@@ -295,3 +295,22 @@ def test_top_level_module_without_functional_screen_is_not_published():
     assert kb.modules == []
     assert any(warning.code == "module_without_functional_screen" for warning in kb.build_warnings)
     assert builder.omitted["modules_without_functional_screen"] == 1
+
+
+def test_evidence_path_uses_custom_structural_artifact_directory(tmp_path):
+    from tests.canonical_fixtures import fictional_artifacts, fictional_profile
+
+    artifact_dir = tmp_path / "data" / "runs" / "pipeline" / "job-123" / "processed" / "structural"
+    knowledge = CanonicalKnowledgeBuilder(tmp_path).build(
+        fictional_profile(),
+        fictional_artifacts(),
+        artifact_dir=artifact_dir,
+    )
+
+    assert knowledge.evidence
+    assert all(
+        item.artifact_path.startswith(
+            "data/runs/pipeline/job-123/processed/structural/"
+        )
+        for item in knowledge.evidence
+    )

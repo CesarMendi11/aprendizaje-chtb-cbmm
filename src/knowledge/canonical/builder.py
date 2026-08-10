@@ -52,6 +52,7 @@ class CanonicalKnowledgeBuilder:
         erp_id = stable_id("erp", slug)
         erp = ERPSystem(id=erp_id, slug=slug, name=str(erp_data.get("name") or slug), profile_name=Path(source_profile).stem, base_url=erp_data.get("base_url"), adapter=erp_data.get("adapter"), metadata=safe_metadata(erp_data.get("metadata")))
         hashes = self._artifact_hashes(artifacts, artifact_dir)
+        artifact_base = self._relative(artifact_dir) if artifact_dir else "data/processed/structural"
         source_refs = [name for name, payload in artifacts.items() if payload is not None]
         evidence: list[Evidence] = []
 
@@ -72,6 +73,7 @@ class CanonicalKnowledgeBuilder:
             evidence,
             home_route=home_route,
             functional_routes=functional_routes,
+            artifact_base=artifact_base,
         )
         screens: list[Screen] = []
         by_route: dict[str, Screen] = {}
@@ -85,7 +87,7 @@ class CanonicalKnowledgeBuilder:
             module_id = self._module_for_route(route, route_modules)
             if module_id is None:
                 self._warn("route_without_module", "Pantalla sin módulo inferible", "screen", screen_id)
-            evidence_id = self._evidence(evidence, "screen", screen_id, "screen_index.json", hashes, EvidenceType.STRUCTURAL_JSON)
+            evidence_id = self._evidence(evidence, "screen", screen_id, "screen_index.json", hashes, EvidenceType.STRUCTURAL_JSON, artifact_base)
             title = str(raw.get("functional_title") or raw.get("title") or route)
             text, exclusions = build_safe_structural_text(title, self._structural_labels(raw))
             self.sensitive_exclusions += exclusions
@@ -189,6 +191,7 @@ class CanonicalKnowledgeBuilder:
         *,
         home_route="/",
         functional_routes=None,
+        artifact_base="data/processed/structural",
     ):
         functional_routes = {normalize_route(route) for route in (functional_routes or set())}
         nodes = self._list(graph, "nodes")
@@ -341,6 +344,7 @@ class CanonicalKnowledgeBuilder:
                 "routes_graph.json",
                 hashes,
                 EvidenceType.STRUCTURAL_JSON,
+                artifact_base,
             )
             modules.append(
                 Module(
@@ -372,9 +376,9 @@ class CanonicalKnowledgeBuilder:
         matches=[(prefix, mid) for prefix, mid in mappings.items() if route.startswith(prefix.rstrip("/")+"/")]
         return max(matches, default=(None, None), key=lambda item:len(item[0]))[1]
 
-    def _evidence(self, evidence, entity_type, entity_id, artifact, hashes, kind):
+    def _evidence(self, evidence, entity_type, entity_id, artifact, hashes, kind, artifact_base="data/processed/structural"):
         evidence_id=stable_id("evidence", entity_type, entity_id, artifact)
-        evidence.append(Evidence(id=evidence_id, evidence_type=kind, artifact_path=f"data/processed/structural/{artifact}", artifact_hash=hashes.get(artifact), source_entity_type=entity_type, source_entity_id=entity_id))
+        evidence.append(Evidence(id=evidence_id, evidence_type=kind, artifact_path=f"{artifact_base.rstrip('/')}/{artifact}", artifact_hash=hashes.get(artifact), source_entity_type=entity_type, source_entity_id=entity_id))
         return evidence_id
 
     def _excluded(self, item):

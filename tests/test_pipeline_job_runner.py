@@ -36,6 +36,26 @@ class FakeCrawlExecutor:
         }
 
 
+class FakeCanonicalBuildExecutor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            "exporting_canonical",
+            {
+                "work_units": 4,
+                "progress_total": 4,
+                "knowledge_version": "canonical-test",
+            },
+        )
+        return {
+            "knowledge_version": "canonical-test",
+            "source_crawl_job_id": parameters["source_crawl_job_id"],
+        }
+
+
 def build_factory():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -84,4 +104,33 @@ def test_runner_marks_failed_crawl_without_exposing_worker_exception_to_api_thre
         assert stored.status == PipelineJobStatus.FAILED
         assert stored.stage == "failed"
         assert "fallo controlado" in (stored.error_summary or "")
+    engine.dispose()
+
+
+def test_runner_dispatches_canonical_build_and_persists_total_progress():
+    engine, factory = build_factory()
+    source_id = "00000000-0000-0000-0000-000000000123"
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="canonical_build",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            parameters={"source_crawl_job_id": source_id},
+        )
+        job_id = job.id
+
+    executor = FakeCanonicalBuildExecutor()
+    PipelineJobRunner(
+        factory, canonical_build_executor=executor
+    ).run(job_id)
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.progress_current == 4
+        assert stored.progress_total == 4
+        assert stored.result_payload["knowledge_version"] == "canonical-test"
+        assert stored.checkpoint["knowledge_version"] == "canonical-test"
+    assert len(executor.calls) == 1
     engine.dispose()

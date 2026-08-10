@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from src.api.dependencies import get_admin_read_session, get_semantic_review_session
 from src.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_summary
 from src.api.schemas.pipeline_jobs import (
+    CanonicalBuildPipelineJobCreateRequest,
     CrawlPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
@@ -48,6 +49,49 @@ def create_crawl_job(
     # antes de colocarlo en la cola local.
     session.commit()
     dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
+
+
+@router.post(
+    "/canonical-build",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_canonical_build_job(
+    payload: CanonicalBuildPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    source = PipelineJobRepository(session).get(payload.source_crawl_job_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="PipelineJob fuente no encontrado.")
+    if source.kind != PipelineJobKind.CRAWL:
+        raise HTTPException(
+            status_code=409,
+            detail="El job fuente debe ser de tipo crawl.",
+        )
+    if source.status != PipelineJobStatus.SUCCEEDED:
+        raise HTTPException(
+            status_code=409,
+            detail="El crawl fuente debe haber finalizado correctamente.",
+        )
+    result = dict(source.result_payload or {})
+    if not result.get("artifact_root"):
+        raise HTTPException(
+            status_code=409,
+            detail="El crawl fuente no registró artefactos utilizables.",
+        )
+
+    job = PipelineJobService(session).create(
+        kind=PipelineJobKind.CANONICAL_BUILD,
+        scope=source.scope,
+        target=source.target,
+        profile_name=source.profile_name,
+        request_source="admin_api",
+        parameters={"source_crawl_job_id": str(source.id)},
+    )
+    session.commit()
+    request.app.state.pipeline_job_dispatcher.submit(job.id)
     return pipeline_job_detail(job)
 
 

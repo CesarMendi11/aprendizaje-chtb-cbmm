@@ -169,3 +169,47 @@ def test_pipeline_job_api_is_hidden_when_admin_api_is_disabled(tmp_path):
     )
     client = Client(app)
     assert client.get("/api/admin/pipeline-jobs").status_code == 404
+
+
+def test_create_canonical_build_job_requires_succeeded_crawl(api):
+    client, factory, dispatcher = api
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="crawl",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            profile_name="cbmm",
+        )
+        source_id = source.id
+        service.start(source.id, stage="running")
+        service.succeed(
+            source.id,
+            result_payload={"artifact_root": f"data/runs/pipeline/{source.id}"},
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-build",
+        json={"source_crawl_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_build"
+    assert body["scope"] == "screen"
+    assert body["target"] == "/admin/cuentasxcobrar/retenciones"
+    assert body["parameters"]["source_crawl_job_id"] == str(source_id)
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_build_rejects_non_succeeded_source(api):
+    client, factory, dispatcher = api
+    with factory.begin() as session:
+        source = PipelineJobService(session).create(kind="crawl", scope="full")
+        source_id = source.id
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-build",
+        json={"source_crawl_job_id": str(source_id)},
+    )
+    assert response.status_code == 409
+    assert dispatcher.submitted == []

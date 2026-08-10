@@ -2,17 +2,19 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
 from src.database.repositories import PipelineJobRepository
 from src.database.services import PipelineJobService
+from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
 
 
 @dataclass(frozen=True)
-class CrawlJobSpec:
+class PipelineJobSpec:
     id: uuid.UUID
+    kind: PipelineJobKind
     scope: PipelineJobScope
     target: str | None
     parameters: dict[str, Any]
@@ -21,17 +23,32 @@ class CrawlJobSpec:
 class PipelineJobRunner:
     """Consume queued jobs and persist progress in short independent transactions."""
 
-    def __init__(self, session_factory, *, crawl_executor: CrawlJobExecutor | None = None):
+    def __init__(
+        self,
+        session_factory,
+        *,
+        crawl_executor: CrawlJobExecutor | None = None,
+        canonical_build_executor: CanonicalBuildJobExecutor | None = None,
+    ):
         self.session_factory = session_factory
-        self.crawl_executor = crawl_executor or CrawlJobExecutor()
+        self.executors = {
+            PipelineJobKind.CRAWL: crawl_executor or CrawlJobExecutor(),
+            PipelineJobKind.CANONICAL_BUILD: canonical_build_executor
+            or CanonicalBuildJobExecutor(),
+        }
 
     def run(self, job_id: uuid.UUID | str) -> None:
         spec = self._start(job_id)
         if spec is None:
             return
 
+        executor = self.executors.get(spec.kind)
+        if executor is None:
+            self._fail(spec.id, RuntimeError(f"Job kind no soportado por el runner: {spec.kind}"))
+            return
+
         try:
-            result = self.crawl_executor.execute(
+            result = executor.execute(
                 job_id=spec.id,
                 scope=spec.scope,
                 target=spec.target,
@@ -49,19 +66,15 @@ class PipelineJobRunner:
                 stage="completed",
             )
 
-    def _start(self, job_id: uuid.UUID | str) -> CrawlJobSpec | None:
+    def _start(self, job_id: uuid.UUID | str) -> PipelineJobSpec | None:
         with self.session_factory.begin() as session:
             job = PipelineJobRepository(session).get(job_id, for_update=True)
             if job is None or job.status != PipelineJobStatus.QUEUED:
                 return None
-            if job.kind != PipelineJobKind.CRAWL:
-                service = PipelineJobService(session)
-                service.start(job.id, stage="unsupported_job_kind")
-                service.fail(job.id, "Este runner sólo ejecuta jobs de crawling")
-                return None
             PipelineJobService(session).start(job.id, stage="starting")
-            return CrawlJobSpec(
+            return PipelineJobSpec(
                 id=job.id,
+                kind=job.kind,
                 scope=job.scope,
                 target=job.target,
                 parameters=dict(job.parameters or {}),
@@ -69,7 +82,13 @@ class PipelineJobRunner:
 
     def _checkpoint(self, job_id: uuid.UUID, stage: str, payload: dict[str, Any]) -> None:
         current = int(payload.get("work_units", 0) or 0)
-        checkpoint = {key: value for key, value in payload.items() if key != "work_units"}
+        total_value = payload.get("progress_total")
+        total = int(total_value) if total_value is not None else None
+        checkpoint = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"work_units", "progress_total"}
+        }
         with self.session_factory.begin() as session:
             job = PipelineJobRepository(session).get(job_id)
             if job is None or job.status != PipelineJobStatus.RUNNING:
@@ -78,6 +97,7 @@ class PipelineJobRunner:
                 job_id,
                 stage=stage,
                 progress_current=max(0, current),
+                progress_total=total,
                 checkpoint=checkpoint,
             )
 
@@ -89,6 +109,6 @@ class PipelineJobRunner:
                     return
                 PipelineJobService(session).fail(job_id, error)
         except Exception:
-            # El crawler ya produjo artefactos aislados si alcanzó a iniciar.
-            # No se oculta el error original dentro del worker ni se expone un secreto al cliente.
+            # El executor puede haber producido artefactos aislados si alcanzó a iniciar.
+            # No se expone un error secundario del worker al hilo de la API.
             return
