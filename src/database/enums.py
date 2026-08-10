@@ -33,6 +33,30 @@ class SemanticType(StrEnum):
     SCREEN_PURPOSE = "screen_purpose"
 
 
+class PipelineJobKind(StrEnum):
+    CRAWL = "crawl"
+    CANONICAL_BUILD = "canonical_build"
+    CANONICAL_IMPORT = "canonical_import"
+    NEO4J_SYNC = "neo4j_sync"
+    CHROMA_SYNC = "chroma_sync"
+    SEMANTIC_INFERENCE = "semantic_inference"
+
+
+class PipelineJobScope(StrEnum):
+    FULL = "full"
+    SCREEN = "screen"
+    VERSION = "version"
+    SYSTEM = "system"
+
+
+class PipelineJobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 class SyncTarget(StrEnum):
     NEO4J = "neo4j"
     CHROMADB = "chromadb"

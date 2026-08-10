@@ -4,6 +4,12 @@ from .effective_knowledge_service import EffectiveKnowledgeService
 from .knowledge_review_service import KnowledgeReviewService
 from .neo4j_subset_planner import Neo4jSubsetPlanner
 from .neo4j_sync_service import Neo4jSyncService
+from .pipeline_job_service import (
+    PipelineJobError,
+    PipelineJobNotFoundError,
+    PipelineJobService,
+    PipelineJobTransitionError,
+)
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
 from .semantic_review_service import SemanticReviewService
@@ -15,6 +21,10 @@ __all__ = [
     "KnowledgeReviewService",
     "Neo4jSubsetPlanner",
     "Neo4jSyncService",
+    "PipelineJobError",
+    "PipelineJobNotFoundError",
+    "PipelineJobService",
+    "PipelineJobTransitionError",
     "SafeDocumentBuilder",
     "SemanticEffectivePayloadService",
     "SemanticProposalService",

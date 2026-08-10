@@ -24,6 +24,9 @@ from ..base import Base
 from ..enums import (
     ImportStatus,
     KnowledgeVersionStatus,
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
     ReviewActionType,
     ReviewSource,
     SemanticType,
@@ -294,6 +297,51 @@ class SemanticReviewAction(TimestampMixin, Base):
     semantic_proposal: Mapped[SemanticProposal] = relationship(back_populates="review_actions")
 
 
+class PipelineJob(TimestampMixin, Base):
+    __tablename__ = "pipeline_jobs"
+    __table_args__ = (
+        Index("ix_pipeline_jobs_status_kind", "status", "kind"),
+        Index("ix_pipeline_jobs_requested_at", "requested_at"),
+        CheckConstraint("progress_current >= 0", name="progress_current_nonnegative"),
+        CheckConstraint(
+            "progress_total IS NULL OR progress_total >= 0",
+            name="progress_total_nonnegative",
+        ),
+        CheckConstraint(
+            "progress_total IS NULL OR progress_current <= progress_total",
+            name="progress_within_total",
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    kind: Mapped[PipelineJobKind] = mapped_column(StringEnum(PipelineJobKind), nullable=False)
+    status: Mapped[PipelineJobStatus] = mapped_column(
+        StringEnum(PipelineJobStatus), default=PipelineJobStatus.QUEUED, nullable=False
+    )
+    scope: Mapped[PipelineJobScope] = mapped_column(StringEnum(PipelineJobScope), nullable=False)
+    target: Mapped[str | None] = mapped_column(String(1000))
+    profile_name: Mapped[str | None] = mapped_column(String(240))
+    erp_id: Mapped[str | None] = mapped_column(ForeignKey("erp_systems.id"), index=True)
+    knowledge_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("knowledge_versions.id"), index=True
+    )
+    request_source: Mapped[str] = mapped_column(String(60), default="admin_api", nullable=False)
+    parameters: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict, nullable=False)
+    stage: Mapped[str] = mapped_column(String(120), default="queued", nullable=False)
+    progress_current: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    progress_total: Mapped[int | None] = mapped_column(Integer)
+    checkpoint: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict, nullable=False)
+    result_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    error_summary: Mapped[str | None] = mapped_column(String(500))
+    requested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
 class SyncJob(TimestampMixin, Base):
     __tablename__ = "sync_jobs"
     __table_args__ = (
@@ -378,5 +426,6 @@ __all__ = [
     "ReviewAction",
     "SemanticProposal",
     "SemanticReviewAction",
+    "PipelineJob",
     "SyncJob",
 ]
