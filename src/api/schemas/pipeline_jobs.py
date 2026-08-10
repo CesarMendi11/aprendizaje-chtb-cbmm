@@ -73,3 +73,12 @@ class CanonicalBuildPipelineJobCreateRequest(BaseModel):
 
 class CanonicalImportPipelineJobCreateRequest(BaseModel):
     source_canonical_job_id: uuid.UUID
+
+
+class Neo4jSyncPipelineJobCreateRequest(BaseModel):
+    batch_size: int = Field(default=200, ge=1, le=2000)
+    replace_version: bool = False
+
+
+class ChromaSyncPipelineJobCreateRequest(BaseModel):
+    pass

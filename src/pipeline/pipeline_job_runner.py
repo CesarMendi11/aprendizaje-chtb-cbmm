@@ -9,7 +9,9 @@ from src.database.repositories import PipelineJobRepository
 from src.database.services import PipelineJobService
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecutor
+from src.pipeline.chroma_sync_job_executor import ChromaSyncJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
+from src.pipeline.neo4j_sync_job_executor import Neo4jSyncJobExecutor
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,8 @@ class PipelineJobRunner:
         crawl_executor: CrawlJobExecutor | None = None,
         canonical_build_executor: CanonicalBuildJobExecutor | None = None,
         canonical_import_executor: CanonicalImportJobExecutor | None = None,
+        neo4j_sync_executor: Neo4jSyncJobExecutor | None = None,
+        chroma_sync_executor: ChromaSyncJobExecutor | None = None,
     ):
         self.session_factory = session_factory
         self.executors = {
@@ -39,6 +43,10 @@ class PipelineJobRunner:
             or CanonicalBuildJobExecutor(),
             PipelineJobKind.CANONICAL_IMPORT: canonical_import_executor
             or CanonicalImportJobExecutor(session_factory),
+            PipelineJobKind.NEO4J_SYNC: neo4j_sync_executor
+            or Neo4jSyncJobExecutor(session_factory),
+            PipelineJobKind.CHROMA_SYNC: chroma_sync_executor
+            or ChromaSyncJobExecutor(session_factory),
         }
 
     def run(self, job_id: uuid.UUID | str) -> None:

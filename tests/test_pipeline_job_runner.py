@@ -77,6 +77,30 @@ class FakeCanonicalImportExecutor:
             "staging_ready": True,
         }
 
+
+class FakeProjectionSyncExecutor:
+    def __init__(self, target):
+        self.target = target
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            f"{self.target}_synced",
+            {
+                "work_units": 4,
+                "progress_total": 4,
+                "eligible_items": 21,
+            },
+        )
+        return {
+            "target": self.target,
+            "active_only": True,
+            "knowledge_version": parameters["knowledge_version"],
+            "knowledge_version_id": parameters["knowledge_version_id"],
+            "eligible_items": 21,
+        }
+
 def build_factory():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -180,4 +204,44 @@ def test_runner_dispatches_canonical_import_executor():
         assert stored.progress_total == 4
         assert stored.result_payload["staging_ready"] is True
     assert len(executor.calls) == 1
+    engine.dispose()
+
+
+
+def test_runner_dispatches_projection_sync_executors():
+    engine, factory = build_factory()
+    version_id = "00000000-0000-0000-0000-000000000555"
+    jobs = []
+    with factory.begin() as session:
+        for kind in ("neo4j_sync", "chroma_sync"):
+            job = PipelineJobService(session).create(
+                kind=kind,
+                scope="version",
+                target="active-v1",
+                parameters={
+                    "active_only": True,
+                    "knowledge_version": "active-v1",
+                    "knowledge_version_id": version_id,
+                },
+            )
+            jobs.append((kind, job.id))
+
+    neo = FakeProjectionSyncExecutor("neo4j")
+    chroma = FakeProjectionSyncExecutor("chromadb")
+    runner = PipelineJobRunner(
+        factory, neo4j_sync_executor=neo, chroma_sync_executor=chroma
+    )
+    for _kind, job_id in jobs:
+        runner.run(job_id)
+
+    with factory() as session:
+        for kind, job_id in jobs:
+            stored = PipelineJobRepository(session).get(job_id)
+            assert stored is not None
+            assert stored.status == PipelineJobStatus.SUCCEEDED
+            assert stored.progress_current == 4
+            assert stored.progress_total == 4
+            assert stored.result_payload["active_only"] is True
+    assert len(neo.calls) == 1
+    assert len(chroma.calls) == 1
     engine.dispose()

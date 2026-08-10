@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
+from datetime import datetime, timezone
 
 import httpx
 import pytest
@@ -11,6 +12,8 @@ from sqlalchemy.orm import sessionmaker
 from src.api.app import create_app
 from src.config.api_settings import ApiSettings
 from src.database.base import Base
+from src.database.enums import ImportStatus, KnowledgeVersionStatus
+from src.database.models import ERPSystemRecord, ImportRun, KnowledgeVersionRecord
 from src.database.services import PipelineJobService
 
 
@@ -269,4 +272,77 @@ def test_create_canonical_import_rejects_wrong_or_unfinished_source(api):
         "/api/admin/pipeline-jobs/canonical-import",
         json={"source_canonical_job_id": str(pending_id)},
     ).status_code == 409
+    assert dispatcher.submitted == []
+
+
+
+def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
+    with factory.begin() as session:
+        erp = ERPSystemRecord(
+            id="erp:sync-test",
+            slug="sync-test",
+            name="ERP Sync Test",
+            profile_name="test",
+            safe_metadata={},
+        )
+        run = ImportRun(
+            erp=erp,
+            source_knowledge_path="knowledge.json",
+            source_manifest_path="manifest.json",
+            requested_knowledge_version="active-v1",
+            status=ImportStatus.SUCCEEDED,
+            source_hashes={},
+        )
+        version = KnowledgeVersionRecord(
+            erp=erp,
+            import_run=run,
+            schema_version="1.0",
+            knowledge_version="active-v1",
+            canonical_hash="a" * 64,
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=status,
+        )
+        session.add(version)
+        session.flush()
+        return str(version.id), erp.id
+
+
+def test_projection_sync_jobs_capture_only_the_single_active_version(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+
+    neo4j = client.post(
+        "/api/admin/pipeline-jobs/neo4j-sync",
+        json={"batch_size": 150, "replace_version": False},
+    )
+    assert neo4j.status_code == 202, neo4j.text
+    neo = neo4j.json()
+    assert neo["kind"] == "neo4j_sync"
+    assert neo["scope"] == "version"
+    assert neo["target"] == "active-v1"
+    assert neo["erp_id"] == erp_id
+    assert neo["knowledge_version_id"] == version_id
+    assert neo["parameters"]["active_only"] is True
+    assert neo["parameters"]["knowledge_version_id"] == version_id
+    assert neo["parameters"]["batch_size"] == 150
+
+    chroma = client.post("/api/admin/pipeline-jobs/chroma-sync", json={})
+    assert chroma.status_code == 202, chroma.text
+    vec = chroma.json()
+    assert vec["kind"] == "chroma_sync"
+    assert vec["scope"] == "version"
+    assert vec["target"] == "active-v1"
+    assert vec["parameters"]["active_only"] is True
+    assert vec["parameters"]["knowledge_version_id"] == version_id
+    assert len(dispatcher.submitted) == 2
+
+
+def test_projection_sync_rejects_when_there_is_no_active_version(api):
+    client, factory, dispatcher = api
+    seed_active_version(factory, status=KnowledgeVersionStatus.IMPORTED)
+    assert client.post("/api/admin/pipeline-jobs/neo4j-sync", json={}).status_code == 409
+    assert client.post("/api/admin/pipeline-jobs/chroma-sync", json={}).status_code == 409
     assert dispatcher.submitted == []

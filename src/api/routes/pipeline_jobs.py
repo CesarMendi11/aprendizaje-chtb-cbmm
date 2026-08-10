@@ -11,17 +11,68 @@ from src.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_s
 from src.api.schemas.pipeline_jobs import (
     CanonicalBuildPipelineJobCreateRequest,
     CanonicalImportPipelineJobCreateRequest,
+    ChromaSyncPipelineJobCreateRequest,
     CrawlPipelineJobCreateRequest,
+    Neo4jSyncPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
 )
-from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
-from src.database.repositories import PipelineJobRepository
+from src.database.enums import (
+    KnowledgeVersionStatus,
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
+from src.database.repositories import KnowledgeRepository, PipelineJobRepository
 from src.database.services import PipelineJobService
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
 SessionDependency = Annotated[Session, Depends(get_admin_read_session)]
 WriteSessionDependency = Annotated[Session, Depends(get_semantic_review_session)]
+
+
+def _single_active_version(session: Session):
+    active = [
+        version
+        for version in KnowledgeRepository(session).list_versions()
+        if version.status == KnowledgeVersionStatus.ACTIVE
+    ]
+    if len(active) != 1:
+        raise HTTPException(
+            status_code=409,
+            detail="Se requiere exactamente una versión ACTIVE para sincronizar.",
+        )
+    return active[0]
+
+
+def _queue_active_projection_job(
+    *,
+    request: Request,
+    session: Session,
+    kind: PipelineJobKind,
+    parameters: dict,
+):
+    version = _single_active_version(session)
+    payload = {
+        "active_only": True,
+        "knowledge_version_id": str(version.id),
+        "knowledge_version": version.knowledge_version,
+        "erp_id": version.erp_id,
+        **parameters,
+    }
+    job = PipelineJobService(session).create(
+        kind=kind,
+        scope=PipelineJobScope.VERSION,
+        target=version.knowledge_version,
+        profile_name=request.app.state.pipeline_crawl_profile_name,
+        erp_id=version.erp_id,
+        knowledge_version_id=version.id,
+        request_source="admin_api",
+        parameters=payload,
+    )
+    session.commit()
+    request.app.state.pipeline_job_dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
 
 
 @router.post(
@@ -152,6 +203,45 @@ def create_canonical_import_job(
     session.commit()
     request.app.state.pipeline_job_dispatcher.submit(job.id)
     return pipeline_job_detail(job)
+
+
+@router.post(
+    "/neo4j-sync",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_neo4j_sync_job(
+    payload: Neo4jSyncPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    return _queue_active_projection_job(
+        request=request,
+        session=session,
+        kind=PipelineJobKind.NEO4J_SYNC,
+        parameters={
+            "batch_size": payload.batch_size,
+            "replace_version": payload.replace_version,
+        },
+    )
+
+
+@router.post(
+    "/chroma-sync",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_chroma_sync_job(
+    payload: ChromaSyncPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    return _queue_active_projection_job(
+        request=request,
+        session=session,
+        kind=PipelineJobKind.CHROMA_SYNC,
+        parameters={},
+    )
 
 
 @router.get("", response_model=PipelineJobListResponse)
