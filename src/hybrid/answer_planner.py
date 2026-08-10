@@ -116,7 +116,7 @@ class StructuralAnswerPlanner:
                     f'Para buscar por "{field["target_label"]}", '
                     f'la pantalla "{field["source_label"]}" dispone del campo '
                     f'"{field["target_label"]}" y del control '
-                    f'"{control["target_label"]}".'
+                    f'"{self._display_label(control["target_label"])}".'
                 )
                 return self._ok(
                     intent,
@@ -155,7 +155,11 @@ class StructuralAnswerPlanner:
                 )
                 if compatible is None and len(controls) == 1:
                     compatible = controls[0]
-                suffix = f', junto al control "{compatible["target_label"]}"' if compatible else ""
+                suffix = (
+                    f', junto al control "{self._display_label(compatible["target_label"])}"'
+                    if compatible
+                    else ""
+                )
                 answer = (
                     f'En la pantalla "{screen}" aparecen los campos {self._join(names)}{suffix}.'
                 )
@@ -192,7 +196,13 @@ class StructuralAnswerPlanner:
                 and self._matches(question, r["target_label"])
             ]
             if matches:
-                r = matches[0]
+                # A screen can be linked both from the ERP root and from its
+                # functional module. For a module-location question, prefer the
+                # HAS_SCREEN edge whose source is explicitly a module.
+                r = next(
+                    (row for row in matches if row.get("source_type") == "module"),
+                    matches[0],
+                )
                 return self._ok(
                     intent,
                     f'La pantalla "{r["target_label"]}" está dentro del módulo "{r["source_label"]}".',  # noqa: E501
@@ -228,9 +238,10 @@ class StructuralAnswerPlanner:
                 and r.get("source_canonical_id") in table_ids
             ]
             if cols:
+                screen_label = tables[0].get("source_label") or "la pantalla recuperada"
                 return self._ok(
                     intent,
-                    f'La tabla "{cols[0]["source_label"]}" contiene las columnas {self._join(self._unique(r["target_label"] for r in cols))}.',  # noqa: E501
+                    f'En la tabla de la pantalla "{screen_label}" aparecen las columnas {self._join(self._unique(r["target_label"] for r in cols))}.',  # noqa: E501
                     cols,
                     "high",
                 )
@@ -282,7 +293,8 @@ class StructuralAnswerPlanner:
         }
         for rel in relations:
             if (
-                rel.get("relationship_type") == "HAS_FIELD"
+                rel.get("relationship_type")
+                in {"HAS_FIELD", "HAS_CONTROL", "HAS_TABLE", "HAS_STATE", "HAS_EVENT"}
                 and rel.get("source_canonical_id") not in screens
             ):
                 screens[rel.get("source_canonical_id")] = {
@@ -359,7 +371,9 @@ class StructuralAnswerPlanner:
             return "LIST_FIELDS"
         if re.search(r"\b(dónde|donde|ingreso|aparece)\b.*\b(campo|ruc|identificaci)", q):
             return "LOCATE_FIELD"
-        if re.search(r"\b(módulo|modulo)\b.*\b(pantalla|dónde|donde)", q):
+        if re.search(r"\b(módulo|modulo)\b", q) and re.search(
+            r"\b(qué|que|cuál|cual|dónde|donde|está|esta|pertenece|pantalla)\b", q
+        ):
             return "LOCATE_SCREEN"
         if re.search(r"\b(botón|boton|control)\b", q):
             return "FIND_CONTROL"
@@ -368,6 +382,14 @@ class StructuralAnswerPlanner:
         if re.search(r"\b(página|pagina|avanz|siguiente)\b", q):
             return "NAVIGATION_EVENT"
         return None
+
+
+    @staticmethod
+    def _display_label(value):
+        text = str(value or "").strip()
+        if text.casefold().startswith("search ") and len(text.split(maxsplit=1)) == 2:
+            return text.split(maxsplit=1)[1]
+        return text
 
     @staticmethod
     def _unique(values):

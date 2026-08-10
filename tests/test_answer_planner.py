@@ -137,3 +137,146 @@ def test_screen_purpose_does_not_use_semantics_for_an_unmentioned_screen():
 
     assert result["supported"] is False
     assert result["intent"] == "SCREEN_PURPOSE"
+
+
+def test_locate_screen_recognizes_common_module_question():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "module:cxp",
+            "target_canonical_id": "screen:list",
+            "source_label": "Cuentas por cobrar",
+            "target_label": "Lista de facturas",
+        }
+    ]
+
+    result = planner.plan(
+        "¿En qué módulo está Lista de facturas?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "LOCATE_SCREEN"
+    assert result["confidence"] == "high"
+    assert result["answer"] == (
+        'La pantalla "Lista de facturas" está dentro del módulo "Cuentas por cobrar".'
+    )
+
+
+
+def test_locate_screen_prefers_module_over_erp_root_relation():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "erp:cbmm",
+            "target_canonical_id": "screen:list",
+            "source_label": "ERP Cuerpo de Bomberos Municipal de Machala",
+            "target_label": "Lista de facturas",
+            "source_type": "erp_system",
+            "target_type": "screen",
+        },
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "module:cxp",
+            "target_canonical_id": "screen:list",
+            "source_label": "Cuentas por cobrar",
+            "target_label": "Lista de facturas",
+            "source_type": "module",
+            "target_type": "screen",
+        },
+    ]
+
+    result = planner.plan(
+        "¿En qué módulo está Lista de facturas?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "LOCATE_SCREEN"
+    assert result["answer"] == (
+        'La pantalla "Lista de facturas" está dentro del módulo "Cuentas por cobrar".'
+    )
+
+def test_list_columns_names_the_screen_when_table_has_no_safe_name():
+    planner = StructuralAnswerPlanner()
+    sources = [
+        {
+            "canonical_id": "screen:puntos",
+            "entity_type": "screen",
+            "safe_label": "Puntos de emisión",
+        }
+    ]
+    relations = [
+        {
+            "relationship_type": "HAS_TABLE",
+            "source_canonical_id": "screen:puntos",
+            "target_canonical_id": "table:puntos",
+            "source_label": "Puntos de emisión",
+            "target_label": "Entidad validada",
+        },
+        {
+            "relationship_type": "HAS_COLUMN",
+            "source_canonical_id": "table:puntos",
+            "target_canonical_id": "column:codigo",
+            "source_label": "Entidad validada",
+            "target_label": "CODIGO",
+        },
+        {
+            "relationship_type": "HAS_COLUMN",
+            "source_canonical_id": "table:puntos",
+            "target_canonical_id": "column:secuencial",
+            "source_label": "Entidad validada",
+            "target_label": "SECUENCIAL",
+        },
+    ]
+
+    result = planner.plan(
+        "¿Qué columnas tiene Puntos de emisión?",
+        sources,
+        relations,
+        sources,
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "LIST_COLUMNS"
+    assert 'tabla de la pantalla "Puntos de emisión"' in result["answer"]
+    assert "CODIGO" in result["answer"]
+    assert "SECUENCIAL" in result["answer"]
+    assert 'tabla "Entidad validada"' not in result["answer"]
+
+
+def test_search_control_display_removes_extractor_prefix():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_FIELD",
+            "source_canonical_id": "screen:list",
+            "target_canonical_id": "field:ruc",
+            "source_label": "Lista de facturas",
+            "target_label": "RUC",
+        },
+        {
+            "relationship_type": "HAS_CONTROL",
+            "source_canonical_id": "screen:list",
+            "target_canonical_id": "control:buscar",
+            "source_label": "Lista de facturas",
+            "target_label": "search Buscar",
+        },
+    ]
+
+    result = planner.plan(
+        "¿Puedo buscar una factura por RUC?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert 'control "Buscar"' in result["answer"]
+    assert "search Buscar" not in result["answer"]

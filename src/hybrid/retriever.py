@@ -118,6 +118,29 @@ class HybridKnowledgeRetriever:
         neighbors = self._expand(seeds, erp_id, knowledge_version, graph_limit)
         ids = self._candidate_ids(seeds, neighbors)
         valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
+
+        # If the question explicitly names a validated screen, complete a focused
+        # two-hop expansion from that screen. The initial semantic top-k can be
+        # dominated by UI states/fields and the global graph limit may otherwise
+        # omit sibling fields or table columns needed by deterministic answers.
+        focused_screen_ids = []
+        for cid, item in valid.items():
+            if item.entity_type != "screen":
+                continue
+            payload = self._effective(item.id)
+            label = self._label(item.entity_type, payload)
+            if self.planner._matches(question, label):
+                focused_screen_ids.append(cid)
+        if focused_screen_ids:
+            focused_neighbors = self._expand(
+                focused_screen_ids,
+                erp_id,
+                knowledge_version,
+                max(graph_limit, 64),
+            )
+            neighbors = self._merge_neighbors(neighbors, focused_neighbors)
+            ids = self._candidate_ids(seeds, neighbors)
+            valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
         graph_ids = {n["canonical_id"] for n in neighbors}
@@ -159,6 +182,11 @@ class HybridKnowledgeRetriever:
             for s in sources
             if s["entity_type"] == "screen" and s.get("screen_route")
         }
+        table_screen = {
+            r["target_canonical_id"]: r["source_canonical_id"]
+            for r in relations
+            if r["relationship_type"] == "HAS_TABLE"
+        }
         for source in sources:
             if source.get("screen_route"):
                 continue
@@ -167,12 +195,26 @@ class HybridKnowledgeRetriever:
                     r
                     for r in relations
                     if r["target_canonical_id"] == source["canonical_id"]
-                    and r["relationship_type"] in {"HAS_FIELD", "HAS_CONTROL", "HAS_TABLE"}
+                    and r["relationship_type"]
+                    in {"HAS_FIELD", "HAS_CONTROL", "HAS_TABLE", "HAS_STATE", "HAS_EVENT"}
                 ),
                 None,
             )
             if relation:
                 source["screen_route"] = route_by_screen.get(relation["source_canonical_id"])
+                continue
+            column_relation = next(
+                (
+                    r
+                    for r in relations
+                    if r["target_canonical_id"] == source["canonical_id"]
+                    and r["relationship_type"] == "HAS_COLUMN"
+                ),
+                None,
+            )
+            if column_relation:
+                screen_id = table_screen.get(column_relation["source_canonical_id"])
+                source["screen_route"] = route_by_screen.get(screen_id)
         return {
             "status": "ok",
             "question": question,
@@ -234,11 +276,44 @@ class HybridKnowledgeRetriever:
             )
             generated_answer = self.generator.generate(prompt, system=SYSTEM_PROMPT)
             result["answer"] = generated_answer
-            if generated_answer.strip() != ABSTAIN:
+            if not self._is_abstention(generated_answer):
                 result["answer_mode"] = "ollama_grounded"
         if generate:
             result.pop("context", None)
         return result
+
+    @staticmethod
+    def _merge_neighbors(*groups):
+        merged = []
+        seen = set()
+        for group in groups:
+            for row in group:
+                edge_key = tuple(
+                    (
+                        edge.get("relationship_type"),
+                        edge.get("from_canonical_id"),
+                        edge.get("to_canonical_id"),
+                    )
+                    for edge in row.get("path_edges", [])
+                )
+                key = (row.get("source_canonical_id"), row.get("canonical_id"), edge_key)
+                if key in seen:
+                    continue
+                seen.add(key)
+                merged.append(row)
+        return merged
+
+    @staticmethod
+    def _is_abstention(answer):
+        text = str(answer or "").strip().casefold()
+        if text == ABSTAIN.casefold():
+            return True
+        return bool(
+            re.match(
+                r"^no\s+encontr[eé]\s+conocimiento\s+validado\s+suficiente\b",
+                text,
+            )
+        )
 
     @staticmethod
     def _candidate_ids(seeds, neighbors):

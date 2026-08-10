@@ -346,3 +346,223 @@ def test_retrieve_uses_only_reauthorized_semantic_screen_as_graph_seed(monkeypat
     assert result["retrieval"]["approved_semantic_hits"] == 1
     assert result["sources"][0]["origin"] == "approved_semantic"
     assert result["approved_semantics"][0]["semantic_id"] == "semantic:retenciones-purpose"
+
+
+def test_grounded_generator_paraphrased_abstention_stays_insufficient_evidence():
+    class ParaphrasingAbstentionGenerator:
+        def generate(self, prompt, *, system):
+            return (
+                'No encontré conocimiento validado suficiente para determinar '
+                'los campos de la pantalla "Comprobantes electrónicos emitidos".'
+            )
+
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        generator=ParaphrasingAbstentionGenerator(),
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:comprobantes",
+                "entity_type": "screen",
+                "safe_label": "Comprobantes electrónicos emitidos",
+                "screen_route": "/admin/cuentasxcobrar/comprobantes",
+            }
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": "ENTIDADES VALIDADAS\n- screen: Comprobantes electrónicos emitidos",
+    }
+
+    result = retriever.ask("¿Qué campos tiene Comprobantes electrónicos emitidos?")
+
+    assert result["answer"].startswith("No encontré conocimiento validado suficiente")
+    assert result["answer_mode"] == "insufficient_evidence"
+
+
+def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
+    from types import SimpleNamespace
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def prepare(self, *, erp_id=None, knowledge_version=None):
+            return version, [], {}
+
+    monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            # Simulates the observed case where UI states crowd the top-k and the
+            # screen itself is not among the structural vector hits.
+            return [
+                {
+                    "canonical_id": "ui_state:comp",
+                    "entity_type": "ui_state",
+                    "safe_label": "Comprobantes electrónicos emitidos",
+                    "score": 0.7,
+                }
+            ]
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=object(),
+        embeddings=Embeddings(),
+    )
+
+    items = {
+        "ui_state:comp": SimpleNamespace(
+            id="db-state",
+            canonical_id="ui_state:comp",
+            entity_type="ui_state",
+            route=None,
+        ),
+        "screen:comp": SimpleNamespace(
+            id="db-screen",
+            canonical_id="screen:comp",
+            entity_type="screen",
+            route="/admin/cuentasxcobrar/comprobantes",
+        ),
+        "field:ruc": SimpleNamespace(
+            id="db-field-ruc",
+            canonical_id="field:ruc",
+            entity_type="field",
+            route=None,
+        ),
+        "field:desde": SimpleNamespace(
+            id="db-field-desde",
+            canonical_id="field:desde",
+            entity_type="field",
+            route=None,
+        ),
+        "table:comp": SimpleNamespace(
+            id="db-table",
+            canonical_id="table:comp",
+            entity_type="table",
+            route=None,
+        ),
+        "column:correo": SimpleNamespace(
+            id="db-column",
+            canonical_id="column:correo",
+            entity_type="table_column",
+            route=None,
+        ),
+    }
+    payloads = {
+        "db-state": {"label": "Comprobantes electrónicos emitidos"},
+        "db-screen": {"title": "Comprobantes electrónicos emitidos"},
+        "db-field-ruc": {"label": "RUC"},
+        "db-field-desde": {"label": "Desde"},
+        "db-table": {"name": None},
+        "db-column": {"name": "CORREO"},
+    }
+
+    retriever._validate = lambda ids, version_id: [items[cid] for cid in ids if cid in items]
+    retriever._effective = lambda item_id: payloads[item_id]
+
+    calls = []
+
+    def expand(seeds, erp_id, knowledge_version, limit):
+        calls.append((list(seeds), limit))
+        if seeds == ["ui_state:comp"]:
+            return [
+                {
+                    "source_canonical_id": "ui_state:comp",
+                    "canonical_id": "screen:comp",
+                    "entity_type": "screen",
+                    "path_edges": [
+                        {
+                            "relationship_type": "HAS_STATE",
+                            "from_canonical_id": "screen:comp",
+                            "to_canonical_id": "ui_state:comp",
+                        }
+                    ],
+                }
+            ]
+        assert seeds == ["screen:comp"]
+        assert limit >= 64
+        return [
+            {
+                "source_canonical_id": "screen:comp",
+                "canonical_id": "field:ruc",
+                "entity_type": "field",
+                "path_edges": [
+                    {
+                        "relationship_type": "HAS_FIELD",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "field:ruc",
+                    }
+                ],
+            },
+            {
+                "source_canonical_id": "screen:comp",
+                "canonical_id": "field:desde",
+                "entity_type": "field",
+                "path_edges": [
+                    {
+                        "relationship_type": "HAS_FIELD",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "field:desde",
+                    }
+                ],
+            },
+            {
+                "source_canonical_id": "screen:comp",
+                "canonical_id": "table:comp",
+                "entity_type": "table",
+                "path_edges": [
+                    {
+                        "relationship_type": "HAS_TABLE",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "table:comp",
+                    }
+                ],
+            },
+            {
+                "source_canonical_id": "screen:comp",
+                "canonical_id": "column:correo",
+                "entity_type": "table_column",
+                "path_edges": [
+                    {
+                        "relationship_type": "HAS_TABLE",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "table:comp",
+                    },
+                    {
+                        "relationship_type": "HAS_COLUMN",
+                        "from_canonical_id": "table:comp",
+                        "to_canonical_id": "column:correo",
+                    },
+                ],
+            },
+        ]
+
+    retriever._expand = expand
+
+    result = retriever.retrieve(
+        "¿Qué información aparece en la tabla de Comprobantes electrónicos emitidos?"
+    )
+
+    assert calls[0] == (["ui_state:comp"], 20)
+    assert calls[1][0] == ["screen:comp"]
+    assert any(r["relationship_type"] == "HAS_FIELD" for r in result["relations"])
+    assert any(r["relationship_type"] == "HAS_COLUMN" for r in result["relations"])
+    column_source = next(s for s in result["sources"] if s["canonical_id"] == "column:correo")
+    assert column_source["screen_route"] == "/admin/cuentasxcobrar/comprobantes"
