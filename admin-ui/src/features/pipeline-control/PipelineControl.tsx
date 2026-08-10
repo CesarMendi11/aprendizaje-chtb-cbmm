@@ -102,7 +102,7 @@ function ServiceState({ status }: { status: string }) {
   return <span className={`projection-service-state projection-service-state--${status}`}><i aria-hidden="true" />{status}</span>
 }
 
-export function PipelineControl() {
+export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: { view?: 'all' | 'pipeline' | 'publication'; onOpenJob?: (jobId: string) => void; focusJobId?: string | null }) {
   const [state, setState] = useState<PanelState>({ active: null, recent: [], system: null, loading: dataMode === 'live', launching: false, message: null })
 
   const loadRecent = useCallback(async () => {
@@ -193,14 +193,18 @@ export function PipelineControl() {
     }
   }
 
-  const selectJob = async (jobId: string) => {
+  const selectJob = useCallback(async (jobId: string) => {
     try {
       const detail = await getPipelineJob(jobId)
       setState((old) => ({ ...old, active: detail, message: null }))
     } catch (error: unknown) {
       setState((old) => ({ ...old, message: errorMessage(error) }))
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (dataMode === 'live' && view === 'pipeline' && focusJobId) void selectJob(focusJobId)
+  }, [focusJobId, selectJob, view])
 
   const job = state.active
   const checkpoint = job?.checkpoint ?? {}
@@ -236,8 +240,13 @@ export function PipelineControl() {
   const latestNeo4j = state.recent.find((item) => item.kind === 'neo4j_sync') ?? null
   const latestChroma = state.recent.find((item) => item.kind === 'chroma_sync') ?? null
   const latestSemanticSync = state.recent.find((item) => item.kind === 'semantic_sync') ?? null
+  const showPipeline = view !== 'publication'
+  const showPublication = view !== 'pipeline'
 
-  return <section className="pipeline-console" aria-label="Control del pipeline de conocimiento">
+  return <section className={`pipeline-console pipeline-console--${view}`} aria-label="Control del pipeline de conocimiento">
+    {dataMode !== 'live' && <div className="pipeline-notice">Modo demostración: los procesos están desactivados. Inicia la Admin UI con <code>VITE_ADMIN_API_MODE=live</code> para operar el pipeline.</div>}
+    {state.message && <div className="pipeline-error" role="alert">{state.message}</div>}
+    {showPipeline && <>
     <div className="pipeline-console__heading">
       <div><span className="pipeline-eyebrow">Pipeline operativo</span><h2>Construcción de conocimiento</h2><p>Ejecuta crawling, canonicalización e importación staging con trazabilidad persistente. Los runs cortos no reemplazan la versión activa del ERP.</p></div>
       <div className="pipeline-actions">
@@ -248,9 +257,6 @@ export function PipelineControl() {
         <button className="pipeline-refresh" onClick={() => void loadRecent()} disabled={dataMode !== 'live' || state.loading}>Actualizar jobs</button>
       </div>
     </div>
-
-    {dataMode !== 'live' && <div className="pipeline-notice">Modo demostración: los procesos están desactivados. Inicia la Admin UI con <code>VITE_ADMIN_API_MODE=live</code> para operar el pipeline.</div>}
-    {state.message && <div className="pipeline-error" role="alert">{state.message}</div>}
 
     <div className="pipeline-flow" aria-label="Etapas habilitadas">
       <span>Crawler</span><i>→</i><span>Canonical Builder</span><i>→</i><span>PostgreSQL staging</span>
@@ -294,8 +300,9 @@ export function PipelineControl() {
         {state.recent.length === 0 ? <p className="pipeline-empty">Todavía no hay jobs registrados.</p> : <div className="pipeline-job-list">{state.recent.slice(0, 12).map((item) => <button key={item.id} disabled={Boolean(job && !terminalStatuses.has(job.status) && item.id !== job.id)} onClick={() => void selectJob(item.id)} className={item.id === job?.id ? 'is-selected' : ''}><div><strong>{jobTitle(item)}</strong><span>{new Date(item.requested_at).toLocaleString()} · {labelStage(item.stage)}</span></div><JobBadge status={item.status} /></button>)}</div>}
       </article>
     </div>
+    </>}
 
-    <div className="pipeline-projections" aria-label="Proyecciones de la versión activa">
+    {showPublication && <div className="pipeline-projections" aria-label="Proyecciones de la versión activa">
       <div className="pipeline-projections__heading">
         <div><span className="pipeline-eyebrow">Publicación controlada</span><h3>Proyecciones de la versión ACTIVE</h3><p>PostgreSQL sigue siendo la fuente de verdad. Estos controles sólo capturan y verifican la versión activa; la versión staging no puede seleccionarse aquí.</p></div>
         <div className="projection-active-version"><span>Versión activa</span><code>{activeVersion ?? 'No disponible'}</code></div>
@@ -312,7 +319,7 @@ export function PipelineControl() {
           <div className="projection-card__head"><div><span>Grafo aprobado</span><h4>Neo4j</h4></div><ServiceState status={system?.services.neo4j.status ?? 'unknown'} /></div>
           <div className="projection-pair"><div><strong>{system?.services.neo4j.nodes ?? '—'}</strong><span>Nodos</span></div><div><strong>{system?.services.neo4j.relationships ?? '—'}</strong><span>Relaciones</span></div></div>
           <p>Upsert no destructivo desde la versión ACTIVE; <code>replace_version=false</code>.</p>
-          <div className="projection-action-row"><button onClick={() => void launchProjection('neo4j_sync')} disabled={!canSyncNeo4j}>Sincronizar Neo4j</button>{latestNeo4j && <button className="projection-job-link" onClick={() => void selectJob(latestNeo4j.id)}>Ver último job</button>}</div>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('neo4j_sync')} disabled={!canSyncNeo4j}>Sincronizar Neo4j</button>{latestNeo4j && <button className="projection-job-link" onClick={() => onOpenJob ? onOpenJob(latestNeo4j.id) : void selectJob(latestNeo4j.id)}>Ver último job</button>}</div>
           {latestNeo4j && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestNeo4j.status} /></div>}
         </article>
 
@@ -320,7 +327,7 @@ export function PipelineControl() {
           <div className="projection-card__head"><div><span>Índice semántico</span><h4>Chroma</h4></div><ServiceState status={system?.services.chroma.status ?? 'unknown'} /></div>
           <strong className="projection-main-value">{system?.services.chroma.documents ?? '—'}</strong><span className="projection-main-label">documentos recuperables</span>
           <p>Embeddings con <code>{system?.services.ollama.configured_embedding_model ?? 'modelo no disponible'}</code>. Ollama: {system?.services.ollama.status ?? 'unknown'}.</p>
-          <div className="projection-action-row"><button onClick={() => void launchProjection('chroma_sync')} disabled={!canSyncChroma}>Sincronizar Chroma</button>{latestChroma && <button className="projection-job-link" onClick={() => void selectJob(latestChroma.id)}>Ver último job</button>}</div>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('chroma_sync')} disabled={!canSyncChroma}>Sincronizar Chroma</button>{latestChroma && <button className="projection-job-link" onClick={() => onOpenJob ? onOpenJob(latestChroma.id) : void selectJob(latestChroma.id)}>Ver último job</button>}</div>
           {latestChroma && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestChroma.status} /></div>}
         </article>
 
@@ -328,10 +335,10 @@ export function PipelineControl() {
           <div className="projection-card__head"><div><span>Semántica HITL</span><h4>Chroma semántico</h4></div><ServiceState status={system?.services.semantic_chroma?.status ?? 'unknown'} /></div>
           <strong className="projection-main-value">{system?.services.semantic_chroma?.documents ?? '—'}</strong><span className="projection-main-label">propuestas aprobadas vectorizadas</span>
           <p>Colección separada <code>{system?.services.semantic_chroma?.collection ?? 'erp_assistant_semantic_v1'}</code>. Sólo publica propuestas revalidadas contra PostgreSQL ACTIVE.</p>
-          <div className="projection-action-row"><button onClick={() => void launchProjection('semantic_sync')} disabled={!canSyncSemantic}>Sincronizar semántica</button>{latestSemanticSync && <button className="projection-job-link" onClick={() => void selectJob(latestSemanticSync.id)}>Ver último job</button>}</div>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('semantic_sync')} disabled={!canSyncSemantic}>Sincronizar semántica</button>{latestSemanticSync && <button className="projection-job-link" onClick={() => onOpenJob ? onOpenJob(latestSemanticSync.id) : void selectJob(latestSemanticSync.id)}>Ver último job</button>}</div>
           {latestSemanticSync && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestSemanticSync.status} /></div>}
         </article>
       </div>
-    </div>
+    </div>}
   </section>
 }

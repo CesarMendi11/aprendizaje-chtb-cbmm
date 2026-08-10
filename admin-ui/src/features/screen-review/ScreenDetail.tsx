@@ -5,16 +5,20 @@ import { EmptyState } from '../../components/EmptyState'
 import { StatusBadge } from '../../components/StatusBadge'
 
 type Tab = 'summary' | 'structure' | 'inference' | 'traceability'
+export type ScreenDetailMode = 'full' | 'structural' | 'semantic'
 type SemanticAction = 'approve' | 'correct' | 'reject'
-const tabs: { id: Tab; label: string }[] = [{ id: 'summary', label: 'Resumen' }, { id: 'structure', label: 'Estructura' }, { id: 'inference', label: 'Inferencia' }, { id: 'traceability', label: 'Trazabilidad' }]
+const allTabs: { id: Tab; label: string }[] = [{ id: 'summary', label: 'Resumen' }, { id: 'structure', label: 'Estructura' }, { id: 'inference', label: 'Inferencia' }, { id: 'traceability', label: 'Trazabilidad' }]
+const tabsForMode = (mode: ScreenDetailMode) => mode === 'structural' ? allTabs.filter((item) => item.id === 'structure' || item.id === 'traceability') : mode === 'semantic' ? allTabs.filter((item) => item.id !== 'structure') : allTabs
 const shortened = (value: string | null) => value ? value.length > 22 ? `${value.slice(0, 10)}…${value.slice(-8)}` : value : 'No disponible en el snapshot de demostración'
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
 const messageOf = (error: unknown) => error instanceof AdminApiError ? error.message : error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
 function List({ values, empty = 'No disponible en el snapshot de demostración.' }: { values: string[]; empty?: string }) { return values.length ? <ul className="detail-list">{values.map((value) => <li key={value}>{value}</li>)}</ul> : <EmptyState>{empty}</EmptyState> }
 function Metric({ label, value }: { label: string; value: string | number }) { return <div className="metric"><span>{label}</span><strong>{value}</strong></div> }
 
-export function ScreenDetail({ context, onNavigate, onRefresh }: { context: ScreenReviewContextResponse; onNavigate: (id: string) => void; onRefresh: () => void | Promise<void> }) {
-  const [tab, setTab] = useState<Tab>('summary')
+export function ScreenDetail({ context, onNavigate, onRefresh, mode = 'full' }: { context: ScreenReviewContextResponse; onNavigate: (id: string) => void; onRefresh: () => void | Promise<void>; mode?: ScreenDetailMode }) {
+  const availableTabs = tabsForMode(mode)
+  const defaultTab: Tab = mode === 'structural' ? 'structure' : 'summary'
+  const [tab, setTab] = useState<Tab>(defaultTab)
   const [reviewer, setReviewer] = useState('')
   const [reason, setReason] = useState('')
   const [correctionMode, setCorrectionMode] = useState(false)
@@ -31,6 +35,8 @@ export function ScreenDetail({ context, onNavigate, onRefresh }: { context: Scre
   const proposalFresh = proposal ? proposal.evidence_matches_current_structure !== false : true
   const reviewable = dataMode === 'live' && proposalStatus === 'pending_review' && proposalFresh
   const inferenceAllowed = dataMode === 'live' && ['approved', 'corrected'].includes(context.screen.structural_review_status) && context.semantic_state === 'no_proposal'
+
+  useEffect(() => { setTab(defaultTab) }, [mode, defaultTab])
 
   useEffect(() => {
     setCorrectionMode(false)
@@ -108,10 +114,10 @@ export function ScreenDetail({ context, onNavigate, onRefresh }: { context: Scre
   }
 
   return <article className="detail">
-    <header className="detail-header"><div><p className="breadcrumb">{context.erp.name} <span>/</span> {context.module?.name ?? 'Sin módulo'}</p><div className="title-line"><h1>{context.screen.title ?? 'Pantalla sin título'}</h1><StatusBadge status={context.semantic_state} /></div><p className="route">{context.screen.route ?? 'Ruta no disponible en el snapshot de demostración'}</p></div><div className="position"><span>Posición en el módulo</span><strong>{context.navigation.module_screen_position} de {context.navigation.module_screen_total}</strong></div></header>
+    <header className="detail-header"><div><p className="breadcrumb">{context.erp.name} <span>/</span> {context.module?.name ?? 'Sin módulo'}</p><div className="title-line"><h1>{context.screen.title ?? 'Pantalla sin título'}</h1><StatusBadge status={mode === 'structural' ? context.screen.structural_review_status : context.semantic_state} /></div><p className="route">{context.screen.route ?? 'Ruta no disponible en el snapshot de demostración'}</p></div><div className="position"><span>Posición en el módulo</span><strong>{context.navigation.module_screen_position} de {context.navigation.module_screen_total}</strong></div></header>
     <div className="state-strip"><span>Estructura <StatusBadge status={context.screen.structural_review_status} /></span><span>Semántica <StatusBadge status={context.semantic_state} /></span><span>Evidencia <b>{e.evidence_available ? 'Disponible' : 'No disponible'}</b></span></div>
-    <section className="metrics" aria-label="Indicadores"><Metric label="Capabilities" value={p?.supported_capabilities.length ?? 0}/><Metric label="Propuesta activa" value={proposal ? '1' : 'Ninguna'}/><Metric label="Acciones de revisión" value={context.traceability.review_action_count}/><Metric label="Evidencia vs. estructura" value={proposal && (proposal.historical_structure_hash === null || proposal.diagnostic === 'Comparación no disponible en el snapshot de demostración.') ? 'No disponible en el snapshot de demostración' : proposal?.evidence_matches_current_structure ? 'Coincide' : proposal ? 'Difiere' : 'No aplica'}/></section>
-    <div className="tabs" role="tablist" aria-label="Detalle de pantalla">{tabs.map(({ id, label }) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>)}</div>
+    {mode === 'structural' ? <section className="metrics" aria-label="Indicadores estructurales"><Metric label="Campos" value={e.fields.length}/><Metric label="Controles" value={e.controls.length}/><Metric label="Tablas" value={e.tables.length}/><Metric label="Transiciones" value={e.transitions.length}/></section> : <section className="metrics" aria-label="Indicadores semánticos"><Metric label="Capabilities" value={p?.supported_capabilities.length ?? 0}/><Metric label="Propuesta activa" value={proposal ? '1' : 'Ninguna'}/><Metric label="Acciones de revisión" value={context.traceability.review_action_count}/><Metric label="Evidencia vs. estructura" value={proposal && (proposal.historical_structure_hash === null || proposal.diagnostic === 'Comparación no disponible en el snapshot de demostración.') ? 'No disponible en el snapshot de demostración' : proposal?.evidence_matches_current_structure ? 'Coincide' : proposal ? 'Difiere' : 'No aplica'}/></section>}
+    <div className="tabs" role="tablist" aria-label="Detalle de pantalla">{availableTabs.map(({ id, label }) => <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{label}</button>)}</div>
     <section className="tab-panel" role="tabpanel">
       {tab === 'summary' && <><Section title="Propósito"><p className="purpose">{p?.purpose_summary ?? 'La pantalla no tiene una propuesta semántica activa.'}</p></Section><Section title="Capabilities">{p?.supported_capabilities.length ? <div className="capabilities">{p.supported_capabilities.map((capability) => <div className="capability" key={`${capability.statement}-${capability.evidence_refs.join('|')}`}><span className="check" aria-hidden="true">✓</span><div><strong>{capability.statement}</strong><small>Evidencia: {capability.evidence_refs.join(', ')}</small></div></div>)}</div> : <EmptyState>No hay capabilities disponibles.</EmptyState>}</Section><div className="two-cols"><Section title="Limitaciones"><List values={p?.limitations ?? []}/></Section><Section title="Incertidumbres"><List values={p?.uncertainties ?? []}/></Section></div><SemanticGovernancePanel context={context} proposalFresh={proposalFresh} reviewer={reviewer} reason={reason} correctionMode={correctionMode} correctionText={correctionText} actionBusy={actionBusy} actionMessage={actionMessage} actionError={actionError} inferenceJob={inferenceJob} inferenceAllowed={inferenceAllowed} reviewable={reviewable} onReviewer={setReviewer} onReason={setReason} onCorrectionMode={setCorrectionMode} onCorrectionText={setCorrectionText} onInfer={() => void runInference()} onReview={(action) => void performReview(action)}/></>}
       {tab === 'structure' && <div className="structure-grid"><EvidenceGroup title="Campos" values={e.fields.map((x) => x.label)}/><EvidenceGroup title="Controles" values={e.controls.map((x) => x.label)}/><EvidenceGroup title="Tablas y columnas" values={e.tables.map((x) => `${x.name}: ${x.columns.map((c) => c.label).join(', ')}`)}/><EvidenceGroup title="Estados UI" values={e.ui_states.map((x) => x.title)}/><EvidenceGroup title="Eventos" values={e.events.map((x) => x.label)}/><EvidenceGroup title="Transiciones" values={e.transitions.map((x) => x.transition_id)}/><EvidenceGroup title="IDs de evidencia" values={e.evidence_ids}/><EvidenceGroup title="Advertencias" values={e.warnings}/></div>}
