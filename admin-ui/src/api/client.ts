@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { KnowledgeTreeResponse, ScreenReviewContextResponse } from '../types/admin'
+import type { AdminSystemStatusResponse, KnowledgeTreeResponse, ScreenReviewContextResponse } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -12,6 +12,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 const hasString = (value: Record<string, unknown>, key: string) => typeof value[key] === 'string'
 const validTree = (value: unknown): value is KnowledgeTreeResponse => isRecord(value) && Array.isArray(value.erps) && value.erps.every((erp) => isRecord(erp) && hasString(erp, 'erp_id') && hasString(erp, 'name') && Array.isArray(erp.modules) && Array.isArray(erp.unassigned_screens))
 const validContext = (value: unknown): value is ScreenReviewContextResponse => isRecord(value) && isRecord(value.erp) && isRecord(value.screen) && hasString(value.erp, 'erp_id') && hasString(value.screen, 'screen_id') && isRecord(value.structural_evidence) && Array.isArray(value.semantic_proposals) && Array.isArray(value.review_history) && isRecord(value.traceability) && isRecord(value.navigation) && value.reviewer_identity_verified === false
+const validSystemStatus = (value: unknown): value is AdminSystemStatusResponse => {
+  if (!isRecord(value) || typeof value.ok !== 'boolean' || !hasString(value, 'generated_at') || !isRecord(value.services) || !isRecord(value.knowledge)) return false
+  const services = value.services
+  const knowledge = value.knowledge
+  const validServices = ['postgresql', 'neo4j', 'chroma', 'ollama'].every((name) => isRecord(services[name]) && hasString(services[name] as Record<string, unknown>, 'status'))
+  return validServices && typeof knowledge.total_items === 'number' && typeof knowledge.approved === 'number' && typeof knowledge.corrected === 'number' && typeof knowledge.pending_review === 'number' && typeof knowledge.rejected === 'number' && Array.isArray(knowledge.sync_jobs)
+}
 
 async function request<T>(path: string, validate: (value: unknown) => value is T): Promise<T> {
   const controller = new AbortController()
@@ -42,4 +49,8 @@ export async function getScreenReviewContext(screenId: string): Promise<ScreenRe
     return Promise.resolve(context)
   }
   return request(`/api/admin/screens/${encodeURIComponent(screenId)}/review-context`, validContext)
+}
+
+export async function getSystemStatus(): Promise<AdminSystemStatusResponse> {
+  return request('/api/admin/system/status', validSystemStatus)
 }

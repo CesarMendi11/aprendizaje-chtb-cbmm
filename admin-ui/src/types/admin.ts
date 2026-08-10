@@ -27,3 +27,25 @@ export interface TraceabilitySummary { proposal_count: number; review_action_cou
 export interface ScreenNavigation { previous_screen_id: string | null; next_screen_id: string | null; module_screen_position: number; module_screen_total: number }
 export interface ReviewHistoryItem { semantic_id: string; action: string; previous_status: ReviewStatus; new_status: ReviewStatus; reason: string | null; reviewer_id: string; reviewer_identity_verified: false; corrected_payload: ScreenPurposeInference | null; created_at: string; diagnostic: string | null }
 export interface ScreenReviewContextResponse { erp: { erp_id: string; name: string; slug: string }; version: { knowledge_version_id: string; knowledge_version: string; status: string }; module: { module_id: string; name: string | null; route: string | null } | null; screen: { screen_id: string; title: string | null; route: string | null; structural_review_status: ReviewStatus; structural_available: boolean; diagnostic: string | null }; structural_evidence: StructuralEvidence; semantic_proposals: ProposalContext[]; active_proposal: ProposalContext | null; review_history: ReviewHistoryItem[]; effective_payload: ScreenPurposeInference | null; traceability: TraceabilitySummary; semantic_state: ScreenSemanticState; navigation: ScreenNavigation; reviewer_identity_verified: false }
+
+export interface AdminSystemStatusResponse {
+  ok: boolean
+  generated_at: string
+  services: {
+    postgresql: { status: string; active_version?: string | null; detail?: string }
+    neo4j: { status: string; uri?: string; database?: string; server_agent?: string; nodes?: number; relationships?: number; versions?: string[]; constraints?: number; detail?: string }
+    chroma: { status: string; collection?: string; documents?: number; detail?: string }
+    ollama: { status: string; configured_embedding_model?: string; configured_embedding_model_available?: boolean; models?: string[]; detail?: string }
+  }
+  knowledge: {
+    active_version: string | null
+    total_items: number
+    approved: number
+    corrected: number
+    pending_review: number
+    rejected: number
+    items_by_status: Record<string, number>
+    latest_import: { id: string; status: string; requested_knowledge_version: string; inserted_items: number; started_at: string | null; finished_at: string | null } | null
+    sync_jobs: Array<{ id: string; target: string; status: string; attempt_count: number; requested_at: string | null; started_at: string | null; finished_at: string | null }>
+  }
+}
