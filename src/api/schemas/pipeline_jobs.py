@@ -84,6 +84,10 @@ class ChromaSyncPipelineJobCreateRequest(BaseModel):
     pass
 
 
+class SemanticSyncPipelineJobCreateRequest(BaseModel):
+    pass
+
+
 class SemanticInferencePipelineJobCreateRequest(BaseModel):
     screen_id: str = Field(min_length=1, max_length=240)
 

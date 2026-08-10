@@ -15,6 +15,7 @@ from src.api.schemas.pipeline_jobs import (
     CrawlPipelineJobCreateRequest,
     Neo4jSyncPipelineJobCreateRequest,
     SemanticInferencePipelineJobCreateRequest,
+    SemanticSyncPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
 )
@@ -246,6 +247,24 @@ def create_chroma_sync_job(
     )
 
 
+
+
+@router.post(
+    "/semantic-sync",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_semantic_sync_job(
+    payload: SemanticSyncPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    return _queue_active_projection_job(
+        request=request,
+        session=session,
+        kind=PipelineJobKind.SEMANTIC_SYNC,
+        parameters={"projection": "semantic_chromadb"},
+    )
 
 
 @router.post(

@@ -40,6 +40,7 @@ class PipelineJobKind(StrEnum):
     NEO4J_SYNC = "neo4j_sync"
     CHROMA_SYNC = "chroma_sync"
     SEMANTIC_INFERENCE = "semantic_inference"
+    SEMANTIC_SYNC = "semantic_sync"
 
 
 class PipelineJobScope(StrEnum):

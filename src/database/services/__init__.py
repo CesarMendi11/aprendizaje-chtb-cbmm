@@ -10,6 +10,10 @@ from .pipeline_job_service import (
     PipelineJobService,
     PipelineJobTransitionError,
 )
+from .semantic_chroma_sync_service import (
+    SemanticChromaSyncService,
+    SemanticSafeDocumentBuilder,
+)
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
 from .semantic_review_service import SemanticReviewService
@@ -26,6 +30,8 @@ __all__ = [
     "PipelineJobService",
     "PipelineJobTransitionError",
     "SafeDocumentBuilder",
+    "SemanticChromaSyncService",
+    "SemanticSafeDocumentBuilder",
     "SemanticEffectivePayloadService",
     "SemanticProposalService",
     "SemanticReviewService",

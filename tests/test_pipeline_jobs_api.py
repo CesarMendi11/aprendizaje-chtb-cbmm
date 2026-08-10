@@ -339,7 +339,17 @@ def test_projection_sync_jobs_capture_only_the_single_active_version(api):
     assert vec["target"] == "active-v1"
     assert vec["parameters"]["active_only"] is True
     assert vec["parameters"]["knowledge_version_id"] == version_id
-    assert len(dispatcher.submitted) == 2
+
+    semantic = client.post("/api/admin/pipeline-jobs/semantic-sync", json={})
+    assert semantic.status_code == 202, semantic.text
+    sem = semantic.json()
+    assert sem["kind"] == "semantic_sync"
+    assert sem["scope"] == "version"
+    assert sem["target"] == "active-v1"
+    assert sem["parameters"]["active_only"] is True
+    assert sem["parameters"]["knowledge_version_id"] == version_id
+    assert sem["parameters"]["projection"] == "semantic_chromadb"
+    assert len(dispatcher.submitted) == 3
 
 
 def test_projection_sync_rejects_when_there_is_no_active_version(api):
@@ -347,6 +357,7 @@ def test_projection_sync_rejects_when_there_is_no_active_version(api):
     seed_active_version(factory, status=KnowledgeVersionStatus.IMPORTED)
     assert client.post("/api/admin/pipeline-jobs/neo4j-sync", json={}).status_code == 409
     assert client.post("/api/admin/pipeline-jobs/chroma-sync", json={}).status_code == 409
+    assert client.post("/api/admin/pipeline-jobs/semantic-sync", json={}).status_code == 409
     assert dispatcher.submitted == []
 
 

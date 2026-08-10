@@ -240,7 +240,7 @@ def test_runner_dispatches_projection_sync_executors():
     version_id = "00000000-0000-0000-0000-000000000555"
     jobs = []
     with factory.begin() as session:
-        for kind in ("neo4j_sync", "chroma_sync"):
+        for kind in ("neo4j_sync", "chroma_sync", "semantic_sync"):
             job = PipelineJobService(session).create(
                 kind=kind,
                 scope="version",
@@ -255,8 +255,12 @@ def test_runner_dispatches_projection_sync_executors():
 
     neo = FakeProjectionSyncExecutor("neo4j")
     chroma = FakeProjectionSyncExecutor("chromadb")
+    semantic = FakeProjectionSyncExecutor("semantic_chromadb")
     runner = PipelineJobRunner(
-        factory, neo4j_sync_executor=neo, chroma_sync_executor=chroma
+        factory,
+        neo4j_sync_executor=neo,
+        chroma_sync_executor=chroma,
+        semantic_sync_executor=semantic,
     )
     for _kind, job_id in jobs:
         runner.run(job_id)
@@ -271,6 +275,7 @@ def test_runner_dispatches_projection_sync_executors():
             assert stored.result_payload["active_only"] is True
     assert len(neo.calls) == 1
     assert len(chroma.calls) == 1
+    assert len(semantic.calls) == 1
     engine.dispose()
 
 

@@ -9,6 +9,10 @@ from .canonical_import_job_executor import (
 from .chroma_sync_job_executor import ChromaSyncJobExecutionError, ChromaSyncJobExecutor
 from .crawl_job_executor import CrawlJobExecutionError, CrawlJobExecutor
 from .neo4j_sync_job_executor import Neo4jSyncJobExecutionError, Neo4jSyncJobExecutor
+from .semantic_chroma_sync_job_executor import (
+    SemanticChromaSyncJobExecutionError,
+    SemanticChromaSyncJobExecutor,
+)
 from .semantic_inference_job_executor import (
     SemanticInferenceJobExecutionError,
     SemanticInferenceJobExecutor,
@@ -27,6 +31,8 @@ __all__ = [
     "CrawlJobExecutor",
     "Neo4jSyncJobExecutionError",
     "Neo4jSyncJobExecutor",
+    "SemanticChromaSyncJobExecutionError",
+    "SemanticChromaSyncJobExecutor",
     "SemanticInferenceJobExecutionError",
     "SemanticInferenceJobExecutor",
     "PipelineJobDispatcher",
