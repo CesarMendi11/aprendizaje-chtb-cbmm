@@ -49,3 +49,50 @@ export interface AdminSystemStatusResponse {
     sync_jobs: Array<{ id: string; target: string; status: string; attempt_count: number; requested_at: string | null; started_at: string | null; finished_at: string | null }>
   }
 }
+
+
+export type PipelineJobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
+export type PipelineJobScope = 'full' | 'screen'
+
+export interface PipelineJobSummary {
+  id: string
+  kind: string
+  status: PipelineJobStatus
+  scope: PipelineJobScope
+  target: string | null
+  profile_name: string | null
+  erp_id: string | null
+  knowledge_version_id: string | null
+  request_source: string
+  stage: string
+  progress_current: number
+  progress_total: number | null
+  progress_percent: number | null
+  requested_at: string
+  started_at: string | null
+  finished_at: string | null
+  error_summary: string | null
+}
+
+export interface PipelineJobDetail extends PipelineJobSummary {
+  parameters: Record<string, unknown>
+  checkpoint: Record<string, unknown>
+  result_payload: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PipelineJobListResponse {
+  items: PipelineJobSummary[]
+  total: number
+  limit: number
+  offset: number
+  next_offset: number | null
+}
+
+export interface CrawlJobRequest {
+  scope: PipelineJobScope
+  target?: string | null
+  headless: boolean
+  slow_mo: number
+}

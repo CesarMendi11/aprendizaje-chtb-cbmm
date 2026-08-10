@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, KnowledgeTreeResponse, ScreenReviewContextResponse } from '../types/admin'
+import type { AdminSystemStatusResponse, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -20,11 +20,22 @@ const validSystemStatus = (value: unknown): value is AdminSystemStatusResponse =
   return validServices && typeof knowledge.total_items === 'number' && typeof knowledge.approved === 'number' && typeof knowledge.corrected === 'number' && typeof knowledge.pending_review === 'number' && typeof knowledge.rejected === 'number' && Array.isArray(knowledge.sync_jobs)
 }
 
-async function request<T>(path: string, validate: (value: unknown) => value is T): Promise<T> {
+const pipelineStatuses = new Set(['queued', 'running', 'succeeded', 'failed', 'cancelled'])
+const pipelineScopes = new Set(['full', 'screen'])
+const validPipelineJobSummary = (value: unknown): value is PipelineJobSummary => {
+  if (!isRecord(value)) return false
+  return hasString(value, 'id') && hasString(value, 'kind') && hasString(value, 'status') && pipelineStatuses.has(String(value.status)) && hasString(value, 'scope') && pipelineScopes.has(String(value.scope)) && hasString(value, 'request_source') && hasString(value, 'stage') && typeof value.progress_current === 'number' && hasString(value, 'requested_at')
+}
+const validPipelineJobDetail = (value: unknown): value is PipelineJobDetail => validPipelineJobSummary(value) && isRecord(value) && isRecord(value.parameters) && isRecord(value.checkpoint) && hasString(value, 'created_at') && hasString(value, 'updated_at')
+const validPipelineJobList = (value: unknown): value is PipelineJobListResponse => isRecord(value) && Array.isArray(value.items) && value.items.every(validPipelineJobSummary) && typeof value.total === 'number' && typeof value.limit === 'number' && typeof value.offset === 'number'
+
+async function request<T>(path: string, validate: (value: unknown) => value is T, init: RequestInit = {}): Promise<T> {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), 8_000)
   try {
-    const response = await fetch(path, { signal: controller.signal, headers: { Accept: 'application/json' } })
+    const headers = new Headers(init.headers)
+    headers.set('Accept', 'application/json')
+    const response = await fetch(path, { ...init, signal: controller.signal, headers })
     if (!response.ok) throw new AdminApiError(response.status === 404 ? 'not_found' : 'http', response.status === 404 ? 'Pantalla no encontrada.' : `La API respondió con estado ${response.status}.`, response.status)
     const type = response.headers.get('content-type') ?? ''
     if (!type.includes('application/json')) throw new AdminApiError('invalid_response', 'La API no devolvió una respuesta JSON válida.')
@@ -53,4 +64,24 @@ export async function getScreenReviewContext(screenId: string): Promise<ScreenRe
 
 export async function getSystemStatus(): Promise<AdminSystemStatusResponse> {
   return request('/api/admin/system/status', validSystemStatus)
+}
+
+
+export async function getPipelineJobs(limit = 8): Promise<PipelineJobListResponse> {
+  if (dataMode !== 'live') return { items: [], total: 0, limit, offset: 0, next_offset: null }
+  return request(`/api/admin/pipeline-jobs?kind=crawl&limit=${encodeURIComponent(String(limit))}`, validPipelineJobList)
+}
+
+export async function getPipelineJob(jobId: string): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Los jobs sólo están disponibles en modo live.', 404)
+  return request(`/api/admin/pipeline-jobs/${encodeURIComponent(jobId)}`, validPipelineJobDetail)
+}
+
+export async function createCrawlJob(payload: CrawlJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'El crawler sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/crawl', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 }
