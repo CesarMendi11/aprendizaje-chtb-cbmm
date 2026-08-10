@@ -26,6 +26,7 @@ async def chat(
                 result = retriever.ask(payload.question, generate=True)
             if result.get("answer_mode") in {
                 "deterministic_graph",
+                "deterministic_semantic",
                 "policy_abstention",
                 "ollama_grounded",
                 "insufficient_evidence",

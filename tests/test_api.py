@@ -200,3 +200,52 @@ def test_chat_does_not_execute_mutative_actions(client, monkeypatch):
     payload = ask(client, "Guarda y elimina todos los registros").json()
     assert payload["status"] == "not_found"
     assert called is False
+
+
+def test_chat_returns_deterministic_semantic_answer(settings):
+    from contextlib import contextmanager
+
+    class Retriever:
+        def ask(self, question, *, generate=True):
+            return {
+                "answer": "Permite buscar y consultar retenciones.",
+                "answer_mode": "deterministic_semantic",
+                "intent": "SCREEN_PURPOSE",
+                "confidence": "high",
+                "evidence_ids": ["semantic:retenciones-purpose", "screen:retenciones"],
+                "retrieval": {
+                    "semantic_hits": 4,
+                    "semantic_candidates": 1,
+                    "approved_semantic_hits": 1,
+                    "graph_neighbors": 3,
+                    "validated_items": 4,
+                },
+                "sources": [
+                    {
+                        "safe_label": "Retenciones",
+                        "screen_route": "/admin/cuentasxcobrar/retenciones",
+                    }
+                ],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    app = create_app(settings)
+    app.state.hybrid_factory = Factory()
+    payload = ask(ApiClient(app), "¿Para qué sirve la pantalla Retenciones?").json()
+
+    assert payload["status"] == "answered"
+    assert payload["answer"] == "Permite buscar y consultar retenciones."
+    assert payload["answer_mode"] == "deterministic_semantic"
+    assert payload["intent"] == "SCREEN_PURPOSE"
+    assert payload["sources"] == [
+        {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen",
+        }
+    ]
+    assert payload["retrieval"]["approved_semantic_hits"] == 1

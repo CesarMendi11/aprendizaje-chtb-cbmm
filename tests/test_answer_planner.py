@@ -81,3 +81,59 @@ def test_search_by_field_uses_validated_field_and_search_control():
     assert "Products" in result["answer"]
     assert "SKU" in result["answer"]
     assert "Search" in result["answer"]
+
+
+def test_screen_purpose_uses_only_human_approved_semantic_payload():
+    planner = StructuralAnswerPlanner()
+    approved = [
+        {
+            "semantic_id": "semantic:retenciones-purpose",
+            "screen_id": "screen:retenciones",
+            "safe_label": "Retenciones",
+            "purpose_summary": "Permite buscar y consultar retenciones.",
+            "evidence_ids": ["evidence:screen"],
+        }
+    ]
+
+    result = planner.plan(
+        "¿Para qué sirve la pantalla Retenciones?",
+        [{"canonical_id": "screen:retenciones", "entity_type": "screen", "safe_label": "Retenciones"}],
+        [],
+        [],
+        approved_semantics=approved,
+    )
+
+    assert result == {
+        "supported": True,
+        "intent": "SCREEN_PURPOSE",
+        "answer": "Permite buscar y consultar retenciones.",
+        "evidence_ids": [
+            "semantic:retenciones-purpose",
+            "screen:retenciones",
+            "evidence:screen",
+        ],
+        "confidence": "high",
+        "answer_mode": "deterministic_semantic",
+    }
+
+
+def test_screen_purpose_does_not_use_semantics_for_an_unmentioned_screen():
+    planner = StructuralAnswerPlanner()
+    result = planner.plan(
+        "¿Para qué sirve la pantalla Personas?",
+        [],
+        [],
+        [],
+        approved_semantics=[
+            {
+                "semantic_id": "semantic:retenciones-purpose",
+                "screen_id": "screen:retenciones",
+                "safe_label": "Retenciones",
+                "purpose_summary": "Permite buscar y consultar retenciones.",
+                "evidence_ids": [],
+            }
+        ],
+    )
+
+    assert result["supported"] is False
+    assert result["intent"] == "SCREEN_PURPOSE"

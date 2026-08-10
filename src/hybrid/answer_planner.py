@@ -13,12 +13,45 @@ class StructuralAnswerPlanner:
             for k, values in (aliases or {}).items()
         }
 
-    def plan(self, question, sources, relations, semantic_hits, erp_context=None):
+    def plan(
+        self,
+        question,
+        sources,
+        relations,
+        semantic_hits,
+        erp_context=None,
+        approved_semantics=None,
+    ):
         intent = self._intent(question)
         if not intent:
             return {
                 "supported": False,
                 "intent": None,
+                "answer": None,
+                "evidence_ids": [],
+                "confidence": "low",
+            }
+        if intent == "SCREEN_PURPOSE":
+            matches = [
+                row
+                for row in (approved_semantics or [])
+                if self._matches(question, row.get("safe_label", ""))
+            ]
+            if matches:
+                semantic = matches[0]
+                evidence_ids = [semantic.get("semantic_id"), semantic.get("screen_id")]
+                evidence_ids.extend(semantic.get("evidence_ids", []))
+                return {
+                    "supported": True,
+                    "intent": intent,
+                    "answer": semantic["purpose_summary"],
+                    "evidence_ids": list(dict.fromkeys(i for i in evidence_ids if i)),
+                    "confidence": "high",
+                    "answer_mode": "deterministic_semantic",
+                }
+            return {
+                "supported": False,
+                "intent": intent,
                 "answer": None,
                 "evidence_ids": [],
                 "confidence": "low",
@@ -301,8 +334,22 @@ class StructuralAnswerPlanner:
     @staticmethod
     def _intent(question):
         q = question.casefold()
+        normalized = StructuralAnswerPlanner._norm(question)
         if re.search(r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)", q):
             return "MUTATIVE_ACTION"
+        if any(
+            phrase in normalized
+            for phrase in (
+                "para que sirve",
+                "que hace la pantalla",
+                "que hace esta pantalla",
+                "proposito de la pantalla",
+                "cual es el proposito",
+                "funcion de la pantalla",
+                "para que se usa la pantalla",
+            )
+        ):
+            return "SCREEN_PURPOSE"
         if re.search(
             r"\b(buscar|busco|busca|búsqueda|busqueda|filtrar)\b",
             q,

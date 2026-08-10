@@ -17,6 +17,7 @@ from .semantic_chroma_sync_service import (
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
 from .semantic_review_service import SemanticReviewService
+from .semantic_retrieval_authorization_service import SemanticRetrievalAuthorizationService
 
 __all__ = [
     "CanonicalImportService",
@@ -35,4 +36,5 @@ __all__ = [
     "SemanticEffectivePayloadService",
     "SemanticProposalService",
     "SemanticReviewService",
+    "SemanticRetrievalAuthorizationService",
 ]

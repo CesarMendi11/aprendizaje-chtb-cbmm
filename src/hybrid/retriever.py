@@ -6,7 +6,7 @@ from collections import OrderedDict
 from sqlalchemy import select
 
 from src.database.models import KnowledgeItem
-from src.database.services import ChromaSyncService
+from src.database.services import ChromaSyncService, SemanticRetrievalAuthorizationService
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
@@ -60,10 +60,24 @@ TYPE_NAMES = {
 
 class HybridKnowledgeRetriever:
     def __init__(
-        self, session, *, chroma, neo4j, embeddings, generator=None, planner=None, aliases=None
+        self,
+        session,
+        *,
+        chroma,
+        neo4j,
+        embeddings,
+        semantic_chroma=None,
+        semantic_authorizer=None,
+        generator=None,
+        planner=None,
+        aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
+        self.semantic_chroma = semantic_chroma
         self.embeddings, self.generator = embeddings, generator
+        self.semantic_authorizer = semantic_authorizer or (
+            SemanticRetrievalAuthorizationService(session) if session is not None else None
+        )
         self.planner = planner or StructuralAnswerPlanner(aliases)
 
     def retrieve(
@@ -73,17 +87,39 @@ class HybridKnowledgeRetriever:
             erp_id=erp_id, knowledge_version=knowledge_version
         )
         erp_id, knowledge_version = version.erp_id, version.knowledge_version
+        query_embedding = self.embeddings.embed(question)[0]
         semantic = self.chroma.query(
-            self.embeddings.embed(question)[0],
+            query_embedding,
             top_k=semantic_top_k,
             erp_id=erp_id,
             knowledge_version=knowledge_version,
         )
-        seeds = [row["canonical_id"] for row in semantic]
+        semantic_candidates = (
+            self.semantic_chroma.query(
+                query_embedding,
+                top_k=semantic_top_k,
+                erp_id=erp_id,
+                knowledge_version=knowledge_version,
+            )
+            if self.semantic_chroma is not None
+            else []
+        )
+        approved_semantics = (
+            self.semantic_authorizer.authorize_hits(semantic_candidates, version=version)
+            if self.semantic_authorizer is not None
+            else []
+        )
+        seeds = list(
+            OrderedDict.fromkeys(
+                [row["canonical_id"] for row in semantic]
+                + [row["screen_id"] for row in approved_semantics]
+            )
+        )
         neighbors = self._expand(seeds, erp_id, knowledge_version, graph_limit)
         ids = self._candidate_ids(seeds, neighbors)
         valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
+        approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
         graph_ids = {n["canonical_id"] for n in neighbors}
         sources = []
         for cid in ids:
@@ -91,17 +127,30 @@ class HybridKnowledgeRetriever:
             if not item:
                 continue
             hit = semantic_by_id.get(cid)
+            approved_semantic = approved_semantics_by_screen.get(cid)
             payload = self._effective(item.id)
+            if approved_semantic and hit and cid in graph_ids:
+                origin = "structural_semantic+approved_semantic+graph"
+            elif approved_semantic and cid in graph_ids:
+                origin = "approved_semantic+graph"
+            elif hit and cid in graph_ids:
+                origin = "semantic+graph"
+            elif approved_semantic:
+                origin = "approved_semantic"
+            else:
+                origin = "semantic" if hit else "graph"
             sources.append(
                 {
                     "canonical_id": cid,
                     "entity_type": item.entity_type,
                     "safe_label": self._label(item.entity_type, payload),
                     "screen_route": item.route,
-                    "origin": "semantic+graph"
-                    if hit and cid in graph_ids
-                    else ("semantic" if hit else "graph"),
-                    "score": hit.get("score") if hit else None,
+                    "origin": origin,
+                    "score": (
+                        approved_semantic.get("score")
+                        if approved_semantic is not None
+                        else (hit.get("score") if hit else None)
+                    ),
                 }
             )
         relations = self._relations(neighbors, valid)
@@ -131,18 +180,25 @@ class HybridKnowledgeRetriever:
             "knowledge_version": knowledge_version,
             "retrieval": {
                 "semantic_hits": len(semantic),
+                "semantic_candidates": len(semantic_candidates),
+                "approved_semantic_hits": len(approved_semantics),
                 "graph_neighbors": len(neighbors),
                 "validated_items": len(sources),
             },
             "sources": sources[:10],
             "relations": relations,
-            "context": self._context(sources, relations, semantic),
+            "approved_semantics": approved_semantics,
+            "context": self._context(sources, relations, semantic, approved_semantics),
         }
 
     def ask(self, question, *, generate=True, **kwargs):
         result = self.retrieve(question, **kwargs)
         plan = self.planner.plan(
-            question, result["sources"], result.get("relations", []), result["sources"]
+            question,
+            result["sources"],
+            result.get("relations", []),
+            result["sources"],
+            approved_semantics=result.get("approved_semantics", []),
         )
         result["intent"] = plan.get("intent")
         result["confidence"] = plan.get("confidence")
@@ -150,7 +206,7 @@ class HybridKnowledgeRetriever:
         result["answer_mode"] = "insufficient_evidence"
         if plan["supported"]:
             result["answer"] = plan["answer"]
-            result["answer_mode"] = "deterministic_graph"
+            result["answer_mode"] = plan.get("answer_mode", "deterministic_graph")
             result["evidence_ids"] = plan["evidence_ids"]
             result.pop("context", None)
             return result
@@ -311,15 +367,26 @@ class HybridKnowledgeRetriever:
         return out
 
     @staticmethod
-    def _context(sources, relations, semantic):
+    def _context(sources, relations, semantic, approved_semantics=None):
         entities = "\n".join(f"- {s['entity_type']}: {s['safe_label']}" for s in sources[:10])
         matches = "\n".join(
             f"- {s['entity_type']}: {s.get('safe_label', s['canonical_id'])}" for s in semantic[:8]
         )
         facts = "\n".join(HybridKnowledgeRetriever._natural_fact(r) for r in relations[:12])
+        semantic_facts = []
+        for row in approved_semantics or []:
+            semantic_facts.append(
+                f'- Propósito aprobado de la pantalla "{row["safe_label"]}": {row["purpose_summary"]}'
+            )
+            semantic_facts.extend(
+                f'- Capacidad aprobada de "{row["safe_label"]}": {statement}'
+                for statement in row.get("supported_capabilities", [])
+            )
+        approved = "\n".join(semantic_facts[:12])
         return (
-            f"COINCIDENCIAS SEMÁNTICAS\n{matches}\n\nENTIDADES VALIDADAS\n{entities}\n\n"
-            f"RELACIONES VALIDADAS\n{facts}"
+            f"COINCIDENCIAS SEMÁNTICAS ESTRUCTURALES\n{matches}\n\n"
+            f"SEMÁNTICA HUMANA APROBADA\n{approved}\n\n"
+            f"ENTIDADES VALIDADAS\n{entities}\n\nRELACIONES VALIDADAS\n{facts}"
         )[:6000]
 
     @staticmethod

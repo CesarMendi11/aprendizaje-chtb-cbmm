@@ -7,7 +7,7 @@ from scripts.database_common import database_engine, project_path
 from src.config.neo4j_settings import Neo4jSettings
 from src.database.session import session_scope
 from src.graph.client import Neo4jClient
-from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
+from src.vectorstore import ChromaRepository, OllamaEmbeddingClient, SemanticChromaRepository
 from src.vectorstore.ollama_generation import OllamaGenerationClient
 
 from .aliases import semantic_aliases_for
@@ -28,9 +28,11 @@ class HybridRetrieverFactory:
                 path=os.getenv("ERP_ASSISTANT_CHROMA_PATH")
                 or project_path("data/vectorstore/chroma")
             )
+            semantic_chroma = SemanticChromaRepository(client=chroma.client)
             yield HybridKnowledgeRetriever(
                 session,
                 chroma=chroma,
+                semantic_chroma=semantic_chroma,
                 neo4j=graph,
                 embeddings=OllamaEmbeddingClient(),
                 generator=OllamaGenerationClient() if generate else None,
