@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -19,6 +19,28 @@ const validSystemStatus = (value: unknown): value is AdminSystemStatusResponse =
   const validServices = ['postgresql', 'neo4j', 'chroma', 'ollama'].every((name) => isRecord(services[name]) && hasString(services[name] as Record<string, unknown>, 'status'))
   return validServices && typeof knowledge.total_items === 'number' && typeof knowledge.approved === 'number' && typeof knowledge.corrected === 'number' && typeof knowledge.pending_review === 'number' && typeof knowledge.rejected === 'number' && Array.isArray(knowledge.sync_jobs)
 }
+
+
+
+const reviewStatuses = new Set(['pending_review', 'approved', 'corrected', 'rejected'])
+const validStructuralReviewItemSummary = (value: unknown): boolean => {
+  if (!isRecord(value)) return false
+  return hasString(value, 'id') && hasString(value, 'canonical_id') && hasString(value, 'entity_type') &&
+    hasString(value, 'current_review_status') && reviewStatuses.has(String(value.current_review_status)) &&
+    hasString(value, 'generated_review_status') && reviewStatuses.has(String(value.generated_review_status)) &&
+    typeof value.review_revision === 'number' && hasString(value, 'knowledge_version_id') &&
+    hasString(value, 'knowledge_version') && hasString(value, 'version_status') && hasString(value, 'content_hash') &&
+    hasString(value, 'created_at') && hasString(value, 'updated_at')
+}
+const validStructuralReviewList = (value: unknown): value is StructuralReviewListResponse =>
+  isRecord(value) && Array.isArray(value.items) && value.items.every(validStructuralReviewItemSummary) &&
+  isRecord(value.status_counts) && typeof value.total === 'number' && typeof value.limit === 'number' &&
+  typeof value.offset === 'number'
+const validStructuralReviewDetail = (value: unknown): value is StructuralReviewItemDetail =>
+  validStructuralReviewItemSummary(value) && isRecord(value) && isRecord(value.source_payload) &&
+  isRecord(value.effective_payload) && Array.isArray(value.review_history) && value.reviewer_identity_verified === false
+const validStructuralReviewResult = (value: unknown): value is StructuralReviewResult =>
+  validStructuralReviewDetail(value) && isRecord(value) && hasString(value, 'performed_action')
 
 const pipelineStatuses = new Set(['queued', 'running', 'succeeded', 'failed', 'cancelled'])
 const pipelineScopes = new Set(['full', 'screen'])
@@ -105,3 +127,44 @@ export async function createCanonicalImportJob(payload: CanonicalImportJobReques
     body: JSON.stringify(payload),
   })
 }
+
+export interface StructuralReviewListQuery {
+  knowledgeVersionId: string
+  status?: string
+  entityType?: string
+  search?: string
+  limit?: number
+  offset?: number
+}
+
+export async function getStructuralReviewItems(queryInput: StructuralReviewListQuery): Promise<StructuralReviewListResponse> {
+  if (dataMode !== 'live') return { items: [], status_counts: {}, total: 0, limit: queryInput.limit ?? 100, offset: queryInput.offset ?? 0, next_offset: null }
+  const query = new URLSearchParams({
+    knowledge_version_id: queryInput.knowledgeVersionId,
+    limit: String(queryInput.limit ?? 100),
+    offset: String(queryInput.offset ?? 0),
+  })
+  if (queryInput.status) query.set('status', queryInput.status)
+  if (queryInput.entityType) query.set('entity_type', queryInput.entityType)
+  if (queryInput.search?.trim()) query.set('search', queryInput.search.trim())
+  return request(`/api/admin/structural-review/items?${query.toString()}`, validStructuralReviewList)
+}
+
+export async function getStructuralReviewItem(itemId: string): Promise<StructuralReviewItemDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'La revisión estructural sólo está disponible en modo live.', 404)
+  return request(`/api/admin/structural-review/items/${encodeURIComponent(itemId)}`, validStructuralReviewDetail)
+}
+
+async function postStructuralReviewAction(itemId: string, action: string, payload: StructuralReviewRequest | StructuralCorrectionRequest): Promise<StructuralReviewResult> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La revisión estructural sólo puede operar en modo live.')
+  return request(`/api/admin/structural-review/items/${encodeURIComponent(itemId)}/${action}`, validStructuralReviewResult, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export const approveStructuralReviewItem = (itemId: string, payload: StructuralReviewRequest) => postStructuralReviewAction(itemId, 'approve', payload)
+export const rejectStructuralReviewItem = (itemId: string, payload: StructuralReviewRequest) => postStructuralReviewAction(itemId, 'reject', payload)
+export const resetStructuralReviewItem = (itemId: string, payload: StructuralReviewRequest) => postStructuralReviewAction(itemId, 'reset', payload)
+export const correctStructuralReviewItem = (itemId: string, payload: StructuralCorrectionRequest) => postStructuralReviewAction(itemId, 'correct', payload)

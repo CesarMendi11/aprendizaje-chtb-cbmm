@@ -104,3 +104,66 @@ export interface CanonicalBuildJobRequest {
 export interface CanonicalImportJobRequest {
   source_canonical_job_id: string
 }
+
+export interface StructuralReviewItemSummary {
+  id: string
+  canonical_id: string
+  entity_type: string
+  parent_canonical_id: string | null
+  title: string | null
+  route: string | null
+  current_review_status: ReviewStatus
+  generated_review_status: ReviewStatus
+  review_revision: number
+  knowledge_version_id: string
+  knowledge_version: string
+  version_status: string
+  content_hash: string
+  created_at: string
+  updated_at: string
+}
+
+export interface StructuralReviewAction {
+  action: string
+  previous_status: ReviewStatus
+  new_status: ReviewStatus
+  source: string
+  reviewer_id: string | null
+  reason: string | null
+  corrected_payload: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface StructuralReviewItemDetail extends StructuralReviewItemSummary {
+  source_payload: Record<string, unknown>
+  corrected_payload: Record<string, unknown> | null
+  effective_payload: Record<string, unknown>
+  was_corrected: boolean
+  review_history: StructuralReviewAction[]
+  reviewer_identity_verified: false
+}
+
+export interface StructuralReviewListResponse {
+  items: StructuralReviewItemSummary[]
+  status_counts: Record<string, number>
+  total: number
+  limit: number
+  offset: number
+  next_offset: number | null
+}
+
+export interface StructuralReviewRequest {
+  reviewer_id: string
+  reason?: string | null
+  expected_status: ReviewStatus
+  expected_revision: number
+}
+
+export interface StructuralCorrectionRequest extends StructuralReviewRequest {
+  reason: string
+  corrected_payload: Record<string, unknown>
+}
+
+export interface StructuralReviewResult extends StructuralReviewItemDetail {
+  performed_action: 'approve' | 'correct' | 'reject' | 'reset_to_pending'
+}

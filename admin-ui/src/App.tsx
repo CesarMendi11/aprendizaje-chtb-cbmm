@@ -4,6 +4,7 @@ import { KnowledgeSidebar } from './features/knowledge-tree/KnowledgeSidebar'
 import { ScreenDetail } from './features/screen-review/ScreenDetail'
 import { SystemDashboard } from './features/system-dashboard/SystemDashboard'
 import { PipelineControl } from './features/pipeline-control/PipelineControl'
+import { StructuralReviewConsole } from './features/structural-review/StructuralReviewConsole'
 import type { KnowledgeTreeResponse, ScreenReviewContextResponse } from './types/admin'
 
 type LoadState<T> = { status: 'loading'; data?: T } | { status: 'ready'; data: T } | { status: 'error'; message: string; data?: T }
@@ -23,6 +24,7 @@ export default function App() {
     <header className="topbar"><div className="brand"><div className="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 7h18v18H7zM11 12h10M11 16h10M11 20h6"/></svg></div><div><strong>Consola de conocimiento</strong><span>{erp?.name ?? 'CBMM'}</span></div></div><div className="top-actions"><span className="provisional">Administración local provisional</span><span className={`mode mode--${dataMode}`}>{dataMode === 'demo' ? 'Modo demostración' : 'Modo live'}</span><span className="source"><i />{dataMode === 'demo' ? 'Snapshot validado' : tree.status === 'ready' ? 'API disponible' : tree.status === 'error' ? 'API no disponible' : 'Verificando API'}</span><button className="reload" onClick={() => void loadTree()} disabled={tree.status === 'loading'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2 5M20 5v6h-6"/></svg>Volver a cargar</button></div></header>
     <SystemDashboard />
     <PipelineControl />
+    <StructuralReviewConsole />
     {tree.status === 'loading' && !tree.data && <main className="center-state" aria-live="polite"><span className="spinner"/>Cargando jerarquía administrativa…</main>}
     {tree.status === 'error' && !tree.data && <ErrorState message={tree.message} retry={loadTree}/>} 
     {tree.data && !erp && <main className="center-state"><h1>Árbol de conocimiento vacío</h1><p>La fuente de datos no contiene un ERP activo con pantallas.</p><button onClick={() => void loadTree()}>Reintentar</button></main>}
