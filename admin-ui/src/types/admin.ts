@@ -35,6 +35,7 @@ export interface AdminSystemStatusResponse {
     postgresql: { status: string; active_version?: string | null; detail?: string }
     neo4j: { status: string; uri?: string; database?: string; server_agent?: string; nodes?: number; relationships?: number; versions?: string[]; constraints?: number; detail?: string }
     chroma: { status: string; collection?: string; documents?: number; detail?: string }
+    semantic_chroma?: { status: string; collection?: string; documents?: number; detail?: string }
     ollama: { status: string; configured_embedding_model?: string; configured_embedding_model_available?: boolean; models?: string[]; detail?: string }
   }
   knowledge: {

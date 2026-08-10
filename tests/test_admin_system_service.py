@@ -32,6 +32,11 @@ def test_system_status_is_ok_when_all_dependencies_are_available(monkeypatch):
     )
     monkeypatch.setattr(
         admin_system_service,
+        "probe_semantic_chroma",
+        lambda: {"status": "ready", "documents": 1},
+    )
+    monkeypatch.setattr(
+        admin_system_service,
         "probe_ollama",
         lambda: {"status": "online"},
     )
@@ -42,6 +47,7 @@ def test_system_status_is_ok_when_all_dependencies_are_available(monkeypatch):
     assert result["knowledge"]["active_version"] == "version-test"
     assert result["services"]["neo4j"]["nodes"] == 21
     assert result["services"]["chroma"]["documents"] == 19
+    assert result["services"]["semantic_chroma"]["documents"] == 1
 
 
 def test_system_status_keeps_partial_results_when_one_dependency_is_offline(
@@ -77,6 +83,11 @@ def test_system_status_keeps_partial_results_when_one_dependency_is_offline(
     )
     monkeypatch.setattr(
         admin_system_service,
+        "probe_semantic_chroma",
+        lambda: {"status": "ready", "documents": 1},
+    )
+    monkeypatch.setattr(
+        admin_system_service,
         "probe_ollama",
         lambda: {"status": "online"},
     )
@@ -87,4 +98,5 @@ def test_system_status_keeps_partial_results_when_one_dependency_is_offline(
     assert result["services"]["postgresql"]["status"] == "online"
     assert result["services"]["neo4j"]["status"] == "offline"
     assert result["services"]["chroma"]["status"] == "ready"
+    assert result["services"]["semantic_chroma"]["status"] == "ready"
     assert result["services"]["ollama"]["status"] == "online"

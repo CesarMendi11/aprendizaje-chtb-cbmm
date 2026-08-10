@@ -20,6 +20,7 @@ from src.database.models import (
 from src.graph.client import Neo4jClient
 from src.graph.repository import Neo4jRepository
 from src.vectorstore.chroma_repository import collection_name
+from src.vectorstore.semantic_chroma_repository import semantic_collection_name
 
 
 def _enum_value(value: Any) -> str:
@@ -206,6 +207,42 @@ def probe_chroma() -> dict[str, Any]:
         }
 
 
+def probe_semantic_chroma() -> dict[str, Any]:
+    """Probe the dedicated projection that stores approved semantic proposals."""
+    location = Path(
+        os.getenv(
+            "ERP_ASSISTANT_CHROMA_PATH",
+            "data/vectorstore/chroma",
+        )
+    )
+
+    if not location.exists():
+        return {
+            "status": "unavailable",
+            "collection": semantic_collection_name(),
+            "documents": 0,
+            "detail": "No existe el almacenamiento local de Chroma.",
+        }
+
+    try:
+        import chromadb
+
+        client = chromadb.PersistentClient(path=str(location))
+        collection = client.get_collection(semantic_collection_name())
+        return {
+            "status": "ready",
+            "collection": semantic_collection_name(),
+            "documents": int(collection.count()),
+        }
+    except Exception:
+        return {
+            "status": "unavailable",
+            "collection": semantic_collection_name(),
+            "documents": 0,
+            "detail": "No fue posible consultar la colección semántica de Chroma.",
+        }
+
+
 def probe_ollama() -> dict[str, Any]:
     settings = OllamaEmbeddingSettings()
 
@@ -247,12 +284,14 @@ def collect_admin_system_status(session_factory) -> dict[str, Any]:
     postgresql, knowledge = probe_postgresql(session_factory)
     neo4j = probe_neo4j()
     chroma = probe_chroma()
+    semantic_chroma = probe_semantic_chroma()
     ollama = probe_ollama()
 
     services = {
         "postgresql": postgresql,
         "neo4j": neo4j,
         "chroma": chroma,
+        "semantic_chroma": semantic_chroma,
         "ollama": ollama,
     }
 

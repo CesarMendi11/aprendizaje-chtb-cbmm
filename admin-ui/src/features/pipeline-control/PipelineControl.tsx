@@ -6,6 +6,7 @@ import {
   createChromaSyncJob,
   createCrawlJob,
   createNeo4jSyncJob,
+  createSemanticSyncJob,
   dataMode,
   getPipelineJob,
   getPipelineJobs,
@@ -59,6 +60,9 @@ const labelStage = (stage: string) => ({
   evidence_prepared: 'Evidencia preparada',
   generating_semantic_proposal: 'Generando propuesta con Ollama',
   proposal_ready: 'Propuesta semántica lista',
+  semantic_documents_prepared: 'Semántica publicable preparada',
+  embedding_and_syncing_semantics: 'Vectorizando semántica aprobada',
+  semantic_chroma_synced: 'Semántica sincronizada en Chroma',
   completed: 'Finalizado',
   failed: 'Falló',
 }[stage] ?? stage.replaceAll('_', ' '))
@@ -74,6 +78,7 @@ const kindLabel = (kind: string) => ({
   neo4j_sync: 'Sync Neo4j',
   chroma_sync: 'Sync Chroma',
   semantic_inference: 'Inferencia semántica',
+  semantic_sync: 'Sync semántica',
 }[kind] ?? kind.replaceAll('_', ' '))
 
 const targetLabel = (job: PipelineJobSummary | PipelineJobDetail) => {
@@ -173,11 +178,16 @@ export function PipelineControl() {
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
-  const launchProjection = async (kind: 'neo4j_sync' | 'chroma_sync') => {
+  const launchProjection = async (kind: 'neo4j_sync' | 'chroma_sync' | 'semantic_sync') => {
     if (dataMode !== 'live' || isBusy) return
     setState((old) => ({ ...old, launching: true, message: null }))
     try {
-      rememberJob(kind === 'neo4j_sync' ? await createNeo4jSyncJob() : await createChromaSyncJob())
+      const created = kind === 'neo4j_sync'
+        ? await createNeo4jSyncJob()
+        : kind === 'chroma_sync'
+          ? await createChromaSyncJob()
+          : await createSemanticSyncJob()
+      rememberJob(created)
     } catch (error: unknown) {
       setState((old) => ({ ...old, launching: false, message: errorMessage(error) }))
     }
@@ -220,9 +230,12 @@ export function PipelineControl() {
   const chromaReady = system?.services.chroma.status === 'ready'
   const ollamaReady = system?.services.ollama.status === 'online' && system.services.ollama.configured_embedding_model_available === true
   const canSyncNeo4j = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && neo4jOnline)
+  const semanticChromaReady = system?.services.semantic_chroma?.status === 'ready' || system?.services.semantic_chroma?.status === 'unavailable'
   const canSyncChroma = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && chromaReady && ollamaReady)
+  const canSyncSemantic = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && chromaReady && semanticChromaReady && ollamaReady)
   const latestNeo4j = state.recent.find((item) => item.kind === 'neo4j_sync') ?? null
   const latestChroma = state.recent.find((item) => item.kind === 'chroma_sync') ?? null
+  const latestSemanticSync = state.recent.find((item) => item.kind === 'semantic_sync') ?? null
 
   return <section className="pipeline-console" aria-label="Control del pipeline de conocimiento">
     <div className="pipeline-console__heading">
@@ -262,9 +275,12 @@ export function PipelineControl() {
 
           {job.kind === 'semantic_inference' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Capabilities" value={asNumber(result.capabilities)}/><Counter label="Estado propuesta" value={asString(result.proposal_status) ?? '—'}/><Counter label="Creada" value={asBoolean(result.created) ? 'Sí' : 'No'}/><Counter label="Ollama" value={asBoolean(result.ollama_called) ? 'Ejecutado' : 'Reutilizado'}/><Counter label="Prompt" value={asString(result.prompt_version) ?? asString(checkpoint.prompt_version) ?? '—'}/><Counter label="Modelo" value={asString(result.generation_model) ?? asString(checkpoint.generation_model) ?? '—'}/></div>}
 
+          {job.kind === 'semantic_sync' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Publicables" value={asNumber(result.publishable_proposals)}/><Counter label="Documentos" value={asNumber(result.documents) || asNumber(checkpoint.documents)}/><Counter label="Actualizados" value={asNumber(result.inserted_or_updated) || asNumber(checkpoint.inserted_or_updated)}/><Counter label="Stale removidos" value={asNumber(result.removed_stale)}/><Counter label="Dimensiones" value={asNumber(result.embedding_dimensions) || asNumber(checkpoint.embedding_dimensions)}/><Counter label="Omitidos" value={asNumber(result.skipped)}/></div>}
+
+
           {job.target && <p className="pipeline-target"><span>Objetivo</span><code>{job.target}</code></p>}
           {knowledgeVersion && <p className="pipeline-target"><span>Knowledge version</span><code>{knowledgeVersion}</code></p>}
-          {job.kind === 'chroma_sync' && asString(result.embedding_model) && <p className="pipeline-target"><span>Embedding model</span><code>{asString(result.embedding_model)}</code></p>}
+          {(job.kind === 'chroma_sync' || job.kind === 'semantic_sync') && asString(result.embedding_model) && <p className="pipeline-target"><span>Embedding model</span><code>{asString(result.embedding_model)}</code></p>}
           {job.error_summary && <p className="pipeline-job-error">{job.error_summary}</p>}
           {artifactRoot && <p className="pipeline-artifacts"><span>Artefactos aislados</span><code>{artifactRoot}</code></p>}
           {canonicalDir && <p className="pipeline-artifacts"><span>Canonical</span><code>{canonicalDir}</code></p>}
@@ -306,6 +322,14 @@ export function PipelineControl() {
           <p>Embeddings con <code>{system?.services.ollama.configured_embedding_model ?? 'modelo no disponible'}</code>. Ollama: {system?.services.ollama.status ?? 'unknown'}.</p>
           <div className="projection-action-row"><button onClick={() => void launchProjection('chroma_sync')} disabled={!canSyncChroma}>Sincronizar Chroma</button>{latestChroma && <button className="projection-job-link" onClick={() => void selectJob(latestChroma.id)}>Ver último job</button>}</div>
           {latestChroma && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestChroma.status} /></div>}
+        </article>
+
+        <article className="projection-card">
+          <div className="projection-card__head"><div><span>Semántica HITL</span><h4>Chroma semántico</h4></div><ServiceState status={system?.services.semantic_chroma?.status ?? 'unknown'} /></div>
+          <strong className="projection-main-value">{system?.services.semantic_chroma?.documents ?? '—'}</strong><span className="projection-main-label">propuestas aprobadas vectorizadas</span>
+          <p>Colección separada <code>{system?.services.semantic_chroma?.collection ?? 'erp_assistant_semantic_v1'}</code>. Sólo publica propuestas revalidadas contra PostgreSQL ACTIVE.</p>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('semantic_sync')} disabled={!canSyncSemantic}>Sincronizar semántica</button>{latestSemanticSync && <button className="projection-job-link" onClick={() => void selectJob(latestSemanticSync.id)}>Ver último job</button>}</div>
+          {latestSemanticSync && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestSemanticSync.status} /></div>}
         </article>
       </div>
     </div>

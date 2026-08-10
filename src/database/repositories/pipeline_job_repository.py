@@ -29,6 +29,31 @@ class PipelineJobRepository:
             query = query.with_for_update()
         return self.session.scalar(query)
 
+
+    def find_active_projection_job(
+        self,
+        *,
+        kind: PipelineJobKind | str,
+        knowledge_version_id: uuid.UUID | str,
+    ) -> PipelineJob | None:
+        """Return the newest queued/running projection job for kind + version."""
+        try:
+            version_id = uuid.UUID(str(knowledge_version_id))
+        except (TypeError, ValueError):
+            return None
+        return self.session.scalar(
+            select(PipelineJob)
+            .where(
+                PipelineJob.kind == PipelineJobKind(kind),
+                PipelineJob.knowledge_version_id == version_id,
+                PipelineJob.status.in_(
+                    [PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]
+                ),
+            )
+            .order_by(PipelineJob.requested_at.desc(), PipelineJob.id.desc())
+            .limit(1)
+        )
+
     def list_page(
         self,
         *,

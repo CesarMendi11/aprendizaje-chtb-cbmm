@@ -159,6 +159,16 @@ export async function createChromaSyncJob(): Promise<PipelineJobDetail> {
 }
 
 
+export async function createSemanticSyncJob(): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización semántica sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/semantic-sync', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  })
+}
+
+
 export async function createSemanticInferenceJob(payload: SemanticInferenceJobRequest): Promise<PipelineJobDetail> {
   if (dataMode !== 'live') throw new AdminApiError('http', 'La inferencia semántica sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/semantic-inference', validPipelineJobDetail, {

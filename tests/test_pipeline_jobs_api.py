@@ -351,6 +351,11 @@ def test_projection_sync_jobs_capture_only_the_single_active_version(api):
     assert sem["parameters"]["projection"] == "semantic_chromadb"
     assert len(dispatcher.submitted) == 3
 
+    duplicate = client.post("/api/admin/pipeline-jobs/semantic-sync", json={})
+    assert duplicate.status_code == 409
+    assert "Ya existe un job semantic_sync" in duplicate.json()["detail"]
+    assert len(dispatcher.submitted) == 3
+
 
 def test_projection_sync_rejects_when_there_is_no_active_version(api):
     client, factory, dispatcher = api

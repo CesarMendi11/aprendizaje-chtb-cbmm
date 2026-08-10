@@ -56,6 +56,19 @@ def _queue_active_projection_job(
     parameters: dict,
 ):
     version = _single_active_version(session)
+    existing = PipelineJobRepository(session).find_active_projection_job(
+        kind=kind,
+        knowledge_version_id=version.id,
+    )
+    if existing is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Ya existe un job {kind.value} en cola o ejecución para la versión ACTIVE "
+                f"{version.knowledge_version}: {existing.id}"
+            ),
+        )
+
     payload = {
         "active_only": True,
         "knowledge_version_id": str(version.id),
