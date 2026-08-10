@@ -55,6 +55,10 @@ const labelStage = (stage: string) => ({
   documents_prepared: 'Documentos preparados',
   embedding_and_syncing: 'Generando embeddings y sincronizando',
   chroma_synced: 'Chroma sincronizado',
+  validating_active_screen: 'Verificando pantalla activa',
+  evidence_prepared: 'Evidencia preparada',
+  generating_semantic_proposal: 'Generando propuesta con Ollama',
+  proposal_ready: 'Propuesta semántica lista',
   completed: 'Finalizado',
   failed: 'Falló',
 }[stage] ?? stage.replaceAll('_', ' '))
@@ -255,6 +259,8 @@ export function PipelineControl() {
           {job.kind === 'neo4j_sync' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Elegibles" value={asNumber(result.eligible_items) || asNumber(checkpoint.eligible_items)}/><Counter label="Nodos" value={asNumber(result.nodes) || asNumber(checkpoint.nodes)}/><Counter label="Relaciones" value={asNumber(result.relationships) || asNumber(checkpoint.relationships)}/><Counter label="Rel. omitidas" value={asNumber(result.skipped_relationships)}/><Counter label="Reemplazo" value={asBoolean(result.replace_version) ? 'Sí' : 'No'}/><Counter label="Active only" value={asBoolean(result.active_only) ? 'Sí' : '—'}/></div>}
 
           {job.kind === 'chroma_sync' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Elegibles" value={asNumber(result.eligible_items) || asNumber(checkpoint.eligible_items)}/><Counter label="Documentos" value={asNumber(result.documents) || asNumber(checkpoint.documents)}/><Counter label="Actualizados" value={asNumber(result.inserted_or_updated) || asNumber(checkpoint.inserted_or_updated)}/><Counter label="Stale removidos" value={asNumber(result.removed_stale)}/><Counter label="Dimensiones" value={asNumber(result.embedding_dimensions)}/><Counter label="Omitidos" value={asNumber(result.skipped)}/></div>}
+
+          {job.kind === 'semantic_inference' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Capabilities" value={asNumber(result.capabilities)}/><Counter label="Estado propuesta" value={asString(result.proposal_status) ?? '—'}/><Counter label="Creada" value={asBoolean(result.created) ? 'Sí' : 'No'}/><Counter label="Ollama" value={asBoolean(result.ollama_called) ? 'Ejecutado' : 'Reutilizado'}/><Counter label="Prompt" value={asString(result.prompt_version) ?? asString(checkpoint.prompt_version) ?? '—'}/><Counter label="Modelo" value={asString(result.generation_model) ?? asString(checkpoint.generation_model) ?? '—'}/></div>}
 
           {job.target && <p className="pipeline-target"><span>Objetivo</span><code>{job.target}</code></p>}
           {knowledgeVersion && <p className="pipeline-target"><span>Knowledge version</span><code>{knowledgeVersion}</code></p>}

@@ -66,6 +66,17 @@ def _screen(identifier: str, title: str, module_id: str | None) -> dict:
     }
 
 
+def _evidence(identifier: str, source_entity_type: str, source_entity_id: str) -> dict:
+    return {
+        "id": identifier,
+        "evidence_type": "structural_json",
+        "artifact_path": f"fixtures/{identifier.replace(':', '_')}.json",
+        "artifact_hash": HASH,
+        "source_entity_type": source_entity_type,
+        "source_entity_id": source_entity_id,
+    }
+
+
 def _add_item(session, version, payload, entity_type, status=ReviewStatus.APPROVED):
     title = payload.get("title") or payload.get("name") or payload.get("label")
     normalized_title = (
@@ -189,6 +200,18 @@ def seed_tree(factory):
             version,
             _screen("screen:a", "Alpha", module_a.canonical_id),
             "screen",
+        )
+        _add_item(
+            session,
+            version,
+            _evidence("evidence:module", "module", module_a.canonical_id),
+            "evidence",
+        )
+        _add_item(
+            session,
+            version,
+            _evidence("evidence:one", "screen", second.canonical_id),
+            "evidence",
         )
         _add_item(
             session,
@@ -320,6 +343,96 @@ def test_screen_list_pagination_and_review_context(admin_api):
     serialized = context.text.casefold()
     assert all(term not in serialized for term in ("raw_response", "cookie", "selector"))
     assert client.get("/api/admin/screens/screen:missing/review-context").status_code == 404
+
+
+def test_comparable_structure_hash_is_order_independent():
+    from src.analysis.schemas import ColumnEvidence, ControlEvidence, FieldEvidence, TableEvidence
+    from src.api.admin_knowledge_serializers import comparable_structure_hash
+    from src.api.schemas.admin_knowledge import ComparableScreenStructure
+
+    field_a = FieldEvidence(field_id="field:a", label="A", required=False, readonly=False)
+    field_b = FieldEvidence(field_id="field:b", label="B", required=False, readonly=False)
+    control_a = ControlEvidence(
+        control_id="control:a", label="A", mutative=False, safety_decision=None
+    )
+    control_b = ControlEvidence(
+        control_id="control:b", label="B", mutative=False, safety_decision=None
+    )
+    table = TableEvidence(
+        table_id="table:a",
+        name="Tabla",
+        columns=[
+            ColumnEvidence(column_id="column:b", label="B"),
+            ColumnEvidence(column_id="column:a", label="A"),
+        ],
+    )
+    first = ComparableScreenStructure(
+        screen_id="screen:a",
+        screen_title="Pantalla",
+        screen_route="/pantalla",
+        module=None,
+        fields=(field_b, field_a),
+        controls=(control_b, control_a),
+        tables=(table,),
+        evidence_ids=("evidence:b", "evidence:a"),
+    )
+    second = ComparableScreenStructure(
+        screen_id="screen:a",
+        screen_title="Pantalla",
+        screen_route="/pantalla",
+        module=None,
+        fields=(field_a, field_b),
+        controls=(control_a, control_b),
+        tables=(
+            table.model_copy(
+                update={
+                    "columns": list(reversed(table.columns)),
+                }
+            ),
+        ),
+        evidence_ids=("evidence:a", "evidence:b"),
+    )
+
+    assert comparable_structure_hash(first) == comparable_structure_hash(second)
+
+
+def test_stale_hash_excludes_pending_evidence_from_current_comparable(admin_api):
+    client, factory, _ = admin_api
+    seeded = seed_tree(factory)
+    with factory.begin() as session:
+        version = session.get(KnowledgeVersionRecord, uuid.UUID(seeded["version_id"]))
+        screen = session.scalar(
+            select(KnowledgeItem).where(KnowledgeItem.canonical_id == seeded["second"])
+        )
+        session.execute(
+            update(KnowledgeItem)
+            .where(KnowledgeItem.id == screen.id)
+            .values(
+                source_payload={
+                    **screen.source_payload,
+                    "evidence_ids": ["evidence:one", "evidence:pending"],
+                }
+            )
+        )
+        _add_item(
+            session,
+            version,
+            _evidence("evidence:pending", "screen", screen.canonical_id),
+            "evidence",
+            ReviewStatus.PENDING_REVIEW,
+        )
+
+    context = client.get(f"/api/admin/screens/{seeded['second']}/review-context")
+    assert context.status_code == 200, context.text
+    body = context.json()
+    proposal = body["semantic_proposals"][0]
+    assert proposal["evidence_matches_current_structure"] is True
+    assert proposal["historical_structure_hash"] == proposal["current_structure_hash"]
+    assert "evidence:pending" in body["structural_evidence"]["evidence_ids"]
+    assert any(
+        "evidence:pending" in warning
+        for warning in body["structural_evidence"]["warnings"]
+    )
 
 
 def test_comparable_structure_matches_naturally_and_ignores_warnings(admin_api):

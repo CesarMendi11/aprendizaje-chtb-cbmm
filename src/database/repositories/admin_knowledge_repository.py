@@ -399,19 +399,31 @@ class AdminKnowledgeRepository:
             for evidence_id in payload.get("evidence_ids", [])
             if isinstance(evidence_id, str)
         }
-        evidence = (
-            list(
+        selected_ids = [item.canonical_id for item in selected]
+        evidence_filters = []
+        if evidence_ids:
+            evidence_filters.append(KnowledgeItem.canonical_id.in_(evidence_ids))
+        if selected_ids:
+            evidence_filters.append(effective_ref("source_entity_id").in_(selected_ids))
+        evidence = []
+        if evidence_filters:
+            evidence = list(
                 self.session.scalars(
-                    select(KnowledgeItem).where(
+                    select(KnowledgeItem)
+                    .outerjoin(
+                        correction,
+                        and_(
+                            correction.c.knowledge_item_id == KnowledgeItem.id,
+                            correction.c.rn == 1,
+                        ),
+                    )
+                    .where(
                         KnowledgeItem.knowledge_version_id == version_id,
                         KnowledgeItem.entity_type == "evidence",
-                        KnowledgeItem.canonical_id.in_(evidence_ids),
+                        or_(*evidence_filters),
                     )
                 )
             )
-            if evidence_ids
-            else []
-        )
         return tuple([*selected, *evidence])
 
     def effective_payloads(self, items: tuple[KnowledgeItem, ...]) -> dict[uuid.UUID, dict]:

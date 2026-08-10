@@ -105,6 +105,32 @@ export interface CanonicalImportJobRequest {
   source_canonical_job_id: string
 }
 
+
+export interface SemanticInferenceJobRequest {
+  screen_id: string
+}
+
+export interface SemanticReviewRequest {
+  reviewer_id: string
+  reason: string
+  expected_status: ReviewStatus
+  expected_revision: number
+}
+
+export interface SemanticCorrectionRequest extends SemanticReviewRequest {
+  corrected_payload: ScreenPurposeInference
+}
+
+export interface SemanticReviewResult {
+  action: 'approve' | 'correct' | 'reject'
+  semantic_id: string
+  current_review_status: ReviewStatus
+  review_revision: number
+  effective_payload: ScreenPurposeInference
+  publishable_payload: ScreenPurposeInference | null
+  reviewer_identity_verified: false
+}
+
 export interface StructuralReviewItemSummary {
   id: string
   canonical_id: string

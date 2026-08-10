@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -50,6 +50,18 @@ const validPipelineJobSummary = (value: unknown): value is PipelineJobSummary =>
 }
 const validPipelineJobDetail = (value: unknown): value is PipelineJobDetail => validPipelineJobSummary(value) && isRecord(value) && isRecord(value.parameters) && isRecord(value.checkpoint) && hasString(value, 'created_at') && hasString(value, 'updated_at')
 const validPipelineJobList = (value: unknown): value is PipelineJobListResponse => isRecord(value) && Array.isArray(value.items) && value.items.every(validPipelineJobSummary) && typeof value.total === 'number' && typeof value.limit === 'number' && typeof value.offset === 'number'
+
+const validScreenPurposeInference = (value: unknown): boolean =>
+  isRecord(value) && value.semantic_type === 'screen_purpose' && hasString(value, 'screen_id') &&
+  hasString(value, 'purpose_summary') && Array.isArray(value.supported_capabilities) &&
+  Array.isArray(value.limitations) && Array.isArray(value.uncertainties)
+const validSemanticReviewResult = (value: unknown): value is SemanticReviewResult =>
+  isRecord(value) && ['approve', 'correct', 'reject'].includes(String(value.action)) &&
+  hasString(value, 'semantic_id') && hasString(value, 'current_review_status') &&
+  reviewStatuses.has(String(value.current_review_status)) && typeof value.review_revision === 'number' &&
+  validScreenPurposeInference(value.effective_payload) &&
+  (value.publishable_payload === null || validScreenPurposeInference(value.publishable_payload)) &&
+  value.reviewer_identity_verified === false
 
 async function request<T>(path: string, validate: (value: unknown) => value is T, init: RequestInit = {}): Promise<T> {
   const controller = new AbortController()
@@ -145,6 +157,29 @@ export async function createChromaSyncJob(): Promise<PipelineJobDetail> {
     body: JSON.stringify({}),
   })
 }
+
+
+export async function createSemanticInferenceJob(payload: SemanticInferenceJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La inferencia semántica sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/semantic-inference', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+async function postSemanticReviewAction(semanticId: string, action: string, payload: SemanticReviewRequest | SemanticCorrectionRequest): Promise<SemanticReviewResult> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La revisión semántica sólo puede operar en modo live.')
+  return request(`/api/admin/semantic-proposals/${encodeURIComponent(semanticId)}/${action}`, validSemanticReviewResult, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export const approveSemanticProposal = (semanticId: string, payload: SemanticReviewRequest) => postSemanticReviewAction(semanticId, 'approve', payload)
+export const rejectSemanticProposal = (semanticId: string, payload: SemanticReviewRequest) => postSemanticReviewAction(semanticId, 'reject', payload)
+export const correctSemanticProposal = (semanticId: string, payload: SemanticCorrectionRequest) => postSemanticReviewAction(semanticId, 'correct', payload)
 
 export interface StructuralReviewListQuery {
   knowledgeVersionId: string

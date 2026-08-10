@@ -30,6 +30,7 @@ from src.api.schemas.admin_knowledge import (
 from src.database.models import KnowledgeItem, SemanticProposal, SemanticReviewAction
 from src.database.repositories.admin_knowledge_repository import EffectiveModule, EffectiveScreen
 from src.database.services.semantic_payloads import canonical_json_hash
+from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.models import Evidence as CanonicalEvidence
 
 
@@ -228,7 +229,45 @@ def comparable_from_historical(
 
 
 def comparable_structure_hash(value: ComparableScreenStructure) -> str:
-    return canonical_json_hash(value.model_dump(mode="json"))
+    """Hash structural content independent of database/list ordering.
+
+    Historical semantic evidence is emitted by ``ScreenEvidenceBuilder`` in a
+    deterministic canonical order. The admin read model is intentionally built
+    with bounded SQL queries and PostgreSQL does not guarantee row order unless
+    an ``ORDER BY`` is present. Hashing those tuples directly can therefore
+    report a false stale proposal even when the effective structure is
+    identical.
+
+    Normalize every collection by its canonical identifier before hashing.
+    This keeps the stale check sensitive to real structural changes while
+    ignoring presentation/query ordering.
+    """
+    tables = tuple(
+        table.model_copy(
+            update={
+                "columns": sorted(table.columns, key=lambda column: column.column_id),
+            }
+        )
+        for table in sorted(value.tables, key=lambda table: table.table_id)
+    )
+    normalized = value.model_copy(
+        update={
+            "fields": tuple(sorted(value.fields, key=lambda field: field.field_id)),
+            "controls": tuple(
+                sorted(value.controls, key=lambda control: control.control_id)
+            ),
+            "tables": tables,
+            "ui_states": tuple(
+                sorted(value.ui_states, key=lambda state: state.state_id)
+            ),
+            "events": tuple(sorted(value.events, key=lambda event: event.event_id)),
+            "transitions": tuple(
+                sorted(value.transitions, key=lambda transition: transition.transition_id)
+            ),
+            "evidence_ids": tuple(sorted(value.evidence_ids)),
+        }
+    )
+    return canonical_json_hash(normalized.model_dump(mode="json"))
 
 
 def current_structure(
@@ -267,11 +306,14 @@ def current_structure(
                 invalid(item)
         return tuple(result)
 
+    validated_evidence: dict[str, CanonicalEvidence] = {}
     for evidence_item, evidence_payload in pairs:
         if evidence_item.entity_type != "evidence":
             continue
         try:
-            CanonicalEvidence.model_validate(evidence_payload)
+            validated_evidence[evidence_item.canonical_id] = CanonicalEvidence.model_validate(
+                evidence_payload
+            )
         except (ValidationError, TypeError, ValueError):
             invalid(evidence_item)
 
@@ -390,16 +432,37 @@ def current_structure(
         or pair in related
         or pair in selected_columns
     ]
-    evidence_ids = tuple(
-        sorted(
-            {
-                str(evidence_id)
-                for _item, payload in selected_pairs
-                for evidence_id in payload.get("evidence_ids", [])
-                if isinstance(evidence_id, str) and evidence_id.strip()
-            }
-        )
-    )
+    referenced_evidence_ids = {
+        str(evidence_id)
+        for _item, payload in selected_pairs
+        for evidence_id in payload.get("evidence_ids", [])
+        if isinstance(evidence_id, str) and evidence_id.strip()
+    }
+    selected_entity_ids = {
+        item.canonical_id for item, _payload in selected_pairs if item.entity_type != "evidence"
+    }
+    comparable_evidence_ids = {
+        evidence_item.canonical_id
+        for evidence_item, _payload in pairs
+        if evidence_item.entity_type == "evidence"
+        and evidence_item.current_review_status
+        in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
+        and evidence_item.canonical_id in validated_evidence
+        and validated_evidence[evidence_item.canonical_id].source_entity_id in selected_entity_ids
+    }
+    for evidence_item, _payload in pairs:
+        if (
+            evidence_item.entity_type == "evidence"
+            and evidence_item.canonical_id in validated_evidence
+            and validated_evidence[evidence_item.canonical_id].source_entity_id
+            in selected_entity_ids
+            and evidence_item.current_review_status
+            not in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
+        ):
+            warnings.append(
+                f"Elemento estructural omitido por revisión: {evidence_item.canonical_id}."
+            )
+    evidence_ids = tuple(sorted(referenced_evidence_ids | comparable_evidence_ids))
     evidence = AdminEvidence(
         evidence_available=screen.diagnostic is None,
         diagnostic=screen.diagnostic,
@@ -421,7 +484,10 @@ def current_structure(
         warnings=tuple(warnings),
         current_structure_hash="0" * 64,
     )
-    fingerprint = comparable_structure_hash(comparable_from_current(evidence))
+    comparable = comparable_from_current(evidence).model_copy(
+        update={"evidence_ids": tuple(sorted(comparable_evidence_ids))}
+    )
+    fingerprint = comparable_structure_hash(comparable)
     return evidence.model_copy(update={"current_structure_hash": fingerprint})
 
 
