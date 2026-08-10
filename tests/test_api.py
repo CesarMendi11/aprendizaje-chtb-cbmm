@@ -249,3 +249,47 @@ def test_chat_returns_deterministic_semantic_answer(settings):
         }
     ]
     assert payload["retrieval"]["approved_semantic_hits"] == 1
+
+
+def test_chat_returns_ollama_grounded_answer_as_answered(settings):
+    from contextlib import contextmanager
+
+    class Retriever:
+        def ask(self, question, *, generate=True):
+            return {
+                "answer": "En Retenciones puedes consultar información usando los criterios disponibles.",
+                "answer_mode": "ollama_grounded",
+                "intent": None,
+                "confidence": None,
+                "evidence_ids": ["screen:retenciones", "field:ruc", "control:buscar"],
+                "retrieval": {
+                    "semantic_hits": 3,
+                    "semantic_candidates": 1,
+                    "approved_semantic_hits": 1,
+                    "graph_neighbors": 4,
+                    "validated_items": 5,
+                },
+                "sources": [
+                    {
+                        "safe_label": "Retenciones",
+                        "screen_route": "/admin/cuentasxcobrar/retenciones",
+                    }
+                ],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    app = create_app(settings)
+    app.state.hybrid_factory = Factory()
+    payload = ask(
+        ApiClient(app),
+        "Explícame qué información está disponible en Retenciones y cómo se relaciona.",
+    ).json()
+
+    assert payload["status"] == "answered"
+    assert payload["answer_mode"] == "ollama_grounded"
+    assert "Retenciones" in payload["answer"]
+    assert payload["sources"][0]["title"] == "Retenciones"

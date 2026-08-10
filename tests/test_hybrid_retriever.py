@@ -27,6 +27,77 @@ def test_prompt_contains_question_and_context():
     assert ABSTAIN in gen.prompt
 
 
+def test_grounded_generator_marks_successful_answer_as_ollama_grounded():
+    gen = Generator()
+    retriever = HybridKnowledgeRetriever(
+        None, chroma=None, neo4j=None, embeddings=None, generator=gen
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:retenciones",
+                "entity_type": "screen",
+                "safe_label": "Retenciones",
+                "screen_route": "/admin/cuentasxcobrar/retenciones",
+            }
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": (
+            "ENTIDADES VALIDADAS\n"
+            "- screen: Retenciones\n"
+            "- field: RUC\n"
+            "- control: Buscar\n"
+            "RELACIONES VALIDADAS\n"
+        ),
+    }
+
+    result = retriever.ask(
+        "Explícame qué información está disponible en Retenciones y cómo se relacionan sus elementos."
+    )
+
+    assert result["answer"] == "respuesta"
+    assert result["answer_mode"] == "ollama_grounded"
+    assert gen.prompt is not None
+    assert "Retenciones" in gen.prompt
+
+
+def test_grounded_generator_exact_abstention_stays_insufficient_evidence():
+    class AbstainingGenerator:
+        def generate(self, prompt, *, system):
+            return ABSTAIN
+
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        generator=AbstainingGenerator(),
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:retenciones",
+                "entity_type": "screen",
+                "safe_label": "Retenciones",
+                "screen_route": "/admin/cuentasxcobrar/retenciones",
+            }
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": "ENTIDADES VALIDADAS\n- screen: Retenciones",
+    }
+
+    result = retriever.ask("Dime algo no respaldado por el contexto")
+
+    assert result["answer"] == ABSTAIN
+    assert result["answer_mode"] == "insufficient_evidence"
+
+
 def test_expansion_is_bidirectional_read_only_and_parameterized():
     class Graph:
         def __init__(self):

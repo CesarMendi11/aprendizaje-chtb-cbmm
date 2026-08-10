@@ -232,7 +232,10 @@ class HybridKnowledgeRetriever:
                 f"comunes, pero no inventes estructura ni procedimientos. Si no basta, responde "
                 f"exactamente:\n{ABSTAIN}"
             )
-            result["answer"] = self.generator.generate(prompt, system=SYSTEM_PROMPT)
+            generated_answer = self.generator.generate(prompt, system=SYSTEM_PROMPT)
+            result["answer"] = generated_answer
+            if generated_answer.strip() != ABSTAIN:
+                result["answer_mode"] = "ollama_grounded"
         if generate:
             result.pop("context", None)
         return result
