@@ -56,6 +56,27 @@ class FakeCanonicalBuildExecutor:
         }
 
 
+
+class FakeCanonicalImportExecutor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            "staging_ready",
+            {
+                "work_units": 4,
+                "progress_total": 4,
+                "knowledge_version": "staging-test",
+            },
+        )
+        return {
+            "knowledge_version": "staging-test",
+            "source_canonical_job_id": parameters["source_canonical_job_id"],
+            "staging_ready": True,
+        }
+
 def build_factory():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -132,5 +153,31 @@ def test_runner_dispatches_canonical_build_and_persists_total_progress():
         assert stored.progress_total == 4
         assert stored.result_payload["knowledge_version"] == "canonical-test"
         assert stored.checkpoint["knowledge_version"] == "canonical-test"
+    assert len(executor.calls) == 1
+    engine.dispose()
+
+
+def test_runner_dispatches_canonical_import_executor():
+    engine, factory = build_factory()
+    source_id = "00000000-0000-0000-0000-000000000789"
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="canonical_import",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            parameters={"source_canonical_job_id": source_id},
+        )
+        job_id = job.id
+
+    executor = FakeCanonicalImportExecutor()
+    PipelineJobRunner(factory, canonical_import_executor=executor).run(job_id)
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.progress_current == 4
+        assert stored.progress_total == 4
+        assert stored.result_payload["staging_ready"] is True
     assert len(executor.calls) == 1
     engine.dispose()

@@ -213,3 +213,60 @@ def test_create_canonical_build_rejects_non_succeeded_source(api):
     )
     assert response.status_code == 409
     assert dispatcher.submitted == []
+
+
+def test_create_canonical_import_job_is_staging_only(api):
+    client, factory, dispatcher = api
+    crawl_id = "00000000-0000-0000-0000-000000000456"
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            profile_name="cbmm",
+        )
+        source_id = source.id
+        service.start(source.id, stage="building", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": crawl_id,
+                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
+                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "knowledge_version": "canonical-staging-test",
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_import"
+    assert body["scope"] == "screen"
+    assert body["target"] == "/admin/cuentasxcobrar/retenciones"
+    assert body["parameters"]["activation_mode"] == "staging_only"
+    assert body["parameters"]["source_canonical_job_id"] == str(source_id)
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_import_rejects_wrong_or_unfinished_source(api):
+    client, factory, dispatcher = api
+    with factory.begin() as session:
+        wrong = PipelineJobService(session).create(kind="crawl", scope="full")
+        wrong_id = wrong.id
+        pending = PipelineJobService(session).create(kind="canonical_build", scope="full")
+        pending_id = pending.id
+
+    assert client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(wrong_id)},
+    ).status_code == 409
+    assert client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(pending_id)},
+    ).status_code == 409
+    assert dispatcher.submitted == []

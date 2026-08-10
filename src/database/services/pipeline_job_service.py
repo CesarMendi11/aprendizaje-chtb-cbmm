@@ -122,6 +122,8 @@ class PipelineJobService:
         *,
         result_payload: dict[str, Any] | None = None,
         stage: str = "completed",
+        erp_id: str | None = None,
+        knowledge_version_id: uuid.UUID | str | None = None,
     ) -> PipelineJob:
         job = self._locked(job_id)
         self._require(job, {PipelineJobStatus.RUNNING}, PipelineJobStatus.SUCCEEDED)
@@ -131,6 +133,10 @@ class PipelineJobService:
         if job.progress_total is not None:
             job.progress_current = job.progress_total
         job.result_payload = dict(result_payload or {})
+        if erp_id is not None:
+            job.erp_id = erp_id
+        if knowledge_version_id is not None:
+            job.knowledge_version_id = uuid.UUID(str(knowledge_version_id))
         job.error_summary = None
         return self._save(job)
 

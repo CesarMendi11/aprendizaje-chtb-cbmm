@@ -10,6 +10,7 @@ from src.api.dependencies import get_admin_read_session, get_semantic_review_ses
 from src.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_summary
 from src.api.schemas.pipeline_jobs import (
     CanonicalBuildPipelineJobCreateRequest,
+    CanonicalImportPipelineJobCreateRequest,
     CrawlPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
@@ -89,6 +90,64 @@ def create_canonical_build_job(
         profile_name=source.profile_name,
         request_source="admin_api",
         parameters={"source_crawl_job_id": str(source.id)},
+    )
+    session.commit()
+    request.app.state.pipeline_job_dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
+
+
+@router.post(
+    "/canonical-import",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_canonical_import_job(
+    payload: CanonicalImportPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    source = PipelineJobRepository(session).get(payload.source_canonical_job_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="PipelineJob fuente no encontrado.")
+    if source.kind != PipelineJobKind.CANONICAL_BUILD:
+        raise HTTPException(
+            status_code=409,
+            detail="El job fuente debe ser de tipo canonical_build.",
+        )
+    if source.status != PipelineJobStatus.SUCCEEDED:
+        raise HTTPException(
+            status_code=409,
+            detail="El canonical build fuente debe haber finalizado correctamente.",
+        )
+    result = dict(source.result_payload or {})
+    required = (
+        "source_crawl_job_id",
+        "knowledge_path",
+        "manifest_path",
+        "build_report_path",
+        "knowledge_version",
+    )
+    if any(not result.get(key) for key in required):
+        raise HTTPException(
+            status_code=409,
+            detail="El canonical build fuente no registró artefactos importables.",
+        )
+
+    job = PipelineJobService(session).create(
+        kind=PipelineJobKind.CANONICAL_IMPORT,
+        scope=source.scope,
+        target=source.target,
+        profile_name=source.profile_name,
+        request_source="admin_api",
+        parameters={
+            "source_canonical_job_id": str(source.id),
+            "source_crawl_job_id": str(result["source_crawl_job_id"]),
+            "knowledge_path": str(result["knowledge_path"]),
+            "manifest_path": str(result["manifest_path"]),
+            "build_report_path": str(result["build_report_path"]),
+            "expected_knowledge_version": str(result["knowledge_version"]),
+            "activation_mode": "staging_only",
+        },
     )
     session.commit()
     request.app.state.pipeline_job_dispatcher.submit(job.id)

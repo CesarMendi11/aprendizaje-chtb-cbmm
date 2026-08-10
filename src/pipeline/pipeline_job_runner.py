@@ -8,6 +8,7 @@ from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobSta
 from src.database.repositories import PipelineJobRepository
 from src.database.services import PipelineJobService
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
+from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
 
 
@@ -29,12 +30,15 @@ class PipelineJobRunner:
         *,
         crawl_executor: CrawlJobExecutor | None = None,
         canonical_build_executor: CanonicalBuildJobExecutor | None = None,
+        canonical_import_executor: CanonicalImportJobExecutor | None = None,
     ):
         self.session_factory = session_factory
         self.executors = {
             PipelineJobKind.CRAWL: crawl_executor or CrawlJobExecutor(),
             PipelineJobKind.CANONICAL_BUILD: canonical_build_executor
             or CanonicalBuildJobExecutor(),
+            PipelineJobKind.CANONICAL_IMPORT: canonical_import_executor
+            or CanonicalImportJobExecutor(session_factory),
         }
 
     def run(self, job_id: uuid.UUID | str) -> None:
@@ -64,6 +68,8 @@ class PipelineJobRunner:
                 spec.id,
                 result_payload=result,
                 stage="completed",
+                erp_id=result.get("erp_id"),
+                knowledge_version_id=result.get("knowledge_version_id"),
             )
 
     def _start(self, job_id: uuid.UUID | str) -> PipelineJobSpec | None:
