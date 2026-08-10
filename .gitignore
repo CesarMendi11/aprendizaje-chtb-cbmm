@@ -78,3 +78,6 @@ docker/neo4j/plugins/
 
 # TypeScript incremental build metadata
 *.tsbuildinfo
+
+# Isolated admin pipeline runs
+data/runs/

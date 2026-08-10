@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -20,6 +21,7 @@ def create_app(
     settings: ApiSettings | None = None,
     *,
     semantic_review_session_factory: Callable | None = None,
+    pipeline_job_dispatcher=None,
 ) -> FastAPI:
     settings = settings or ApiSettings()
     repository = StructuralKnowledgeRepository(settings.screen_index_path)
@@ -76,6 +78,15 @@ def create_app(
             )
             app.state.semantic_review_engine = engine
         app.state.semantic_review_session_factory = semantic_review_session_factory
+
+        if pipeline_job_dispatcher is None:
+            from src.pipeline import PipelineJobDispatcher
+
+            pipeline_job_dispatcher = PipelineJobDispatcher(semantic_review_session_factory)
+        app.state.pipeline_job_dispatcher = pipeline_job_dispatcher
+        app.state.pipeline_crawl_profile_name = Path(
+            os.getenv("ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml")
+        ).stem
 
         @app.middleware("http")
         async def sanitize_admin_failures(request: Request, call_next):

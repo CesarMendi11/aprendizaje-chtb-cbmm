@@ -3,20 +3,52 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
-from src.api.dependencies import get_admin_read_session
+from src.api.dependencies import get_admin_read_session, get_semantic_review_session
 from src.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_summary
 from src.api.schemas.pipeline_jobs import (
+    CrawlPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
 )
 from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
 from src.database.repositories import PipelineJobRepository
+from src.database.services import PipelineJobService
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
 SessionDependency = Annotated[Session, Depends(get_admin_read_session)]
+WriteSessionDependency = Annotated[Session, Depends(get_semantic_review_session)]
+
+
+@router.post(
+    "/crawl",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_crawl_job(
+    payload: CrawlPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    dispatcher = request.app.state.pipeline_job_dispatcher
+    job = PipelineJobService(session).create(
+        kind=PipelineJobKind.CRAWL,
+        scope=payload.scope,
+        target=payload.target,
+        profile_name=request.app.state.pipeline_crawl_profile_name,
+        request_source="admin_api",
+        parameters={
+            "headless": payload.headless,
+            "slow_mo": payload.slow_mo,
+        },
+    )
+    # El worker usa una sesión distinta; el job debe existir de forma visible
+    # antes de colocarlo en la cola local.
+    session.commit()
+    dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
 
 
 @router.get("", response_model=PipelineJobListResponse)

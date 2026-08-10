@@ -30,6 +30,29 @@ class Client:
 
         return asyncio.run(send())
 
+    def post(self, path, json):
+        async def send():
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(
+                    app=self.app, client=("127.0.0.1", 50000)
+                ),
+                base_url="http://test",
+            ) as client:
+                return await client.post(path, json=json)
+
+        return asyncio.run(send())
+
+
+class FakeDispatcher:
+    def __init__(self):
+        self.submitted = []
+
+    def submit(self, job_id):
+        self.submitted.append(job_id)
+
+    def shutdown(self):
+        return None
+
 
 @pytest.fixture
 def api(tmp_path):
@@ -42,8 +65,13 @@ def api(tmp_path):
     engine = create_engine(f"sqlite+pysqlite:///{database_path}")
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
-    app = create_app(settings, semantic_review_session_factory=factory)
-    yield Client(app), factory
+    dispatcher = FakeDispatcher()
+    app = create_app(
+        settings,
+        semantic_review_session_factory=factory,
+        pipeline_job_dispatcher=dispatcher,
+    )
+    yield Client(app), factory, dispatcher
     engine.dispose()
     database_path.unlink(missing_ok=True)
 
@@ -66,7 +94,7 @@ def seed(factory):
 
 
 def test_pipeline_job_list_filters_and_detail(api):
-    client, factory = api
+    client, factory, _ = api
     first_id, second_id = seed(factory)
 
     response = client.get("/api/admin/pipeline-jobs")
@@ -89,10 +117,48 @@ def test_pipeline_job_list_filters_and_detail(api):
 
 
 def test_pipeline_job_not_found_and_validation(api):
-    client, _ = api
+    client, _, _ = api
     missing = client.get("/api/admin/pipeline-jobs/00000000-0000-0000-0000-000000000000")
     assert missing.status_code == 404
     assert client.get("/api/admin/pipeline-jobs?status=unknown").status_code == 422
+
+
+def test_create_crawl_job_queues_controlled_worker(api):
+    client, factory, dispatcher = api
+    response = client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={
+            "scope": "screen",
+            "target": "/admin/cuentasxcobrar/retenciones",
+            "headless": False,
+            "slow_mo": 120,
+        },
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "crawl"
+    assert body["scope"] == "screen"
+    assert body["status"] == "queued"
+    assert body["parameters"] == {"headless": False, "slow_mo": 120}
+    assert [str(value) for value in dispatcher.submitted] == [body["id"]]
+
+    with factory() as session:
+        stored = PipelineJobService(session).jobs.get(body["id"])
+        assert stored is not None
+        assert stored.target == "/admin/cuentasxcobrar/retenciones"
+
+
+def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api):
+    client, _, dispatcher = api
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "full", "target": "/admin/retenciones"},
+    ).status_code == 422
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "screen", "target": "https://example.test/admin/x"},
+    ).status_code == 422
+    assert dispatcher.submitted == []
 
 
 def test_pipeline_job_api_is_hidden_when_admin_api_is_disabled(tmp_path):

@@ -11,6 +11,7 @@ def test_expected_database_tables_and_constraints():
         "import_runs",
         "knowledge_versions",
         "knowledge_items",
+        "pipeline_jobs",
         "review_actions",
         "semantic_proposals",
         "semantic_review_actions",

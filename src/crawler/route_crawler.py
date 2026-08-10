@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from playwright.sync_api import Page
 
@@ -64,9 +64,22 @@ class RouteCrawler:
     Este componente NO inserta directamente en Neo4j.
     """
 
-    def __init__(self, page: Page, profile: dict[str, Any]):
+    def __init__(
+        self,
+        page: Page,
+        profile: dict[str, Any],
+        *,
+        route_scope: set[str] | None = None,
+        progress_callback: Callable[[str, dict[str, Any]], None] | None = None,
+    ):
         self.page = page
         self.profile = profile
+        self.route_scope = (
+            {self._route_identity(route) for route in route_scope}
+            if route_scope
+            else None
+        )
+        self.progress_callback = progress_callback
 
         self.navigator = ERPNavigator(page, profile)
         self.policy = RoutePolicy(profile)
@@ -161,6 +174,7 @@ class RouteCrawler:
         """
 
         try:
+            self._emit_progress("navigating_home")
             self.navigator.goto_home()
 
             self._capture_current_screen(
@@ -178,6 +192,45 @@ class RouteCrawler:
 
         except KeyboardInterrupt:
             print("\nInterrupción detectada dentro del crawler.")
+            print("Guardando resultados parciales antes de salir...")
+
+        return self._save_outputs()
+
+    def crawl_screen(self, route: str) -> CrawlSummary:
+        """Explora una sola ruta funcional y sus estados UI seguros.
+
+        El alcance es exacto por pathname: los href descubiertos hacia otras
+        pantallas se observan en la extracción, pero no entran a la frontera.
+        Los artefactos siguen usando el storage configurado por el caller.
+        """
+        target = self.policy.normalize_href(route)
+        if target is None:
+            raise ValueError("La ruta objetivo no es válida")
+        identity = self._route_identity(target)
+        if self.route_scope is None:
+            self.route_scope = {identity}
+        elif identity not in self.route_scope:
+            raise ValueError("La ruta objetivo está fuera del route_scope configurado")
+        if not self._is_allowed_route(target):
+            raise ValueError("La ruta objetivo no está permitida por la política")
+
+        try:
+            self._emit_progress("navigating_target", target=target)
+            self.navigator.goto_path(target)
+            if self.page_wait_ms:
+                self.page.wait_for_timeout(self.page_wait_ms)
+            actual_route = self.navigator.current_path()
+            if not self._is_allowed_route(actual_route):
+                raise RuntimeError("La ruta objetivo redirigió fuera del alcance permitido")
+            self._capture_current_screen(
+                source="screen_scope",
+                depth=0,
+                reason="screen_scope_target",
+            )
+            self._checkpoint_outputs()
+            self._crawl_until_fixed_point()
+        except KeyboardInterrupt:
+            print("\nInterrupción detectada dentro del crawler de pantalla.")
             print("Guardando resultados parciales antes de salir...")
 
         return self._save_outputs()
@@ -241,6 +294,7 @@ class RouteCrawler:
             if self.state_frontier.has_pending():
                 self._crawl_pending_states()
 
+            self._emit_progress("exploring_fixed_point")
             after = (
                 self.frontier.visited_count(),
                 self.frontier.pending_count(),
@@ -278,7 +332,7 @@ class RouteCrawler:
             if self.frontier.is_visited(target.route):
                 continue
 
-            if not self.policy.is_allowed_route(target.route):
+            if not self._is_allowed_route(target.route):
                 continue
 
             try:
@@ -317,7 +371,7 @@ class RouteCrawler:
 
         route = screen_data.get("path") or self.navigator.current_path()
 
-        if not self.policy.is_allowed_route(route):
+        if not self._is_allowed_route(route):
             return
 
         if self.frontier.is_visited(route):
@@ -369,6 +423,7 @@ class RouteCrawler:
                 },
             )
             self._checkpoint_outputs()
+            self._emit_progress("screen_captured", current_route=route)
             return
 
         signature = observation.signature
@@ -440,6 +495,7 @@ class RouteCrawler:
         )
 
         self._checkpoint_outputs()
+        self._emit_progress("screen_captured", current_route=route)
 
 
     def _observe_screen(
@@ -552,7 +608,7 @@ class RouteCrawler:
             if target_route == source_route:
                 continue
 
-            if not self.policy.is_allowed_route(target_route):
+            if not self._is_allowed_route(target_route):
                 continue
 
             already_known = self.routes_graph.has_screen(target_route)
@@ -622,7 +678,9 @@ class RouteCrawler:
         changed_results = [
             result
             for result in results
-            if result.changed and result.error is None
+            if result.changed
+            and result.error is None
+            and self._is_route_in_scope(result.after_route)
         ]
 
         if not results:
@@ -1110,6 +1168,49 @@ class RouteCrawler:
             filename="state_exploration_summary.partial.json",
         )
 
+    @staticmethod
+    def _route_identity(route: str) -> str:
+        value = str(route or "").split("#", 1)[0].split("?", 1)[0].strip()
+        if len(value) > 1:
+            value = value.rstrip("/")
+        return value or "/"
+
+    def _is_route_in_scope(self, route: str | None) -> bool:
+        if self.route_scope is None:
+            return True
+        if not route:
+            return False
+        return self._route_identity(route) in self.route_scope
+
+    def _is_allowed_route(self, route: str | None) -> bool:
+        return bool(
+            route
+            and self.policy.is_allowed_route(route)
+            and self._is_route_in_scope(route)
+        )
+
+    def _emit_progress(self, stage: str, **extra: Any) -> None:
+        callback = getattr(self, "progress_callback", None)
+        if callback is None:
+            return
+        payload = {
+            "routes_visited": self.frontier.visited_count(),
+            "routes_pending": self.frontier.pending_count(),
+            "states_explored": self.state_frontier.explored_count(),
+            "states_pending": self.state_frontier.pending_count(),
+            "functional_screens": self.screen_index.screen_count(),
+            "unavailable_routes": len(self._unavailable_routes),
+            "structural_nodes": self.routes_graph.node_count(),
+            "structural_relationships": self.routes_graph.edge_count(),
+            "ui_states": self.state_flow_graph.state_count(),
+            "ui_transitions": self.state_flow_graph.transition_count(),
+            **extra,
+        }
+        payload["work_units"] = (
+            payload["routes_visited"] + payload["states_explored"]
+        )
+        callback(stage, payload)
+
     def _save_outputs(self) -> CrawlSummary:
         routes_graph_data = self.routes_graph.to_dict()
         screen_index_data = self.screen_index.to_dict()
@@ -1145,6 +1246,8 @@ class RouteCrawler:
             data=self._state_exploration_summary(),
             filename="state_exploration_summary.json",
         )
+
+        self._emit_progress("saving_outputs")
 
         return CrawlSummary(
             visited_count=self.frontier.visited_count(),

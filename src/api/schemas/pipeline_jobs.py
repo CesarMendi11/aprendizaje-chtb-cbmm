@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
 
@@ -43,3 +43,25 @@ class PipelineJobListResponse(BaseModel):
     limit: int
     offset: int
     next_offset: int | None
+
+
+class CrawlPipelineJobCreateRequest(BaseModel):
+    scope: PipelineJobScope
+    target: str | None = Field(default=None, max_length=1000)
+    headless: bool = False
+    slow_mo: int = Field(default=0, ge=0, le=5000)
+
+    @model_validator(mode="after")
+    def validate_crawl_scope(self):
+        if self.scope not in {PipelineJobScope.FULL, PipelineJobScope.SCREEN}:
+            raise ValueError("El crawler sólo admite scope=full o scope=screen")
+        if self.scope == PipelineJobScope.SCREEN:
+            target = (self.target or "").strip()
+            if not target:
+                raise ValueError("scope=screen requiere target")
+            if not target.startswith("/") or "://" in target:
+                raise ValueError("target debe ser una ruta interna del ERP")
+            self.target = target
+        elif self.target is not None:
+            raise ValueError("scope=full no acepta target")
+        return self
