@@ -157,19 +157,37 @@ def test_empty_capabilities_have_sanitized_domain_category():
 
 
 @pytest.mark.parametrize(
-    ("action", "statement", "reference"),
+    ("action", "statement", "reference", "canonical_statement"),
     [
-        ("search", "Permite buscar retenciones registradas.", "control:search"),
-        ("navigate", "Permite navegar a la siguiente página.", "event:next"),
-        ("view", "Permite visualizar retenciones registradas.", "table:results"),
+        (
+            "search",
+            "Permite buscar retenciones registradas.",
+            "control:search",
+            "Permite buscar mediante los criterios disponibles.",
+        ),
+        (
+            "navigate",
+            "Permite navegar a la siguiente página.",
+            "event:next",
+            "Permite navegar entre las páginas de resultados.",
+        ),
+        (
+            "view",
+            "Permite visualizar retenciones registradas.",
+            "table:results",
+            "Permite visualizar información disponible en la pantalla.",
+        ),
     ],
 )
-def test_valid_single_action_drafts_map_to_public_inference(action, statement, reference):
+def test_valid_single_action_drafts_are_rendered_as_controlled_public_claims(
+    action, statement, reference, canonical_statement
+):
     inference = parse(
         {"action": action, "statement": statement, "evidence_refs": [reference]}
     )
     claim = inference.supported_capabilities[0]
-    assert claim.statement == statement
+    assert claim.statement == canonical_statement
+    assert claim.statement != statement
     assert claim.evidence_refs == [reference]
     assert "action" not in inference.model_dump(mode="json")["supported_capabilities"][0]
 

@@ -14,6 +14,7 @@ from src.api.schemas.pipeline_jobs import (
     ChromaSyncPipelineJobCreateRequest,
     CrawlPipelineJobCreateRequest,
     Neo4jSyncPipelineJobCreateRequest,
+    SemanticInferencePipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
 )
@@ -25,6 +26,7 @@ from src.database.enums import (
 )
 from src.database.repositories import KnowledgeRepository, PipelineJobRepository
 from src.database.services import PipelineJobService
+from src.knowledge.canonical.enums import ReviewStatus
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
 SessionDependency = Annotated[Session, Depends(get_admin_read_session)]
@@ -40,7 +42,7 @@ def _single_active_version(session: Session):
     if len(active) != 1:
         raise HTTPException(
             status_code=409,
-            detail="Se requiere exactamente una versión ACTIVE para sincronizar.",
+            detail="Se requiere exactamente una versión ACTIVE para esta operación.",
         )
     return active[0]
 
@@ -242,6 +244,60 @@ def create_chroma_sync_job(
         kind=PipelineJobKind.CHROMA_SYNC,
         parameters={},
     )
+
+
+
+
+@router.post(
+    "/semantic-inference",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_semantic_inference_job(
+    payload: SemanticInferencePipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    version = _single_active_version(session)
+    screen = KnowledgeRepository(session).get_item_by_identity(
+        version.id, "screen", payload.screen_id
+    )
+    if screen is None:
+        raise HTTPException(
+            status_code=404,
+            detail="La pantalla no existe en la versión ACTIVE.",
+        )
+    if screen.current_review_status not in {
+        ReviewStatus.APPROVED,
+        ReviewStatus.CORRECTED,
+    }:
+        raise HTTPException(
+            status_code=409,
+            detail="La pantalla requiere revisión estructural aprobada/corregida.",
+        )
+
+    job = PipelineJobService(session).create(
+        kind=PipelineJobKind.SEMANTIC_INFERENCE,
+        scope=PipelineJobScope.SCREEN,
+        target=screen.route or screen.canonical_id,
+        profile_name=request.app.state.pipeline_crawl_profile_name,
+        erp_id=version.erp_id,
+        knowledge_version_id=version.id,
+        request_source="admin_api",
+        parameters={
+            "active_only": True,
+            "semantic_type": "screen_purpose",
+            "knowledge_version_id": str(version.id),
+            "knowledge_version": version.knowledge_version,
+            "erp_id": version.erp_id,
+            "screen_knowledge_item_id": str(screen.id),
+            "screen_id": screen.canonical_id,
+            "screen_route": screen.route,
+        },
+    )
+    session.commit()
+    request.app.state.pipeline_job_dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
 
 
 @router.get("", response_model=PipelineJobListResponse)

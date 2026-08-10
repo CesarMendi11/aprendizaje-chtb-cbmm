@@ -40,7 +40,7 @@ from src.analysis.schemas import (
     TableEvidence,
     TransitionEvidence,
 )
-from src.analysis.validators import build_grounding_plan
+from src.analysis.validators import build_grounding_plan, validate_capability_grounding
 from src.database.services.semantic_payloads import canonical_json_hash
 
 
@@ -242,7 +242,7 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v8"
+    assert PROMPT_VERSION == "screen-purpose-v9"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
@@ -659,7 +659,7 @@ def test_epistemic_negative_claims_are_also_excluded_from_draft(field_name, clai
         ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(package())
 
 
-def test_view_claim_rejects_unbacked_detail_semantics():
+def test_generated_view_detail_overreach_is_not_persisted_as_public_claim():
     evidence = grounding_package()
     value = valid_output(
         supported_capabilities=[
@@ -674,15 +674,17 @@ def test_view_claim_rejects_unbacked_detail_semantics():
         ]
     )
 
-    with pytest.raises(InferenceGroundingError) as captured:
-        ScreenPurposeInferenceService(
-            FakeClient(json.dumps(value, ensure_ascii=False))
-        ).generate(evidence)
+    candidate = ScreenPurposeInferenceService(
+        FakeClient(json.dumps(value, ensure_ascii=False))
+    ).generate(evidence)
 
-    assert captured.value.category == "unsupported_view_detail_claim"
+    claim = candidate.inference.supported_capabilities[0]
+    assert claim.statement == "Permite visualizar información disponible en la pantalla."
+    assert "detalle" not in claim.statement.casefold()
+    assert claim.evidence_refs == ["screen:test", "table:results"]
 
 
-def test_view_detail_claim_accepts_explicit_detail_evidence():
+def test_generation_remains_conservative_even_with_explicit_detail_evidence():
     evidence = grounding_package(
         controls=[
             ControlEvidence(
@@ -707,9 +709,59 @@ def test_view_detail_claim_accepts_explicit_detail_evidence():
         FakeClient(json.dumps(value, ensure_ascii=False))
     ).generate(evidence)
 
-    assert candidate.inference.supported_capabilities[0].evidence_refs == [
-        "control:detail"
-    ]
+    claim = candidate.inference.supported_capabilities[0]
+    assert claim.statement == "Permite visualizar información disponible en la pantalla."
+    assert claim.evidence_refs == ["control:detail"]
+
+
+def test_grounding_validator_still_allows_human_detail_claim_when_evidence_is_explicit():
+    evidence = grounding_package(
+        controls=[
+            ControlEvidence(
+                control_id="control:detail",
+                label="Ver detalle",
+                control_type="button",
+                mutative=False,
+            )
+        ]
+    )
+    inference = ScreenPurposeInference(
+        semantic_type="screen_purpose",
+        screen_id=evidence.screen_id,
+        purpose_summary="Permite visualizar información de Retenciones desde la pantalla.",
+        supported_capabilities=[
+            CapabilityClaim(
+                statement="Permite visualizar el detalle de una retención.",
+                evidence_refs=["control:detail"],
+            )
+        ],
+        limitations=[],
+        uncertainties=[],
+    )
+
+    validate_capability_grounding(inference, evidence)
+
+
+def test_grounding_validator_still_rejects_unbacked_human_detail_claim():
+    evidence = grounding_package()
+    inference = ScreenPurposeInference(
+        semantic_type="screen_purpose",
+        screen_id=evidence.screen_id,
+        purpose_summary="Permite visualizar información de Retenciones desde la pantalla.",
+        supported_capabilities=[
+            CapabilityClaim(
+                statement="Permite visualizar detalles de una retención.",
+                evidence_refs=["screen:test", "table:results"],
+            )
+        ],
+        limitations=[],
+        uncertainties=[],
+    )
+
+    with pytest.raises(InferenceGroundingError) as captured:
+        validate_capability_grounding(inference, evidence)
+
+    assert captured.value.category == "unsupported_view_detail_claim"
 
 
 def test_table_statement_is_detected_as_view_and_uses_table_reference():

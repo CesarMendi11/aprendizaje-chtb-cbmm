@@ -12,6 +12,7 @@ from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecuto
 from src.pipeline.chroma_sync_job_executor import ChromaSyncJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
 from src.pipeline.neo4j_sync_job_executor import Neo4jSyncJobExecutor
+from src.pipeline.semantic_inference_job_executor import SemanticInferenceJobExecutor
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class PipelineJobRunner:
         canonical_import_executor: CanonicalImportJobExecutor | None = None,
         neo4j_sync_executor: Neo4jSyncJobExecutor | None = None,
         chroma_sync_executor: ChromaSyncJobExecutor | None = None,
+        semantic_inference_executor: SemanticInferenceJobExecutor | None = None,
     ):
         self.session_factory = session_factory
         self.executors = {
@@ -47,6 +49,8 @@ class PipelineJobRunner:
             or Neo4jSyncJobExecutor(session_factory),
             PipelineJobKind.CHROMA_SYNC: chroma_sync_executor
             or ChromaSyncJobExecutor(session_factory),
+            PipelineJobKind.SEMANTIC_INFERENCE: semantic_inference_executor
+            or SemanticInferenceJobExecutor(session_factory),
         }
 
     def run(self, job_id: uuid.UUID | str) -> None:

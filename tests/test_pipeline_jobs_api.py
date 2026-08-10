@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from dataclasses import replace
 from datetime import datetime, timezone
 
@@ -13,8 +14,9 @@ from src.api.app import create_app
 from src.config.api_settings import ApiSettings
 from src.database.base import Base
 from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import ERPSystemRecord, ImportRun, KnowledgeVersionRecord
+from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
 from src.database.services import PipelineJobService
+from src.knowledge.canonical.enums import ReviewStatus
 
 
 class Client:
@@ -345,4 +347,71 @@ def test_projection_sync_rejects_when_there_is_no_active_version(api):
     seed_active_version(factory, status=KnowledgeVersionStatus.IMPORTED)
     assert client.post("/api/admin/pipeline-jobs/neo4j-sync", json={}).status_code == 409
     assert client.post("/api/admin/pipeline-jobs/chroma-sync", json={}).status_code == 409
+    assert dispatcher.submitted == []
+
+
+
+def seed_active_screen(factory, *, review=ReviewStatus.APPROVED):
+    version_id, erp_id = seed_active_version(factory)
+    with factory.begin() as session:
+        screen = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="screen:retenciones-active",
+            entity_type="screen",
+            title="Retenciones",
+            normalized_title="retenciones",
+            route="/admin/cuentasxcobrar/retenciones",
+            content_hash="b" * 64,
+            source_payload={"id": "screen:retenciones-active", "title": "Retenciones"},
+            generated_review_status=review,
+            current_review_status=review,
+        )
+        session.add(screen)
+        session.flush()
+        return version_id, erp_id, str(screen.id), screen.canonical_id
+
+
+def test_semantic_inference_job_captures_only_reviewed_screen_from_active_version(api):
+    client, factory, dispatcher = api
+    version_id, erp_id, screen_item_id, screen_id = seed_active_screen(factory)
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/semantic-inference",
+        json={"screen_id": screen_id},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "semantic_inference"
+    assert body["scope"] == "screen"
+    assert body["target"] == "/admin/cuentasxcobrar/retenciones"
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"]["active_only"] is True
+    assert body["parameters"]["semantic_type"] == "screen_purpose"
+    assert body["parameters"]["screen_knowledge_item_id"] == screen_item_id
+    assert body["parameters"]["screen_id"] == screen_id
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_semantic_inference_job_rejects_unreviewed_or_unknown_screen(api):
+    client, factory, dispatcher = api
+    _version_id, _erp_id, _screen_item_id, screen_id = seed_active_screen(
+        factory, review=ReviewStatus.PENDING_REVIEW
+    )
+
+    pending = client.post(
+        "/api/admin/pipeline-jobs/semantic-inference",
+        json={"screen_id": screen_id},
+    )
+    assert pending.status_code == 409
+    unknown = client.post(
+        "/api/admin/pipeline-jobs/semantic-inference",
+        json={"screen_id": "screen:unknown"},
+    )
+    assert unknown.status_code == 404
+    invalid = client.post(
+        "/api/admin/pipeline-jobs/semantic-inference",
+        json={"screen_id": "not-a-screen"},
+    )
+    assert invalid.status_code == 422
     assert dispatcher.submitted == []

@@ -21,6 +21,7 @@ from src.analysis.schemas.screen_purpose_grounding_plan import (
 )
 from src.analysis.schemas.screen_purpose_inference import InferenceModel, _safe_text
 from src.analysis.validators.screen_purpose_grounding import validate_declared_capability
+from src.knowledge.canonical.ids import normalize_text
 
 
 class GeneratedCapabilityDraft(InferenceModel):
@@ -113,6 +114,51 @@ def build_screen_purpose_generation_schema(
     }
 
 
+CANONICAL_CAPABILITY_STATEMENTS = {
+    "search": "Permite buscar mediante los criterios disponibles.",
+    "navigate": "Permite navegar entre las páginas de resultados.",
+    "view": "Permite visualizar información disponible en la pantalla.",
+    "create": "Permite crear mediante la opción disponible.",
+    "edit": "Permite editar mediante la opción disponible.",
+    "delete": "Permite eliminar mediante la opción disponible.",
+    "process": "Permite procesar mediante la opción disponible.",
+}
+CAPABILITY_ACTION_VERBS = {
+    "create": "crear",
+    "edit": "editar",
+    "delete": "eliminar",
+    "process": "procesar",
+}
+PRUDENT_DRAFT_MARKERS = (
+    "presenta una opcion",
+    "muestra una opcion",
+    "existe un control",
+    "opcion asociada",
+    "control asociado",
+    "relacionada con",
+    "relacionado con",
+)
+
+
+def build_deterministic_capability_statement(
+    capability: GeneratedCapabilityDraft,
+    hint,
+) -> str:
+    """Render the public claim from action/policy, never from model-specific prose."""
+    normalized_statement = normalize_text(capability.statement)
+    prudent_draft = any(
+        marker in normalized_statement for marker in PRUDENT_DRAFT_MARKERS
+    )
+    if capability.action in CAPABILITY_ACTION_VERBS and (
+        hint.narrative_rule == "prudent_only" or prudent_draft
+    ):
+        return (
+            "La interfaz presenta una opción relacionada con "
+            f"{CAPABILITY_ACTION_VERBS[capability.action]}."
+        )
+    return CANONICAL_CAPABILITY_STATEMENTS[capability.action]
+
+
 def parse_generation_draft(
     raw: str,
     *,
@@ -175,10 +221,12 @@ def parse_generation_draft(
                 location=("supported_capabilities", position, "evidence_refs"),
                 category="declared_action_reference_not_permitted",
             )
+        # The model statement is only a consistency signal. It is validated, then
+        # replaced with controlled language before any public semantic payload exists.
         validate_declared_capability(capability, hint, position=position)
         claims.append(
             CapabilityClaim(
-                statement=capability.statement,
+                statement=build_deterministic_capability_statement(capability, hint),
                 evidence_refs=list(capability.evidence_refs),
             )
         )

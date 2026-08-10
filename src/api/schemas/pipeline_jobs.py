@@ -82,3 +82,15 @@ class Neo4jSyncPipelineJobCreateRequest(BaseModel):
 
 class ChromaSyncPipelineJobCreateRequest(BaseModel):
     pass
+
+
+class SemanticInferencePipelineJobCreateRequest(BaseModel):
+    screen_id: str = Field(min_length=1, max_length=240)
+
+    @model_validator(mode="after")
+    def validate_screen_id(self):
+        clean = self.screen_id.strip()
+        if not clean.startswith("screen:"):
+            raise ValueError("screen_id debe ser un identificador canónico de pantalla")
+        self.screen_id = clean
+        return self

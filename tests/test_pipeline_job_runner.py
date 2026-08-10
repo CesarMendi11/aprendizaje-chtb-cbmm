@@ -101,6 +101,33 @@ class FakeProjectionSyncExecutor:
             "eligible_items": 21,
         }
 
+
+
+class FakeSemanticInferenceExecutor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            "proposal_ready",
+            {
+                "work_units": 4,
+                "progress_total": 4,
+                "semantic_id": "semantic:test",
+                "proposal_status": "pending_review",
+            },
+        )
+        return {
+            "target": "semantic_proposal",
+            "active_only": True,
+            "knowledge_version": parameters["knowledge_version"],
+            "knowledge_version_id": parameters["knowledge_version_id"],
+            "semantic_id": "semantic:test",
+            "proposal_status": "pending_review",
+        }
+
+
 def build_factory():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -244,4 +271,38 @@ def test_runner_dispatches_projection_sync_executors():
             assert stored.result_payload["active_only"] is True
     assert len(neo.calls) == 1
     assert len(chroma.calls) == 1
+    engine.dispose()
+
+
+
+def test_runner_dispatches_semantic_inference_executor():
+    engine, factory = build_factory()
+    version_id = "00000000-0000-0000-0000-000000000777"
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="semantic_inference",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            parameters={
+                "active_only": True,
+                "knowledge_version": "active-v1",
+                "knowledge_version_id": version_id,
+                "screen_knowledge_item_id": "00000000-0000-0000-0000-000000000778",
+                "screen_id": "screen:retenciones",
+            },
+        )
+        job_id = job.id
+
+    executor = FakeSemanticInferenceExecutor()
+    PipelineJobRunner(factory, semantic_inference_executor=executor).run(job_id)
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.progress_current == 4
+        assert stored.progress_total == 4
+        assert stored.result_payload["semantic_id"] == "semantic:test"
+        assert stored.result_payload["proposal_status"] == "pending_review"
+    assert len(executor.calls) == 1
     engine.dispose()

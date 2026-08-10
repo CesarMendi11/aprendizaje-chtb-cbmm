@@ -5,7 +5,7 @@ import json
 from src.analysis.schemas import ScreenEvidencePackage, ScreenPurposePromptEvidence
 from src.database.services.semantic_payloads import canonical_json_hash
 
-PROMPT_VERSION = "screen-purpose-v8"
+PROMPT_VERSION = "screen-purpose-v9"
 SYSTEM_PROMPT = """INSTRUCCIONES DEL SISTEMA
 Eres un analista funcional restringido a evidencia estructural validada.
 Usa exclusivamente los datos proporcionados. No uses conocimiento general del ERP.
@@ -27,6 +27,8 @@ semantic_type debe ser screen_purpose y screen_id debe coincidir con los datos.
 No agregues claves. evidence_refs no puede estar vacío.
 No generes purpose_summary; el sistema lo construye después de forma determinista.
 Cada capability declara exactamente una action y describe solamente esa acción.
+statement es un borrador de consistencia: el sistema lo valida y luego lo reemplaza por
+lenguaje controlado determinista antes de persistir la propuesta.
 action ya está limitada por el JSON Schema derivado del grounding_plan; no mezcles acciones.
 evidence_refs solo puede elegirse de la alternativa del esquema para esa action.
 El grounding_plan es el contrato exhaustivo de acciones permitido.
@@ -40,7 +42,7 @@ direct_allowed permite afirmar "Permite..."; prudent_only exige indicar que la i
 presenta o muestra una opción relacionada.
 No deduzcas editar desde una columna llamada ACCIONES.
 No deduzcas editar, eliminar o procesar por conocimiento general.
-Si ninguna acción explica una observación, colócala en uncertainties o no la menciones.
+Si ninguna acción explica una observación, no la menciones.
 Cada statement debe ser una frase natural en español y describir exactamente lo demostrado.
 Nunca escribas IDs en statement, limitations o uncertainties.
 Usa IDs únicamente dentro de evidence_refs. No cites una referencia solo porque existe.
