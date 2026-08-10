@@ -69,22 +69,22 @@ class KnowledgeReviewService:
             raise LookupError("KnowledgeItem no encontrado")
         return item
 
-    def approve(self, item_id, *, reviewer=None, notes=None, expected_revision=None):
+    def approve(self, item_id, *, reviewer=None, notes=None, expected_revision=None, source=ReviewSource.CLI):
         return self._change(
             item_id, ReviewActionType.APPROVE, ReviewStatus.APPROVED,
-            reviewer=reviewer, notes=notes, expected_revision=expected_revision
+            reviewer=reviewer, notes=notes, expected_revision=expected_revision, source=source
         )
 
-    def reject(self, item_id, *, reviewer=None, notes=None, expected_revision=None):
+    def reject(self, item_id, *, reviewer=None, notes=None, expected_revision=None, source=ReviewSource.CLI):
         if not notes:
             raise ValueError("El rechazo requiere notas")
         return self._change(
             item_id, ReviewActionType.REJECT, ReviewStatus.REJECTED,
-            reviewer=reviewer, notes=notes, expected_revision=expected_revision
+            reviewer=reviewer, notes=notes, expected_revision=expected_revision, source=source
         )
 
     def correct(
-        self, item_id, corrected_payload, *, reviewer=None, notes=None, expected_revision=None
+        self, item_id, corrected_payload, *, reviewer=None, notes=None, expected_revision=None, source=ReviewSource.CLI
     ):
         if not notes:
             raise ValueError("La corrección requiere notas")
@@ -105,16 +105,16 @@ class KnowledgeReviewService:
                 raise ValueError("La corrección no valida contra el modelo canónico") from exc
         return self._record(
             item, ReviewActionType.CORRECT, ReviewStatus.CORRECTED,
-            reviewer, notes, payload
+            reviewer, notes, payload, source=source
         )
 
     def reset_to_pending(
-        self, item_id, *, reviewer=None, notes=None, expected_revision=None
+        self, item_id, *, reviewer=None, notes=None, expected_revision=None, source=ReviewSource.CLI
     ):
         item = self._locked(item_id, expected_revision)
         return self._record(
             item, ReviewActionType.RESET_TO_PENDING, ReviewStatus.PENDING_REVIEW,
-            reviewer, notes, None, allow_any=True
+            reviewer, notes, None, allow_any=True, source=source
         )
 
     def get_review_history(self, item_id):
@@ -128,9 +128,9 @@ class KnowledgeReviewService:
             correction.corrected_payload if correction else item.source_payload
         )
 
-    def _change(self, item_id, action, status, *, reviewer, notes, expected_revision):
+    def _change(self, item_id, action, status, *, reviewer, notes, expected_revision, source):
         item = self._locked(item_id, expected_revision)
-        return self._record(item, action, status, reviewer, notes, None)
+        return self._record(item, action, status, reviewer, notes, None, source=source)
 
     def _locked(self, item_id, expected_revision):
         item = self.knowledge.get_item(item_id, for_update=True)
@@ -141,7 +141,7 @@ class KnowledgeReviewService:
         return item
 
     def _record(
-        self, item, action, status, reviewer, notes, corrected_payload, allow_any=False
+        self, item, action, status, reviewer, notes, corrected_payload, allow_any=False, source=ReviewSource.CLI
     ):
         previous = item.current_review_status
         if not allow_any and status not in TRANSITIONS.get(previous, set()):
@@ -156,7 +156,7 @@ class KnowledgeReviewService:
                 review_notes=(notes or "")[:4000] or None,
                 reviewer_subject=(reviewer or "")[:240] or None,
                 item_content_hash=item.content_hash,
-                source=ReviewSource.CLI,
+                source=ReviewSource(source),
             )
         )
         item.current_review_status = status
