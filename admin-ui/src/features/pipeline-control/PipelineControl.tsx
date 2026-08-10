@@ -3,12 +3,15 @@ import {
   AdminApiError,
   createCanonicalBuildJob,
   createCanonicalImportJob,
+  createChromaSyncJob,
   createCrawlJob,
+  createNeo4jSyncJob,
   dataMode,
   getPipelineJob,
   getPipelineJobs,
+  getSystemStatus,
 } from '../../api/client'
-import type { CrawlJobRequest, PipelineJobDetail, PipelineJobSummary } from '../../types/admin'
+import type { AdminSystemStatusResponse, CrawlJobRequest, PipelineJobDetail, PipelineJobSummary } from '../../types/admin'
 import './pipeline-control.css'
 
 const RETENCIONES_ROUTE = '/admin/cuentasxcobrar/retenciones'
@@ -17,6 +20,7 @@ const terminalStatuses = new Set(['succeeded', 'failed', 'cancelled'])
 type PanelState = {
   active: PipelineJobDetail | null
   recent: PipelineJobSummary[]
+  system: AdminSystemStatusResponse | null
   loading: boolean
   launching: boolean
   message: string | null
@@ -44,6 +48,13 @@ const labelStage = (stage: string) => ({
   validating_import: 'Validando importación',
   importing_staging: 'Importando a staging',
   staging_ready: 'Staging listo',
+  validating_active_version: 'Verificando versión activa',
+  projection_planned: 'Proyección preparada',
+  syncing_neo4j: 'Sincronizando Neo4j',
+  neo4j_synced: 'Neo4j sincronizado',
+  documents_prepared: 'Documentos preparados',
+  embedding_and_syncing: 'Generando embeddings y sincronizando',
+  chroma_synced: 'Chroma sincronizado',
   completed: 'Finalizado',
   failed: 'Falló',
 }[stage] ?? stage.replaceAll('_', ' '))
@@ -61,8 +72,12 @@ const kindLabel = (kind: string) => ({
   semantic_inference: 'Inferencia semántica',
 }[kind] ?? kind.replaceAll('_', ' '))
 
-const targetLabel = (job: PipelineJobSummary | PipelineJobDetail) =>
-  job.scope === 'screen' ? 'Retenciones' : job.scope === 'full' ? 'ERP completo' : job.target ?? 'Pipeline'
+const targetLabel = (job: PipelineJobSummary | PipelineJobDetail) => {
+  if (job.scope === 'screen') return 'Retenciones'
+  if (job.scope === 'full') return 'ERP completo'
+  if (job.scope === 'version') return job.target ? `Versión ${job.target}` : 'Versión activa'
+  return job.target ?? 'Sistema'
+}
 
 const jobTitle = (job: PipelineJobSummary | PipelineJobDetail) => `${kindLabel(job.kind)} · ${targetLabel(job)}`
 
@@ -74,15 +89,21 @@ function Counter({ label, value }: { label: string; value: number | string }) {
   return <div className="pipeline-counter"><strong>{value}</strong><span>{label}</span></div>
 }
 
+function ServiceState({ status }: { status: string }) {
+  return <span className={`projection-service-state projection-service-state--${status}`}><i aria-hidden="true" />{status}</span>
+}
+
 export function PipelineControl() {
-  const [state, setState] = useState<PanelState>({ active: null, recent: [], loading: dataMode === 'live', launching: false, message: null })
+  const [state, setState] = useState<PanelState>({ active: null, recent: [], system: null, loading: dataMode === 'live', launching: false, message: null })
 
   const loadRecent = useCallback(async () => {
     if (dataMode !== 'live') return
     try {
-      const response = await getPipelineJobs(12)
+      const response = await getPipelineJobs(20)
+      let system: AdminSystemStatusResponse | null = null
+      try { system = await getSystemStatus() } catch { /* Los jobs siguen siendo operables aunque falle este resumen. */ }
       const running = response.items.find((job) => job.status === 'queued' || job.status === 'running') ?? null
-      setState((old) => ({ ...old, recent: response.items, loading: false, message: null }))
+      setState((old) => ({ ...old, recent: response.items, system: system ?? old.system, loading: false, message: null }))
       if (running) {
         const detail = await getPipelineJob(running.id)
         setState((old) => ({ ...old, active: detail }))
@@ -116,7 +137,7 @@ export function PipelineControl() {
   const isBusy = state.launching || hasRunningJob || Boolean(state.active && !terminalStatuses.has(state.active.status))
 
   const rememberJob = (job: PipelineJobDetail) => {
-    setState((old) => ({ ...old, active: job, launching: false, recent: [job, ...old.recent.filter((item) => item.id !== job.id)].slice(0, 12) }))
+    setState((old) => ({ ...old, active: job, launching: false, recent: [job, ...old.recent.filter((item) => item.id !== job.id)].slice(0, 20) }))
   }
 
   const launchCrawl = useCallback(async (payload: CrawlJobRequest) => {
@@ -148,6 +169,25 @@ export function PipelineControl() {
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
+  const launchProjection = async (kind: 'neo4j_sync' | 'chroma_sync') => {
+    if (dataMode !== 'live' || isBusy) return
+    setState((old) => ({ ...old, launching: true, message: null }))
+    try {
+      rememberJob(kind === 'neo4j_sync' ? await createNeo4jSyncJob() : await createChromaSyncJob())
+    } catch (error: unknown) {
+      setState((old) => ({ ...old, launching: false, message: errorMessage(error) }))
+    }
+  }
+
+  const selectJob = async (jobId: string) => {
+    try {
+      const detail = await getPipelineJob(jobId)
+      setState((old) => ({ ...old, active: detail, message: null }))
+    } catch (error: unknown) {
+      setState((old) => ({ ...old, message: errorMessage(error) }))
+    }
+  }
+
   const job = state.active
   const checkpoint = job?.checkpoint ?? {}
   const result = job?.result_payload ?? {}
@@ -168,6 +208,17 @@ export function PipelineControl() {
   const knowledgeVersion = asString(result.knowledge_version) ?? asString(checkpoint.knowledge_version)
   const canBuild = Boolean(job && job.kind === 'crawl' && job.status === 'succeeded' && !isBusy)
   const canImport = Boolean(job && job.kind === 'canonical_build' && job.status === 'succeeded' && !isBusy)
+
+  const system = state.system
+  const activeVersion = system?.knowledge.active_version ?? null
+  const postgresqlOnline = system?.services.postgresql.status === 'online'
+  const neo4jOnline = system?.services.neo4j.status === 'online'
+  const chromaReady = system?.services.chroma.status === 'ready'
+  const ollamaReady = system?.services.ollama.status === 'online' && system.services.ollama.configured_embedding_model_available === true
+  const canSyncNeo4j = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && neo4jOnline)
+  const canSyncChroma = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && chromaReady && ollamaReady)
+  const latestNeo4j = state.recent.find((item) => item.kind === 'neo4j_sync') ?? null
+  const latestChroma = state.recent.find((item) => item.kind === 'chroma_sync') ?? null
 
   return <section className="pipeline-console" aria-label="Control del pipeline de conocimiento">
     <div className="pipeline-console__heading">
@@ -201,8 +252,13 @@ export function PipelineControl() {
 
           {job.kind === 'canonical_import' && <div className="pipeline-counters pipeline-counters--import"><Counter label="Items" value={asNumber(result.items)}/><Counter label="Reviews heredadas" value={asNumber(result.carried_reviews)}/><Counter label="Estado" value={asString(result.version_status) ?? '—'}/><Counter label="Sync jobs" value={asNumber(result.sync_jobs_present)}/><Counter label="Activó versión" value={asBoolean(result.activation_performed) ? 'Sí' : 'No'}/><Counter label="Staging" value={asBoolean(result.staging_ready) ? 'Listo' : '—'}/></div>}
 
+          {job.kind === 'neo4j_sync' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Elegibles" value={asNumber(result.eligible_items) || asNumber(checkpoint.eligible_items)}/><Counter label="Nodos" value={asNumber(result.nodes) || asNumber(checkpoint.nodes)}/><Counter label="Relaciones" value={asNumber(result.relationships) || asNumber(checkpoint.relationships)}/><Counter label="Rel. omitidas" value={asNumber(result.skipped_relationships)}/><Counter label="Reemplazo" value={asBoolean(result.replace_version) ? 'Sí' : 'No'}/><Counter label="Active only" value={asBoolean(result.active_only) ? 'Sí' : '—'}/></div>}
+
+          {job.kind === 'chroma_sync' && <div className="pipeline-counters pipeline-counters--projection"><Counter label="Elegibles" value={asNumber(result.eligible_items) || asNumber(checkpoint.eligible_items)}/><Counter label="Documentos" value={asNumber(result.documents) || asNumber(checkpoint.documents)}/><Counter label="Actualizados" value={asNumber(result.inserted_or_updated) || asNumber(checkpoint.inserted_or_updated)}/><Counter label="Stale removidos" value={asNumber(result.removed_stale)}/><Counter label="Dimensiones" value={asNumber(result.embedding_dimensions)}/><Counter label="Omitidos" value={asNumber(result.skipped)}/></div>}
+
           {job.target && <p className="pipeline-target"><span>Objetivo</span><code>{job.target}</code></p>}
           {knowledgeVersion && <p className="pipeline-target"><span>Knowledge version</span><code>{knowledgeVersion}</code></p>}
+          {job.kind === 'chroma_sync' && asString(result.embedding_model) && <p className="pipeline-target"><span>Embedding model</span><code>{asString(result.embedding_model)}</code></p>}
           {job.error_summary && <p className="pipeline-job-error">{job.error_summary}</p>}
           {artifactRoot && <p className="pipeline-artifacts"><span>Artefactos aislados</span><code>{artifactRoot}</code></p>}
           {canonicalDir && <p className="pipeline-artifacts"><span>Canonical</span><code>{canonicalDir}</code></p>}
@@ -213,8 +269,39 @@ export function PipelineControl() {
 
       <article className="pipeline-history">
         <div className="pipeline-card-head"><div><span>Trazabilidad</span><h3>Ejecuciones recientes</h3></div><strong>{state.recent.length}</strong></div>
-        {state.recent.length === 0 ? <p className="pipeline-empty">Todavía no hay jobs registrados.</p> : <div className="pipeline-job-list">{state.recent.slice(0, 10).map((item) => <button key={item.id} disabled={Boolean(job && !terminalStatuses.has(job.status) && item.id !== job.id)} onClick={() => void getPipelineJob(item.id).then((detail) => setState((old) => ({ ...old, active: detail }))).catch((error: unknown) => setState((old) => ({ ...old, message: errorMessage(error) })))} className={item.id === job?.id ? 'is-selected' : ''}><div><strong>{jobTitle(item)}</strong><span>{new Date(item.requested_at).toLocaleString()} · {labelStage(item.stage)}</span></div><JobBadge status={item.status} /></button>)}</div>}
+        {state.recent.length === 0 ? <p className="pipeline-empty">Todavía no hay jobs registrados.</p> : <div className="pipeline-job-list">{state.recent.slice(0, 12).map((item) => <button key={item.id} disabled={Boolean(job && !terminalStatuses.has(job.status) && item.id !== job.id)} onClick={() => void selectJob(item.id)} className={item.id === job?.id ? 'is-selected' : ''}><div><strong>{jobTitle(item)}</strong><span>{new Date(item.requested_at).toLocaleString()} · {labelStage(item.stage)}</span></div><JobBadge status={item.status} /></button>)}</div>}
       </article>
+    </div>
+
+    <div className="pipeline-projections" aria-label="Proyecciones de la versión activa">
+      <div className="pipeline-projections__heading">
+        <div><span className="pipeline-eyebrow">Publicación controlada</span><h3>Proyecciones de la versión ACTIVE</h3><p>PostgreSQL sigue siendo la fuente de verdad. Estos controles sólo capturan y verifican la versión activa; la versión staging no puede seleccionarse aquí.</p></div>
+        <div className="projection-active-version"><span>Versión activa</span><code>{activeVersion ?? 'No disponible'}</code></div>
+      </div>
+
+      <div className="projection-grid">
+        <article className="projection-card projection-card--source">
+          <div className="projection-card__head"><div><span>Fuente de verdad</span><h4>PostgreSQL</h4></div><ServiceState status={system?.services.postgresql.status ?? 'unknown'} /></div>
+          <strong className="projection-main-value">{system?.knowledge.approved ?? '—'}</strong><span className="projection-main-label">items aprobados en ACTIVE</span>
+          <dl><div><dt>Pendientes</dt><dd>{system?.knowledge.pending_review ?? '—'}</dd></div><div><dt>Total</dt><dd>{system?.knowledge.total_items ?? '—'}</dd></div></dl>
+        </article>
+
+        <article className="projection-card">
+          <div className="projection-card__head"><div><span>Grafo aprobado</span><h4>Neo4j</h4></div><ServiceState status={system?.services.neo4j.status ?? 'unknown'} /></div>
+          <div className="projection-pair"><div><strong>{system?.services.neo4j.nodes ?? '—'}</strong><span>Nodos</span></div><div><strong>{system?.services.neo4j.relationships ?? '—'}</strong><span>Relaciones</span></div></div>
+          <p>Upsert no destructivo desde la versión ACTIVE; <code>replace_version=false</code>.</p>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('neo4j_sync')} disabled={!canSyncNeo4j}>Sincronizar Neo4j</button>{latestNeo4j && <button className="projection-job-link" onClick={() => void selectJob(latestNeo4j.id)}>Ver último job</button>}</div>
+          {latestNeo4j && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestNeo4j.status} /></div>}
+        </article>
+
+        <article className="projection-card">
+          <div className="projection-card__head"><div><span>Índice semántico</span><h4>Chroma</h4></div><ServiceState status={system?.services.chroma.status ?? 'unknown'} /></div>
+          <strong className="projection-main-value">{system?.services.chroma.documents ?? '—'}</strong><span className="projection-main-label">documentos recuperables</span>
+          <p>Embeddings con <code>{system?.services.ollama.configured_embedding_model ?? 'modelo no disponible'}</code>. Ollama: {system?.services.ollama.status ?? 'unknown'}.</p>
+          <div className="projection-action-row"><button onClick={() => void launchProjection('chroma_sync')} disabled={!canSyncChroma}>Sincronizar Chroma</button>{latestChroma && <button className="projection-job-link" onClick={() => void selectJob(latestChroma.id)}>Ver último job</button>}</div>
+          {latestChroma && <div className="projection-last"><span>Última ejecución</span><JobBadge status={latestChroma.status} /></div>}
+        </article>
+      </div>
     </div>
   </section>
 }

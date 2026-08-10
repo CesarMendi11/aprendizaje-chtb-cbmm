@@ -412,3 +412,234 @@
     flex-direction: column;
   }
 }
+
+.pipeline-projections {
+  margin-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
+
+.pipeline-projections__heading,
+.projection-card__head,
+.projection-action-row,
+.projection-last {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pipeline-projections__heading {
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pipeline-projections__heading h3,
+.projection-card h4 {
+  margin: 3px 0 0;
+}
+
+.pipeline-projections__heading p {
+  max-width: 760px;
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: .82rem;
+}
+
+.projection-active-version {
+  display: grid;
+  gap: 4px;
+  min-width: 210px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: #f8fafc;
+}
+
+.projection-active-version span,
+.projection-card__head span,
+.projection-main-label,
+.projection-last > span {
+  color: #64748b;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.projection-active-version code {
+  color: #0f172a;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.projection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.projection-card {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.projection-card--source {
+  background: #f1f5f9;
+}
+
+.projection-service-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.projection-service-state i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.projection-service-state--online,
+.projection-service-state--ready {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.projection-service-state--offline,
+.projection-service-state--error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.projection-main-value {
+  display: block;
+  margin-top: 16px;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.projection-main-label {
+  display: block;
+  margin-top: 5px;
+}
+
+.projection-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.projection-card dl div {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.projection-card dt {
+  color: #64748b;
+  font-size: .68rem;
+}
+
+.projection-card dd {
+  margin: 3px 0 0;
+  font-weight: 800;
+}
+
+.projection-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.projection-pair div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 10px;
+  background: #fff;
+}
+
+.projection-pair strong {
+  font-size: 1.35rem;
+}
+
+.projection-pair span {
+  color: #64748b;
+  font-size: .7rem;
+}
+
+.projection-card > p {
+  min-height: 38px;
+  margin: 13px 0 0;
+  color: #64748b;
+  font-size: .75rem;
+  line-height: 1.45;
+}
+
+.projection-card code {
+  color: #334155;
+  font-size: .72rem;
+}
+
+.projection-action-row {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.projection-action-row button {
+  border: 1px solid #155e75;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #155e75;
+  color: #fff;
+  font-weight: 700;
+}
+
+.projection-action-row button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.projection-action-row .projection-job-link {
+  border-color: #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.projection-last {
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+@media (max-width: 1180px) {
+  .projection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .pipeline-projections__heading {
+    flex-direction: column;
+  }
+
+  .projection-active-version {
+    width: 100%;
+  }
+}

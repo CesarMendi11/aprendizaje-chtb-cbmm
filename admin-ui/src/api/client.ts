@@ -43,7 +43,7 @@ const validStructuralReviewResult = (value: unknown): value is StructuralReviewR
   validStructuralReviewDetail(value) && isRecord(value) && hasString(value, 'performed_action')
 
 const pipelineStatuses = new Set(['queued', 'running', 'succeeded', 'failed', 'cancelled'])
-const pipelineScopes = new Set(['full', 'screen'])
+const pipelineScopes = new Set(['full', 'screen', 'version', 'system'])
 const validPipelineJobSummary = (value: unknown): value is PipelineJobSummary => {
   if (!isRecord(value)) return false
   return hasString(value, 'id') && hasString(value, 'kind') && hasString(value, 'status') && pipelineStatuses.has(String(value.status)) && hasString(value, 'scope') && pipelineScopes.has(String(value.scope)) && hasString(value, 'request_source') && hasString(value, 'stage') && typeof value.progress_current === 'number' && hasString(value, 'requested_at')
@@ -125,6 +125,24 @@ export async function createCanonicalImportJob(payload: CanonicalImportJobReques
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  })
+}
+
+export async function createNeo4jSyncJob(): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización con Neo4j sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/neo4j-sync', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ batch_size: 200, replace_version: false }),
+  })
+}
+
+export async function createChromaSyncJob(): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización con Chroma sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/chroma-sync', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
   })
 }
 

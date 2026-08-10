@@ -52,7 +52,7 @@ export interface AdminSystemStatusResponse {
 
 
 export type PipelineJobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
-export type PipelineJobScope = 'full' | 'screen'
+export type PipelineJobScope = 'full' | 'screen' | 'version' | 'system'
 
 export interface PipelineJobSummary {
   id: string
