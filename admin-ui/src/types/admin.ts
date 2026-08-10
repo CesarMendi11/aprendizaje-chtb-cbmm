@@ -96,3 +96,11 @@ export interface CrawlJobRequest {
   headless: boolean
   slow_mo: number
 }
+
+export interface CanonicalBuildJobRequest {
+  source_crawl_job_id: string
+}
+
+export interface CanonicalImportJobRequest {
+  source_canonical_job_id: string
+}

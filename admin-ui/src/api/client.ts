@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -67,9 +67,11 @@ export async function getSystemStatus(): Promise<AdminSystemStatusResponse> {
 }
 
 
-export async function getPipelineJobs(limit = 8): Promise<PipelineJobListResponse> {
+export async function getPipelineJobs(limit = 12, kind?: string): Promise<PipelineJobListResponse> {
   if (dataMode !== 'live') return { items: [], total: 0, limit, offset: 0, next_offset: null }
-  return request(`/api/admin/pipeline-jobs?kind=crawl&limit=${encodeURIComponent(String(limit))}`, validPipelineJobList)
+  const query = new URLSearchParams({ limit: String(limit) })
+  if (kind) query.set('kind', kind)
+  return request(`/api/admin/pipeline-jobs?${query.toString()}`, validPipelineJobList)
 }
 
 export async function getPipelineJob(jobId: string): Promise<PipelineJobDetail> {
@@ -80,6 +82,24 @@ export async function getPipelineJob(jobId: string): Promise<PipelineJobDetail> 
 export async function createCrawlJob(payload: CrawlJobRequest): Promise<PipelineJobDetail> {
   if (dataMode !== 'live') throw new AdminApiError('http', 'El crawler sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/crawl', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createCanonicalBuildJob(payload: CanonicalBuildJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'El Canonical Builder sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/canonical-build', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createCanonicalImportJob(payload: CanonicalImportJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La importación canónica sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/canonical-import', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

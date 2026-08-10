@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AdminApiError, createCrawlJob, dataMode, getPipelineJob, getPipelineJobs } from '../../api/client'
+import {
+  AdminApiError,
+  createCanonicalBuildJob,
+  createCanonicalImportJob,
+  createCrawlJob,
+  dataMode,
+  getPipelineJob,
+  getPipelineJobs,
+} from '../../api/client'
 import type { CrawlJobRequest, PipelineJobDetail, PipelineJobSummary } from '../../types/admin'
 import './pipeline-control.css'
 
@@ -16,16 +24,53 @@ type PanelState = {
 
 const errorMessage = (error: unknown) => error instanceof AdminApiError ? error.message : 'Ocurrió un error inesperado en el pipeline.'
 const labelStatus = (status: string) => ({ queued: 'En cola', running: 'Ejecutando', succeeded: 'Completado', failed: 'Falló', cancelled: 'Cancelado' }[status] ?? status)
-const labelStage = (stage: string) => ({ queued: 'En cola', starting: 'Iniciando', loading_profile: 'Cargando perfil', launching_browser: 'Abriendo navegador', logging_in: 'Iniciando sesión', login_succeeded: 'Sesión iniciada', navigating_home: 'Abriendo inicio', navigating_target: 'Abriendo pantalla objetivo', screen_captured: 'Pantalla capturada', exploring_fixed_point: 'Explorando estados seguros', saving_outputs: 'Guardando artefactos', completed: 'Finalizado', failed: 'Falló' }[stage] ?? stage.replaceAll('_', ' '))
+const labelStage = (stage: string) => ({
+  queued: 'En cola',
+  starting: 'Iniciando',
+  loading_profile: 'Cargando perfil',
+  launching_browser: 'Abriendo navegador',
+  logging_in: 'Iniciando sesión',
+  login_succeeded: 'Sesión iniciada',
+  navigating_home: 'Abriendo inicio',
+  navigating_target: 'Abriendo pantalla objetivo',
+  screen_captured: 'Pantalla capturada',
+  exploring_fixed_point: 'Explorando estados seguros',
+  saving_outputs: 'Guardando artefactos',
+  loading_crawl_artifacts: 'Cargando artefactos del crawl',
+  building_canonical: 'Construyendo conocimiento canónico',
+  validating_canonical: 'Validando conocimiento canónico',
+  exporting_canonical: 'Exportando canonical',
+  loading_canonical: 'Cargando canonical',
+  validating_import: 'Validando importación',
+  importing_staging: 'Importando a staging',
+  staging_ready: 'Staging listo',
+  completed: 'Finalizado',
+  failed: 'Falló',
+}[stage] ?? stage.replaceAll('_', ' '))
 const asNumber = (value: unknown) => typeof value === 'number' ? value : 0
 const asString = (value: unknown) => typeof value === 'string' ? value : null
+const asBoolean = (value: unknown) => typeof value === 'boolean' ? value : false
 const formatTime = (value: string | null) => value ? new Date(value).toLocaleTimeString() : '—'
+
+const kindLabel = (kind: string) => ({
+  crawl: 'Crawler',
+  canonical_build: 'Canonical Builder',
+  canonical_import: 'Importación staging',
+  neo4j_sync: 'Sync Neo4j',
+  chroma_sync: 'Sync Chroma',
+  semantic_inference: 'Inferencia semántica',
+}[kind] ?? kind.replaceAll('_', ' '))
+
+const targetLabel = (job: PipelineJobSummary | PipelineJobDetail) =>
+  job.scope === 'screen' ? 'Retenciones' : job.scope === 'full' ? 'ERP completo' : job.target ?? 'Pipeline'
+
+const jobTitle = (job: PipelineJobSummary | PipelineJobDetail) => `${kindLabel(job.kind)} · ${targetLabel(job)}`
 
 function JobBadge({ status }: { status: string }) {
   return <span className={`pipeline-badge pipeline-badge--${status}`}><i aria-hidden="true" />{labelStatus(status)}</span>
 }
 
-function Counter({ label, value }: { label: string; value: number }) {
+function Counter({ label, value }: { label: string; value: number | string }) {
   return <div className="pipeline-counter"><strong>{value}</strong><span>{label}</span></div>
 }
 
@@ -35,12 +80,14 @@ export function PipelineControl() {
   const loadRecent = useCallback(async () => {
     if (dataMode !== 'live') return
     try {
-      const response = await getPipelineJobs(8)
+      const response = await getPipelineJobs(12)
       const running = response.items.find((job) => job.status === 'queued' || job.status === 'running') ?? null
       setState((old) => ({ ...old, recent: response.items, loading: false, message: null }))
       if (running) {
         const detail = await getPipelineJob(running.id)
         setState((old) => ({ ...old, active: detail }))
+      } else {
+        setState((old) => old.active ? old : { ...old, active: null })
       }
     } catch (error: unknown) {
       setState((old) => ({ ...old, loading: false, message: errorMessage(error) }))
@@ -68,26 +115,43 @@ export function PipelineControl() {
   const hasRunningJob = state.recent.some((item) => item.status === 'queued' || item.status === 'running')
   const isBusy = state.launching || hasRunningJob || Boolean(state.active && !terminalStatuses.has(state.active.status))
 
-  const launch = useCallback(async (payload: CrawlJobRequest) => {
+  const rememberJob = (job: PipelineJobDetail) => {
+    setState((old) => ({ ...old, active: job, launching: false, recent: [job, ...old.recent.filter((item) => item.id !== job.id)].slice(0, 12) }))
+  }
+
+  const launchCrawl = useCallback(async (payload: CrawlJobRequest) => {
     if (dataMode !== 'live' || isBusy) return
     setState((old) => ({ ...old, launching: true, message: null }))
-    try {
-      const job = await createCrawlJob(payload)
-      setState((old) => ({ ...old, active: job, launching: false, recent: [job, ...old.recent.filter((item) => item.id !== job.id)].slice(0, 8) }))
-    } catch (error: unknown) {
-      setState((old) => ({ ...old, launching: false, message: errorMessage(error) }))
-    }
+    try { rememberJob(await createCrawlJob(payload)) }
+    catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }, [isBusy])
 
-  const launchRetenciones = () => void launch({ scope: 'screen', target: RETENCIONES_ROUTE, headless: false, slow_mo: 100 })
+  const launchRetenciones = () => void launchCrawl({ scope: 'screen', target: RETENCIONES_ROUTE, headless: false, slow_mo: 100 })
   const launchFull = () => {
     if (!window.confirm('El recorrido completo explora el ERP y puede tardar varios minutos. ¿Desea iniciarlo?')) return
-    void launch({ scope: 'full', target: null, headless: false, slow_mo: 100 })
+    void launchCrawl({ scope: 'full', target: null, headless: false, slow_mo: 100 })
+  }
+
+  const launchCanonicalBuild = async () => {
+    const source = state.active
+    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'crawl' || source.status !== 'succeeded') return
+    setState((old) => ({ ...old, launching: true, message: null }))
+    try { rememberJob(await createCanonicalBuildJob({ source_crawl_job_id: source.id })) }
+    catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
+  }
+
+  const launchCanonicalImport = async () => {
+    const source = state.active
+    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_build' || source.status !== 'succeeded') return
+    setState((old) => ({ ...old, launching: true, message: null }))
+    try { rememberJob(await createCanonicalImportJob({ source_canonical_job_id: source.id })) }
+    catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
   const job = state.active
   const checkpoint = job?.checkpoint ?? {}
-  const metrics = useMemo(() => ({
+  const result = job?.result_payload ?? {}
+  const crawlMetrics = useMemo(() => ({
     routes: asNumber(checkpoint.routes_visited),
     pendingRoutes: asNumber(checkpoint.routes_pending),
     screens: asNumber(checkpoint.functional_screens),
@@ -95,14 +159,24 @@ export function PipelineControl() {
     transitions: asNumber(checkpoint.ui_transitions),
     pendingStates: asNumber(checkpoint.states_pending),
   }), [checkpoint])
-  const artifactRoot = asString(job?.result_payload?.artifact_root)
 
-  return <section className="pipeline-console" aria-label="Control del pipeline de descubrimiento">
+  const statistics = result.statistics && typeof result.statistics === 'object' && !Array.isArray(result.statistics)
+    ? result.statistics as Record<string, unknown>
+    : {}
+  const artifactRoot = asString(result.artifact_root)
+  const canonicalDir = asString(result.canonical_dir)
+  const knowledgeVersion = asString(result.knowledge_version) ?? asString(checkpoint.knowledge_version)
+  const canBuild = Boolean(job && job.kind === 'crawl' && job.status === 'succeeded' && !isBusy)
+  const canImport = Boolean(job && job.kind === 'canonical_build' && job.status === 'succeeded' && !isBusy)
+
+  return <section className="pipeline-console" aria-label="Control del pipeline de conocimiento">
     <div className="pipeline-console__heading">
-      <div><span className="pipeline-eyebrow">Pipeline operativo</span><h2>Descubrimiento estructural</h2><p>Ejecuta el crawler con artefactos aislados. Los runs de demostración no reemplazan el snapshot oficial.</p></div>
+      <div><span className="pipeline-eyebrow">Pipeline operativo</span><h2>Construcción de conocimiento</h2><p>Ejecuta crawling, canonicalización e importación staging con trazabilidad persistente. Los runs cortos no reemplazan la versión activa del ERP.</p></div>
       <div className="pipeline-actions">
         <button className="pipeline-primary" onClick={launchRetenciones} disabled={dataMode !== 'live' || isBusy}>Recorrer Retenciones</button>
         <button onClick={launchFull} disabled={dataMode !== 'live' || isBusy}>Recorrer ERP completo</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalBuild()} disabled={dataMode !== 'live' || !canBuild}>Construir canonical</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalImport()} disabled={dataMode !== 'live' || !canImport}>Importar a staging</button>
         <button className="pipeline-refresh" onClick={() => void loadRecent()} disabled={dataMode !== 'live' || state.loading}>Actualizar jobs</button>
       </div>
     </div>
@@ -110,22 +184,36 @@ export function PipelineControl() {
     {dataMode !== 'live' && <div className="pipeline-notice">Modo demostración: los procesos están desactivados. Inicia la Admin UI con <code>VITE_ADMIN_API_MODE=live</code> para operar el pipeline.</div>}
     {state.message && <div className="pipeline-error" role="alert">{state.message}</div>}
 
+    <div className="pipeline-flow" aria-label="Etapas habilitadas">
+      <span>Crawler</span><i>→</i><span>Canonical Builder</span><i>→</i><span>PostgreSQL staging</span>
+    </div>
+
     <div className="pipeline-grid">
       <article className="pipeline-active">
-        <div className="pipeline-card-head"><div><span>Job activo / último job</span><h3>{job ? (job.scope === 'screen' ? 'Crawler · Retenciones' : 'Crawler · ERP completo') : 'Sin ejecuciones'}</h3></div>{job && <JobBadge status={job.status} />}</div>
-        {!job ? <p className="pipeline-empty">Ejecuta Retenciones para realizar una demostración corta y aislada del crawler.</p> : <>
+        <div className="pipeline-card-head"><div><span>Job seleccionado</span><h3>{job ? jobTitle(job) : 'Sin ejecuciones seleccionadas'}</h3></div>{job && <JobBadge status={job.status} />}</div>
+        {!job ? <p className="pipeline-empty">Ejecuta Retenciones para iniciar una demostración corta del pipeline o selecciona un job reciente.</p> : <>
           <div className="pipeline-job-meta"><span>Etapa <strong>{labelStage(job.stage)}</strong></span><span>Inicio <strong>{formatTime(job.started_at)}</strong></span><span>Fin <strong>{formatTime(job.finished_at)}</strong></span></div>
-          <div className="pipeline-progress"><div className={`pipeline-progress__bar pipeline-progress__bar--${job.status}`}><span /></div><small>{job.status === 'running' ? `Unidades procesadas: ${job.progress_current} · progreso total no estimado` : labelStatus(job.status)}</small></div>
-          <div className="pipeline-counters"><Counter label="Rutas" value={metrics.routes}/><Counter label="Pantallas" value={metrics.screens}/><Counter label="Estados UI" value={metrics.states}/><Counter label="Transiciones" value={metrics.transitions}/><Counter label="Pend. rutas" value={metrics.pendingRoutes}/><Counter label="Pend. estados" value={metrics.pendingStates}/></div>
+          <div className="pipeline-progress"><div className={`pipeline-progress__bar pipeline-progress__bar--${job.status}`}><span style={job.progress_percent !== null && job.status !== 'running' ? { width: `${job.progress_percent}%` } : undefined} /></div><small>{job.progress_total ? `${job.progress_current} / ${job.progress_total} · ${job.progress_percent ?? 0}%` : job.status === 'running' ? `Unidades procesadas: ${job.progress_current} · progreso total no estimado` : labelStatus(job.status)}</small></div>
+
+          {job.kind === 'crawl' && <div className="pipeline-counters"><Counter label="Rutas" value={crawlMetrics.routes}/><Counter label="Pantallas" value={crawlMetrics.screens}/><Counter label="Estados UI" value={crawlMetrics.states}/><Counter label="Transiciones" value={crawlMetrics.transitions}/><Counter label="Pend. rutas" value={crawlMetrics.pendingRoutes}/><Counter label="Pend. estados" value={crawlMetrics.pendingStates}/></div>}
+
+          {job.kind === 'canonical_build' && <div className="pipeline-counters pipeline-counters--canonical"><Counter label="Pantallas" value={asNumber(statistics.screens)}/><Counter label="Campos" value={asNumber(statistics.fields)}/><Counter label="Controles" value={asNumber(statistics.controls)}/><Counter label="Tablas" value={asNumber(statistics.tables)}/><Counter label="Columnas" value={asNumber(statistics.table_columns)}/><Counter label="Errores" value={asNumber(result.validation_errors)}/></div>}
+
+          {job.kind === 'canonical_import' && <div className="pipeline-counters pipeline-counters--import"><Counter label="Items" value={asNumber(result.items)}/><Counter label="Reviews heredadas" value={asNumber(result.carried_reviews)}/><Counter label="Estado" value={asString(result.version_status) ?? '—'}/><Counter label="Sync jobs" value={asNumber(result.sync_jobs_present)}/><Counter label="Activó versión" value={asBoolean(result.activation_performed) ? 'Sí' : 'No'}/><Counter label="Staging" value={asBoolean(result.staging_ready) ? 'Listo' : '—'}/></div>}
+
           {job.target && <p className="pipeline-target"><span>Objetivo</span><code>{job.target}</code></p>}
+          {knowledgeVersion && <p className="pipeline-target"><span>Knowledge version</span><code>{knowledgeVersion}</code></p>}
           {job.error_summary && <p className="pipeline-job-error">{job.error_summary}</p>}
           {artifactRoot && <p className="pipeline-artifacts"><span>Artefactos aislados</span><code>{artifactRoot}</code></p>}
+          {canonicalDir && <p className="pipeline-artifacts"><span>Canonical</span><code>{canonicalDir}</code></p>}
+          {canBuild && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalBuild()}>Construir canonical desde este crawl</button></div>}
+          {canImport && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalImport()}>Importar este canonical a staging</button></div>}
         </>}
       </article>
 
       <article className="pipeline-history">
         <div className="pipeline-card-head"><div><span>Trazabilidad</span><h3>Ejecuciones recientes</h3></div><strong>{state.recent.length}</strong></div>
-        {state.recent.length === 0 ? <p className="pipeline-empty">Todavía no hay jobs de crawling registrados.</p> : <div className="pipeline-job-list">{state.recent.slice(0, 6).map((item) => <button key={item.id} disabled={Boolean(job && !terminalStatuses.has(job.status) && item.id !== job.id)} onClick={() => void getPipelineJob(item.id).then((detail) => setState((old) => ({ ...old, active: detail }))).catch((error: unknown) => setState((old) => ({ ...old, message: errorMessage(error) })))} className={item.id === job?.id ? 'is-selected' : ''}><div><strong>{item.scope === 'screen' ? 'Retenciones' : 'ERP completo'}</strong><span>{new Date(item.requested_at).toLocaleString()}</span></div><JobBadge status={item.status} /></button>)}</div>}
+        {state.recent.length === 0 ? <p className="pipeline-empty">Todavía no hay jobs registrados.</p> : <div className="pipeline-job-list">{state.recent.slice(0, 10).map((item) => <button key={item.id} disabled={Boolean(job && !terminalStatuses.has(job.status) && item.id !== job.id)} onClick={() => void getPipelineJob(item.id).then((detail) => setState((old) => ({ ...old, active: detail }))).catch((error: unknown) => setState((old) => ({ ...old, message: errorMessage(error) })))} className={item.id === job?.id ? 'is-selected' : ''}><div><strong>{jobTitle(item)}</strong><span>{new Date(item.requested_at).toLocaleString()} · {labelStage(item.stage)}</span></div><JobBadge status={item.status} /></button>)}</div>}
       </article>
     </div>
   </section>
