@@ -56,6 +56,7 @@ def create_app(
         from sqlalchemy.orm import sessionmaker
 
         from src.api.routes.admin_knowledge import router as admin_knowledge_router
+        from src.api.routes.admin_system import router as admin_system_router
         from src.api.routes.semantic_review import (
             AdminSemanticApiError,
             admin_semantic_error_handler,
@@ -114,6 +115,7 @@ def create_app(
             prefix="/api/admin",
         )
         app.include_router(admin_knowledge_router, prefix="/api/admin")
+        app.include_router(admin_system_router, prefix="/api/admin")
     return app
 
 
