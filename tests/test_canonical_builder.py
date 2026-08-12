@@ -314,3 +314,14 @@ def test_evidence_path_uses_custom_structural_artifact_directory(tmp_path):
         )
         for item in knowledge.evidence
     )
+
+
+def test_top_level_modules_have_root_hierarchy_metadata():
+    kb = build()
+
+    assert kb.modules
+
+    for module in kb.modules:
+        assert module.parent_module_id is None
+        assert module.depth == 0
+        assert module.navigation_path == [module.name]

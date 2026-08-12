@@ -7,7 +7,7 @@ from .enums import IssueSeverity
 from .models import CanonicalKnowledgeBase, ValidationIssue
 from .privacy import contains_sensitive
 
-SUPPORTED_SCHEMA_VERSIONS = {"1.0.0"}
+SUPPORTED_SCHEMA_VERSIONS = {"1.0.0", "1.1.0"}
 
 
 class CanonicalKnowledgeValidator:
@@ -48,8 +48,44 @@ class CanonicalKnowledgeValidator:
         for duplicate in _duplicates(routes):
             issues.append(self._issue("error", "duplicate_route", f"Ruta duplicada: {duplicate[1]}"))
 
+        module_by_id = {item.id: item for item in knowledge.modules}
+
         for module in knowledge.modules:
-            self._ref(issues, module.erp_id, {knowledge.erp_system.id}, "module.erp_id", module.id)
+            self._ref(
+                issues,
+                module.erp_id,
+                {knowledge.erp_system.id},
+                "module.erp_id",
+                module.id,
+            )
+
+            if module.parent_module_id:
+                if module.parent_module_id == module.id:
+                    issues.append(
+                        self._issue(
+                            "error",
+                            "module_self_parent",
+                            "Un módulo no puede ser su propio padre",
+                            "module",
+                            module.id,
+                        )
+                    )
+                else:
+                    self._ref(
+                        issues,
+                        module.parent_module_id,
+                        module_ids,
+                        "module.parent_module_id",
+                        module.id,
+                    )
+
+        issues.extend(
+            self._module_hierarchy_issues(
+                module_by_id,
+                enforce_derived_metadata=knowledge.schema_version == "1.1.0",
+            )
+        )
+
         for screen in knowledge.screens:
             self._ref(issues, screen.erp_id, {knowledge.erp_system.id}, "screen.erp_id", screen.id)
             if screen.module_id:
@@ -77,6 +113,100 @@ class CanonicalKnowledgeValidator:
         for evidence in knowledge.evidence:
             if contains_sensitive(evidence.observed_text):
                 issues.append(self._issue("error", "sensitive_content", "Contenido sensible en evidencia", "evidence", evidence.id))
+        return issues
+
+    def _module_hierarchy_issues(
+        self,
+        module_by_id,
+        *,
+        enforce_derived_metadata: bool,
+    ) -> list[ValidationIssue]:
+        issues: list[ValidationIssue] = []
+        cycle_reported: set[frozenset[str]] = set()
+
+        # Detect cycles in the parent hierarchy.
+        for module in module_by_id.values():
+            chain: list[str] = []
+            positions: dict[str, int] = {}
+            current = module
+
+            while current is not None:
+                if current.id in positions:
+                    cycle = frozenset(chain[positions[current.id]:])
+
+                    if cycle and cycle not in cycle_reported:
+                        cycle_reported.add(cycle)
+                        issues.append(
+                            self._issue(
+                                "error",
+                                "module_cycle",
+                                "La jerarquía de módulos contiene un ciclo",
+                                "module",
+                                module.id,
+                            )
+                        )
+
+                    break
+
+                positions[current.id] = len(chain)
+                chain.append(current.id)
+
+                parent_id = current.parent_module_id
+
+                if (
+                    not parent_id
+                    or parent_id == current.id
+                    or parent_id not in module_by_id
+                ):
+                    break
+
+                current = module_by_id[parent_id]
+
+        # Schema 1.0.0 did not define depth/navigation_path. It remains
+        # readable for backward compatibility, while schema 1.1.0 enforces
+        # the complete recursive hierarchy contract.
+        if not enforce_derived_metadata:
+            return issues
+
+        # Validate deterministic derived hierarchy metadata.
+        for module in module_by_id.values():
+            if module.parent_module_id:
+                parent = module_by_id.get(module.parent_module_id)
+
+                if parent is None or module.parent_module_id == module.id:
+                    continue
+
+                expected_depth = parent.depth + 1
+                expected_path = [*parent.navigation_path, module.name]
+            else:
+                expected_depth = 0
+                expected_path = [module.name]
+
+            if module.depth != expected_depth:
+                issues.append(
+                    self._issue(
+                        "error",
+                        "module_depth_mismatch",
+                        (
+                            "Profundidad de módulo inválida: "
+                            f"esperado {expected_depth}, observado {module.depth}"
+                        ),
+                        "module",
+                        module.id,
+                    )
+                )
+
+            if module.navigation_path != expected_path:
+                issues.append(
+                    self._issue(
+                        "error",
+                        "module_navigation_path_mismatch",
+                        "Ruta jerárquica de módulo inconsistente",
+                        "module",
+                        module.id,
+                    )
+                )
+
         return issues
 
     def errors(self, knowledge: CanonicalKnowledgeBase) -> list[ValidationIssue]:

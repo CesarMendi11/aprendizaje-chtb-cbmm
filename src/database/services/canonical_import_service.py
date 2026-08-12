@@ -242,7 +242,8 @@ class CanonicalImportService:
 
     @staticmethod
     def _load(knowledge_path, manifest_path, report_path):
-        knowledge = CanonicalKnowledgeRepository(knowledge_path).knowledge
+        repository = CanonicalKnowledgeRepository(knowledge_path)
+        knowledge = repository.knowledge
         errors = CanonicalKnowledgeValidator().errors(knowledge)
         if errors:
             raise ValueError(f"Conocimiento canónico inválido: {len(errors)} errores")
@@ -252,7 +253,7 @@ class CanonicalImportService:
         )
         if manifest.get("knowledge_version") != knowledge.knowledge_version:
             raise ValueError("manifest.json no corresponde a knowledge.json")
-        calculated = content_hash(knowledge.model_dump(mode="json"))
+        calculated = repository.document_hash
         if manifest.get("canonical_document_hash") != calculated:
             raise ValueError("Hash canónico del manifest no coincide")
         return knowledge, manifest, report

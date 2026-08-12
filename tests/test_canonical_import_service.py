@@ -182,3 +182,39 @@ def test_changed_hash_does_not_carry_review(session, tmp_path):
     ))
     assert changed.current_review_status == ReviewStatus.PENDING_REVIEW
     assert result.carried_reviews == 0
+
+
+def test_legacy_manifest_hash_is_checked_against_raw_document(tmp_path, session):
+    knowledge = json.loads((CANONICAL / "knowledge.json").read_text(encoding="utf-8"))
+    manifest = json.loads((CANONICAL / "manifest.json").read_text(encoding="utf-8"))
+
+    knowledge["schema_version"] = "1.0.0"
+
+    for module in knowledge["modules"]:
+        module.pop("parent_module_id", None)
+        module.pop("depth", None)
+        module.pop("navigation_path", None)
+
+    # The manifest hashes exactly what was persisted, not a later
+    # Pydantic representation that may contain newly introduced defaults.
+    manifest["schema_version"] = "1.0.0"
+    manifest["canonical_document_hash"] = content_hash(knowledge)
+
+    knowledge_path = tmp_path / "legacy-knowledge.json"
+    manifest_path = tmp_path / "legacy-manifest.json"
+
+    knowledge_path.write_text(
+        json.dumps(knowledge, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    result = CanonicalImportService(session).dry_run(
+        knowledge_path,
+        manifest_path,
+    )
+
+    assert result.result == "dry_run"

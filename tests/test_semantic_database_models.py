@@ -314,7 +314,7 @@ def test_canonical_and_neo4j_contracts_remain_unchanged():
         "build_warnings",
         "statistics",
     }
-    assert SUPPORTED_SCHEMA_VERSIONS == {"1.0.0"}
+    assert SUPPORTED_SCHEMA_VERSIONS == {"1.0.0", "1.1.0"}
     from src.graph.mapper import LABELS
     from src.graph.repository import RELATIONSHIP_TYPES
 

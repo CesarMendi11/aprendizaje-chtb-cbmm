@@ -16,8 +16,8 @@ from .models import (
 from .privacy import SENSITIVE_REGIONS, build_safe_structural_text, safe_metadata, sanitize_text
 from .validator import CanonicalKnowledgeValidator
 
-SCHEMA_VERSION = "1.0.0"
-GENERATOR_VERSION = "3A.2"
+SCHEMA_VERSION = "1.1.0"
+GENERATOR_VERSION = "4.0.0"
 ARTIFACT_NAMES = (
     "screen_index.json", "routes_graph.json", "state_registry.json",
     "state_flow_graph.json", "event_policy_audit.json", "ui_event_execution_audit.json",
@@ -350,6 +350,9 @@ class CanonicalKnowledgeBuilder:
                 Module(
                     id=module_id,
                     erp_id=erp_id,
+                    parent_module_id=None,
+                    depth=0,
+                    navigation_path=[name],
                     name=name,
                     normalized_name=normalized_name,
                     route_prefix=prefix,

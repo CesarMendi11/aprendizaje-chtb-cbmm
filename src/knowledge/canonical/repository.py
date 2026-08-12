@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .ids import content_hash
 from .models import CanonicalKnowledgeBase
 from .validator import CanonicalKnowledgeValidator
 
@@ -11,6 +12,12 @@ class CanonicalKnowledgeRepository:
     def __init__(self, knowledge_path: Path | str):
         self.path = Path(knowledge_path)
         payload = json.loads(self.path.read_text(encoding="utf-8"))
+
+        # Integrity belongs to the canonical document as it was persisted.
+        # Do not derive this hash from model_dump(), because newer model
+        # versions may inject defaults while reading older schema versions.
+        self.document_hash = content_hash(payload)
+
         self.knowledge = CanonicalKnowledgeBase.model_validate(payload)
         errors = CanonicalKnowledgeValidator().errors(self.knowledge)
         if errors:

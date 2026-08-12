@@ -59,3 +59,67 @@ def test_safe_json_rejects_concrete_identifiers_and_transactions():
             pass
         else:
             raise AssertionError(f"El valor sintético no fue rechazado: {sample!r}")
+
+
+def test_module_parent_reference_is_validated():
+    payload = build().model_dump(mode="json")
+    payload["modules"][0]["parent_module_id"] = "module:missing"
+
+    assert "unresolved_reference" in codes(payload)
+
+
+def test_module_hierarchy_detects_self_parent():
+    payload = build().model_dump(mode="json")
+    module = payload["modules"][0]
+
+    module["parent_module_id"] = module["id"]
+
+    assert "module_self_parent" in codes(payload)
+
+
+def test_module_hierarchy_detects_cycles():
+    payload = build().model_dump(mode="json")
+    first, second = payload["modules"][:2]
+
+    first["parent_module_id"] = second["id"]
+    first["depth"] = 1
+    first["navigation_path"] = [second["name"], first["name"]]
+
+    second["parent_module_id"] = first["id"]
+    second["depth"] = 1
+    second["navigation_path"] = [first["name"], second["name"]]
+
+    assert "module_cycle" in codes(payload)
+
+
+def test_module_hierarchy_validates_depth_and_navigation_path():
+    payload = build().model_dump(mode="json")
+    first, second = payload["modules"][:2]
+
+    second["parent_module_id"] = first["id"]
+    second["depth"] = 7
+    second["navigation_path"] = [second["name"]]
+
+    result = codes(payload)
+
+    assert "module_depth_mismatch" in result
+    assert "module_navigation_path_mismatch" in result
+
+
+def test_schema_v1_legacy_modules_remain_readable_without_hierarchy_metadata():
+    payload = build().model_dump(mode="json")
+    payload["schema_version"] = "1.0.0"
+
+    for module in payload["modules"]:
+        module.pop("parent_module_id", None)
+        module.pop("depth", None)
+        module.pop("navigation_path", None)
+
+    kb = CanonicalKnowledgeBase.model_validate(payload)
+    result = {
+        item.code
+        for item in CanonicalKnowledgeValidator().validate(kb)
+    }
+
+    assert "module_depth_mismatch" not in result
+    assert "module_navigation_path_mismatch" not in result
