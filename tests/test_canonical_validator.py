@@ -123,3 +123,28 @@ def test_schema_v1_legacy_modules_remain_readable_without_hierarchy_metadata():
 
     assert "module_depth_mismatch" not in result
     assert "module_navigation_path_mismatch" not in result
+
+
+def test_safe_json_does_not_treat_numeric_runs_inside_canonical_ids_as_sensitive():
+    payload = {
+        "screen_id": "screen:8835443310af",
+        "module_id": "module:1234567890ab",
+    }
+
+    assert validate_safe_json(payload) == payload
+
+
+def test_safe_json_still_rejects_standalone_numeric_business_identifiers():
+    for value in (
+        "1234567890",
+        "1799999999001",
+        "RUC: 1799999999001",
+    ):
+        try:
+            validate_safe_json({"value": value})
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(
+                f"El identificador concreto debía rechazarse: {value!r}"
+            )

@@ -13,8 +13,11 @@ PATTERNS = (
     # Concrete business values. Labels such as "RUC", "Factura", "Monto" and
     # "Fecha" intentionally do not match without an accompanying value.
     re.compile(r"\b\d{3}-\d{3}-\d{9}\b"),
-    re.compile(r"(?<!\d)\d{13}(?!\d)"),
-    re.compile(r"(?<!\d)\d{10}(?!\d)"),
+    # Concrete numeric identifiers must stand on their own. Numeric runs
+    # embedded inside canonical/alphanumeric IDs such as
+    # ``screen:8835443310af`` are not business values.
+    re.compile(r"(?<![\w.-])\d{13}(?![\w.-])"),
+    re.compile(r"(?<![\w.-])\d{10}(?![\w.-])"),
     re.compile(r"(?<![\w.-])\d{7,}(?![\w.-])"),
     re.compile(r"(?<!\w)(?:USD\s*)?[$€£]\s*\d[\d.,]*(?!\w)", re.I),
     re.compile(r"(?<![\w.])\d{1,3}(?:[.,]\d{3})*[.,]\d{2}(?![\w.])"),
