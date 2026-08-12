@@ -6,6 +6,7 @@ from typing import Any, Callable
 from playwright.sync_api import Page
 
 from src.browser.navigator import ERPNavigator
+from src.crawler.module_scope import ModuleCrawlBoundary
 from src.crawler.frontier import CrawlTarget, Frontier
 from src.crawler.path_replayer import PathReplayer
 from src.crawler.screen_availability import ScreenAvailabilityClassifier
@@ -23,6 +24,7 @@ from src.graph.screen_index_builder import ScreenIndexBuilder
 from src.graph.state_flow_graph_builder import StateFlowGraphBuilder
 from src.models.crawl_path import CrawlPath, CrawlPathStep
 from src.models.transition import Transition
+from src.models.ui_event import EventDecision, RiskLevel, UIEvent, UIEventType
 from src.models.ui_state import UIState
 from src.policy.route_policy import RoutePolicy
 from src.review.event_policy_auditor import build_event_policy_audit
@@ -76,7 +78,7 @@ class RouteCrawler:
         self.profile = profile
         self.route_scope = (
             {self._route_identity(route) for route in route_scope}
-            if route_scope
+            if route_scope is not None
             else None
         )
         self.progress_callback = progress_callback
@@ -195,6 +197,211 @@ class RouteCrawler:
             print("Guardando resultados parciales antes de salir...")
 
         return self._save_outputs()
+
+    def crawl_module(self, boundary: ModuleCrawlBoundary) -> CrawlSummary:
+        """Recorre las pantallas conocidas de un subárbol MODULE fijado.
+
+        Este primer executor MODULE conserva una frontera exacta sobre las rutas
+        ya conocidas. También reproduce la trayectoria de menús fijada para que
+        ``routes_graph`` y ``state_registry`` mantengan la jerarquía navegacional.
+        La ampliación dinámica a rutas nuevas se habilitará separadamente, con
+        procedencia estructural explícita.
+        """
+        expected_scope = {
+            self._route_identity(route)
+            for route in boundary.known_screen_routes
+        }
+        if self.route_scope is None:
+            self.route_scope = expected_scope
+        elif self.route_scope != expected_scope:
+            raise ValueError(
+                "El route_scope configurado no coincide con las rutas fijadas del MODULE"
+            )
+
+        try:
+            self._emit_progress(
+                "navigating_module",
+                target_module_id=boundary.root_module_id,
+            )
+            entry_state, entry_node_id = self._enter_module_branch(boundary)
+            self._checkpoint_outputs()
+
+            for route in boundary.known_screen_routes:
+                if not self._is_allowed_route(route):
+                    raise ValueError(
+                        f"Ruta fijada fuera de la política del perfil: {route}"
+                    )
+                self.frontier.push(
+                    CrawlTarget(
+                        route=route,
+                        source=entry_node_id,
+                        depth=0,
+                        reason="module_scope_known_screen",
+                        title_hint="",
+                    )
+                )
+
+            if entry_state is not None:
+                self.state_frontier.mark_explored(entry_state.state_id)
+            self._crawl_until_fixed_point()
+        except KeyboardInterrupt:
+            print("\nInterrupción detectada dentro del crawler de módulo.")
+            print("Guardando resultados parciales antes de salir...")
+
+        return self._save_outputs()
+
+    def _enter_module_branch(
+        self,
+        boundary: ModuleCrawlBoundary,
+    ) -> tuple[UIState, str]:
+        """Reproduce únicamente la rama de menú fijada del módulo seleccionado."""
+        self.navigator.goto_home()
+        if self.page_wait_ms:
+            self.page.wait_for_timeout(self.page_wait_ms)
+
+        observation = self._observe_screen()
+        home_route = observation.screen_data.get("path") or self.navigator.current_path()
+        if not self.policy.is_allowed_route(home_route):
+            raise RuntimeError("home_url quedó fuera de la política durante MODULE")
+
+        root_signature = observation.signature
+        root_state_id = self.state_registry.build_state_id(
+            root_signature.structural_fingerprint
+        )
+        root_path = CrawlPath(
+            root_state_id=root_state_id,
+            metadata={
+                "scope": "module",
+                "target_module_id": boundary.root_module_id,
+            },
+        )
+        current_state = self.state_registry.register_signature(
+            signature=root_signature,
+            path=root_path,
+            metadata={
+                "source": "module_scope",
+                "depth": 0,
+                "reason": "module_scope_home",
+                "kind": "route_root_state",
+                "canonical_title": root_signature.title,
+                "state_observation": observation.diagnostics(),
+            },
+        ).state
+        self.state_flow_graph.add_state(current_state)
+        self.routes_graph.add_screen(
+            route=home_route,
+            title=root_signature.title,
+            source_module="root",
+            status="discovered",
+            metadata={
+                "reason": "module_scope_entry",
+                "scope": "module",
+            },
+        )
+        current_node_id = home_route
+
+        for step in boundary.entry_steps:
+            interaction = self.ui_event_explorer.interaction_executor.click(step.selector)
+            if not interaction.success:
+                raise RuntimeError(
+                    "No se pudo reproducir la rama MODULE en "
+                    f"{step.label!r}: {interaction.error}"
+                )
+            if self.ui_event_explorer.event_wait_ms:
+                self.page.wait_for_timeout(self.ui_event_explorer.event_wait_ms)
+
+            next_observation = self._observe_screen(title_hint=step.label)
+            next_signature = next_observation.signature
+            next_state_id = self.state_registry.build_state_id(
+                next_signature.structural_fingerprint
+            )
+            event = UIEvent(
+                event_type=UIEventType.EXPAND_MENU,
+                label=step.label,
+                selector=step.selector,
+                decision=EventDecision.ALLOW,
+                risk_level=RiskLevel.LOW,
+                source="module_scope",
+                reasons=("pinned_module_navigation",),
+                metadata={
+                    "target_module_id": boundary.root_module_id,
+                    "navigation_depth": step.depth,
+                },
+            )
+            source_path = current_state.path or CrawlPath(
+                root_state_id=current_state.state_id
+            )
+            target_path = source_path.append(
+                CrawlPathStep(
+                    source_state_id=current_state.state_id,
+                    event=event,
+                    target_state_id=next_state_id,
+                )
+            )
+            registration = self.state_registry.register_signature(
+                signature=next_signature,
+                path=target_path,
+                metadata={
+                    "kind": "ui_event_state",
+                    "base_route": home_route,
+                    "discovered_from": current_state.state_id,
+                    "scope": "module",
+                    "target_module_id": boundary.root_module_id,
+                    "navigation_depth": step.depth,
+                },
+            )
+            target_state = registration.state
+            self.state_flow_graph.add_state(current_state)
+            self.state_flow_graph.add_state(target_state)
+            self.state_flow_graph.add_transition(
+                Transition(
+                    source_state_id=current_state.state_id,
+                    target_state_id=target_state.state_id,
+                    event=event,
+                    changed_route=(current_state.route != target_state.route),
+                    metadata={
+                        "scope": "module",
+                        "pinned_navigation": True,
+                    },
+                )
+            )
+
+            event_node_id = (
+                f"{home_route}#state:{next_signature.structural_fingerprint[:12]}"
+            )
+            self.routes_graph.add_screen(
+                route=event_node_id,
+                title=next_signature.title or step.label,
+                source_module=home_route,
+                status="discovered",
+                metadata={
+                    "kind": "ui_state",
+                    "state_id": target_state.state_id,
+                    "base_route": home_route,
+                    "scope": "module",
+                    "target_module_id": boundary.root_module_id,
+                    "path": target_state.path.to_dict() if target_state.path else None,
+                },
+            )
+            self.routes_graph.add_transition(
+                source=current_node_id,
+                target=event_node_id,
+                label=step.label,
+                kind="ui_event",
+                metadata={
+                    "event_type": UIEventType.EXPAND_MENU.value,
+                    "event_category": UIEventType.EXPAND_MENU.value,
+                    "decision": EventDecision.ALLOW.value,
+                    "risk_level": RiskLevel.LOW.value,
+                    "selector": step.selector,
+                    "scope": "module",
+                    "pinned_navigation": True,
+                },
+            )
+            current_state = target_state
+            current_node_id = event_node_id
+
+        return current_state, current_node_id
 
     def crawl_screen(self, route: str) -> CrawlSummary:
         """Explora una sola ruta funcional y sus estados UI seguros.
