@@ -2,6 +2,11 @@ from .canonical_import_service import CanonicalImportService
 from .chroma_sync_service import ChromaSyncService, SafeDocumentBuilder
 from .effective_knowledge_service import EffectiveKnowledgeService
 from .knowledge_review_service import KnowledgeReviewService
+from .module_subtree_resolver import (
+    ModuleCrawlSubtree,
+    ModuleSubtreeResolutionError,
+    ModuleSubtreeResolver,
+)
 from .neo4j_subset_planner import Neo4jSubsetPlanner
 from .neo4j_sync_service import Neo4jSyncService
 from .pipeline_job_service import (
@@ -24,6 +29,9 @@ __all__ = [
     "ChromaSyncService",
     "EffectiveKnowledgeService",
     "KnowledgeReviewService",
+    "ModuleCrawlSubtree",
+    "ModuleSubtreeResolutionError",
+    "ModuleSubtreeResolver",
     "Neo4jSubsetPlanner",
     "Neo4jSyncService",
     "PipelineJobError",
