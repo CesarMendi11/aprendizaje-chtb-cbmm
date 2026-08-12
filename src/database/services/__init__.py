@@ -1,4 +1,8 @@
 from .canonical_import_service import CanonicalImportService
+from .canonical_materialization_service import (
+    CanonicalKnowledgeMaterializationError,
+    CanonicalKnowledgeMaterializer,
+)
 from .chroma_sync_service import ChromaSyncService, SafeDocumentBuilder
 from .effective_knowledge_service import EffectiveKnowledgeService
 from .knowledge_review_service import KnowledgeReviewService
@@ -26,6 +30,8 @@ from .semantic_retrieval_authorization_service import SemanticRetrievalAuthoriza
 
 __all__ = [
     "CanonicalImportService",
+    "CanonicalKnowledgeMaterializationError",
+    "CanonicalKnowledgeMaterializer",
     "ChromaSyncService",
     "EffectiveKnowledgeService",
     "KnowledgeReviewService",
