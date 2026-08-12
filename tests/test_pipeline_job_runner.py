@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.database.base import Base
-from src.database.enums import PipelineJobStatus
+from src.database.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    PipelineJobStatus,
+)
+from src.database.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+)
 from src.database.repositories import PipelineJobRepository
 from src.database.services import PipelineJobService
+from src.knowledge.canonical.enums import ReviewStatus
 from src.pipeline.pipeline_job_runner import PipelineJobRunner
 
 
@@ -132,6 +145,140 @@ def build_factory():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
     return engine, sessionmaker(bind=engine, expire_on_commit=False)
+
+
+def seed_active_module_tree(factory):
+    with factory.begin() as session:
+        erp = ERPSystemRecord(
+            id="erp:test",
+            slug="erp-test",
+            name="ERP Test",
+            profile_name="test",
+            base_url="http://erp.test",
+            safe_metadata={},
+        )
+        run = ImportRun(
+            erp_id=erp.id,
+            source_knowledge_path="knowledge.json",
+            source_manifest_path="manifest.json",
+            requested_knowledge_version="v1",
+            status=ImportStatus.SUCCEEDED,
+        )
+        session.add_all([erp, run])
+        session.flush()
+        version = KnowledgeVersionRecord(
+            erp_id=erp.id,
+            import_run_id=run.id,
+            schema_version="1.1.0",
+            knowledge_version="v1",
+            canonical_hash="canonical-hash",
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=KnowledgeVersionStatus.ACTIVE,
+        )
+        session.add(version)
+        session.flush()
+
+        def item(canonical_id, entity_type, parent, *, title, route=None, payload=None):
+            source_payload = dict(payload or {})
+            source_payload.setdefault("id", canonical_id)
+            return KnowledgeItem(
+                knowledge_version_id=version.id,
+                canonical_id=canonical_id,
+                entity_type=entity_type,
+                parent_canonical_id=parent,
+                title=title,
+                normalized_title=title.casefold(),
+                route=route,
+                content_hash=f"hash:{canonical_id}",
+                source_payload=source_payload,
+                generated_review_status=ReviewStatus.APPROVED,
+                current_review_status=ReviewStatus.APPROVED,
+            )
+
+        sales = item(
+            "module:sales",
+            "module",
+            erp.id,
+            title="Sales",
+            payload={
+                "name": "Sales",
+                "depth": 0,
+                "navigation_path": ["Sales"],
+                "metadata": {"navigation_origin_path": "#sales"},
+            },
+        )
+        tracking = item(
+            "module:tracking",
+            "module",
+            sales.canonical_id,
+            title="Tracking",
+            payload={
+                "name": "Tracking",
+                "depth": 1,
+                "navigation_path": ["Sales", "Tracking"],
+                "metadata": {
+                    "navigation_origin_path": "#sales || #tracking"
+                },
+            },
+        )
+        integrations = item(
+            "module:integrations",
+            "module",
+            tracking.canonical_id,
+            title="Integrations",
+            payload={
+                "name": "Integrations",
+                "depth": 2,
+                "navigation_path": ["Sales", "Tracking", "Integrations"],
+                "metadata": {
+                    "navigation_origin_path": (
+                        "#sales || #tracking || #integrations"
+                    )
+                },
+            },
+        )
+        orders = item(
+            "module:orders",
+            "module",
+            sales.canonical_id,
+            title="Orders",
+            payload={
+                "name": "Orders",
+                "depth": 1,
+                "navigation_path": ["Sales", "Orders"],
+                "metadata": {
+                    "navigation_origin_path": "#sales || #orders"
+                },
+            },
+        )
+        screens = [
+            item(
+                "screen:tracking",
+                "screen",
+                tracking.canonical_id,
+                title="Tracking list",
+                route="/sales/tracking",
+            ),
+            item(
+                "screen:external",
+                "screen",
+                integrations.canonical_id,
+                title="External systems",
+                route="/sales/tracking/integrations/external",
+            ),
+            item(
+                "screen:orders",
+                "screen",
+                orders.canonical_id,
+                title="Orders",
+                route="/sales/orders",
+            ),
+        ]
+        session.add_all([sales, tracking, integrations, orders, *screens])
+        return version.id
 
 
 def test_runner_executes_queued_crawl_and_persists_progress_and_result():
@@ -310,4 +457,84 @@ def test_runner_dispatches_semantic_inference_executor():
         assert stored.result_payload["semantic_id"] == "semantic:test"
         assert stored.result_payload["proposal_status"] == "pending_review"
     assert len(executor.calls) == 1
+    engine.dispose()
+
+
+def test_runner_revalidates_pinned_module_scope_before_dispatch():
+    engine, factory = build_factory()
+    version_id = seed_active_module_tree(factory)
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="crawl",
+            scope="module",
+            target="module:tracking",
+            erp_id="erp:test",
+            knowledge_version_id=version_id,
+            parameters={
+                "target_module_id": "module:tracking",
+                "knowledge_version_id": str(version_id),
+                "knowledge_version": "v1",
+                "erp_id": "erp:test",
+            },
+        )
+        job_id = job.id
+
+    executor = FakeCrawlExecutor()
+    PipelineJobRunner(factory, crawl_executor=executor).run(job_id)
+
+    assert len(executor.calls) == 1
+    _, scope, target, parameters = executor.calls[0]
+    assert scope.value == "module"
+    assert target == "module:tracking"
+    assert parameters["module_scope"]["module_ids"] == [
+        "module:tracking",
+        "module:integrations",
+    ]
+    assert parameters["module_scope"]["known_screen_routes"] == [
+        "/sales/tracking",
+        "/sales/tracking/integrations/external",
+    ]
+    assert "/sales/orders" not in parameters["module_scope"]["known_screen_routes"]
+    assert parameters["module_scope"]["navigation_origin_path"] == [
+        "#sales",
+        "#tracking",
+    ]
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+    engine.dispose()
+
+
+def test_runner_fails_module_job_when_pinned_version_is_no_longer_active():
+    engine, factory = build_factory()
+    version_id = seed_active_module_tree(factory)
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="crawl",
+            scope="module",
+            target="module:tracking",
+            erp_id="erp:test",
+            knowledge_version_id=version_id,
+            parameters={
+                "target_module_id": "module:tracking",
+                "knowledge_version_id": str(version_id),
+                "knowledge_version": "v1",
+                "erp_id": "erp:test",
+            },
+        )
+        job_id = job.id
+        version = session.get(KnowledgeVersionRecord, version_id)
+        version.status = KnowledgeVersionStatus.ARCHIVED
+
+    executor = FakeCrawlExecutor()
+    PipelineJobRunner(factory, crawl_executor=executor).run(job_id)
+
+    assert executor.calls == []
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.FAILED
+        assert "ACTIVE" in (stored.error_summary or "")
     engine.dispose()
