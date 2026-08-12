@@ -43,7 +43,7 @@ const validStructuralReviewResult = (value: unknown): value is StructuralReviewR
   validStructuralReviewDetail(value) && isRecord(value) && hasString(value, 'performed_action')
 
 const pipelineStatuses = new Set(['queued', 'running', 'succeeded', 'failed', 'cancelled'])
-const pipelineScopes = new Set(['full', 'screen', 'version', 'system'])
+const pipelineScopes = new Set(['full', 'module', 'screen', 'version', 'system'])
 const validPipelineJobSummary = (value: unknown): value is PipelineJobSummary => {
   if (!isRecord(value)) return false
   return hasString(value, 'id') && hasString(value, 'kind') && hasString(value, 'status') && pipelineStatuses.has(String(value.status)) && hasString(value, 'scope') && pipelineScopes.has(String(value.scope)) && hasString(value, 'request_source') && hasString(value, 'stage') && typeof value.progress_current === 'number' && hasString(value, 'requested_at')

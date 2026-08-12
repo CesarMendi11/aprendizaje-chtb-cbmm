@@ -53,7 +53,7 @@ export interface AdminSystemStatusResponse {
 
 
 export type PipelineJobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
-export type PipelineJobScope = 'full' | 'screen' | 'version' | 'system'
+export type PipelineJobScope = 'full' | 'module' | 'screen' | 'version' | 'system'
 
 export interface PipelineJobSummary {
   id: string
@@ -94,6 +94,7 @@ export interface PipelineJobListResponse {
 export interface CrawlJobRequest {
   scope: PipelineJobScope
   target?: string | null
+  target_module_id?: string | null
   headless: boolean
   slow_mo: number
 }

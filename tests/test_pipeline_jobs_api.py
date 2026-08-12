@@ -153,6 +153,59 @@ def test_create_crawl_job_queues_controlled_worker(api):
         assert stored.target == "/admin/cuentasxcobrar/retenciones"
 
 
+
+
+def test_create_module_crawl_queues_canonical_module_target(api):
+    client, factory, dispatcher = api
+    response = client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={
+            "scope": "module",
+            "target_module_id": "module:tracking",
+            "headless": True,
+            "slow_mo": 50,
+        },
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["scope"] == "module"
+    assert body["target"] == "module:tracking"
+    assert body["parameters"] == {
+        "headless": True,
+        "slow_mo": 50,
+        "target_module_id": "module:tracking",
+    }
+    assert [str(value) for value in dispatcher.submitted] == [body["id"]]
+
+    with factory() as session:
+        stored = PipelineJobService(session).jobs.get(body["id"])
+        assert stored is not None
+        assert stored.scope.value == "module"
+        assert stored.target == "module:tracking"
+
+
+def test_module_crawl_requires_canonical_module_id_and_rejects_route_target(api):
+    client, _, dispatcher = api
+
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "module"},
+    ).status_code == 422
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "module", "target_module_id": "tracking"},
+    ).status_code == 422
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={
+            "scope": "module",
+            "target": "/admin/tracking",
+            "target_module_id": "module:tracking",
+        },
+    ).status_code == 422
+    assert dispatcher.submitted == []
+
+
 def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api):
     client, _, dispatcher = api
     assert client.post(
@@ -162,6 +215,18 @@ def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api
     assert client.post(
         "/api/admin/pipeline-jobs/crawl",
         json={"scope": "screen", "target": "https://example.test/admin/x"},
+    ).status_code == 422
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={
+            "scope": "screen",
+            "target": "/admin/x",
+            "target_module_id": "module:x",
+        },
+    ).status_code == 422
+    assert client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "full", "target_module_id": "module:x"},
     ).status_code == 422
     assert dispatcher.submitted == []
 

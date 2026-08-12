@@ -44,8 +44,8 @@ class PipelineJobService:
         normalized_kind = PipelineJobKind(kind)
         normalized_scope = PipelineJobScope(scope)
         clean_target = target.strip() if target else None
-        if normalized_scope == PipelineJobScope.SCREEN and not clean_target:
-            raise PipelineJobError("scope=screen requiere target")
+        if normalized_scope in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN} and not clean_target:
+            raise PipelineJobError(f"scope={normalized_scope.value} requiere target")
         clean_source = request_source.strip()
         if not clean_source:
             raise PipelineJobError("request_source no puede estar vacío")

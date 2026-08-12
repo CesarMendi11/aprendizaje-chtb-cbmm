@@ -45,6 +45,7 @@ class PipelineJobKind(StrEnum):
 
 class PipelineJobScope(StrEnum):
     FULL = "full"
+    MODULE = "module"
     SCREEN = "screen"
     VERSION = "version"
     SYSTEM = "system"

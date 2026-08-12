@@ -59,10 +59,20 @@ def test_pipeline_job_lifecycle_and_progress(session):
         service.start(job.id)
 
 
-def test_screen_scope_requires_target_and_progress_is_bounded(session):
+def test_screen_and_module_scopes_require_target_and_progress_is_bounded(session):
     service = PipelineJobService(session)
     with pytest.raises(PipelineJobError, match="requiere target"):
         service.create(kind="crawl", scope="screen")
+    with pytest.raises(PipelineJobError, match="requiere target"):
+        service.create(kind="crawl", scope="module")
+
+    module_job = service.create(
+        kind="crawl",
+        scope="module",
+        target="module:tracking",
+    )
+    assert module_job.scope.value == "module"
+    assert module_job.target == "module:tracking"
 
     job = service.create(kind="crawl", scope="full", profile_name="cbmm")
     service.start(job.id, progress_total=2)

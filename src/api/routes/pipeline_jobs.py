@@ -102,16 +102,25 @@ def create_crawl_job(
     session: WriteSessionDependency,
 ) -> PipelineJobDetail:
     dispatcher = request.app.state.pipeline_job_dispatcher
+    target = (
+        payload.target_module_id
+        if payload.scope == PipelineJobScope.MODULE
+        else payload.target
+    )
+    parameters = {
+        "headless": payload.headless,
+        "slow_mo": payload.slow_mo,
+    }
+    if payload.target_module_id is not None:
+        parameters["target_module_id"] = payload.target_module_id
+
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CRAWL,
         scope=payload.scope,
-        target=payload.target,
+        target=target,
         profile_name=request.app.state.pipeline_crawl_profile_name,
         request_source="admin_api",
-        parameters={
-            "headless": payload.headless,
-            "slow_mo": payload.slow_mo,
-        },
+        parameters=parameters,
     )
     # El worker usa una sesión distinta; el job debe existir de forma visible
     # antes de colocarlo en la cola local.
