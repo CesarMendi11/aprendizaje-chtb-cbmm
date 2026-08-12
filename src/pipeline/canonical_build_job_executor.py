@@ -12,6 +12,7 @@ from src.knowledge.canonical import (
     CanonicalKnowledgeBuilder,
     CanonicalKnowledgeExporter,
     CanonicalKnowledgeValidator,
+    CanonicalSnapshotContext,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -111,6 +112,12 @@ class CanonicalBuildJobExecutor:
                 "source_crawl_job_id": str(source_job_id),
             },
         )
+        snapshot_context = self._snapshot_context(
+            normalized_scope,
+            target,
+            params,
+        )
+
         builder = CanonicalKnowledgeBuilder(PROJECT_ROOT)
         try:
             knowledge = builder.build_from_paths(
@@ -134,7 +141,19 @@ class CanonicalBuildJobExecutor:
             raise CanonicalBuildJobExecutionError(
                 f"Conocimiento canónico inválido: {len(errors)} errores"
             )
+        if snapshot_context.erp_id and snapshot_context.erp_id != knowledge.erp_system.id:
+            raise CanonicalBuildJobExecutionError(
+                "El canonical parcial pertenece a un ERP distinto del crawl fijado"
+            )
+        if snapshot_context.scope == "module" and snapshot_context.target_module_id not in {
+            module.id for module in knowledge.modules
+        }:
+            raise CanonicalBuildJobExecutionError(
+                "El canonical MODULE no reconstruyó el módulo objetivo fijado"
+            )
+
         report = builder.build_report(knowledge, issues)
+        report["snapshot"] = snapshot_context.model_dump(mode="json")
 
         emit(
             "exporting_canonical",
@@ -149,6 +168,7 @@ class CanonicalBuildJobExecutor:
             canonical_dir,
             pretty=True,
             build_report=report,
+            snapshot_context=snapshot_context,
         )
 
         return {
@@ -164,4 +184,59 @@ class CanonicalBuildJobExecutor:
             "statistics": dict(knowledge.statistics),
             "warnings": len(knowledge.build_warnings),
             "validation_errors": 0,
+            "snapshot_mode": snapshot_context.mode,
+            "snapshot_scope": snapshot_context.scope,
+            "snapshot_target": snapshot_context.target,
+            "target_module_id": snapshot_context.target_module_id,
+            "base_knowledge_version_id": snapshot_context.base_knowledge_version_id,
+            "base_knowledge_version": snapshot_context.base_knowledge_version,
         }
+
+    @staticmethod
+    def _snapshot_context(
+        scope: PipelineJobScope,
+        target: str | None,
+        parameters: dict[str, Any],
+    ) -> CanonicalSnapshotContext:
+        if scope == PipelineJobScope.FULL:
+            return CanonicalSnapshotContext.full()
+
+        if scope == PipelineJobScope.SCREEN:
+            return CanonicalSnapshotContext(
+                mode="partial",
+                scope="screen",
+                target=target,
+                erp_id=str(parameters.get("erp_id") or "").strip() or None,
+                base_knowledge_version_id=(
+                    str(parameters.get("base_knowledge_version_id") or "").strip() or None
+                ),
+                base_knowledge_version=(
+                    str(parameters.get("base_knowledge_version") or "").strip() or None
+                ),
+            )
+
+        if scope == PipelineJobScope.MODULE:
+            try:
+                return CanonicalSnapshotContext(
+                    mode="partial",
+                    scope="module",
+                    target=target,
+                    target_module_id=str(
+                        parameters.get("target_module_id") or ""
+                    ).strip(),
+                    base_knowledge_version_id=str(
+                        parameters.get("base_knowledge_version_id") or ""
+                    ).strip(),
+                    base_knowledge_version=str(
+                        parameters.get("base_knowledge_version") or ""
+                    ).strip(),
+                    erp_id=str(parameters.get("erp_id") or "").strip(),
+                )
+            except ValueError as exc:
+                raise CanonicalBuildJobExecutionError(
+                    f"El crawl MODULE no conserva provenance canónica válida: {exc}"
+                ) from exc
+
+        raise CanonicalBuildJobExecutionError(
+            f"Scope canónico no soportado: {scope.value}"
+        )

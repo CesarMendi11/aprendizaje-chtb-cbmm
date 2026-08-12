@@ -315,8 +315,8 @@ def test_create_canonical_import_job_is_staging_only(api):
         service = PipelineJobService(session)
         source = service.create(
             kind="canonical_build",
-            scope="screen",
-            target="/admin/cuentasxcobrar/retenciones",
+            scope="full",
+            target=None,
             profile_name="cbmm",
         )
         source_id = source.id
@@ -329,6 +329,8 @@ def test_create_canonical_import_job_is_staging_only(api):
                 "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
                 "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
                 "knowledge_version": "canonical-staging-test",
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
             },
         )
 
@@ -339,8 +341,8 @@ def test_create_canonical_import_job_is_staging_only(api):
     assert response.status_code == 202, response.text
     body = response.json()
     assert body["kind"] == "canonical_import"
-    assert body["scope"] == "screen"
-    assert body["target"] == "/admin/cuentasxcobrar/retenciones"
+    assert body["scope"] == "full"
+    assert body["target"] is None
     assert body["parameters"]["activation_mode"] == "staging_only"
     assert body["parameters"]["source_canonical_job_id"] == str(source_id)
     assert str(dispatcher.submitted[-1]) == body["id"]
@@ -398,6 +400,89 @@ def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
         session.add(version)
         session.flush()
         return str(version.id), erp.id
+
+
+
+
+def test_create_canonical_build_preserves_module_base_provenance(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="crawl",
+            scope="module",
+            target="module:tracking",
+            profile_name="cbmm",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+            parameters={
+                "target_module_id": "module:tracking",
+                "knowledge_version_id": version_id,
+                "knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+        source_id = source.id
+        service.start(source.id, stage="running")
+        service.succeed(
+            source.id,
+            result_payload={"artifact_root": f"data/runs/pipeline/{source.id}"},
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-build",
+        json={"source_crawl_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["scope"] == "module"
+    assert body["target"] == "module:tracking"
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"] == {
+        "source_crawl_job_id": str(source_id),
+        "target_module_id": "module:tracking",
+        "base_knowledge_version_id": version_id,
+        "base_knowledge_version": "active-v1",
+        "erp_id": erp_id,
+    }
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_import_rejects_partial_snapshot(api):
+    client, factory, dispatcher = api
+    crawl_id = "00000000-0000-0000-0000-000000000457"
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="module",
+            target="module:tracking",
+            profile_name="cbmm",
+        )
+        source_id = source.id
+        service.start(source.id, stage="building", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": crawl_id,
+                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
+                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "knowledge_version": "partial-module-test",
+                "snapshot_mode": "partial",
+                "snapshot_scope": "module",
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 409
+    assert "canonical parcial" in response.json()["detail"]
+    assert dispatcher.submitted == []
 
 
 def seed_active_module(factory):

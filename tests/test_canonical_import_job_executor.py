@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import uuid
 from pathlib import Path
@@ -106,4 +107,52 @@ def test_canonical_import_executor_rejects_artifacts_outside_source_run(tmp_path
         assert "fuera del crawl aislado" in str(exc)
     else:
         raise AssertionError("Se esperaba rechazo de path fuera del run")
+    engine.dispose()
+
+
+def test_canonical_import_executor_rejects_partial_snapshot(tmp_path):
+    engine, factory = _factory(tmp_path)
+    crawl_id = uuid.uuid4()
+    canonical_dir = _copy_canonical(tmp_path, crawl_id)
+    manifest_path = canonical_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["snapshot"] = {
+        "mode": "partial",
+        "scope": "module",
+        "target": "module:tracking",
+        "target_module_id": "module:tracking",
+        "base_knowledge_version_id": str(uuid.uuid4()),
+        "base_knowledge_version": "active-v1",
+        "erp_id": manifest["erp"]["id"],
+    }
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    executor = CanonicalImportJobExecutor(
+        factory,
+        project_root=tmp_path,
+        runs_root="data/runs/pipeline",
+    )
+    try:
+        executor.execute(
+            job_id=uuid.uuid4(),
+            scope=PipelineJobScope.MODULE,
+            target="module:tracking",
+            parameters={
+                "source_canonical_job_id": str(uuid.uuid4()),
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": str(
+                    canonical_dir.relative_to(tmp_path) / "knowledge.json"
+                ),
+                "manifest_path": str(
+                    canonical_dir.relative_to(tmp_path) / "manifest.json"
+                ),
+                "build_report_path": str(
+                    canonical_dir.relative_to(tmp_path) / "build_report.json"
+                ),
+            },
+        )
+    except CanonicalImportJobExecutionError as exc:
+        assert "debe fusionarse" in str(exc)
+    else:
+        raise AssertionError("Se esperaba rechazo de canonical parcial")
     engine.dispose()

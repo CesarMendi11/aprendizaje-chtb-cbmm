@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import uuid
 from pathlib import Path
@@ -98,11 +99,18 @@ class CanonicalImportJobExecutor:
             )
 
         try:
+            manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
             knowledge = CanonicalKnowledgeRepository(knowledge_path).knowledge
-        except (OSError, ValueError) as exc:
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
             raise CanonicalImportJobExecutionError(
                 "No fue posible cargar el conocimiento canónico fuente"
             ) from exc
+
+        snapshot = manifest_payload.get("snapshot")
+        if isinstance(snapshot, dict) and snapshot.get("mode") == "partial":
+            raise CanonicalImportJobExecutionError(
+                "Un canonical parcial debe fusionarse con su versión base antes de importarse"
+            )
 
         expected_version = str(params.get("expected_knowledge_version") or "").strip()
         if expected_version and knowledge.knowledge_version != expected_version:

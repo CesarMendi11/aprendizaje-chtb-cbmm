@@ -5,11 +5,20 @@ from pathlib import Path
 
 from .manifest import create_manifest
 from .models import CanonicalKnowledgeBase
+from .snapshot import CanonicalSnapshotContext
 from .validator import CanonicalKnowledgeValidator
 
 
 class CanonicalKnowledgeExporter:
-    def export(self, knowledge: CanonicalKnowledgeBase, output_dir: Path | str, *, pretty=True, build_report=None):
+    def export(
+        self,
+        knowledge: CanonicalKnowledgeBase,
+        output_dir: Path | str,
+        *,
+        pretty=True,
+        build_report=None,
+        snapshot_context: CanonicalSnapshotContext | None = None,
+    ):
         issues = CanonicalKnowledgeValidator().validate(knowledge)
         errors = [item for item in issues if item.severity == "error"]
         if errors:
@@ -20,7 +29,11 @@ class CanonicalKnowledgeExporter:
         kwargs = {"ensure_ascii": False, "sort_keys": True}
         if pretty: kwargs["indent"] = 2
         self._write(output / "knowledge.json", payload, kwargs)
-        self._write(output / "manifest.json", create_manifest(knowledge, payload), kwargs)
+        self._write(
+            output / "manifest.json",
+            create_manifest(knowledge, payload, snapshot_context=snapshot_context),
+            kwargs,
+        )
         self._write(output / "build_report.json", build_report or {}, kwargs)
         return output
 

@@ -85,6 +85,15 @@ def test_export_manifest_hashes_and_repository(tmp_path):
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert manifest["knowledge_version"] == kb.knowledge_version
     assert len(manifest["canonical_document_hash"]) == 64
+    assert manifest["snapshot"] == {
+        "mode": "full",
+        "scope": "full",
+        "target": None,
+        "target_module_id": None,
+        "base_knowledge_version_id": None,
+        "base_knowledge_version": None,
+        "erp_id": None,
+    }
     repo = CanonicalKnowledgeRepository(tmp_path / "knowledge.json")
     screen = repo.get_screen_by_route("/app/inventory/products?x=1")
     assert screen.title == "Products"

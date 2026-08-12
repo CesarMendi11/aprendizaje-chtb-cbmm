@@ -182,13 +182,33 @@ def create_canonical_build_job(
             detail="El crawl fuente no registró artefactos utilizables.",
         )
 
+    parameters = {"source_crawl_job_id": str(source.id)}
+    if source.scope == PipelineJobScope.MODULE:
+        source_parameters = dict(source.parameters or {})
+        required_module_context = {
+            "target_module_id": source_parameters.get("target_module_id"),
+            "base_knowledge_version_id": (
+                str(source.knowledge_version_id) if source.knowledge_version_id else None
+            ),
+            "base_knowledge_version": source_parameters.get("knowledge_version"),
+            "erp_id": source.erp_id or source_parameters.get("erp_id"),
+        }
+        if any(not value for value in required_module_context.values()):
+            raise HTTPException(
+                status_code=409,
+                detail="El crawl MODULE fuente no conserva su versión base fijada.",
+            )
+        parameters.update(required_module_context)
+
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CANONICAL_BUILD,
         scope=source.scope,
         target=source.target,
         profile_name=source.profile_name,
+        erp_id=source.erp_id,
+        knowledge_version_id=source.knowledge_version_id,
         request_source="admin_api",
-        parameters={"source_crawl_job_id": str(source.id)},
+        parameters=parameters,
     )
     session.commit()
     request.app.state.pipeline_job_dispatcher.submit(job.id)
@@ -230,6 +250,14 @@ def create_canonical_import_job(
         raise HTTPException(
             status_code=409,
             detail="El canonical build fuente no registró artefactos importables.",
+        )
+    if result.get("snapshot_mode") != "full":
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Un canonical parcial no se importa directamente; "
+                "debe fusionarse con su versión base ACTIVE."
+            ),
         )
 
     job = PipelineJobService(session).create(
