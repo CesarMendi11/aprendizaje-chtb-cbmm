@@ -101,8 +101,8 @@ class Neo4jSubsetPlanner:
         module_id = screen_payload.get("module_id")
         module = self._optional_exact(items, "module", module_id)
         if module:
-            self._require_parent(module, erp.id)
-            selected.append(module)
+            modules = self._module_ancestry(items, module, erp.id)
+            selected.extend(modules)
             self._require_parent(screen, module.canonical_id)
         else:
             missing.append("module")
@@ -388,6 +388,34 @@ class Neo4jSubsetPlanner:
         if len(matches) > 1:
             raise SubsetPlanningError(f"Dependencia duplicada: {entity_type}")
         return matches[0] if matches else None
+
+    @classmethod
+    def _module_ancestry(cls, items, leaf_module, erp_id):
+        ancestry = []
+        seen = set()
+        current = leaf_module
+
+        while current is not None:
+            if current.canonical_id in seen:
+                raise SubsetPlanningError("Jerarquía de módulos cíclica")
+            seen.add(current.canonical_id)
+            ancestry.append(current)
+
+            parent_id = current.parent_canonical_id
+            if parent_id == erp_id:
+                break
+
+            parent = cls._optional_exact(items, "module", parent_id)
+            if parent is None:
+                raise SubsetPlanningError("Dependencia no resoluble: module_ancestor")
+            current = parent
+
+        ancestry.reverse()
+        expected_parent = erp_id
+        for module in ancestry:
+            cls._require_parent(module, expected_parent)
+            expected_parent = module.canonical_id
+        return ancestry
 
     @staticmethod
     def _require_parent(item, expected):

@@ -85,3 +85,22 @@ def test_inspection_has_screen_query_avoids_static_relationship_token():
         "knowledge_version": "version:external",
     }
     assert write is False
+
+
+def test_repository_accepts_has_submodule_relationship():
+    mapper = GraphMapper()
+    relationship = mapper.map_relationship(
+        "HAS_SUBMODULE",
+        "module:root",
+        "module:child",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+    client = FakeClient()
+    repo = Neo4jRepository(client)
+
+    assert repo.upsert_relationships([relationship], batch_size=1) == 1
+    query, parameters, write = client.calls[0]
+    assert "HAS_SUBMODULE" in query
+    assert parameters["rows"][0]["relationship_key"] == relationship.key
+    assert write is True

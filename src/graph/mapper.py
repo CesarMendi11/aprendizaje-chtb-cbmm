@@ -24,7 +24,7 @@ LABELS = {
 }
 ALLOWED_PROPERTIES = {
     "erp_system": ("slug", "name", "profile_name", "adapter"),
-    "module": ("name", "normalized_name", "route_prefix", "description"),
+    "module": ("name", "normalized_name", "route_prefix", "description", "depth"),
     "screen": ("title", "normalized_title", "route", "description"),
     "ui_state": ("route", "depth", "title", "is_route_root"),
     "field": (
@@ -123,10 +123,17 @@ class GraphMapper:
                 candidates.append((rel_type, str(source), str(target)))
 
         if entity_type == "module":
-            add("HAS_MODULE", payload.get("erp_id"), cid)
+            parent_module_id = payload.get("parent_module_id")
+            if parent_module_id:
+                add("HAS_SUBMODULE", parent_module_id, cid)
+            else:
+                add("HAS_MODULE", payload.get("erp_id"), cid)
         elif entity_type == "screen":
-            add("HAS_SCREEN", payload.get("erp_id"), cid)
-            add("HAS_SCREEN", payload.get("module_id"), cid)
+            module_id = payload.get("module_id")
+            if module_id:
+                add("HAS_SCREEN", module_id, cid)
+            else:
+                add("HAS_SCREEN", payload.get("erp_id"), cid)
         elif entity_type == "ui_state":
             add("HAS_STATE", payload.get("screen_id"), cid)
         elif entity_type == "field":

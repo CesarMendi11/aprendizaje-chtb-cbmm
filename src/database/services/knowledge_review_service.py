@@ -93,7 +93,7 @@ class KnowledgeReviewService:
         if payload.get("id") != item.canonical_id:
             raise ValueError("La corrección debe mantener el canonical_id original")
         original = item.source_payload
-        for key in ("erp_id", "module_id", "screen_id", "table_id", "source_state_id",
+        for key in ("erp_id", "parent_module_id", "module_id", "screen_id", "table_id", "source_state_id",
                     "target_state_id", "event_id"):
             if original.get(key) != payload.get(key):
                 raise ValueError(f"La relación crítica {key} no puede modificarse")

@@ -203,3 +203,83 @@ def test_projection_is_deterministic_and_omits_missing_endpoints():
         and rel.target_key in {node.key for node in first.nodes}
         for rel in first.relationships
     )
+
+
+def test_recursive_module_relationships_are_hierarchical():
+    mapper = GraphMapper()
+
+    root = {
+        **PAYLOADS["module"],
+        "id": "module:root",
+        "parent_module_id": None,
+        "depth": 0,
+        "navigation_path": ["Inventory"],
+    }
+    child = {
+        **PAYLOADS["module"],
+        "id": "module:child",
+        "parent_module_id": "module:root",
+        "depth": 1,
+        "navigation_path": ["Inventory", "Catalog"],
+        "name": "Catalog",
+        "normalized_name": "catalog",
+    }
+    screen = {
+        **PAYLOADS["screen"],
+        "module_id": "module:child",
+    }
+
+    assert mapper.relationship_candidates("module", root) == [
+        ("HAS_MODULE", "erp:synthetic", "module:root")
+    ]
+    assert mapper.relationship_candidates("module", child) == [
+        ("HAS_SUBMODULE", "module:root", "module:child")
+    ]
+    assert mapper.relationship_candidates("screen", screen) == [
+        ("HAS_SCREEN", "module:child", "screen:one")
+    ]
+
+    child_node = mapper.map_node(
+        entity_type="module",
+        payload=child,
+        content_hash="a" * 64,
+        review_status="approved",
+        erp_id="erp:synthetic",
+        knowledge_version="version-one",
+        projected_at="2026-01-01T00:00:00+00:00",
+    )
+    assert child_node.properties["depth"] == 1
+    assert "navigation_path" not in child_node.properties
+
+
+def test_projection_does_not_reparent_submodule_when_parent_is_not_projected():
+    entries = [
+        {
+            "entity_type": "erp_system",
+            "payload": PAYLOADS["erp_system"],
+            "content_hash": "erp",
+            "review_status": "approved",
+        },
+        {
+            "entity_type": "module",
+            "payload": {
+                **PAYLOADS["module"],
+                "id": "module:child",
+                "parent_module_id": "module:missing-parent",
+                "depth": 1,
+                "navigation_path": ["Missing", "Inventory"],
+            },
+            "content_hash": "module",
+            "review_status": "approved",
+        },
+    ]
+
+    plan = GraphProjectionService().build_plan(
+        entries,
+        erp_id="erp:synthetic",
+        knowledge_version="v1",
+        projected_at="2026-01-01T00:00:00+00:00",
+    )
+
+    assert plan.relationships == ()
+    assert plan.skipped_reasons == {"endpoint_not_projected": 1}

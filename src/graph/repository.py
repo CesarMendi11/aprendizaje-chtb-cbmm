@@ -8,6 +8,7 @@ from .schema import MANAGED_SCHEMA
 
 RELATIONSHIP_TYPES = {
     "HAS_MODULE",
+    "HAS_SUBMODULE",
     "HAS_SCREEN",
     "HAS_STATE",
     "HAS_FIELD",

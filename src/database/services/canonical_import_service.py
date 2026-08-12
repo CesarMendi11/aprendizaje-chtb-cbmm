@@ -50,6 +50,7 @@ COLLECTION_TYPES = {
     "evidence": "evidence",
 }
 PARENT_KEYS = (
+    "parent_module_id",
     "module_id",
     "screen_id",
     "table_id",

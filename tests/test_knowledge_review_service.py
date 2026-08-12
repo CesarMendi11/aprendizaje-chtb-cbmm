@@ -151,3 +151,25 @@ def test_only_approved_or_corrected_are_projected(reviewed):
         version_id=item.knowledge_version_id
     )
     assert [entry["canonical_id"] for entry in projection] == [item.canonical_id]
+
+
+def test_module_parent_relation_cannot_be_changed_by_human_correction(reviewed):
+    session, _ = reviewed
+    module = session.scalar(
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "module").limit(1)
+    )
+    payload = {
+        key: value
+        for key, value in module.source_payload.items()
+        if key not in {"review_status", "reviewed_at", "reviewed_by", "review_notes"}
+    }
+    payload["parent_module_id"] = "module:other"
+
+    session.rollback()
+    with pytest.raises(ValueError, match="parent_module_id"):
+        with session.begin():
+            KnowledgeReviewService(session).correct(
+                module.id,
+                payload,
+                notes="No debe permitirse cambiar la jerarquía",
+            )

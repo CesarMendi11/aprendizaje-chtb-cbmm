@@ -48,7 +48,7 @@ def test_nova_retail_core_is_generic_and_deterministic(nova_session):
     assert first["expected_relationships"] == {
         "HAS_COLUMN": 3,
         "HAS_MODULE": 1,
-        "HAS_SCREEN": 2,
+        "HAS_SCREEN": 1,
         "HAS_STATE": 1,
         "HAS_TABLE": 1,
     }
@@ -109,7 +109,7 @@ def test_nova_retail_screen_complete_selects_only_connected_local_knowledge(
         "HAS_FIELD": 2,
         "HAS_LINK": 1,
         "HAS_MODULE": 1,
-        "HAS_SCREEN": 2,
+        "HAS_SCREEN": 1,
         "HAS_STATE": 2,
         "HAS_TABLE": 1,
         "TO_STATE": 1,

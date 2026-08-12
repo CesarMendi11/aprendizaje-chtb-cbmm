@@ -218,3 +218,68 @@ def test_legacy_manifest_hash_is_checked_against_raw_document(tmp_path, session)
     )
 
     assert result.result == "dry_run"
+
+
+def test_imported_child_module_keeps_canonical_module_parent(session, tmp_path):
+    knowledge = json.loads(
+        (CANONICAL / "knowledge.json").read_text(encoding="utf-8")
+    )
+    manifest = json.loads(
+        (CANONICAL / "manifest.json").read_text(encoding="utf-8")
+    )
+
+    assert len(knowledge["modules"]) >= 2
+
+    # Normalize the fixture to the new hierarchy contract.
+    knowledge["schema_version"] = "1.1.0"
+    knowledge["knowledge_version"] = "recursive-module-parent-test"
+
+    for module in knowledge["modules"]:
+        module["parent_module_id"] = None
+        module["depth"] = 0
+        module["navigation_path"] = [module["name"]]
+
+    parent = knowledge["modules"][0]
+    child = knowledge["modules"][1]
+
+    child["parent_module_id"] = parent["id"]
+    child["depth"] = 1
+    child["navigation_path"] = [
+        parent["name"],
+        child["name"],
+    ]
+
+    manifest["schema_version"] = "1.1.0"
+    manifest["knowledge_version"] = knowledge["knowledge_version"]
+    manifest["canonical_document_hash"] = content_hash(knowledge)
+
+    knowledge_path = tmp_path / "knowledge.json"
+    manifest_path = tmp_path / "manifest.json"
+
+    knowledge_path.write_text(
+        json.dumps(knowledge, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    with session.begin():
+        result = CanonicalImportService(session).import_canonical(
+            knowledge_path,
+            manifest_path,
+            activate=False,
+            create_sync_jobs=False,
+        )
+
+    imported_child = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
+            KnowledgeItem.entity_type == "module",
+            KnowledgeItem.canonical_id == child["id"],
+        )
+    )
+
+    assert imported_child is not None
+    assert imported_child.parent_canonical_id == parent["id"]

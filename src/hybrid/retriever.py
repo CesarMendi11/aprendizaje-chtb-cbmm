@@ -14,6 +14,7 @@ from .answer_planner import StructuralAnswerPlanner
 
 ALLOWED_RELATIONSHIPS = {
     "HAS_MODULE",
+    "HAS_SUBMODULE",
     "HAS_SCREEN",
     "HAS_STATE",
     "HAS_FIELD",
@@ -471,6 +472,7 @@ class HybridKnowledgeRetriever:
     def _natural_fact(r):
         templates = {
             "HAS_MODULE": 'El ERP "{s}" contiene el módulo "{t}".',
+            "HAS_SUBMODULE": 'El módulo "{s}" contiene el submódulo "{t}".',
             "HAS_SCREEN": 'El {st} "{s}" contiene la pantalla "{t}".',
             "HAS_FIELD": 'La pantalla "{s}" contiene el campo "{t}".',
             "HAS_CONTROL": 'La pantalla "{s}" contiene el control "{t}".',

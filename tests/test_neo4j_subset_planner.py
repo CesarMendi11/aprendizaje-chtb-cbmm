@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
 import src.database.models  # noqa: F401
@@ -283,7 +283,7 @@ def test_subset_selection_is_connected_deterministic_and_excludes_other_types(pl
     assert report["expected_relationships"] == {
         "HAS_COLUMN": 2,
         "HAS_MODULE": 1,
-        "HAS_SCREEN": 2,
+        "HAS_SCREEN": 1,
         "HAS_STATE": 1,
         "HAS_TABLE": 1,
     }
@@ -346,7 +346,7 @@ def test_screen_complete_selects_interactions_and_internal_dependencies(planner_
         "HAS_FIELD": 1,
         "HAS_LINK": 1,
         "HAS_MODULE": 1,
-        "HAS_SCREEN": 2,
+        "HAS_SCREEN": 1,
         "HAS_STATE": 3,
         "HAS_TABLE": 1,
         "TO_STATE": 1,
@@ -542,3 +542,89 @@ def test_subset_cli_parser():
     assert complete.scope == "screen-complete"
     with pytest.raises(SystemExit):
         build_parser().parse_args(["--screen-route", ROUTE, "--scope", "unsupported"])
+
+
+def test_subset_includes_full_recursive_module_ancestry(planner_session):
+    erp = planner_session.scalar(
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "erp_system")
+    )
+    root_module = planner_session.scalar(
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "module").limit(1)
+    )
+    screen = planner_session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.entity_type == "screen", KnowledgeItem.route == ROUTE
+        )
+    )
+    version_id = screen.knowledge_version_id
+
+    def module_item(canonical_id, name, parent_id, depth, path):
+        payload = {
+            "id": canonical_id,
+            "erp_id": erp.canonical_id,
+            "parent_module_id": None if parent_id == erp.canonical_id else parent_id,
+            "depth": depth,
+            "navigation_path": path,
+            "name": name,
+            "normalized_name": name.casefold(),
+        }
+        return KnowledgeItem(
+            knowledge_version_id=version_id,
+            canonical_id=canonical_id,
+            entity_type="module",
+            parent_canonical_id=parent_id,
+            title=name,
+            normalized_title=name.casefold(),
+            content_hash=item_content_hash(payload),
+            source_payload=payload,
+            generated_review_status=ReviewStatus.PENDING_REVIEW,
+            current_review_status=ReviewStatus.PENDING_REVIEW,
+        )
+
+    tracking = module_item(
+        "module:synthetic-tracking",
+        "Tracking",
+        root_module.canonical_id,
+        1,
+        [root_module.title, "Tracking"],
+    )
+    integrations = module_item(
+        "module:synthetic-integrations",
+        "Integrations",
+        tracking.canonical_id,
+        2,
+        [root_module.title, "Tracking", "Integrations"],
+    )
+
+    payload = dict(screen.source_payload)
+    payload["module_id"] = integrations.canonical_id
+
+    planner_session.rollback()
+    with planner_session.begin():
+        planner_session.add_all([tracking, integrations])
+        planner_session.execute(
+            update(KnowledgeItem)
+            .where(KnowledgeItem.id == screen.id)
+            .values(
+                source_payload=payload,
+                parent_canonical_id=integrations.canonical_id,
+                content_hash=item_content_hash(payload),
+            )
+        )
+    planner_session.expire_all()
+
+    report = Neo4jSubsetPlanner(planner_session).plan(ROUTE)
+    modules = [
+        item for item in report["selected_items"] if item["entity_type"] == "module"
+    ]
+
+    assert [item["canonical_id"] for item in modules] == [
+        root_module.canonical_id,
+        tracking.canonical_id,
+        integrations.canonical_id,
+    ]
+    assert report["selected_items_by_type"]["module"] == 3
+    assert report["expected_relationships"]["HAS_MODULE"] == 1
+    assert report["expected_relationships"]["HAS_SUBMODULE"] == 2
+    assert report["expected_relationships"]["HAS_SCREEN"] == 1
+    assert report["missing_dependencies"] == []
