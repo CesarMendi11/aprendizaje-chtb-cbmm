@@ -81,6 +81,9 @@ class RouteCrawler:
             if route_scope is not None
             else None
         )
+        self.module_boundary: ModuleCrawlBoundary | None = None
+        self._module_entry_depth = 0
+        self._module_dynamic_routes: set[str] = set()
         self.progress_callback = progress_callback
 
         self.navigator = ERPNavigator(page, profile)
@@ -218,6 +221,10 @@ class RouteCrawler:
                 "El route_scope configurado no coincide con las rutas fijadas del MODULE"
             )
 
+        self.module_boundary = boundary
+        self._module_entry_depth = len(boundary.entry_steps)
+        self._module_dynamic_routes = set()
+
         try:
             self._emit_progress(
                 "navigating_module",
@@ -241,8 +248,10 @@ class RouteCrawler:
                     )
                 )
 
-            if entry_state is not None:
-                self.state_frontier.mark_explored(entry_state.state_id)
+            self.state_frontier.push_state(
+                entry_state,
+                reason="module_scope_entry_state",
+            )
             self._crawl_until_fixed_point()
         except KeyboardInterrupt:
             print("\nInterrupción detectada dentro del crawler de módulo.")
@@ -887,7 +896,7 @@ class RouteCrawler:
             for result in results
             if result.changed
             and result.error is None
-            and self._is_route_in_scope(result.after_route)
+            and self._ui_event_result_in_scope(result, source_state)
         ]
 
         if not results:
@@ -947,6 +956,7 @@ class RouteCrawler:
                 depth=depth,
                 source_state=source_state,
                 target_state=target_state,
+                source_screen_data=screen_data,
                 result=result,
             )
 
@@ -970,6 +980,7 @@ class RouteCrawler:
         depth: int,
         source_state: UIState,
         target_state: UIState,
+        source_screen_data: dict[str, Any],
         result,
     ) -> None:
         event_prefix = self._build_ui_state_prefix(
@@ -1072,16 +1083,120 @@ class RouteCrawler:
             },
         )
 
-        discovered_links = self.discovery.discover_allowed_links(
-            after_screen_data
-        )
-        self._register_discovered_links(
+        self._register_ui_event_discovered_links(
             source_route=event_node_id,
-            links=discovered_links,
+            source_screen_data=source_screen_data,
+            after_screen_data=after_screen_data,
+            target_state=target_state,
+            result=result,
             depth=depth,
-            reason="ui_event_discovered_href",
+        )
+
+    def _register_ui_event_discovered_links(
+        self,
+        *,
+        source_route: str,
+        source_screen_data: dict[str, Any],
+        after_screen_data: dict[str, Any],
+        target_state: UIState,
+        result,
+        depth: int,
+    ) -> None:
+        after_links = self.discovery.discover_allowed_links(after_screen_data)
+        if getattr(self, "module_boundary", None) is None:
+            self._register_discovered_links(
+                source_route=source_route,
+                links=after_links,
+                depth=depth,
+                reason="ui_event_discovered_href",
+                only_new_targets=True,
+            )
+            return
+
+        before_routes = {
+            self._route_identity(link["route"])
+            for link in self.discovery.discover_allowed_links(source_screen_data)
+        }
+        menu_selectors = self._menu_selectors_from_path(target_state.path)
+        event_category = str(
+            result.candidate.get("event_category")
+            or result.candidate.get("event_type")
+            or result.event.event_type.value
+        ).strip()
+
+        admitted_links: list[dict[str, Any]] = []
+        for link in after_links:
+            route = link.get("route")
+            identity = self._route_identity(route) if route else ""
+            newly_revealed = bool(identity and identity not in before_routes)
+            if not self.module_boundary.allows_discovered_route(
+                route,
+                menu_selectors=menu_selectors,
+                event_category=event_category,
+                newly_revealed=newly_revealed,
+            ):
+                continue
+            if not self.policy.is_allowed_route(route):
+                continue
+
+            if self.route_scope is None:
+                self.route_scope = set()
+            if identity not in self.route_scope:
+                self.route_scope.add(identity)
+                self._module_dynamic_routes.add(identity)
+            admitted_links.append(link)
+
+        self._register_discovered_links(
+            source_route=source_route,
+            links=admitted_links,
+            depth=depth,
+            reason="module_scope_discovered_href",
             only_new_targets=True,
         )
+
+    def _ui_event_result_in_scope(self, result, source_state: UIState) -> bool:
+        if not result.after_route or not self.policy.is_allowed_route(result.after_route):
+            return False
+        if self._is_route_in_scope(result.after_route):
+            return True
+        if getattr(self, "module_boundary", None) is None:
+            return False
+
+        event_category = str(
+            result.candidate.get("event_category")
+            or result.candidate.get("event_type")
+            or result.event.event_type.value
+        ).strip()
+        if event_category != "expand_menu":
+            return False
+
+        selectors = list(self._menu_selectors_from_path(source_state.path))
+        if result.event.selector:
+            selectors.append(result.event.selector)
+        return self.module_boundary.is_inside_selected_branch(selectors)
+
+    def _module_state_inside_branch(self, state: UIState) -> bool:
+        if getattr(self, "module_boundary", None) is None:
+            return False
+        return self.module_boundary.is_inside_selected_branch(
+            self._menu_selectors_from_path(state.path)
+        )
+
+    @staticmethod
+    def _menu_selectors_from_path(path: CrawlPath | None) -> tuple[str, ...]:
+        if path is None:
+            return ()
+        return tuple(
+            step.event.selector
+            for step in path.steps
+            if step.event.selector
+            and step.event.event_type.value in {"expand_menu", "collapse_menu"}
+        )
+
+    def _state_event_depth(self, path: CrawlPath) -> int:
+        if getattr(self, "module_boundary", None) is None:
+            return path.depth
+        return max(0, path.depth - getattr(self, "_module_entry_depth", 0))
 
     def _save_ui_event_results(
         self,
@@ -1266,6 +1381,17 @@ class RouteCrawler:
         )
         if is_home_root:
             return set(self.home_event_categories)
+
+        if (
+            getattr(self, "module_boundary", None) is not None
+            and self._route_identity(state.route) == self._route_identity(self.home_route)
+            and self._module_state_inside_branch(state)
+        ):
+            # Los estados del menú dentro del MODULE seleccionado continúan
+            # descubriendo solamente expand_menu descendientes. Los estados de
+            # pantallas funcionales conservan las categorías locales normales.
+            return set(self.home_event_categories)
+
         return set(self.local_event_categories)
 
     def _should_queue_dynamic_state(
@@ -1277,7 +1403,7 @@ class RouteCrawler:
             return False
         if state.path is None:
             return False
-        return state.path.depth < self.max_event_depth
+        return self._state_event_depth(state.path) < self.max_event_depth
 
     def _crawl_pending_states(self) -> None:
         """Explora estados reproducibles hasta la profundidad permitida."""
@@ -1286,7 +1412,7 @@ class RouteCrawler:
             if target is None:
                 break
 
-            if target.depth >= self.max_event_depth:
+            if self._state_event_depth(target.path) >= self.max_event_depth:
                 self.state_frontier.mark_explored(target.state_id)
                 continue
 
