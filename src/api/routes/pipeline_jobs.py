@@ -26,7 +26,11 @@ from src.database.enums import (
     PipelineJobStatus,
 )
 from src.database.repositories import KnowledgeRepository, PipelineJobRepository
-from src.database.services import PipelineJobService
+from src.database.services import (
+    ModuleSubtreeResolutionError,
+    ModuleSubtreeResolver,
+    PipelineJobService,
+)
 from src.knowledge.canonical.enums import ReviewStatus
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
@@ -102,23 +106,42 @@ def create_crawl_job(
     session: WriteSessionDependency,
 ) -> PipelineJobDetail:
     dispatcher = request.app.state.pipeline_job_dispatcher
-    target = (
-        payload.target_module_id
-        if payload.scope == PipelineJobScope.MODULE
-        else payload.target
-    )
     parameters = {
         "headless": payload.headless,
         "slow_mo": payload.slow_mo,
     }
-    if payload.target_module_id is not None:
-        parameters["target_module_id"] = payload.target_module_id
+    target = payload.target
+    erp_id = None
+    knowledge_version_id = None
+
+    if payload.scope == PipelineJobScope.MODULE:
+        try:
+            subtree = ModuleSubtreeResolver(session).resolve(
+                payload.target_module_id or ""
+            )
+        except ModuleSubtreeResolutionError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+        target = subtree.root_module_id
+        erp_id = subtree.erp_id
+        knowledge_version_id = subtree.knowledge_version_id
+        parameters.update(
+            {
+                "active_only": True,
+                "target_module_id": subtree.root_module_id,
+                "knowledge_version_id": str(subtree.knowledge_version_id),
+                "knowledge_version": subtree.knowledge_version,
+                "erp_id": subtree.erp_id,
+            }
+        )
 
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CRAWL,
         scope=payload.scope,
         target=target,
         profile_name=request.app.state.pipeline_crawl_profile_name,
+        erp_id=erp_id,
+        knowledge_version_id=knowledge_version_id,
         request_source="admin_api",
         parameters=parameters,
     )

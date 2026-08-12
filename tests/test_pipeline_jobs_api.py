@@ -155,8 +155,10 @@ def test_create_crawl_job_queues_controlled_worker(api):
 
 
 
-def test_create_module_crawl_queues_canonical_module_target(api):
+def test_create_module_crawl_pins_target_to_active_knowledge_version(api):
     client, factory, dispatcher = api
+    version_id, erp_id = seed_active_module(factory)
+
     response = client.post(
         "/api/admin/pipeline-jobs/crawl",
         json={
@@ -170,10 +172,16 @@ def test_create_module_crawl_queues_canonical_module_target(api):
     body = response.json()
     assert body["scope"] == "module"
     assert body["target"] == "module:tracking"
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
     assert body["parameters"] == {
         "headless": True,
         "slow_mo": 50,
+        "active_only": True,
         "target_module_id": "module:tracking",
+        "knowledge_version_id": version_id,
+        "knowledge_version": "active-v1",
+        "erp_id": erp_id,
     }
     assert [str(value) for value in dispatcher.submitted] == [body["id"]]
 
@@ -182,6 +190,8 @@ def test_create_module_crawl_queues_canonical_module_target(api):
         assert stored is not None
         assert stored.scope.value == "module"
         assert stored.target == "module:tracking"
+        assert str(stored.knowledge_version_id) == version_id
+        assert stored.erp_id == erp_id
 
 
 def test_module_crawl_requires_canonical_module_id_and_rejects_route_target(api):
@@ -203,6 +213,19 @@ def test_module_crawl_requires_canonical_module_id_and_rejects_route_target(api)
             "target_module_id": "module:tracking",
         },
     ).status_code == 422
+    assert dispatcher.submitted == []
+
+
+def test_module_crawl_rejects_target_not_present_in_active_knowledge(api):
+    client, _, dispatcher = api
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={"scope": "module", "target_module_id": "module:missing"},
+    )
+
+    assert response.status_code == 409
+    assert "ACTIVE" in response.json()["detail"]
     assert dispatcher.submitted == []
 
 
@@ -375,6 +398,33 @@ def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
         session.add(version)
         session.flush()
         return str(version.id), erp.id
+
+
+def seed_active_module(factory):
+    version_id, erp_id = seed_active_version(factory)
+    with factory.begin() as session:
+        module = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="module:tracking",
+            entity_type="module",
+            parent_canonical_id=erp_id,
+            title="Tracking",
+            normalized_title="tracking",
+            route=None,
+            content_hash="c" * 64,
+            source_payload={
+                "id": "module:tracking",
+                "name": "Tracking",
+                "depth": 0,
+                "navigation_path": ["Tracking"],
+                "metadata": {"navigation_origin_path": "#tracking"},
+            },
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        session.add(module)
+        session.flush()
+    return version_id, erp_id
 
 
 def test_projection_sync_jobs_capture_only_the_single_active_version(api):
