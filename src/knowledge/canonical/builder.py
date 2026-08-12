@@ -193,150 +193,385 @@ class CanonicalKnowledgeBuilder:
         functional_routes=None,
         artifact_base="data/processed/structural",
     ):
-        functional_routes = {normalize_route(route) for route in (functional_routes or set())}
+        functional_routes = {
+            normalize_route(route) for route in (functional_routes or set())
+        }
         nodes = self._list(graph, "nodes")
         edges = self._list(graph, "edges")
-        node_by_id = {}
-        for node in nodes:
-            for key in (node.get("id"), node.get("route")):
-                if key:
-                    node_by_id[str(key)] = node
+        normalized_home = normalize_route(home_route)
 
         def state_path(node):
             metadata = (node or {}).get("metadata") or {}
             path = metadata.get("path") or {}
             return path if isinstance(path, dict) else {}
 
-        def first_path_event(node):
-            steps = state_path(node).get("steps") or []
-            if not steps or not isinstance(steps[0], dict):
-                return {}
-            event = steps[0].get("event") or {}
-            return event if isinstance(event, dict) else {}
+        def menu_steps(node):
+            result = []
 
-        # The crawler stores every UI event edge from the base route. Therefore
-        # edge.source alone cannot distinguish a top-level module from a nested
-        # submenu. UIState.path is the canonical hierarchy: depth=1 means the
-        # first expansion from Home; depth>=2 is a nested navigation group.
-        candidates = []
-        candidate_by_origin = {}
-        for edge in edges:
-            meta = edge.get("metadata") or {}
-            if meta.get("event_category") != "expand_menu" or not edge.get("label"):
+            for step in state_path(node).get("steps") or []:
+                if not isinstance(step, dict):
+                    continue
+
+                event = step.get("event") or {}
+                if not isinstance(event, dict):
+                    continue
+
+                category = str(
+                    event.get("event_type")
+                    or event.get("event_category")
+                    or ""
+                ).strip()
+                label = str(event.get("label") or "").strip()
+
+                if category != "expand_menu" or not label:
+                    continue
+
+                result.append(
+                    {
+                        "name": label,
+                        "selector": str(
+                            event.get("selector") or ""
+                        ).strip(),
+                    }
+                )
+
+            return result
+
+        def segment_origin(step):
+            selector = str(step.get("selector") or "").strip()
+
+            if selector:
+                return selector
+
+            name = " ".join(
+                str(step.get("name") or "").strip().split()
+            )
+            return f"label:{name.casefold()}"
+
+        # UIState.path is the authoritative navigation hierarchy.
+        # Every expand_menu prefix becomes a Module candidate.
+        candidates_by_key = {}
+        state_leaf_keys = {}
+
+        for node in nodes:
+            metadata = (node or {}).get("metadata") or {}
+
+            if metadata.get("kind") != "ui_state":
                 continue
-            target = str(edge.get("target") or "")
-            state_node = node_by_id.get(target)
-            path = state_path(state_node)
-            state_meta = (state_node or {}).get("metadata") or {}
-            base_route = normalize_route(state_meta.get("base_route") or edge.get("source"))
-            try:
-                depth = int(path.get("depth") or 0)
-            except (TypeError, ValueError):
-                depth = 0
-            if base_route != normalize_route(home_route) or depth != 1:
+
+            if (
+                normalize_route(
+                    metadata.get("base_route") or "/"
+                )
+                != normalized_home
+            ):
                 continue
 
-            first_event = first_path_event(state_node)
-            selector = str(meta.get("selector") or first_event.get("selector") or "").strip()
-            origin = selector or target
-            candidate = {
-                "name": str(edge["label"]).strip(),
-                "origin": origin,
-                "routes": set(),
-            }
-            candidates.append(candidate)
-            candidate_by_origin[origin] = candidate
+            steps = menu_steps(node)
 
-        # Attribute links discovered from both top-level and nested Home states
-        # to the module identified by the first event in that state's path.
+            if not steps:
+                continue
+
+            origins = tuple(
+                segment_origin(step) for step in steps
+            )
+            names = [
+                str(step["name"]).strip()
+                for step in steps
+            ]
+
+            # Create every hierarchy prefix:
+            # A
+            # A/B
+            # A/B/C
+            for index in range(len(steps)):
+                key = origins[: index + 1]
+
+                if key not in candidates_by_key:
+                    candidates_by_key[key] = {
+                        "key": key,
+                        "parent_key": key[:-1] or None,
+                        "name": names[index],
+                        "navigation_path": names[: index + 1],
+                        "origin_path": list(key),
+                        "depth": index,
+                        "direct_routes": set(),
+                        "subtree_routes": set(),
+                    }
+
+            leaf_key = origins
+
+            for state_key in (
+                node.get("id"),
+                node.get("route"),
+            ):
+                if state_key:
+                    state_leaf_keys[str(state_key)] = leaf_key
+
         outgoing = {}
-        for edge in edges:
-            outgoing.setdefault(str(edge.get("source") or ""), []).append(edge)
 
-        if candidates:
-            for state_id, state_node in node_by_id.items():
-                metadata = (state_node or {}).get("metadata") or {}
-                if metadata.get("kind") != "ui_state":
-                    continue
-                if normalize_route(metadata.get("base_route") or "/") != normalize_route(home_route):
-                    continue
-                path = state_path(state_node)
-                try:
-                    depth = int(path.get("depth") or 0)
-                except (TypeError, ValueError):
-                    depth = 0
-                if depth < 1:
-                    continue
-                first_event = first_path_event(state_node)
-                origin = str(first_event.get("selector") or "").strip()
-                candidate = candidate_by_origin.get(origin)
+        for edge in edges:
+            outgoing.setdefault(
+                str(edge.get("source") or ""),
+                [],
+            ).append(edge)
+
+        if candidates_by_key:
+            # A route discovered from a navigation state belongs
+            # to the most specific module represented by that state.
+            for state_id, leaf_key in state_leaf_keys.items():
+                candidate = candidates_by_key.get(leaf_key)
+
                 if candidate is None:
                     continue
+
                 for edge in outgoing.get(state_id, []):
                     target = edge.get("target")
-                    if isinstance(target, str) and target.startswith("/") and "#state:" not in target:
-                        candidate["routes"].add(normalize_route(target))
 
-        # Backward-compatible fallback for structural fixtures/older crawls that
-        # do not persist UIState path hierarchy. Instance-specific labels are
-        # only consulted when no hierarchical module evidence is available.
-        if not candidates:
+                    if (
+                        isinstance(target, str)
+                        and target.startswith("/")
+                        and "#state:" not in target
+                    ):
+                        candidate["direct_routes"].add(
+                            normalize_route(target)
+                        )
+
+        # Backward-compatible fallback for old structural
+        # artifacts that do not contain UIState.path.
+        if not candidates_by_key:
             legacy: dict[str, set[str]] = {}
+
             for screen in audit_screens:
-                for item in ((screen.get("pipeline") or {}).get("selected_for_exploration") or []):
-                    if item.get("event_category") == "expand_menu" and item.get("label"):
-                        legacy.setdefault(str(item["label"]), set())
+                selected = (
+                    (screen.get("pipeline") or {})
+                    .get("selected_for_exploration")
+                    or []
+                )
+
+                for item in selected:
+                    if (
+                        item.get("event_category")
+                        == "expand_menu"
+                        and item.get("label")
+                    ):
+                        legacy.setdefault(
+                            str(item["label"]),
+                            set(),
+                        )
+
             for node in nodes:
                 module = node.get("source_module")
                 route = node.get("route")
-                if module and module != "root" and route and not str(module).startswith("/"):
-                    legacy.setdefault(str(module), set()).add(normalize_route(route))
-            candidates = [
-                {"name": name, "origin": f"legacy:{name}", "routes": routes}
-                for name, routes in legacy.items()
-            ]
 
-        # Canonical knowledge is functional: navigation groups whose observed
-        # branch contains no functional screen remain preserved in raw evidence
-        # but are not published as functional Module entities.
+                if (
+                    module
+                    and module != "root"
+                    and route
+                    and not str(module).startswith("/")
+                ):
+                    legacy.setdefault(
+                        str(module),
+                        set(),
+                    ).add(normalize_route(route))
+
+            for name, routes in legacy.items():
+                exact_name = " ".join(
+                    str(name).strip().split()
+                )
+                key = (
+                    f"legacy:{exact_name.casefold()}",
+                )
+
+                candidates_by_key[key] = {
+                    "key": key,
+                    "parent_key": None,
+                    "name": exact_name,
+                    "navigation_path": [exact_name],
+                    "origin_path": list(key),
+                    "depth": 0,
+                    "direct_routes": set(routes),
+                    "subtree_routes": set(),
+                }
+
+        # A parent remains functional when a descendant contains
+        # a functional screen.
+        for candidate in candidates_by_key.values():
+            candidate["subtree_routes"] = set(
+                candidate["direct_routes"]
+            )
+
+        for candidate in sorted(
+            candidates_by_key.values(),
+            key=lambda item: item["depth"],
+            reverse=True,
+        ):
+            parent_key = candidate["parent_key"]
+
+            if (
+                parent_key
+                and parent_key in candidates_by_key
+            ):
+                candidates_by_key[
+                    parent_key
+                ]["subtree_routes"].update(
+                    candidate["subtree_routes"]
+                )
+
         publishable = []
-        for candidate in candidates:
-            functional = set(candidate["routes"]) & functional_routes
+
+        for candidate in candidates_by_key.values():
+            functional = (
+                candidate["subtree_routes"]
+                & functional_routes
+            )
+
             if functional_routes and not functional:
                 self._warn(
                     "module_without_functional_screen",
-                    f"Módulo omitido sin pantalla funcional observada: {candidate['name']}",
+                    (
+                        "Módulo omitido sin pantalla "
+                        "funcional observada: "
+                        f"{candidate['name']}"
+                    ),
                     "module",
                 )
-                self._omit("modules_without_functional_screen")
+                self._omit(
+                    "modules_without_functional_screen"
+                )
                 continue
+
             publishable.append(candidate)
 
         normalized_groups = {}
         exact_groups = {}
+
         for candidate in publishable:
-            normalized_groups.setdefault(normalize_text(candidate["name"]), []).append(candidate)
-            exact = " ".join(candidate["name"].strip().split())
-            exact_groups.setdefault(exact, []).append(candidate)
+            normalized_path = tuple(
+                normalize_text(name)
+                for name
+                in candidate["navigation_path"]
+            )
+            exact_path = tuple(
+                " ".join(name.strip().split())
+                for name
+                in candidate["navigation_path"]
+            )
+
+            normalized_groups.setdefault(
+                normalized_path,
+                [],
+            ).append(candidate)
+            exact_groups.setdefault(
+                exact_path,
+                [],
+            ).append(candidate)
+
+        def candidate_sort_key(item):
+            return (
+                item["depth"],
+                tuple(
+                    normalize_text(name)
+                    for name
+                    in item["navigation_path"]
+                ),
+                tuple(item["navigation_path"]),
+                tuple(item["origin_path"]),
+            )
+
+        # IDs are computed before entities so child modules can
+        # reference their parent's stable canonical ID.
+        id_by_key = {}
+
+        for candidate in sorted(
+            publishable,
+            key=candidate_sort_key,
+        ):
+            normalized_path = tuple(
+                normalize_text(name)
+                for name
+                in candidate["navigation_path"]
+            )
+            exact_path = tuple(
+                " ".join(name.strip().split())
+                for name
+                in candidate["navigation_path"]
+            )
+
+            id_parts = [
+                erp_id,
+                normalized_path,
+            ]
+
+            if (
+                len(
+                    normalized_groups.get(
+                        normalized_path,
+                        [],
+                    )
+                )
+                > 1
+            ):
+                discriminator = content_hash(
+                    exact_path
+                )[:12]
+
+                if (
+                    len(
+                        exact_groups.get(
+                            exact_path,
+                            [],
+                        )
+                    )
+                    > 1
+                ):
+                    discriminator = content_hash(
+                        {
+                            "path": exact_path,
+                            "origin_path": (
+                                candidate[
+                                    "origin_path"
+                                ]
+                            ),
+                        }
+                    )[:16]
+
+                id_parts.append(discriminator)
+
+            id_by_key[candidate["key"]] = (
+                stable_id(
+                    "module",
+                    *id_parts,
+                )
+            )
 
         modules = []
         route_modules = {}
+        route_depths = {}
+
         for candidate in sorted(
             publishable,
-            key=lambda item: (normalize_text(item["name"]), item["name"], item["origin"]),
+            key=candidate_sort_key,
         ):
-            name = candidate["name"]
-            normalized_name = normalize_text(name)
-            id_parts = ["module", erp_id, normalized_name]
-            if len(normalized_groups.get(normalized_name, [])) > 1:
-                exact = " ".join(name.strip().split())
-                discriminator = content_hash(exact)[:12]
-                if len(exact_groups.get(exact, [])) > 1:
-                    discriminator = content_hash({"name": exact, "origin": candidate["origin"]})[:16]
-                id_parts.append(discriminator)
-            module_id = stable_id(*id_parts)
-            routes = sorted(candidate["routes"])
-            prefix = self._common_prefix(routes) if routes else None
+            module_id = id_by_key[
+                candidate["key"]
+            ]
+            parent_key = candidate["parent_key"]
+            parent_module_id = (
+                id_by_key.get(parent_key)
+                if parent_key
+                else None
+            )
+
+            routes = sorted(
+                candidate["subtree_routes"]
+            )
+            prefix = (
+                self._common_prefix(routes)
+                if routes
+                else None
+            )
+
             ev = self._evidence(
                 evidence,
                 "module",
@@ -346,32 +581,94 @@ class CanonicalKnowledgeBuilder:
                 EvidenceType.STRUCTURAL_JSON,
                 artifact_base,
             )
+
             modules.append(
                 Module(
                     id=module_id,
                     erp_id=erp_id,
-                    parent_module_id=None,
-                    depth=0,
-                    navigation_path=[name],
-                    name=name,
-                    normalized_name=normalized_name,
+                    parent_module_id=(
+                        parent_module_id
+                    ),
+                    depth=candidate["depth"],
+                    navigation_path=list(
+                        candidate[
+                            "navigation_path"
+                        ]
+                    ),
+                    name=candidate["name"],
+                    normalized_name=normalize_text(
+                        candidate["name"]
+                    ),
                     route_prefix=prefix,
-                    source_refs=["routes_graph.json"],
+                    source_refs=[
+                        "routes_graph.json"
+                    ],
                     evidence_ids=[ev],
-                    metadata=safe_metadata({"navigation_origin": candidate["origin"]}),
+                    metadata=safe_metadata(
+                        {
+                            "navigation_origin": (
+                                candidate[
+                                    "origin_path"
+                                ][-1]
+                            ),
+                            "navigation_origin_path": (
+                                " || ".join(
+                                    candidate[
+                                        "origin_path"
+                                    ]
+                                )[:500]
+                            ),
+                        }
+                    ),
                 )
             )
-            for route in routes:
+
+            # Routes are owned by the most-specific module.
+            for route in sorted(
+                candidate["direct_routes"]
+            ):
                 existing = route_modules.get(route)
-                if existing and existing != module_id:
-                    self._warn(
-                        "ambiguous_module_route",
-                        f"Ruta observada bajo más de un módulo: {route}",
-                        "module",
-                        module_id,
-                    )
+                existing_depth = route_depths.get(
+                    route,
+                    -1,
+                )
+
+                if (
+                    existing
+                    and existing != module_id
+                ):
+                    if (
+                        candidate["depth"]
+                        > existing_depth
+                    ):
+                        route_modules[
+                            route
+                        ] = module_id
+                        route_depths[
+                            route
+                        ] = candidate["depth"]
+                    elif (
+                        candidate["depth"]
+                        == existing_depth
+                    ):
+                        self._warn(
+                            "ambiguous_module_route",
+                            (
+                                "Ruta observada bajo "
+                                "más de un módulo: "
+                                f"{route}"
+                            ),
+                            "module",
+                            module_id,
+                        )
+
                     continue
+
                 route_modules[route] = module_id
+                route_depths[
+                    route
+                ] = candidate["depth"]
+
         return modules, route_modules
 
     def _module_for_route(self, route, mappings):

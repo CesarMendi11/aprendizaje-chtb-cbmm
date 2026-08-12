@@ -107,7 +107,7 @@ def test_missing_and_corrupt_artifacts(tmp_path):
         builder.build_from_paths("profile.yaml")
 
 
-def test_nested_expand_menus_are_not_promoted_to_modules_and_keep_parent_module():
+def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_parent():
     profile = {
         "erp": {"name": "Fictional ERP", "code": "fictional"},
         "navigation": {"home_url": "/app/home"},
@@ -191,10 +191,32 @@ def test_nested_expand_menus_are_not_promoted_to_modules_and_keep_parent_module(
     }
 
     kb = CanonicalKnowledgeBuilder().build(profile, artifacts)
-    assert [module.name for module in kb.modules] == ["Sales"]
-    sales = kb.modules[0]
-    assert next(screen for screen in kb.screens if screen.route == "/app/sales/orders").module_id == sales.id
-    assert next(screen for screen in kb.screens if screen.route == "/app/sales/tracking/external").module_id == sales.id
+    modules = {module.name: module for module in kb.modules}
+
+    assert set(modules) == {"Sales", "Tracking"}
+
+    sales = modules["Sales"]
+    tracking = modules["Tracking"]
+
+    assert sales.parent_module_id is None
+    assert sales.depth == 0
+    assert sales.navigation_path == ["Sales"]
+
+    assert tracking.parent_module_id == sales.id
+    assert tracking.depth == 1
+    assert tracking.navigation_path == ["Sales", "Tracking"]
+
+    assert next(
+        screen
+        for screen in kb.screens
+        if screen.route == "/app/sales/orders"
+    ).module_id == sales.id
+
+    assert next(
+        screen
+        for screen in kb.screens
+        if screen.route == "/app/sales/tracking/external"
+    ).module_id == tracking.id
 
 
 def test_case_distinct_top_level_modules_do_not_collide():
@@ -325,3 +347,255 @@ def test_top_level_modules_have_root_hierarchy_metadata():
         assert module.parent_module_id is None
         assert module.depth == 0
         assert module.navigation_path == [module.name]
+
+
+def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_screen():
+    profile = {
+        "erp": {
+            "name": "Fictional ERP",
+            "code": "fictional",
+        },
+        "navigation": {
+            "home_url": "/app/home",
+        },
+    }
+
+    sales_state = "/app/home#state:sales"
+    tracking_state = "/app/home#state:sales-tracking"
+    integrations_state = "/app/home#state:sales-tracking-integrations"
+
+    sales_step = {
+        "event": {
+            "event_type": "expand_menu",
+            "label": "Sales",
+            "selector": "nav > menu:nth(1)",
+        }
+    }
+
+    tracking_step = {
+        "event": {
+            "event_type": "expand_menu",
+            "label": "Tracking",
+            "selector": "nav > menu:nth(1) > submenu:nth(1)",
+        }
+    }
+
+    integrations_step = {
+        "event": {
+            "event_type": "expand_menu",
+            "label": "Integrations",
+            "selector": (
+                "nav > menu:nth(1) "
+                "> submenu:nth(1) "
+                "> submenu:nth(1)"
+            ),
+        }
+    }
+
+    artifacts = {
+        "screen_index.json": {
+            "screens": [
+                {
+                    "route": "/app/home",
+                    "title": "Home",
+                },
+                {
+                    "route": (
+                        "/app/sales/tracking/"
+                        "integrations/external"
+                    ),
+                    "title": "External systems",
+                },
+            ]
+        },
+        "routes_graph.json": {
+            "nodes": [
+                {
+                    "id": "/app/home",
+                    "route": "/app/home",
+                    "source_module": "root",
+                },
+                {
+                    "id": sales_state,
+                    "route": sales_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [
+                                sales_step,
+                            ],
+                        },
+                    },
+                },
+                {
+                    "id": tracking_state,
+                    "route": tracking_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 2,
+                            "steps": [
+                                sales_step,
+                                tracking_step,
+                            ],
+                        },
+                    },
+                },
+                {
+                    "id": integrations_state,
+                    "route": integrations_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 3,
+                            "steps": [
+                                sales_step,
+                                tracking_step,
+                                integrations_step,
+                            ],
+                        },
+                    },
+                },
+                {
+                    "id": (
+                        "/app/sales/tracking/"
+                        "integrations/external"
+                    ),
+                    "route": (
+                        "/app/sales/tracking/"
+                        "integrations/external"
+                    ),
+                },
+            ],
+            "edges": [
+                {
+                    "source": "/app/home",
+                    "target": sales_state,
+                    "label": "Sales",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                    },
+                },
+                {
+                    "source": sales_state,
+                    "target": tracking_state,
+                    "label": "Tracking",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                    },
+                },
+                {
+                    "source": tracking_state,
+                    "target": integrations_state,
+                    "label": "Integrations",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                    },
+                },
+                {
+                    "source": integrations_state,
+                    "target": (
+                        "/app/sales/tracking/"
+                        "integrations/external"
+                    ),
+                    "label": "External systems",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+            ],
+        },
+        "state_registry.json": {
+            "states": [],
+        },
+        "state_flow_graph.json": {
+            "states": [],
+            "transitions": [],
+        },
+        "event_policy_audit.json": {
+            "screens": [],
+        },
+        "ui_event_execution_audit.json": {},
+    }
+
+    first = CanonicalKnowledgeBuilder().build(
+        profile,
+        artifacts,
+    )
+    second = CanonicalKnowledgeBuilder().build(
+        profile,
+        artifacts,
+    )
+
+    modules = {
+        module.name: module
+        for module in first.modules
+    }
+
+    assert set(modules) == {
+        "Sales",
+        "Tracking",
+        "Integrations",
+    }
+
+    sales = modules["Sales"]
+    tracking = modules["Tracking"]
+    integrations = modules["Integrations"]
+
+    assert sales.parent_module_id is None
+    assert sales.depth == 0
+    assert sales.navigation_path == [
+        "Sales",
+    ]
+
+    assert tracking.parent_module_id == sales.id
+    assert tracking.depth == 1
+    assert tracking.navigation_path == [
+        "Sales",
+        "Tracking",
+    ]
+
+    assert integrations.parent_module_id == tracking.id
+    assert integrations.depth == 2
+    assert integrations.navigation_path == [
+        "Sales",
+        "Tracking",
+        "Integrations",
+    ]
+
+    external = next(
+        screen
+        for screen in first.screens
+        if screen.route
+        == "/app/sales/tracking/integrations/external"
+    )
+
+    assert external.module_id == integrations.id
+
+    # Parents without direct functional screens remain published
+    # because their descendant subtree contains one.
+    assert sales.id in {
+        module.id
+        for module in first.modules
+    }
+    assert tracking.id in {
+        module.id
+        for module in first.modules
+    }
+
+    # Canonical hierarchy and IDs remain deterministic.
+    second_modules = {
+        module.name: module
+        for module in second.modules
+    }
+
+    assert second_modules["Sales"].id == sales.id
+    assert second_modules["Tracking"].id == tracking.id
+    assert second_modules["Integrations"].id == integrations.id
+    assert first.knowledge_version == second.knowledge_version
