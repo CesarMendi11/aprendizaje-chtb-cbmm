@@ -2,7 +2,7 @@ services:
   neo4j:
     image: neo4j:2026.04.0
     container_name: cbmm_neo4j
-    restart: unless-stopped
+    restart: "no"
     ports:
       - "7474:7474"
       - "7687:7687"
