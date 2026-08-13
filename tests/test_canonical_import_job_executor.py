@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-import shutil
 import uuid
-from pathlib import Path
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
@@ -15,9 +13,7 @@ from src.pipeline.canonical_import_job_executor import (
     CanonicalImportJobExecutionError,
     CanonicalImportJobExecutor,
 )
-
-ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = ROOT / "data" / "processed" / "canonical"
+from tests.canonical_fixtures import exported_fictional_canonical
 
 
 def _factory(tmp_path):
@@ -28,10 +24,7 @@ def _factory(tmp_path):
 
 def _copy_canonical(tmp_path, crawl_id: uuid.UUID):
     target = tmp_path / "data" / "runs" / "pipeline" / str(crawl_id) / "processed" / "canonical"
-    target.mkdir(parents=True)
-    for name in ("knowledge.json", "manifest.json", "build_report.json"):
-        shutil.copy2(CANONICAL / name, target / name)
-    return target
+    return exported_fictional_canonical(target)
 
 
 def test_canonical_import_executor_creates_non_active_staging_without_sync_jobs(tmp_path):
@@ -84,10 +77,7 @@ def test_canonical_import_executor_creates_non_active_staging_without_sync_jobs(
 def test_canonical_import_executor_rejects_artifacts_outside_source_run(tmp_path):
     engine, factory = _factory(tmp_path)
     crawl_id = uuid.uuid4()
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    for name in ("knowledge.json", "manifest.json", "build_report.json"):
-        shutil.copy2(CANONICAL / name, outside / name)
+    outside = exported_fictional_canonical(tmp_path / "outside")
 
     executor = CanonicalImportJobExecutor(factory, project_root=tmp_path)
     try:

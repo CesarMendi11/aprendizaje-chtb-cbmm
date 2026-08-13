@@ -32,9 +32,9 @@ class ERPSystem(CanonicalModel):
 class Module(Reviewable):
     id: str
     erp_id: str
-    parent_module_id: str | None = None
-    depth: int = Field(default=0, ge=0)
-    navigation_path: list[str] = Field(default_factory=list)
+    parent_module_id: str | None
+    depth: int = Field(ge=0)
+    navigation_path: list[str]
     name: str
     normalized_name: str
     route_prefix: str | None = None

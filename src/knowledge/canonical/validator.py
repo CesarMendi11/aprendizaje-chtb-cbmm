@@ -7,7 +7,7 @@ from .enums import IssueSeverity
 from .models import CanonicalKnowledgeBase, ValidationIssue
 from .privacy import contains_sensitive
 
-SUPPORTED_SCHEMA_VERSIONS = {"1.0.0", "1.1.0"}
+SUPPORTED_SCHEMA_VERSIONS = {"1.1.0"}
 
 
 class CanonicalKnowledgeValidator:
@@ -79,12 +79,7 @@ class CanonicalKnowledgeValidator:
                         module.id,
                     )
 
-        issues.extend(
-            self._module_hierarchy_issues(
-                module_by_id,
-                enforce_derived_metadata=knowledge.schema_version == "1.1.0",
-            )
-        )
+        issues.extend(self._module_hierarchy_issues(module_by_id))
 
         for screen in knowledge.screens:
             self._ref(issues, screen.erp_id, {knowledge.erp_system.id}, "screen.erp_id", screen.id)
@@ -118,8 +113,6 @@ class CanonicalKnowledgeValidator:
     def _module_hierarchy_issues(
         self,
         module_by_id,
-        *,
-        enforce_derived_metadata: bool,
     ) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
         cycle_reported: set[frozenset[str]] = set()
@@ -161,12 +154,6 @@ class CanonicalKnowledgeValidator:
                     break
 
                 current = module_by_id[parent_id]
-
-        # Schema 1.0.0 did not define depth/navigation_path. It remains
-        # readable for backward compatibility, while schema 1.1.0 enforces
-        # the complete recursive hierarchy contract.
-        if not enforce_derived_metadata:
-            return issues
 
         # Validate deterministic derived hierarchy metadata.
         for module in module_by_id.values():

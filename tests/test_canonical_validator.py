@@ -106,24 +106,14 @@ def test_module_hierarchy_validates_depth_and_navigation_path():
     assert "module_navigation_path_mismatch" in result
 
 
-def test_schema_v1_legacy_modules_remain_readable_without_hierarchy_metadata():
+def test_schema_v1_is_rejected_after_vnext_cutover():
     payload = build().model_dump(mode="json")
     payload["schema_version"] = "1.0.0"
+    knowledge = CanonicalKnowledgeBase.model_validate(payload)
 
-    for module in payload["modules"]:
-        module.pop("parent_module_id", None)
-        module.pop("depth", None)
-        module.pop("navigation_path", None)
+    issues = CanonicalKnowledgeValidator().validate(knowledge)
 
-    kb = CanonicalKnowledgeBase.model_validate(payload)
-    result = {
-        item.code
-        for item in CanonicalKnowledgeValidator().validate(kb)
-    }
-
-    assert "module_depth_mismatch" not in result
-    assert "module_navigation_path_mismatch" not in result
-
+    assert any(item.code == "unsupported_schema" for item in issues)
 
 def test_safe_json_does_not_treat_numeric_runs_inside_canonical_ids_as_sensitive():
     payload = {

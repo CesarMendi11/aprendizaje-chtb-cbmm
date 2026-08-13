@@ -91,7 +91,7 @@ def nova_retail_knowledge() -> CanonicalKnowledgeBase:
         ),
     ]
     return CanonicalKnowledgeBase(
-        schema_version="1.0.0",
+        schema_version="1.1.0",
         knowledge_version="nova-version-one",
         generated_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         generator_version="synthetic-test",
@@ -108,6 +108,9 @@ def nova_retail_knowledge() -> CanonicalKnowledgeBase:
             Module(
                 id=module_id,
                 erp_id=erp_id,
+                parent_module_id=None,
+                depth=0,
+                navigation_path=["Inventory"],
                 name="Inventory",
                 normalized_name="inventory",
                 route_prefix="/inventory",

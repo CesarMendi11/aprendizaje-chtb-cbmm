@@ -1,8 +1,20 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
+from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
+
 
 def fictional_profile():
-    return {"erp": {"name": "Northwind Operations", "code": "northwind", "base_url": "https://erp.example.test"}}
+    return {
+        "erp": {
+            "name": "Northwind Operations",
+            "code": "northwind",
+            "base_url": "https://erp.example.test",
+        },
+        "navigation": {"home_url": "/app/home"},
+    }
 
 
 def fictional_artifacts():
@@ -12,13 +24,93 @@ def fictional_artifacts():
         {"route": "/app/purchasing/suppliers", "title": "Suppliers"},
     ]
     root = "raw:root"; product = "raw:product"
+    inventory_state = "/app/home#state:inventory"
+    purchasing_state = "/app/home#state:purchasing"
     return {
         "screen_index.json": {"screens": screens},
-        "routes_graph.json": {"nodes": [
-            {"route": "/app/home", "source_module": "root"},
-            {"route": "/app/inventory/products", "source_module": "Inventory"},
-            {"route": "/app/purchasing/suppliers", "source_module": "Purchasing"},
-        ], "edges": []},
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home", "source_module": "root"},
+                {
+                    "id": inventory_state,
+                    "route": inventory_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Inventory",
+                                        "selector": "nav > inventory",
+                                    }
+                                }
+                            ],
+                        },
+                    },
+                },
+                {
+                    "id": purchasing_state,
+                    "route": purchasing_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Purchasing",
+                                        "selector": "nav > purchasing",
+                                    }
+                                }
+                            ],
+                        },
+                    },
+                },
+                {"id": "/app/inventory/products", "route": "/app/inventory/products"},
+                {"id": "/app/purchasing/suppliers", "route": "/app/purchasing/suppliers"},
+            ],
+            "edges": [
+                {
+                    "source": "/app/home",
+                    "target": inventory_state,
+                    "label": "Inventory",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > inventory",
+                    },
+                },
+                {
+                    "source": inventory_state,
+                    "target": "/app/inventory/products",
+                    "label": "Products",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+                {
+                    "source": "/app/home",
+                    "target": purchasing_state,
+                    "label": "Purchasing",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > purchasing",
+                    },
+                },
+                {
+                    "source": purchasing_state,
+                    "target": "/app/purchasing/suppliers",
+                    "label": "Suppliers",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+            ],
+        },
         "state_registry.json": {"states": [
             {"state_id": root, "route": "/app/home", "title": "Dashboard", "structural_signature": "root", "metadata": {"depth": 0}},
             {"state_id": product, "route": "/app/inventory/products", "title": "Products", "structural_signature": "product", "metadata": {"depth": 0}},
@@ -27,3 +119,14 @@ def fictional_artifacts():
         "event_policy_audit.json": {"screens": []},
         "ui_event_execution_audit.json": {},
     }
+
+
+def exported_fictional_canonical(target: Path) -> Path:
+    builder = CanonicalKnowledgeBuilder()
+    knowledge = builder.build(fictional_profile(), fictional_artifacts())
+    CanonicalKnowledgeExporter().export(
+        knowledge,
+        target,
+        build_report=builder.build_report(knowledge),
+    )
+    return target

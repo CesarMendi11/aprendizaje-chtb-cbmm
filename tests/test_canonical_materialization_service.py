@@ -34,6 +34,7 @@ def _knowledge() -> CanonicalKnowledgeBase:
                 {
                     "id": "module:sales",
                     "erp_id": "erp:test",
+                    "parent_module_id": None,
                     "depth": 0,
                     "navigation_path": ["Sales"],
                     "name": "Sales",

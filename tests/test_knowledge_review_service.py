@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
@@ -13,19 +11,18 @@ from src.database.services import (
     CanonicalImportService, EffectiveKnowledgeService, KnowledgeReviewService
 )
 from src.knowledge.canonical.enums import ReviewStatus
-
-ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = ROOT / "data/processed/canonical"
+from tests.canonical_fixtures import exported_fictional_canonical
 
 
 @pytest.fixture
-def reviewed():
+def reviewed(tmp_path):
+    canonical_dir = exported_fictional_canonical(tmp_path / "canonical")
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
     with Session(engine, expire_on_commit=False) as session:
         with session.begin():
             CanonicalImportService(session).import_canonical(
-                CANONICAL / "knowledge.json", CANONICAL / "manifest.json"
+                canonical_dir / "knowledge.json", canonical_dir / "manifest.json"
             )
         session.rollback()
         item = session.scalar(

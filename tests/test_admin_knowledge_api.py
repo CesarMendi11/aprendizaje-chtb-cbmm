@@ -45,6 +45,9 @@ def _module(identifier: str, name: str) -> dict:
     return {
         "id": identifier,
         "erp_id": "erp:tree",
+        "parent_module_id": None,
+        "depth": 0,
+        "navigation_path": [name],
         "name": name,
         "normalized_name": name.casefold(),
         "route_prefix": f"/{name.casefold()}",

@@ -60,15 +60,12 @@ class CanonicalKnowledgeBuilder:
         route_graph = artifacts.get("routes_graph.json") or {}
         state_payloads = self._list(artifacts.get("state_registry.json"), "states") or self._list(artifacts.get("state_flow_graph.json"), "states")
         transition_payloads = self._list(artifacts.get("state_flow_graph.json"), "transitions")
-        audit_screens = self._list(artifacts.get("event_policy_audit.json"), "screens")
 
         home_route = normalize_route((profile.get("navigation") or {}).get("home_url") or "/")
         functional_routes = {normalize_route(item.get("route")) for item in screen_payloads if item.get("route")}
         modules, route_modules = self._modules(
             erp_id,
             route_graph,
-            transition_payloads,
-            audit_screens,
             hashes,
             evidence,
             home_route=home_route,
@@ -184,8 +181,6 @@ class CanonicalKnowledgeBuilder:
         self,
         erp_id,
         graph,
-        transitions,
-        audit_screens,
         hashes,
         evidence,
         *,
@@ -336,63 +331,6 @@ class CanonicalKnowledgeBuilder:
                         candidate["direct_routes"].add(
                             normalize_route(target)
                         )
-
-        # Backward-compatible fallback for old structural
-        # artifacts that do not contain UIState.path.
-        if not candidates_by_key:
-            legacy: dict[str, set[str]] = {}
-
-            for screen in audit_screens:
-                selected = (
-                    (screen.get("pipeline") or {})
-                    .get("selected_for_exploration")
-                    or []
-                )
-
-                for item in selected:
-                    if (
-                        item.get("event_category")
-                        == "expand_menu"
-                        and item.get("label")
-                    ):
-                        legacy.setdefault(
-                            str(item["label"]),
-                            set(),
-                        )
-
-            for node in nodes:
-                module = node.get("source_module")
-                route = node.get("route")
-
-                if (
-                    module
-                    and module != "root"
-                    and route
-                    and not str(module).startswith("/")
-                ):
-                    legacy.setdefault(
-                        str(module),
-                        set(),
-                    ).add(normalize_route(route))
-
-            for name, routes in legacy.items():
-                exact_name = " ".join(
-                    str(name).strip().split()
-                )
-                key = (
-                    f"legacy:{exact_name.casefold()}",
-                )
-
-                candidates_by_key[key] = {
-                    "key": key,
-                    "parent_key": None,
-                    "name": exact_name,
-                    "navigation_path": [exact_name],
-                    "origin_path": list(key),
-                    "depth": 0,
-                    "direct_routes": set(routes),
-                    "subtree_routes": set(),
-                }
 
         # A parent remains functional when a descendant contains
         # a functional screen.

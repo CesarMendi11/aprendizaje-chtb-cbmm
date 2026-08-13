@@ -6,7 +6,15 @@ from src.knowledge.canonical.models import ERPSystem, Module
 
 
 def test_generated_entity_is_pending_review():
-    module = Module(id="module:1", erp_id="erp:1", name="Inventory", normalized_name="inventory")
+    module = Module(
+        id="module:1",
+        erp_id="erp:1",
+        parent_module_id=None,
+        depth=0,
+        navigation_path=["Inventory"],
+        name="Inventory",
+        normalized_name="inventory",
+    )
     assert module.review_status is ReviewStatus.PENDING_REVIEW
     assert module.reviewed_at is None
 
@@ -16,14 +24,11 @@ def test_models_forbid_unknown_fields():
         ERPSystem(id="erp:1", slug="erp", name="ERP", profile_name="test", password="bad")
 
 
-def test_module_hierarchy_defaults_are_safe():
-    module = Module(
-        id="module:1",
-        erp_id="erp:1",
-        name="Inventory",
-        normalized_name="inventory",
-    )
-
-    assert module.parent_module_id is None
-    assert module.depth == 0
-    assert module.navigation_path == []
+def test_module_hierarchy_contract_is_required():
+    with pytest.raises(ValidationError):
+        Module(
+            id="module:1",
+            erp_id="erp:1",
+            name="Inventory",
+            normalized_name="inventory",
+        )

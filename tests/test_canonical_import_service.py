@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 import uuid
 import json
 
@@ -17,9 +16,12 @@ from src.database.services.payloads import item_content_hash
 from src.database.services import KnowledgeReviewService, EffectiveKnowledgeService
 from src.knowledge.canonical.ids import content_hash
 from src.knowledge.canonical.enums import ReviewStatus
+from tests.canonical_fixtures import exported_fictional_canonical
 
-ROOT = Path(__file__).resolve().parents[1]
-CANONICAL = ROOT / "data/processed/canonical"
+
+@pytest.fixture
+def canonical_dir(tmp_path):
+    return exported_fictional_canonical(tmp_path / "canonical")
 
 
 @pytest.fixture
@@ -30,12 +32,12 @@ def session():
         yield value
 
 
-def import_once(session):
+def import_once(session, canonical_dir):
     with session.begin():
         return CanonicalImportService(session).import_canonical(
-            CANONICAL / "knowledge.json",
-            CANONICAL / "manifest.json",
-            CANONICAL / "build_report.json",
+            canonical_dir / "knowledge.json",
+            canonical_dir / "manifest.json",
+            canonical_dir / "build_report.json",
         )
 
 
@@ -46,13 +48,13 @@ def test_content_hash_is_deterministic_and_ignores_review_metadata():
     assert item_content_hash(a) != item_content_hash({**a, "title": "B"})
 
 
-def test_new_import_and_idempotency(session):
+def test_new_import_and_idempotency(session, canonical_dir):
     manifest = json.loads(
-        (CANONICAL / "manifest.json").read_text(encoding="utf-8")
+        (canonical_dir / "manifest.json").read_text(encoding="utf-8")
     )
     expected_items = 1 + sum(manifest["entity_counts"].values())
 
-    first = import_once(session)
+    first = import_once(session, canonical_dir)
     assert first.result == "imported"
     assert first.items == expected_items
     assert (
@@ -61,41 +63,41 @@ def test_new_import_and_idempotency(session):
     )
     assert session.scalar(select(func.count()).select_from(SyncJob)) == 2
     session.rollback()
-    second = import_once(session)
+    second = import_once(session, canonical_dir)
     assert second.result == "skipped"
     assert session.scalar(select(func.count()).select_from(KnowledgeVersionRecord)) == 1
     assert session.scalar(select(func.count()).select_from(ImportRun)) == 2
 
 
-def test_import_activates_version_and_creates_pending_jobs(session):
-    result = import_once(session)
+def test_import_activates_version_and_creates_pending_jobs(session, canonical_dir):
+    result = import_once(session, canonical_dir)
     version = session.get(KnowledgeVersionRecord, uuid.UUID(result.version_id))
     assert version.status == KnowledgeVersionStatus.ACTIVE
     assert {job.status for job in version.sync_jobs} == {SyncStatus.PENDING}
 
 
-def test_dry_run_does_not_write(session):
+def test_dry_run_does_not_write(session, canonical_dir):
     result = CanonicalImportService(session).dry_run(
-        CANONICAL / "knowledge.json", CANONICAL / "manifest.json"
+        canonical_dir / "knowledge.json", canonical_dir / "manifest.json"
     )
     assert result.result == "dry_run"
     assert session.scalar(select(func.count()).select_from(ImportRun)) == 0
 
 
-def test_invalid_manifest_rolls_back_functional_import(session, tmp_path):
+def test_invalid_manifest_rolls_back_functional_import(session, tmp_path, canonical_dir):
     bad = tmp_path / "manifest.json"
     bad.write_text('{"knowledge_version":"wrong","canonical_document_hash":"x"}')
     with pytest.raises(ValueError):
         with session.begin():
             CanonicalImportService(session).import_canonical(
-                CANONICAL / "knowledge.json", bad
+                canonical_dir / "knowledge.json", bad
             )
     assert session.scalar(select(func.count()).select_from(KnowledgeItem)) == 0
 
 
-def test_sensitive_canonical_is_rejected_before_writing(session, tmp_path):
-    knowledge = json.loads((CANONICAL / "knowledge.json").read_text())
-    manifest = json.loads((CANONICAL / "manifest.json").read_text())
+def test_sensitive_canonical_is_rejected_before_writing(session, tmp_path, canonical_dir):
+    knowledge = json.loads((canonical_dir / "knowledge.json").read_text())
+    manifest = json.loads((canonical_dir / "manifest.json").read_text())
     knowledge["screens"][0]["main_content_text"] = "001-001-000000001"
     manifest["canonical_document_hash"] = content_hash(knowledge)
     knowledge_path = tmp_path / "knowledge.json"
@@ -109,9 +111,9 @@ def test_sensitive_canonical_is_rejected_before_writing(session, tmp_path):
     assert session.scalar(select(func.count()).select_from(ImportRun)) == 0
 
 
-def _next_version(tmp_path, *, change_screen=False):
-    knowledge = json.loads((CANONICAL / "knowledge.json").read_text())
-    manifest = json.loads((CANONICAL / "manifest.json").read_text())
+def _next_version(tmp_path, canonical_dir, *, change_screen=False):
+    knowledge = json.loads((canonical_dir / "knowledge.json").read_text())
+    manifest = json.loads((canonical_dir / "manifest.json").read_text())
     knowledge["knowledge_version"] = "next-version"
     manifest["knowledge_version"] = "next-version"
     if change_screen:
@@ -124,13 +126,13 @@ def _next_version(tmp_path, *, change_screen=False):
     return knowledge_path, manifest_path
 
 
-def test_identical_approval_is_carried_forward(session, tmp_path):
-    first = import_once(session)
+def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir):
+    first = import_once(session, canonical_dir)
     item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
     session.rollback()
     with session.begin():
         KnowledgeReviewService(session).approve(item.id)
-    paths = _next_version(tmp_path)
+    paths = _next_version(tmp_path, canonical_dir)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
     carried = session.scalar(select(KnowledgeItem).where(
@@ -142,8 +144,8 @@ def test_identical_approval_is_carried_forward(session, tmp_path):
     assert result.carried_reviews == 1
 
 
-def test_identical_correction_is_carried_forward(session, tmp_path):
-    import_once(session)
+def test_identical_correction_is_carried_forward(session, tmp_path, canonical_dir):
+    import_once(session, canonical_dir)
     item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
     payload = {
         key: value for key, value in item.source_payload.items()
@@ -153,7 +155,7 @@ def test_identical_correction_is_carried_forward(session, tmp_path):
     session.rollback()
     with session.begin():
         KnowledgeReviewService(session).correct(item.id, payload, notes="ajuste")
-    paths = _next_version(tmp_path)
+    paths = _next_version(tmp_path, canonical_dir)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
     carried = session.scalar(select(KnowledgeItem).where(
@@ -166,13 +168,13 @@ def test_identical_correction_is_carried_forward(session, tmp_path):
     assert effective["effective_payload"]["description"] == "Revisión humana"
 
 
-def test_changed_hash_does_not_carry_review(session, tmp_path):
-    import_once(session)
+def test_changed_hash_does_not_carry_review(session, tmp_path, canonical_dir):
+    import_once(session, canonical_dir)
     item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
     session.rollback()
     with session.begin():
         KnowledgeReviewService(session).approve(item.id)
-    paths = _next_version(tmp_path, change_screen=True)
+    paths = _next_version(tmp_path, canonical_dir, change_screen=True)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
     changed = session.scalar(select(KnowledgeItem).where(
@@ -184,48 +186,12 @@ def test_changed_hash_does_not_carry_review(session, tmp_path):
     assert result.carried_reviews == 0
 
 
-def test_legacy_manifest_hash_is_checked_against_raw_document(tmp_path, session):
-    knowledge = json.loads((CANONICAL / "knowledge.json").read_text(encoding="utf-8"))
-    manifest = json.loads((CANONICAL / "manifest.json").read_text(encoding="utf-8"))
-
-    knowledge["schema_version"] = "1.0.0"
-
-    for module in knowledge["modules"]:
-        module.pop("parent_module_id", None)
-        module.pop("depth", None)
-        module.pop("navigation_path", None)
-
-    # The manifest hashes exactly what was persisted, not a later
-    # Pydantic representation that may contain newly introduced defaults.
-    manifest["schema_version"] = "1.0.0"
-    manifest["canonical_document_hash"] = content_hash(knowledge)
-
-    knowledge_path = tmp_path / "legacy-knowledge.json"
-    manifest_path = tmp_path / "legacy-manifest.json"
-
-    knowledge_path.write_text(
-        json.dumps(knowledge, ensure_ascii=False),
-        encoding="utf-8",
-    )
-    manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
-    result = CanonicalImportService(session).dry_run(
-        knowledge_path,
-        manifest_path,
-    )
-
-    assert result.result == "dry_run"
-
-
-def test_imported_child_module_keeps_canonical_module_parent(session, tmp_path):
+def test_imported_child_module_keeps_canonical_module_parent(session, tmp_path, canonical_dir):
     knowledge = json.loads(
-        (CANONICAL / "knowledge.json").read_text(encoding="utf-8")
+        (canonical_dir / "knowledge.json").read_text(encoding="utf-8")
     )
     manifest = json.loads(
-        (CANONICAL / "manifest.json").read_text(encoding="utf-8")
+        (canonical_dir / "manifest.json").read_text(encoding="utf-8")
     )
 
     assert len(knowledge["modules"]) >= 2

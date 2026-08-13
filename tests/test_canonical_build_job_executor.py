@@ -120,12 +120,48 @@ def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
         },
         "routes_graph.json": {
             "nodes": [
+                {"id": "/admin/home", "route": "/admin/home"},
                 {
-                    "route": "/admin/tracking",
-                    "source_module": "Tracking",
-                }
+                    "id": "/admin/home#state:tracking",
+                    "route": "/admin/home#state:tracking",
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/admin/home",
+                        "path": {
+                            "depth": 1,
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Tracking",
+                                        "selector": "#tracking",
+                                    }
+                                }
+                            ],
+                        },
+                    },
+                },
+                {"id": "/admin/tracking", "route": "/admin/tracking"},
             ],
-            "edges": [],
+            "edges": [
+                {
+                    "source": "/admin/home",
+                    "target": "/admin/home#state:tracking",
+                    "label": "Tracking",
+                    "kind": "ui_event",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "#tracking",
+                    },
+                },
+                {
+                    "source": "/admin/home#state:tracking",
+                    "target": "/admin/tracking",
+                    "label": "Tracking",
+                    "kind": "ui_event_discovered_href",
+                    "metadata": {},
+                },
+            ],
         },
     }
     for name, payload in artifacts.items():
