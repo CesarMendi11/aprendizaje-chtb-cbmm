@@ -6,6 +6,14 @@ from .canonical_materialization_service import (
 from .chroma_sync_service import ChromaSyncService, SafeDocumentBuilder
 from .effective_knowledge_service import EffectiveKnowledgeService
 from .knowledge_review_service import KnowledgeReviewService
+from .knowledge_promotion_service import (
+    KnowledgePromotionBlockedError,
+    KnowledgePromotionError,
+    KnowledgePromotionService,
+    PromotionAssessment,
+    PromotionBlocker,
+    PromotionResult,
+)
 from .module_subtree_resolver import (
     ModuleCrawlSubtree,
     ModuleSubtreeResolutionError,
@@ -35,6 +43,12 @@ __all__ = [
     "ChromaSyncService",
     "EffectiveKnowledgeService",
     "KnowledgeReviewService",
+    "KnowledgePromotionBlockedError",
+    "KnowledgePromotionError",
+    "KnowledgePromotionService",
+    "PromotionAssessment",
+    "PromotionBlocker",
+    "PromotionResult",
     "ModuleCrawlSubtree",
     "ModuleSubtreeResolutionError",
     "ModuleSubtreeResolver",

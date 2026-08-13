@@ -4,6 +4,11 @@ import re
 from typing import Any
 
 SENSITIVE_REGIONS = {"volatile", "header", "session", "user", "authentication"}
+
+CANONICAL_ID = re.compile(
+    r"^(?:erp|module|screen|ui_state|field|control|table|table_column|link|event|transition|evidence|semantic)(?::[A-Za-z0-9._-]+)+$",
+    re.I,
+)
 PATTERNS = (
     re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.I),
     re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
@@ -44,6 +49,11 @@ def sanitize_text(value: Any, limit: int = 4000) -> tuple[str, int]:
 
 def contains_sensitive(value: Any) -> bool:
     text = str(value or "")
+    # Canonical IDs are structural identifiers, not observed business values.
+    # Their hash suffix can be purely numeric by chance, so numeric PII rules
+    # must not classify a valid namespaced canonical ID as sensitive.
+    if CANONICAL_ID.fullmatch(text):
+        return False
     return any(pattern.search(text) for pattern in (*PATTERNS, *VOLATILE))
 
 

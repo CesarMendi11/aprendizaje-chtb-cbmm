@@ -119,6 +119,9 @@ def test_safe_json_does_not_treat_numeric_runs_inside_canonical_ids_as_sensitive
     payload = {
         "screen_id": "screen:8835443310af",
         "module_id": "module:1234567890ab",
+        # A stable hash can be numeric-only by chance; it is still an ID.
+        "event_id": "event:344365453141",
+        "transition_id": "transition:test:1234567890123",
     }
 
     assert validate_safe_json(payload) == payload

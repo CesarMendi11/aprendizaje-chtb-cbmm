@@ -10,6 +10,7 @@ def test_expected_database_tables_and_constraints():
         "erp_systems",
         "import_runs",
         "knowledge_versions",
+        "knowledge_version_promotions",
         "knowledge_items",
         "pipeline_jobs",
         "review_actions",
@@ -22,6 +23,20 @@ def test_expected_database_tables_and_constraints():
         item.c.keys()
     )
     assert any(c.name == "uq_knowledge_items_knowledge_version_id" for c in item.constraints)
+
+    promotion = Base.metadata.tables["knowledge_version_promotions"]
+    assert {
+        "knowledge_version_id",
+        "previous_active_version_id",
+        "reviewer_subject",
+        "reason",
+        "source",
+        "gate_snapshot",
+    } <= set(promotion.c.keys())
+    assert any(
+        c.name == "uq_knowledge_version_promotions_version"
+        for c in promotion.constraints
+    )
 
 
 def test_metadata_is_sqlite_portable():

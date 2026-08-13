@@ -105,6 +105,10 @@ class KnowledgeVersionRecord(TimestampMixin, Base):
         back_populates="knowledge_version"
     )
     sync_jobs: Mapped[list["SyncJob"]] = relationship(back_populates="knowledge_version")
+    promotions: Mapped[list["KnowledgeVersionPromotion"]] = relationship(
+        back_populates="knowledge_version",
+        foreign_keys="KnowledgeVersionPromotion.knowledge_version_id",
+    )
 
 
 class KnowledgeItem(TimestampMixin, Base):
@@ -297,6 +301,42 @@ class SemanticReviewAction(TimestampMixin, Base):
     semantic_proposal: Mapped[SemanticProposal] = relationship(back_populates="review_actions")
 
 
+class KnowledgeVersionPromotion(TimestampMixin, Base):
+    __tablename__ = "knowledge_version_promotions"
+    __table_args__ = (
+        UniqueConstraint(
+            "knowledge_version_id",
+            name="uq_knowledge_version_promotions_version",
+        ),
+        Index(
+            "ix_knowledge_version_promotions_created_at",
+            "created_at",
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    knowledge_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    previous_active_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT")
+    )
+    reviewer_subject: Mapped[str] = mapped_column(String(240), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(60), nullable=False)
+    gate_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+    knowledge_version: Mapped[KnowledgeVersionRecord] = relationship(
+        back_populates="promotions",
+        foreign_keys=[knowledge_version_id],
+    )
+
+
+@event.listens_for(KnowledgeVersionPromotion, "before_update")
+@event.listens_for(KnowledgeVersionPromotion, "before_delete")
+def _immutable_knowledge_version_promotions(*_: Any) -> None:
+    raise ValueError("knowledge_version_promotions es un historial inmutable")
+
+
 class PipelineJob(TimestampMixin, Base):
     __tablename__ = "pipeline_jobs"
     __table_args__ = (
@@ -426,6 +466,7 @@ __all__ = [
     "ReviewAction",
     "SemanticProposal",
     "SemanticReviewAction",
+    "KnowledgeVersionPromotion",
     "PipelineJob",
     "SyncJob",
 ]
