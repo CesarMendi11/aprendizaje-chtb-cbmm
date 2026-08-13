@@ -24,6 +24,7 @@ from src.database.models import (
     SyncJob,
 )
 from src.knowledge.canonical.enums import ReviewStatus
+from src.knowledge.canonical.privacy import is_safe_navigation_metadata
 
 from .canonical_materialization_service import (
     CanonicalKnowledgeMaterializationError,
@@ -220,6 +221,7 @@ class KnowledgePromotionService:
 
         required_counts, all_counts, review_blockers = self._review_state(version.id)
         blockers.extend(review_blockers)
+        blockers.extend(self._module_crawl_readiness(version.id))
 
         existing_sync_jobs = list(
             self.session.scalars(
@@ -381,6 +383,53 @@ class KnowledgePromotionService:
                 )
 
         return required_counts, dict(sorted(all_counts.items())), blockers
+
+    def _module_crawl_readiness(self, version_id: uuid.UUID) -> list[PromotionBlocker]:
+        modules = list(
+            self.session.scalars(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == version_id,
+                    KnowledgeItem.entity_type == "module",
+                )
+            )
+        )
+        invalid = 0
+        for item in modules:
+            payload = dict(item.source_payload or {})
+            navigation_path = payload.get("navigation_path")
+            labels = (
+                [str(value or "").strip() for value in navigation_path]
+                if isinstance(navigation_path, (list, tuple))
+                else []
+            )
+            labels = [value for value in labels if value]
+
+            metadata = payload.get("metadata")
+            if not isinstance(metadata, dict):
+                invalid += 1
+                continue
+            origin_value = metadata.get("navigation_origin_path")
+            if not is_safe_navigation_metadata("navigation_origin_path", origin_value):
+                invalid += 1
+                continue
+            origins = [
+                value.strip()
+                for value in str(origin_value).split("||")
+                if value.strip()
+            ]
+            if not labels or len(labels) != len(origins):
+                invalid += 1
+
+        if not invalid:
+            return []
+        return [
+            PromotionBlocker(
+                "module_navigation_unreproducible",
+                "Todos los módulos de una versión promovible deben conservar navigation_path y navigation_origin_path reproducibles.",
+                count=invalid,
+                entity_type="module",
+            )
+        ]
 
     def _pipeline_provenance(self, version: KnowledgeVersionRecord) -> tuple[PipelineJob | None, PipelineJob | None]:
         import_job = self.session.scalar(

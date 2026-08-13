@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
 import src.database.models  # noqa: F401
@@ -185,3 +185,33 @@ def test_promotion_is_fail_closed_after_version_is_already_active(session, stage
                 reason="No debe promoverse dos veces.",
                 expected_knowledge_version=assessment.knowledge_version,
             )
+
+
+def test_bootstrap_gate_blocks_module_without_reproducible_navigation(session, staged):
+    module = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == staged,
+            KnowledgeItem.entity_type == "module",
+        )
+    )
+    assert module is not None
+    payload = dict(module.source_payload)
+    payload["metadata"] = {}
+    session.execute(
+        update(KnowledgeItem)
+        .where(KnowledgeItem.id == module.id)
+        .values(source_payload=payload)
+    )
+    session.commit()
+
+    _approve_required(session, staged)
+    assessment = KnowledgePromotionService(session).assess(staged)
+
+    assert assessment.promotable is False
+    blocker = next(
+        item
+        for item in assessment.blockers
+        if item.code == "module_navigation_unreproducible"
+    )
+    assert blocker.entity_type == "module"
+    assert blocker.count == 1

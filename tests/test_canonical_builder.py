@@ -608,3 +608,156 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
     assert second_modules["Tracking"].id == tracking.id
     assert second_modules["Integrations"].id == integrations.id
     assert first.knowledge_version == second.knowledge_version
+
+
+def test_realistic_long_menu_selectors_survive_navigation_privacy_filter():
+    profile = {
+        "erp": {"name": "Fictional ERP", "code": "fictional"},
+        "navigation": {"home_url": "/app/home"},
+    }
+    root_selector = (
+        "app-root > layout > admin-layout > fuse-vertical-navigation > div > "
+        "div:nth-of-type(2) > fuse-vertical-navigation-group-item > "
+        "fuse-vertical-navigation-collapsable-item:nth-of-type(10)"
+    )
+    child_selector = (
+        "admin-layout > fuse-vertical-navigation > div > div:nth-of-type(2) > "
+        "fuse-vertical-navigation-group-item > "
+        "fuse-vertical-navigation-collapsable-item:nth-of-type(10) > "
+        "div:nth-of-type(2) > "
+        "fuse-vertical-navigation-collapsable-item:nth-of-type(4)"
+    )
+    root_state = "/app/home#state:tramites"
+    child_state = "/app/home#state:rastrear"
+    artifacts = {
+        "screen_index.json": {
+            "screens": [
+                {"route": "/app/home", "title": "Home"},
+                {"route": "/app/tramites/main", "title": "Tramites"},
+                {"route": "/app/tramites/rastrear", "title": "Rastrear"},
+            ]
+        },
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home"},
+                {
+                    "id": root_state,
+                    "route": root_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Tramites",
+                                        "selector": root_selector,
+                                    }
+                                }
+                            ]
+                        },
+                    },
+                },
+                {
+                    "id": child_state,
+                    "route": child_state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Tramites",
+                                        "selector": root_selector,
+                                    }
+                                },
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Rastrear",
+                                        "selector": child_selector,
+                                    }
+                                },
+                            ]
+                        },
+                    },
+                },
+                {"id": "/app/tramites/main", "route": "/app/tramites/main"},
+                {"id": "/app/tramites/rastrear", "route": "/app/tramites/rastrear"},
+            ],
+            "edges": [
+                {"source": root_state, "target": "/app/tramites/main", "metadata": {}},
+                {"source": child_state, "target": "/app/tramites/rastrear", "metadata": {}},
+            ],
+        },
+        "state_registry.json": {"states": []},
+        "state_flow_graph.json": {"states": [], "transitions": []},
+        "event_policy_audit.json": {"screens": []},
+        "ui_event_execution_audit.json": {},
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(profile, artifacts)
+    modules = {module.name: module for module in kb.modules}
+
+    assert modules["Tramites"].metadata["navigation_origin"] == root_selector
+    assert modules["Tramites"].metadata["navigation_origin_path"] == root_selector
+    assert modules["Rastrear"].metadata["navigation_origin"] == child_selector
+    assert modules["Rastrear"].metadata["navigation_origin_path"] == (
+        f"{root_selector} || {child_selector}"
+    )
+
+
+def test_missing_menu_selector_is_not_persisted_as_replay_locator():
+    profile = {
+        "erp": {"name": "Fictional ERP", "code": "fictional"},
+        "navigation": {"home_url": "/app/home"},
+    }
+    state = "/app/home#state:missing-selector"
+    artifacts = {
+        "screen_index.json": {
+            "screens": [
+                {"route": "/app/home", "title": "Home"},
+                {"route": "/app/module/a", "title": "A"},
+            ]
+        },
+        "routes_graph.json": {
+            "nodes": [
+                {"id": "/app/home", "route": "/app/home"},
+                {
+                    "id": state,
+                    "route": state,
+                    "metadata": {
+                        "kind": "ui_state",
+                        "base_route": "/app/home",
+                        "path": {
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Module A",
+                                        "selector": "",
+                                    }
+                                }
+                            ]
+                        },
+                    },
+                },
+                {"id": "/app/module/a", "route": "/app/module/a"},
+            ],
+            "edges": [
+                {"source": state, "target": "/app/module/a", "metadata": {}}
+            ],
+        },
+        "state_registry.json": {"states": []},
+        "state_flow_graph.json": {"states": [], "transitions": []},
+        "event_policy_audit.json": {"screens": []},
+        "ui_event_execution_audit.json": {},
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(profile, artifacts)
+    module = next(item for item in kb.modules if item.name == "Module A")
+
+    assert module.metadata == {}

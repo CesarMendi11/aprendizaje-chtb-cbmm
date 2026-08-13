@@ -288,7 +288,15 @@ class CanonicalKnowledgeBuilder:
                         "parent_key": key[:-1] or None,
                         "name": names[index],
                         "navigation_path": names[: index + 1],
+                        # ``origin_path`` is identity provenance and may use a
+                        # label fallback when the extractor had no selector.
                         "origin_path": list(key),
+                        # Replay provenance must never use that fallback: the
+                        # MODULE crawler clicks these values as CSS selectors.
+                        "selector_path": [
+                            str(step.get("selector") or "").strip()
+                            for step in steps[: index + 1]
+                        ],
                         "depth": index,
                         "direct_routes": set(),
                         "subtree_routes": set(),
@@ -543,20 +551,17 @@ class CanonicalKnowledgeBuilder:
                     ],
                     evidence_ids=[ev],
                     metadata=safe_metadata(
-                        {
-                            "navigation_origin": (
-                                candidate[
-                                    "origin_path"
-                                ][-1]
-                            ),
-                            "navigation_origin_path": (
-                                " || ".join(
-                                    candidate[
-                                        "origin_path"
-                                    ]
-                                )[:500]
-                            ),
-                        }
+                        (
+                            {
+                                "navigation_origin": candidate["selector_path"][-1],
+                                "navigation_origin_path": " || ".join(
+                                    candidate["selector_path"]
+                                ),
+                            }
+                            if candidate["selector_path"]
+                            and all(candidate["selector_path"])
+                            else {}
+                        )
                     ),
                 )
             )

@@ -141,3 +141,52 @@ def test_safe_json_still_rejects_standalone_numeric_business_identifiers():
             raise AssertionError(
                 f"El identificador concreto debía rechazarse: {value!r}"
             )
+
+
+def test_safe_json_accepts_generated_structural_navigation_selector():
+    selector = (
+        "app-root > layout > admin-layout > fuse-vertical-navigation > div > "
+        "div:nth-of-type(2) > fuse-vertical-navigation-group-item > "
+        "fuse-vertical-navigation-collapsable-item:nth-of-type(10)"
+    )
+
+    payload = {
+        "metadata": {
+            "navigation_origin": selector,
+            "navigation_origin_path": selector,
+        }
+    }
+
+    assert validate_safe_json(payload) == payload
+
+
+def test_safe_json_does_not_whitelist_plain_long_secret_as_navigation_origin():
+    payload = {
+        "metadata": {
+            "navigation_origin": "abcdefghijklmnopqrstuvwxyz1234567890",
+            "navigation_origin_path": "abcdefghijklmnopqrstuvwxyz1234567890",
+        }
+    }
+
+    try:
+        validate_safe_json(payload)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Un token largo no debe aceptarse como selector estructural")
+
+
+def test_safe_json_rejects_long_secret_embedded_in_selector_shaped_value():
+    payload = {
+        "metadata": {
+            "navigation_origin": "div > abcdefghijklmnopqrstuvwxyz1234567890",
+            "navigation_origin_path": "div > abcdefghijklmnopqrstuvwxyz1234567890",
+        }
+    }
+
+    try:
+        validate_safe_json(payload)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Un token opaco no debe disfrazarse de selector CSS")

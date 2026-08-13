@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 from src.knowledge.canonical.ids import content_hash
-from src.knowledge.canonical.privacy import contains_sensitive
+from src.knowledge.canonical.privacy import contains_sensitive, is_safe_navigation_metadata
 
 VOLATILE_KEYS = {
     "generated_at",
@@ -75,7 +75,7 @@ def validate_safe_json(payload: Any) -> dict[str, Any]:
         }:
             raise ValueError(f"Contenido sensible no permitido: {key}")
         if isinstance(value, str) and (
-            contains_sensitive(value)
+            (contains_sensitive(value) and not is_safe_navigation_metadata(key, value))
             or "<script" in value.casefold()
             or "javascript:" in value.casefold()
         ):
