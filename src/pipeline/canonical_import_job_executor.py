@@ -70,6 +70,18 @@ class CanonicalImportJobExecutor:
 
         source_canonical_job_id = self._uuid_param(params, "source_canonical_job_id")
         source_crawl_job_id = self._uuid_param(params, "source_crawl_job_id")
+        requires_active_base = bool(params.get("requires_active_base"))
+        base_version_id = (
+            self._uuid_param(params, "base_knowledge_version_id")
+            if requires_active_base
+            else None
+        )
+        base_version_name = str(params.get("base_knowledge_version") or "").strip()
+        pinned_erp_id = str(params.get("erp_id") or "").strip()
+        if requires_active_base and (not base_version_name or not pinned_erp_id):
+            raise CanonicalImportJobExecutionError(
+                "canonical_import merged requiere versión base y ERP fijados"
+            )
         run_root = (self.runs_root / str(source_crawl_job_id)).resolve()
 
         emit(
@@ -117,6 +129,27 @@ class CanonicalImportJobExecutor:
             raise CanonicalImportJobExecutionError(
                 "La versión canónica no coincide con el job fuente"
             )
+        if requires_active_base and knowledge.erp_system.id != pinned_erp_id:
+            raise CanonicalImportJobExecutionError(
+                "El canonical merged pertenece a un ERP distinto de su base fijada"
+            )
+        if requires_active_base:
+            merge_context = manifest_payload.get("merge")
+            expected_target = str(params.get("merged_target_module_id") or "").strip()
+            if not isinstance(merge_context, dict) or (
+                str(merge_context.get("base_knowledge_version_id") or "")
+                != str(base_version_id)
+                or str(merge_context.get("base_knowledge_version") or "")
+                != base_version_name
+                or str(merge_context.get("erp_id") or "") != pinned_erp_id
+                or (
+                    expected_target
+                    and str(merge_context.get("target_module_id") or "") != expected_target
+                )
+            ):
+                raise CanonicalImportJobExecutionError(
+                    "El manifest merged no conserva la provenance base esperada"
+                )
 
         emit(
             "validating_import",
@@ -138,6 +171,21 @@ class CanonicalImportJobExecutor:
         )
         try:
             with self.session_factory.begin() as session:
+                if requires_active_base:
+                    base = session.scalar(
+                        select(KnowledgeVersionRecord)
+                        .where(KnowledgeVersionRecord.id == base_version_id)
+                        .with_for_update()
+                    )
+                    if (
+                        base is None
+                        or base.status != KnowledgeVersionStatus.ACTIVE
+                        or base.knowledge_version != base_version_name
+                        or base.erp_id != pinned_erp_id
+                    ):
+                        raise CanonicalImportJobExecutionError(
+                            "La versión base fijada del canonical merged ya no está ACTIVE"
+                        )
                 result = CanonicalImportService(session).import_canonical(
                     knowledge_path,
                     manifest_path,
@@ -195,6 +243,10 @@ class CanonicalImportJobExecutor:
             "sync_jobs_created": False,
             "sync_jobs_present": int(sync_jobs),
             "staging_ready": version_status == KnowledgeVersionStatus.IMPORTED,
+            "base_knowledge_version_id": (
+                str(base_version_id) if base_version_id is not None else None
+            ),
+            "base_knowledge_version": base_version_name or None,
             "knowledge_path": _relative_project_path(self.project_root, knowledge_path),
             "manifest_path": _relative_project_path(self.project_root, manifest_path),
             "build_report_path": _relative_project_path(

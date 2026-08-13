@@ -13,6 +13,7 @@ from src.database.services import (
 )
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecutor
+from src.pipeline.canonical_merge_job_executor import CanonicalMergeJobExecutor
 from src.pipeline.chroma_sync_job_executor import ChromaSyncJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
 from src.pipeline.neo4j_sync_job_executor import Neo4jSyncJobExecutor
@@ -41,6 +42,7 @@ class PipelineJobRunner:
         crawl_executor: CrawlJobExecutor | None = None,
         canonical_build_executor: CanonicalBuildJobExecutor | None = None,
         canonical_import_executor: CanonicalImportJobExecutor | None = None,
+        canonical_merge_executor: CanonicalMergeJobExecutor | None = None,
         neo4j_sync_executor: Neo4jSyncJobExecutor | None = None,
         chroma_sync_executor: ChromaSyncJobExecutor | None = None,
         semantic_inference_executor: SemanticInferenceJobExecutor | None = None,
@@ -51,6 +53,8 @@ class PipelineJobRunner:
             PipelineJobKind.CRAWL: crawl_executor or CrawlJobExecutor(),
             PipelineJobKind.CANONICAL_BUILD: canonical_build_executor
             or CanonicalBuildJobExecutor(),
+            PipelineJobKind.CANONICAL_MERGE: canonical_merge_executor
+            or CanonicalMergeJobExecutor(session_factory),
             PipelineJobKind.CANONICAL_IMPORT: canonical_import_executor
             or CanonicalImportJobExecutor(session_factory),
             PipelineJobKind.NEO4J_SYNC: neo4j_sync_executor

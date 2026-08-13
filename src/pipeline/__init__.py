@@ -2,6 +2,10 @@ from .canonical_build_job_executor import (
     CanonicalBuildJobExecutionError,
     CanonicalBuildJobExecutor,
 )
+from .canonical_merge_job_executor import (
+    CanonicalMergeJobExecutionError,
+    CanonicalMergeJobExecutor,
+)
 from .canonical_import_job_executor import (
     CanonicalImportJobExecutionError,
     CanonicalImportJobExecutor,
@@ -23,6 +27,8 @@ from .pipeline_job_runner import PipelineJobRunner
 __all__ = [
     "CanonicalBuildJobExecutionError",
     "CanonicalBuildJobExecutor",
+    "CanonicalMergeJobExecutionError",
+    "CanonicalMergeJobExecutor",
     "CanonicalImportJobExecutionError",
     "CanonicalImportJobExecutor",
     "ChromaSyncJobExecutionError",

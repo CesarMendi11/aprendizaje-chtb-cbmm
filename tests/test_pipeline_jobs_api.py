@@ -631,3 +631,148 @@ def test_semantic_inference_job_rejects_unreviewed_or_unknown_screen(api):
     )
     assert invalid.status_code == 422
     assert dispatcher.submitted == []
+
+
+def test_create_canonical_merge_pins_partial_to_exact_active_base(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="module",
+            target="module:tracking",
+            profile_name="cbmm",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+            parameters={"source_crawl_job_id": str(crawl_id)},
+        )
+        source_id = source.id
+        service.start(source.id, stage="building", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
+                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "knowledge_version": "partial-v1",
+                "snapshot_mode": "partial",
+                "snapshot_scope": "module",
+                "target_module_id": "module:tracking",
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-merge",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_merge"
+    assert body["scope"] == "module"
+    assert body["target"] == "module:tracking"
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"]["base_knowledge_version_id"] == version_id
+    assert body["parameters"]["base_knowledge_version"] == "active-v1"
+    assert body["parameters"]["expected_partial_knowledge_version"] == "partial-v1"
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_merge_rejects_when_pinned_base_is_no_longer_active(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="module",
+            target="module:tracking",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+        )
+        source_id = source.id
+        service.start(source.id, stage="building")
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "partial-v1",
+                "snapshot_mode": "partial",
+                "snapshot_scope": "module",
+                "target_module_id": "module:tracking",
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+        session.get(KnowledgeVersionRecord, uuid.UUID(version_id)).status = (
+            KnowledgeVersionStatus.ARCHIVED
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-merge",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 409
+    assert "ACTIVE" in response.json()["detail"]
+    assert dispatcher.submitted == []
+
+
+def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_base(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_merge",
+            scope="module",
+            target="module:tracking",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+        )
+        source_id = source.id
+        service.start(source.id, stage="merging", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/knowledge.json",
+                "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/manifest.json",
+                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/build_report.json",
+                "knowledge_version": "merged-v2",
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+                "target_module_id": "module:tracking",
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_import"
+    assert body["scope"] == "full"
+    assert body["target"] is None
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"]["requires_active_base"] is True
+    assert body["parameters"]["base_knowledge_version_id"] == version_id
+    assert body["parameters"]["base_knowledge_version"] == "active-v1"
+    assert body["parameters"]["merged_target_module_id"] == "module:tracking"
+    assert str(dispatcher.submitted[-1]) == body["id"]

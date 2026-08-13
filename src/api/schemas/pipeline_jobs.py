@@ -97,6 +97,10 @@ class CanonicalBuildPipelineJobCreateRequest(BaseModel):
     source_crawl_job_id: uuid.UUID
 
 
+class CanonicalMergePipelineJobCreateRequest(BaseModel):
+    source_canonical_job_id: uuid.UUID
+
+
 class CanonicalImportPipelineJobCreateRequest(BaseModel):
     source_canonical_job_id: uuid.UUID
 

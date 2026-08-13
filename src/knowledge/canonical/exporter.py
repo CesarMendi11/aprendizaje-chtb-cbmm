@@ -18,6 +18,7 @@ class CanonicalKnowledgeExporter:
         pretty=True,
         build_report=None,
         snapshot_context: CanonicalSnapshotContext | None = None,
+        manifest_metadata: dict | None = None,
     ):
         issues = CanonicalKnowledgeValidator().validate(knowledge)
         errors = [item for item in issues if item.severity == "error"]
@@ -31,7 +32,12 @@ class CanonicalKnowledgeExporter:
         self._write(output / "knowledge.json", payload, kwargs)
         self._write(
             output / "manifest.json",
-            create_manifest(knowledge, payload, snapshot_context=snapshot_context),
+            create_manifest(
+                knowledge,
+                payload,
+                snapshot_context=snapshot_context,
+                extra_metadata=manifest_metadata,
+            ),
             kwargs,
         )
         self._write(output / "build_report.json", build_report or {}, kwargs)

@@ -70,6 +70,29 @@ class FakeCanonicalBuildExecutor:
 
 
 
+
+
+class FakeCanonicalMergeExecutor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            "full_candidate_ready",
+            {
+                "work_units": 4,
+                "progress_total": 4,
+                "knowledge_version": "merged-test",
+            },
+        )
+        return {
+            "knowledge_version": "merged-test",
+            "source_canonical_job_id": parameters["source_canonical_job_id"],
+            "snapshot_mode": "full",
+        }
+
+
 class FakeCanonicalImportExecutor:
     def __init__(self):
         self.calls = []
@@ -351,6 +374,34 @@ def test_runner_dispatches_canonical_build_and_persists_total_progress():
         assert stored.progress_total == 4
         assert stored.result_payload["knowledge_version"] == "canonical-test"
         assert stored.checkpoint["knowledge_version"] == "canonical-test"
+    assert len(executor.calls) == 1
+    engine.dispose()
+
+
+
+
+def test_runner_dispatches_canonical_merge_executor():
+    engine, factory = build_factory()
+    source_id = "00000000-0000-0000-0000-000000000790"
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="canonical_merge",
+            scope="module",
+            target="module:tracking",
+            parameters={"source_canonical_job_id": source_id},
+        )
+        job_id = job.id
+
+    executor = FakeCanonicalMergeExecutor()
+    PipelineJobRunner(factory, canonical_merge_executor=executor).run(job_id)
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.progress_current == 4
+        assert stored.progress_total == 4
+        assert stored.result_payload["knowledge_version"] == "merged-test"
     assert len(executor.calls) == 1
     engine.dispose()
 

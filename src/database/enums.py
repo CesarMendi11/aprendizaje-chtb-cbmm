@@ -36,6 +36,7 @@ class SemanticType(StrEnum):
 class PipelineJobKind(StrEnum):
     CRAWL = "crawl"
     CANONICAL_BUILD = "canonical_build"
+    CANONICAL_MERGE = "canonical_merge"
     CANONICAL_IMPORT = "canonical_import"
     NEO4J_SYNC = "neo4j_sync"
     CHROMA_SYNC = "chroma_sync"
