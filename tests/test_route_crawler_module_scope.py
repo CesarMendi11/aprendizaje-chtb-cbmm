@@ -366,3 +366,170 @@ def test_module_home_branch_keeps_expand_menu_categories_after_pinned_entry():
     state = module_menu_state('#sales', '#tracking', '#integrations')
 
     assert crawler._categories_for_state(state) == {'expand_menu'}
+
+
+def test_module_known_route_revealed_after_capture_keeps_structural_edge():
+    crawler = object.__new__(RouteCrawler)
+    crawler.route_scope = {
+        '/admin/tracking',
+        '/admin/integrations/external',
+    }
+    crawler.module_boundary = boundary()
+    crawler._module_dynamic_routes = set()
+    crawler.policy = FakePolicy()
+    crawler.discovery = FakeDiscovery()
+    crawler.routes_graph = FakeRoutesGraph()
+    crawler.routes_graph.screens.add('/admin/integrations/external')
+    crawler.frontier = Frontier()
+    crawler.frontier.mark_visited('/admin/integrations/external')
+    crawler.home_route = '/admin/home'
+
+    target_state = module_menu_state('#sales', '#tracking', '#integrations')
+    result = SimpleNamespace(
+        candidate={'event_category': 'expand_menu'},
+        event=menu_event('Integrations', '#integrations'),
+    )
+
+    crawler._register_ui_event_discovered_links(
+        source_route='/admin/home#state:integrations',
+        source_screen_data={'links': []},
+        after_screen_data={
+            'links': [
+                {
+                    'route': '/admin/integrations/external',
+                    'text': 'External',
+                    'region': 'global_navigation',
+                    'selector': '#external',
+                    'href': '/admin/integrations/external',
+                },
+            ],
+        },
+        target_state=target_state,
+        result=result,
+        depth=0,
+    )
+
+    assert crawler.routes_graph.transitions == [
+        {
+            'source': '/admin/home#state:integrations',
+            'target': '/admin/integrations/external',
+            'label': 'External',
+            'kind': 'module_scope_discovered_href',
+            'metadata': {
+                'selector': '#external',
+                'href': '/admin/integrations/external',
+                'region': 'global_navigation',
+            },
+        }
+    ]
+    assert not crawler.frontier.has_pending()
+    assert crawler._module_dynamic_routes == set()
+
+
+def test_module_does_not_record_known_route_before_selected_branch_is_entered():
+    crawler = object.__new__(RouteCrawler)
+    crawler.route_scope = {
+        '/admin/tracking',
+        '/admin/integrations/external',
+    }
+    crawler.module_boundary = boundary()
+    crawler._module_dynamic_routes = set()
+    crawler.policy = FakePolicy()
+    crawler.discovery = FakeDiscovery()
+    crawler.routes_graph = FakeRoutesGraph()
+    crawler.frontier = Frontier()
+    crawler.home_route = '/admin/home'
+
+    parent_state = module_menu_state('#sales')
+
+    crawler._register_module_event_discovered_links(
+        source_route='/admin/home#state:sales',
+        source_screen_data={'links': []},
+        after_screen_data={
+            'links': [
+                {
+                    'route': '/admin/tracking',
+                    'text': 'Tracking',
+                    'region': 'global_navigation',
+                    'selector': '#tracking-link',
+                    'href': '/admin/tracking',
+                },
+            ],
+        },
+        target_state=parent_state,
+        event_category='expand_menu',
+        depth=0,
+    )
+
+    assert crawler.routes_graph.transitions == []
+    assert not crawler.frontier.has_pending()
+
+
+def test_pinned_module_entry_records_route_revealed_by_final_expand():
+    crawler = object.__new__(RouteCrawler)
+    crawler.navigator = FakeNavigator()
+    crawler.page = FakePage()
+    crawler.page_wait_ms = 0
+    crawler.policy = FakePolicy()
+    crawler.discovery = FakeDiscovery()
+    crawler.frontier = Frontier()
+    crawler.route_scope = set(boundary().known_screen_routes)
+    crawler.module_boundary = boundary()
+    crawler._module_dynamic_routes = set()
+    crawler.state_registry = StateRegistry()
+    crawler.state_flow_graph = StateFlowGraphBuilder()
+    crawler.routes_graph = RoutesGraphBuilder()
+    crawler.ui_event_explorer = FakeUIEventExplorer()
+    crawler.home_route = '/admin/home'
+
+    observations = iter(
+        [
+            FakeObservation(
+                signature('home', 'Home'),
+                {'path': '/admin/home', 'links': []},
+            ),
+            FakeObservation(
+                signature('sales', 'Sales'),
+                {'path': '/admin/home', 'links': []},
+            ),
+            FakeObservation(
+                signature('tracking', 'Tracking'),
+                {
+                    'path': '/admin/home',
+                    'links': [
+                        {
+                            'route': '/admin/tracking',
+                            'text': 'Tracking screen',
+                            'region': 'global_navigation',
+                            'selector': '#tracking-screen',
+                            'href': '/admin/tracking',
+                        }
+                    ],
+                },
+            ),
+        ]
+    )
+    crawler._observe_screen = lambda **_kwargs: next(observations)
+
+    _state, node_id = crawler._enter_module_branch(boundary())
+
+    graph = crawler.routes_graph.to_dict()
+    route_edges = [
+        edge
+        for edge in graph['edges']
+        if edge['kind'] == 'module_scope_discovered_href'
+    ]
+
+    assert route_edges == [
+        {
+            'source': node_id,
+            'target': '/admin/tracking',
+            'label': 'Tracking screen',
+            'kind': 'module_scope_discovered_href',
+            'metadata': {
+                'selector': '#tracking-screen',
+                'href': '/admin/tracking',
+                'region': 'global_navigation',
+            },
+        }
+    ]

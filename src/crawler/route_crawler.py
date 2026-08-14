@@ -308,6 +308,7 @@ class RouteCrawler:
             },
         )
         current_node_id = home_route
+        current_observation = observation
 
         for step in boundary.entry_steps:
             interaction = self.ui_event_explorer.interaction_executor.click(step.selector)
@@ -407,6 +408,15 @@ class RouteCrawler:
                     "pinned_navigation": True,
                 },
             )
+            self._register_module_event_discovered_links(
+                source_route=event_node_id,
+                source_screen_data=current_observation.screen_data,
+                after_screen_data=next_observation.screen_data,
+                target_state=target_state,
+                event_category=UIEventType.EXPAND_MENU.value,
+                depth=step.depth - 1,
+            )
+            current_observation = next_observation
             current_state = target_state
             current_node_id = event_node_id
 
@@ -837,6 +847,7 @@ class RouteCrawler:
             repeated_global_link = (
                 region == "global_navigation"
                 and source_route != self.home_route
+                and "#state:" not in source_route
                 and already_known
             )
             if repeated_global_link:
@@ -1113,27 +1124,61 @@ class RouteCrawler:
             )
             return
 
-        before_routes = {
-            self._route_identity(link["route"])
-            for link in self.discovery.discover_allowed_links(source_screen_data)
-        }
-        menu_selectors = self._menu_selectors_from_path(target_state.path)
         event_category = str(
             result.candidate.get("event_category")
             or result.candidate.get("event_type")
             or result.event.event_type.value
         ).strip()
+        self._register_module_event_discovered_links(
+            source_route=source_route,
+            source_screen_data=source_screen_data,
+            after_screen_data=after_screen_data,
+            target_state=target_state,
+            event_category=event_category,
+            depth=depth,
+        )
+
+    def _register_module_event_discovered_links(
+        self,
+        *,
+        source_route: str,
+        source_screen_data: dict[str, Any],
+        after_screen_data: dict[str, Any],
+        target_state: UIState,
+        event_category: str,
+        depth: int,
+    ) -> None:
+        """Registra únicamente href revelados causalmente dentro del MODULE.
+
+        Las rutas conocidas pueden haber sido capturadas antes de explorar los
+        estados del menú. Aun así, la arista estado->pantalla debe conservarse
+        porque es la evidencia estructural que usa el Canonical Builder para
+        reconstruir ownership y jerarquía. Por eso aquí no se descarta una
+        arista solo porque el nodo target ya exista.
+        """
+        if getattr(self, "module_boundary", None) is None:
+            return
+
+        before_routes = {
+            self._route_identity(link["route"])
+            for link in self.discovery.discover_allowed_links(source_screen_data)
+        }
+        menu_selectors = self._menu_selectors_from_path(target_state.path)
+        if not self.module_boundary.is_inside_selected_branch(menu_selectors):
+            return
 
         admitted_links: list[dict[str, Any]] = []
-        for link in after_links:
+        for link in self.discovery.discover_allowed_links(after_screen_data):
             route = link.get("route")
             identity = self._route_identity(route) if route else ""
             newly_revealed = bool(identity and identity not in before_routes)
+            if not newly_revealed:
+                continue
             if not self.module_boundary.allows_discovered_route(
                 route,
                 menu_selectors=menu_selectors,
                 event_category=event_category,
-                newly_revealed=newly_revealed,
+                newly_revealed=True,
             ):
                 continue
             if not self.policy.is_allowed_route(route):
@@ -1151,7 +1196,10 @@ class RouteCrawler:
             links=admitted_links,
             depth=depth,
             reason="module_scope_discovered_href",
-            only_new_targets=True,
+            # Preserve provenance even when a known route node was already
+            # captured earlier in this MODULE run. Frontier de-duplicates the
+            # route, while RoutesGraphBuilder de-duplicates the relation.
+            only_new_targets=False,
         )
 
     def _ui_event_result_in_scope(self, result, source_state: UIState) -> bool:
