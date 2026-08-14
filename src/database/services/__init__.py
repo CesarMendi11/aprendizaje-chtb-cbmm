@@ -5,7 +5,6 @@ from .canonical_materialization_service import (
 )
 from .chroma_sync_service import ChromaSyncService, SafeDocumentBuilder
 from .effective_knowledge_service import EffectiveKnowledgeService
-from .knowledge_review_service import KnowledgeReviewService
 from .knowledge_promotion_service import (
     KnowledgePromotionBlockedError,
     KnowledgePromotionError,
@@ -14,6 +13,7 @@ from .knowledge_promotion_service import (
     PromotionBlocker,
     PromotionResult,
 )
+from .knowledge_review_service import KnowledgeReviewService
 from .module_subtree_resolver import (
     ModuleCrawlSubtree,
     ModuleSubtreeResolutionError,
@@ -33,8 +33,15 @@ from .semantic_chroma_sync_service import (
 )
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
-from .semantic_review_service import SemanticReviewService
 from .semantic_retrieval_authorization_service import SemanticRetrievalAuthorizationService
+from .semantic_review_service import SemanticReviewService
+from .version_diff_service import (
+    VersionDiff,
+    VersionDiffChangeType,
+    VersionDiffError,
+    VersionDiffItem,
+    VersionDiffService,
+)
 
 __all__ = [
     "CanonicalImportService",
@@ -49,6 +56,11 @@ __all__ = [
     "PromotionAssessment",
     "PromotionBlocker",
     "PromotionResult",
+    "VersionDiff",
+    "VersionDiffChangeType",
+    "VersionDiffError",
+    "VersionDiffItem",
+    "VersionDiffService",
     "ModuleCrawlSubtree",
     "ModuleSubtreeResolutionError",
     "ModuleSubtreeResolver",
