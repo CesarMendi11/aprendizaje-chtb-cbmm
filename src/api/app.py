@@ -70,6 +70,9 @@ def create_app(
         from src.api.routes.semantic_review import (
             router as semantic_review_router,
         )
+        from src.api.routes.structural_review_packages import (
+            router as structural_review_packages_router,
+        )
         from src.api.routes.version_diff import router as version_diff_router
         from src.config.database_settings import DatabaseSettings
         from src.database.session import create_engine_from_settings
@@ -133,6 +136,7 @@ def create_app(
         app.include_router(admin_system_router, prefix="/api/admin")
         app.include_router(pipeline_jobs_router, prefix="/api/admin")
         app.include_router(structural_review_router, prefix="/api/admin")
+        app.include_router(structural_review_packages_router, prefix="/api/admin")
         app.include_router(version_promotion_router, prefix="/api/admin")
         app.include_router(version_diff_router, prefix="/api/admin")
     return app

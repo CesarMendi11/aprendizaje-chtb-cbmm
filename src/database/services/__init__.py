@@ -35,6 +35,13 @@ from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
 from .semantic_retrieval_authorization_service import SemanticRetrievalAuthorizationService
 from .semantic_review_service import SemanticReviewService
+from .structural_review_package_service import (
+    StructuralReviewChange,
+    StructuralReviewPackage,
+    StructuralReviewPackageError,
+    StructuralReviewPackageService,
+    StructuralScreenReviewPackage,
+)
 from .version_diff_service import (
     VersionDiff,
     VersionDiffChangeType,
@@ -77,4 +84,9 @@ __all__ = [
     "SemanticProposalService",
     "SemanticReviewService",
     "SemanticRetrievalAuthorizationService",
+    "StructuralReviewChange",
+    "StructuralReviewPackage",
+    "StructuralReviewPackageError",
+    "StructuralReviewPackageService",
+    "StructuralScreenReviewPackage",
 ]
