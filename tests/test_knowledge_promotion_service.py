@@ -29,6 +29,7 @@ from src.database.services import (
     KnowledgePromotionService,
     KnowledgeReviewService,
 )
+from src.knowledge.canonical.enums import ReviewStatus
 from tests.canonical_fixtures import exported_fictional_canonical
 
 
@@ -215,3 +216,72 @@ def test_bootstrap_gate_blocks_module_without_reproducible_navigation(session, s
     )
     assert blocker.entity_type == "module"
     assert blocker.count == 1
+
+
+def test_replacement_gate_uses_reconciled_diff_and_archives_previous_active(tmp_path):
+    from tests.test_version_diff_service import seed_reconciled
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine, expire_on_commit=False) as session:
+        active_id, _, candidate_id, source_id, _ = seed_reconciled(session, tmp_path)
+
+        assessment = KnowledgePromotionService(session).assess(candidate_id)
+        assert assessment.bootstrap_promotion is False
+        assert assessment.promotion_mode == "replacement"
+        assert assessment.promotable is True
+        assert assessment.current_active_version_id == str(active_id)
+        assert assessment.source_reconciliation_job_id == str(source_id)
+        assert assessment.diff_totals is not None
+        session.rollback()
+
+        with session.begin():
+            result = KnowledgePromotionService(session).promote_replacement(
+                candidate_id,
+                reviewer="reviewer:test",
+                reason="Candidate reconciliado y revisado.",
+                expected_knowledge_version=assessment.knowledge_version,
+            )
+
+        active = session.get(KnowledgeVersionRecord, active_id)
+        candidate = session.get(KnowledgeVersionRecord, candidate_id)
+        assert active.status == KnowledgeVersionStatus.ARCHIVED
+        assert candidate.status == KnowledgeVersionStatus.ACTIVE
+        assert result.previous_active_version_id == str(active_id)
+        promotion = session.scalar(
+            select(KnowledgeVersionPromotion).where(
+                KnowledgeVersionPromotion.knowledge_version_id == candidate_id
+            )
+        )
+        assert promotion.previous_active_version_id == active_id
+        jobs = list(
+            session.scalars(select(SyncJob).where(SyncJob.knowledge_version_id == candidate_id))
+        )
+        assert len(jobs) == 2
+        assert {job.status for job in jobs} == {SyncStatus.PENDING}
+
+    engine.dispose()
+
+
+def test_replacement_gate_blocks_unreviewed_new_or_modified_items(tmp_path):
+    from tests.test_version_diff_service import seed_reconciled
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine, expire_on_commit=False) as session:
+        _, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+        candidate_item = session.scalar(
+            select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == candidate_id)
+        )
+        candidate_item.content_hash = "a" * 64
+        candidate_item.current_review_status = ReviewStatus.PENDING_REVIEW
+        session.commit()
+
+        assessment = KnowledgePromotionService(session).assess(candidate_id)
+        assert assessment.promotable is False
+        assert any(
+            blocker.code == "replacement_structural_review_incomplete"
+            for blocker in assessment.blockers
+        )
+
+    engine.dispose()

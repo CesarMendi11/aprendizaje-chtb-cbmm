@@ -30,6 +30,13 @@ from .canonical_materialization_service import (
     CanonicalKnowledgeMaterializationError,
     CanonicalKnowledgeMaterializer,
 )
+from .version_diff_service import (
+    VersionDiff,
+    VersionDiffCandidateOrigin,
+    VersionDiffChangeType,
+    VersionDiffError,
+    VersionDiffService,
+)
 
 PUBLISHABLE_REVIEW_STATUSES = {
     ReviewStatus.APPROVED,
@@ -64,13 +71,19 @@ class PromotionAssessment:
     version_status: str
     promotable: bool
     bootstrap_promotion: bool
+    promotion_mode: str
     current_active_version_id: str | None
     current_active_knowledge_version: str | None
     required_entity_types: tuple[str, ...]
     required_review_counts: dict[str, dict[str, int]]
     all_review_counts: dict[str, int]
+    replacement_review_counts: dict[str, int]
+    diff_totals: dict[str, int] | None
     pipeline_import_job_id: str | None
     source_canonical_job_id: str | None
+    source_reconciliation_job_id: str | None
+    removal_review_set_id: str | None
+    decision_set_hash: str | None
     build_warning_count: int
     blockers: tuple[PromotionBlocker, ...]
     warnings: tuple[str, ...]
@@ -88,17 +101,17 @@ class PromotionResult:
 
 
 class KnowledgePromotionService:
-    """Fail-closed Promotion Gate for governed KnowledgeVersion activation.
-
-    The first vNext implementation intentionally supports only the first ACTIVE
-    version of one ERP. Replacement promotion remains blocked until version diff
-    and replacement-specific conflict rules are implemented.
-    """
+    """Fail-closed bootstrap and replacement Promotion Gate."""
 
     def __init__(self, session: Session):
         self.session = session
 
-    def assess(self, knowledge_version_id: uuid.UUID | str, *, for_update: bool = False) -> PromotionAssessment:
+    def assess(
+        self,
+        knowledge_version_id: uuid.UUID | str,
+        *,
+        for_update: bool = False,
+    ) -> PromotionAssessment:
         version_id = self._uuid(knowledge_version_id)
         version = self._version(version_id, for_update=for_update)
         if version is None:
@@ -116,98 +129,36 @@ class KnowledgePromotionService:
             )
 
         active = self._active_version(version.erp_id, for_update=for_update)
-        if active is not None:
-            blockers.append(
-                PromotionBlocker(
-                    "replacement_promotion_not_implemented",
-                    "Ya existe una versión ACTIVE; la sustitución queda bloqueada hasta implementar diff y Promotion Gate de reemplazo.",
-                )
-            )
+        bootstrap = active is None
+        promotion_mode = "bootstrap" if bootstrap else "replacement"
 
-        import_job, source_job = self._pipeline_provenance(version)
-        if import_job is None:
-            blockers.append(
-                PromotionBlocker(
-                    "missing_pipeline_import_provenance",
-                    "La versión no conserva un canonical_import exitoso y gobernado del pipeline.",
-                )
-            )
-        else:
-            parameters = dict(import_job.parameters or {})
-            result = dict(import_job.result_payload or {})
-            if import_job.scope != PipelineJobScope.FULL:
-                blockers.append(
-                    PromotionBlocker(
-                        "import_scope_not_full",
-                        "El canonical_import de procedencia no tiene scope=FULL.",
-                    )
-                )
-            if parameters.get("activation_mode") != "staging_only":
-                blockers.append(
-                    PromotionBlocker(
-                        "import_not_staging_only",
-                        "La versión no fue importada explícitamente en modo staging_only.",
-                    )
-                )
-            if result.get("staging_ready") is not True:
-                blockers.append(
-                    PromotionBlocker(
-                        "staging_not_ready",
-                        "El canonical_import no declaró staging_ready=true.",
-                    )
-                )
-            if result.get("activation_performed") is not False:
-                blockers.append(
-                    PromotionBlocker(
-                        "unexpected_activation_history",
-                        "La procedencia indica una activación previa o ambigua.",
-                    )
-                )
-            if result.get("knowledge_version") != version.knowledge_version:
-                blockers.append(
-                    PromotionBlocker(
-                        "import_version_mismatch",
-                        "La versión importada no coincide con la KnowledgeVersion objetivo.",
-                    )
-                )
-            if str(result.get("knowledge_version_id") or "") != str(version.id):
-                blockers.append(
-                    PromotionBlocker(
-                        "import_version_id_mismatch",
-                        "El canonical_import no apunta a la KnowledgeVersion objetivo.",
-                    )
-                )
+        import_job: PipelineJob | None = None
+        source_job: PipelineJob | None = None
+        source_reconciliation_job: PipelineJob | None = None
+        removal_review_set_id: str | None = None
+        decision_set_hash: str | None = None
+        diff: VersionDiff | None = None
+        replacement_review_counts: dict[str, int] = {}
 
-        if source_job is None:
-            blockers.append(
-                PromotionBlocker(
-                    "missing_source_canonical_provenance",
-                    "No se pudo verificar el canonical_build/canonical_merge fuente.",
-                )
-            )
+        if bootstrap:
+            import_job, source_job = self._bootstrap_provenance(version, blockers)
+            required_counts, all_counts, review_blockers = self._review_state(version.id)
+            blockers.extend(review_blockers)
+            required_entity_types = BOOTSTRAP_REQUIRED_ENTITY_TYPES
         else:
-            source_result = dict(source_job.result_payload or {})
-            if source_job.status != PipelineJobStatus.SUCCEEDED:
-                blockers.append(
-                    PromotionBlocker(
-                        "source_canonical_not_succeeded",
-                        "El canonical fuente no terminó correctamente.",
-                    )
-                )
-            if source_result.get("snapshot_mode") != "full" or source_result.get("snapshot_scope") != "full":
-                blockers.append(
-                    PromotionBlocker(
-                        "source_snapshot_not_full",
-                        "Promotion Gate requiere un snapshot canónico FULL.",
-                    )
-                )
-            if source_result.get("knowledge_version") != version.knowledge_version:
-                blockers.append(
-                    PromotionBlocker(
-                        "source_canonical_version_mismatch",
-                        "El canonical fuente no coincide con la KnowledgeVersion importada.",
-                    )
-                )
+            (
+                import_job,
+                source_reconciliation_job,
+                diff,
+                removal_review_set_id,
+                decision_set_hash,
+            ) = self._replacement_provenance(version, active, blockers)
+            required_counts = {}
+            required_entity_types = ()
+            all_counts = self._all_review_counts(version.id)
+            if diff is not None:
+                replacement_review_counts, review_blockers = self._replacement_review_state(diff)
+                blockers.extend(review_blockers)
 
         try:
             CanonicalKnowledgeMaterializer(self.session).materialize(version.id)
@@ -219,8 +170,6 @@ class KnowledgePromotionService:
                 )
             )
 
-        required_counts, all_counts, review_blockers = self._review_state(version.id)
-        blockers.extend(review_blockers)
         blockers.extend(self._module_crawl_readiness(version.id))
 
         existing_sync_jobs = list(
@@ -232,7 +181,8 @@ class KnowledgePromotionService:
             blockers.append(
                 PromotionBlocker(
                     "preexisting_projection_jobs",
-                    "Una versión STAGING no debe tener SyncJobs estructurales antes de la promoción.",
+                    "Una versión STAGING no debe tener SyncJobs estructurales "
+                    "antes de la promoción.",
                     count=len(existing_sync_jobs),
                 )
             )
@@ -240,7 +190,8 @@ class KnowledgePromotionService:
         build_warning_count = len(version.build_warnings or [])
         if build_warning_count:
             warnings.append(
-                f"El build conserva {build_warning_count} warning(s); no son bloqueantes porque el canonical validó sin errores."
+                f"El build conserva {build_warning_count} warning(s); no son "
+                "bloqueantes porque el canonical validó sin errores."
             )
 
         return PromotionAssessment(
@@ -249,20 +200,28 @@ class KnowledgePromotionService:
             erp_id=version.erp_id,
             version_status=str(version.status),
             promotable=not blockers,
-            bootstrap_promotion=active is None,
+            bootstrap_promotion=bootstrap,
+            promotion_mode=promotion_mode,
             current_active_version_id=str(active.id) if active else None,
             current_active_knowledge_version=active.knowledge_version if active else None,
-            required_entity_types=BOOTSTRAP_REQUIRED_ENTITY_TYPES,
+            required_entity_types=required_entity_types,
             required_review_counts=required_counts,
             all_review_counts=all_counts,
+            replacement_review_counts=replacement_review_counts,
+            diff_totals=diff.totals if diff is not None else None,
             pipeline_import_job_id=str(import_job.id) if import_job else None,
             source_canonical_job_id=str(source_job.id) if source_job else None,
+            source_reconciliation_job_id=(
+                str(source_reconciliation_job.id) if source_reconciliation_job else None
+            ),
+            removal_review_set_id=removal_review_set_id,
+            decision_set_hash=decision_set_hash,
             build_warning_count=build_warning_count,
             blockers=tuple(blockers),
             warnings=tuple(warnings),
         )
 
-    def promote_bootstrap(
+    def promote(
         self,
         knowledge_version_id: uuid.UUID | str,
         *,
@@ -288,21 +247,33 @@ class KnowledgePromotionService:
 
         version = self._version(self._uuid(knowledge_version_id), for_update=True)
         assert version is not None
-
-        # Re-check after row locks: fail closed if another transaction activated one.
         active = self._active_version(version.erp_id, for_update=True)
-        if active is not None:
-            raise KnowledgePromotionBlockedError(self.assess(version.id, for_update=True))
+
+        if assessment.bootstrap_promotion:
+            if active is not None:
+                raise KnowledgePromotionBlockedError(self.assess(version.id, for_update=True))
+            previous_active = None
+        else:
+            if (
+                active is None
+                or assessment.current_active_version_id is None
+                or str(active.id) != assessment.current_active_version_id
+            ):
+                raise KnowledgePromotionBlockedError(self.assess(version.id, for_update=True))
+            previous_active = active
 
         promotion = KnowledgeVersionPromotion(
             knowledge_version_id=version.id,
-            previous_active_version_id=None,
+            previous_active_version_id=(previous_active.id if previous_active else None),
             reviewer_subject=reviewer[:240],
             reason=reason[:4000],
             source="api",
             gate_snapshot=self._assessment_payload(assessment),
         )
         self.session.add(promotion)
+
+        if previous_active is not None:
+            previous_active.status = KnowledgeVersionStatus.ARCHIVED
         version.status = KnowledgeVersionStatus.ACTIVE
 
         sync_jobs: dict[str, str] = {}
@@ -322,15 +293,272 @@ class KnowledgePromotionService:
             knowledge_version_id=str(version.id),
             knowledge_version=version.knowledge_version,
             erp_id=version.erp_id,
-            previous_active_version_id=None,
+            previous_active_version_id=(str(previous_active.id) if previous_active else None),
             sync_jobs=sync_jobs,
             assessment=assessment,
         )
 
-    def _review_state(self, version_id: uuid.UUID) -> tuple[dict[str, dict[str, int]], dict[str, int], list[PromotionBlocker]]:
+    def promote_bootstrap(
+        self,
+        knowledge_version_id: uuid.UUID | str,
+        *,
+        reviewer: str,
+        reason: str,
+        expected_knowledge_version: str,
+    ) -> PromotionResult:
+        assessment = self.assess(knowledge_version_id)
+        if not assessment.bootstrap_promotion:
+            raise KnowledgePromotionBlockedError(assessment)
+        return self.promote(
+            knowledge_version_id,
+            reviewer=reviewer,
+            reason=reason,
+            expected_knowledge_version=expected_knowledge_version,
+        )
+
+    def promote_replacement(
+        self,
+        knowledge_version_id: uuid.UUID | str,
+        *,
+        reviewer: str,
+        reason: str,
+        expected_knowledge_version: str,
+    ) -> PromotionResult:
+        assessment = self.assess(knowledge_version_id)
+        if assessment.bootstrap_promotion:
+            raise KnowledgePromotionBlockedError(assessment)
+        return self.promote(
+            knowledge_version_id,
+            reviewer=reviewer,
+            reason=reason,
+            expected_knowledge_version=expected_knowledge_version,
+        )
+
+    def _bootstrap_provenance(
+        self,
+        version: KnowledgeVersionRecord,
+        blockers: list[PromotionBlocker],
+    ) -> tuple[PipelineJob | None, PipelineJob | None]:
+        import_job, source_job = self._pipeline_provenance(version)
+        if import_job is None:
+            blockers.append(
+                PromotionBlocker(
+                    "missing_pipeline_import_provenance",
+                    "La versión no conserva un canonical_import exitoso y gobernado del pipeline.",
+                )
+            )
+        else:
+            parameters = dict(import_job.parameters or {})
+            result = dict(import_job.result_payload or {})
+            if import_job.scope != PipelineJobScope.FULL:
+                blockers.append(
+                    PromotionBlocker(
+                        "import_scope_not_full",
+                        "El canonical_import de bootstrap no tiene scope=FULL.",
+                    )
+                )
+            if parameters.get("activation_mode") != "staging_only":
+                blockers.append(
+                    PromotionBlocker(
+                        "import_not_staging_only",
+                        "La versión no fue importada en staging_only.",
+                    )
+                )
+            if result.get("staging_ready") is not True:
+                blockers.append(
+                    PromotionBlocker(
+                        "staging_not_ready",
+                        "El canonical_import no declaró staging_ready=true.",
+                    )
+                )
+            if result.get("activation_performed") is not False:
+                blockers.append(
+                    PromotionBlocker(
+                        "unexpected_activation_history",
+                        "La procedencia indica activación previa o ambigua.",
+                    )
+                )
+            if result.get("knowledge_version") != version.knowledge_version:
+                blockers.append(
+                    PromotionBlocker(
+                        "import_version_mismatch",
+                        "El import no coincide con la KnowledgeVersion objetivo.",
+                    )
+                )
+            if str(result.get("knowledge_version_id") or "") != str(version.id):
+                blockers.append(
+                    PromotionBlocker(
+                        "import_version_id_mismatch",
+                        "El import no apunta a la KnowledgeVersion objetivo.",
+                    )
+                )
+
+        if source_job is None:
+            blockers.append(
+                PromotionBlocker(
+                    "missing_source_canonical_provenance",
+                    "No se pudo verificar el canonical_build/canonical_merge fuente.",
+                )
+            )
+        else:
+            source_result = dict(source_job.result_payload or {})
+            if source_job.status != PipelineJobStatus.SUCCEEDED:
+                blockers.append(
+                    PromotionBlocker(
+                        "source_canonical_not_succeeded",
+                        "El canonical fuente no terminó correctamente.",
+                    )
+                )
+            if (
+                source_result.get("snapshot_mode") != "full"
+                or source_result.get("snapshot_scope") != "full"
+            ):
+                blockers.append(
+                    PromotionBlocker(
+                        "source_snapshot_not_full",
+                        "Promotion Gate requiere un snapshot canónico FULL.",
+                    )
+                )
+            if source_result.get("knowledge_version") != version.knowledge_version:
+                blockers.append(
+                    PromotionBlocker(
+                        "source_canonical_version_mismatch",
+                        "El canonical fuente no coincide con la KnowledgeVersion importada.",
+                    )
+                )
+        return import_job, source_job
+
+    def _replacement_provenance(
+        self,
+        version: KnowledgeVersionRecord,
+        active: KnowledgeVersionRecord,
+        blockers: list[PromotionBlocker],
+    ) -> tuple[PipelineJob | None, PipelineJob | None, VersionDiff | None, str | None, str | None]:
+        try:
+            diff = VersionDiffService(self.session).compare(version.id)
+        except (VersionDiffError, LookupError) as exc:
+            blockers.append(PromotionBlocker("replacement_diff_invalid", str(exc)))
+            return None, None, None, None, None
+
+        if diff.candidate_origin != VersionDiffCandidateOrigin.RECONCILED_FULL.value:
+            blockers.append(
+                PromotionBlocker(
+                    "replacement_not_reconciled",
+                    "Una sustitución ACTIVE requiere un candidate FULL reconciliado.",
+                )
+            )
+
+        import_job = self._origin_import(version)
+        if import_job is None:
+            blockers.append(
+                PromotionBlocker(
+                    "missing_pipeline_import_provenance",
+                    "Falta canonical_import reconciliado.",
+                )
+            )
+            return None, None, diff, None, None
+        parameters = dict(import_job.parameters or {})
+        try:
+            source_id = uuid.UUID(str(parameters.get("source_reconciliation_job_id")))
+        except (TypeError, ValueError):
+            blockers.append(
+                PromotionBlocker(
+                    "missing_reconciliation_provenance",
+                    "Falta source_reconciliation_job_id válido.",
+                )
+            )
+            return import_job, None, diff, None, None
+        source = self.session.get(PipelineJob, source_id)
+        if source is None:
+            blockers.append(
+                PromotionBlocker(
+                    "missing_reconciliation_provenance",
+                    "No existe el source reconciliation job.",
+                )
+            )
+            return import_job, None, diff, None, None
+
+        source_result = dict(source.result_payload or {})
+        decisions = list(source_result.get("decisions") or [])
+        review_set_ids = {
+            str(value.get("review_set_id"))
+            for value in decisions
+            if value.get("review_set_id")
+        }
+        review_set_id = next(iter(review_set_ids)) if len(review_set_ids) == 1 else None
+        decision_set_hash = source_result.get("decision_set_hash")
+
+        if (
+            source_result.get("confirmed_removed_total")
+            != diff.totals[VersionDiffChangeType.REMOVED.value]
+        ):
+            blockers.append(
+                PromotionBlocker(
+                    "replacement_removed_count_mismatch",
+                    "Los REMOVED finales no coinciden con las eliminaciones confirmadas por HITL.",
+                )
+            )
+        if decisions and review_set_id is None:
+            blockers.append(
+                PromotionBlocker(
+                    "removal_hitl_ambiguous",
+                    "Las decisiones de removal no pertenecen a un único ReviewSet.",
+                )
+            )
+        if source_result.get("unresolved_total") != 0:
+            blockers.append(
+                PromotionBlocker(
+                    "removal_hitl_unresolved",
+                    "Existen decisiones de removal sin resolver.",
+                )
+            )
+        if source_result.get("base_active_version_id") != str(active.id):
+            blockers.append(
+                PromotionBlocker(
+                    "replacement_base_active_mismatch",
+                    "La reconciliación no parte de la ACTIVE actual.",
+                )
+            )
+
+        return import_job, source, diff, review_set_id, str(decision_set_hash or "") or None
+
+    def _replacement_review_state(
+        self,
+        diff: VersionDiff,
+    ) -> tuple[dict[str, int], list[PromotionBlocker]]:
+        changed = [
+            item
+            for item in diff.items
+            if item.change_type in {VersionDiffChangeType.NEW, VersionDiffChangeType.MODIFIED}
+        ]
+        counts = Counter(str(item.candidate_review_status) for item in changed)
+        blockers: list[PromotionBlocker] = []
+        non_publishable = [
+            item
+            for item in changed
+            if item.candidate_review_status
+            not in {status.value for status in PUBLISHABLE_REVIEW_STATUSES}
+        ]
+        if non_publishable:
+            blockers.append(
+                PromotionBlocker(
+                    "replacement_structural_review_incomplete",
+                    "Todos los elementos NEW/MODIFIED deben estar APPROVED o "
+                    "CORRECTED antes del reemplazo.",
+                    count=len(non_publishable),
+                )
+            )
+        return dict(sorted(counts.items())), blockers
+
+    def _review_state(
+        self,
+        version_id: uuid.UUID,
+    ) -> tuple[dict[str, dict[str, int]], dict[str, int], list[PromotionBlocker]]:
         items = list(
             self.session.scalars(
-                select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == version_id)
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == version_id
+                )
             )
         )
         all_counts = Counter(str(item.current_review_status) for item in items)
@@ -356,7 +584,8 @@ class KnowledgePromotionService:
                     blockers.append(
                         PromotionBlocker(
                             f"required_{status.value}",
-                            f"Los elementos {entity_type} obligatorios no pueden permanecer en {status.value}.",
+                            f"Los elementos {entity_type} obligatorios no pueden "
+                            f"permanecer en {status.value}.",
                             count=count,
                             entity_type=entity_type,
                         )
@@ -366,23 +595,33 @@ class KnowledgePromotionService:
                 for item in selected
                 if item.current_review_status not in PUBLISHABLE_REVIEW_STATUSES
             ]
-            # Future enum values fail closed even if not pending/rejected.
             known_blocked = sum(
                 1
                 for item in selected
-                if item.current_review_status in {ReviewStatus.PENDING_REVIEW, ReviewStatus.REJECTED}
+                if item.current_review_status
+                in {ReviewStatus.PENDING_REVIEW, ReviewStatus.REJECTED}
             )
             if len(non_publishable) > known_blocked:
                 blockers.append(
                     PromotionBlocker(
                         "required_review_status_unsupported",
-                        f"Hay elementos {entity_type} obligatorios con estado de revisión no publicable.",
+                        f"Hay elementos {entity_type} obligatorios con estado no publicable.",
                         count=len(non_publishable) - known_blocked,
                         entity_type=entity_type,
                     )
                 )
 
         return required_counts, dict(sorted(all_counts.items())), blockers
+
+    def _all_review_counts(self, version_id: uuid.UUID) -> dict[str, int]:
+        items = list(
+            self.session.scalars(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == version_id
+                )
+            )
+        )
+        return dict(sorted(Counter(str(item.current_review_status) for item in items).items()))
 
     def _module_crawl_readiness(self, version_id: uuid.UUID) -> list[PromotionBlocker]:
         modules = list(
@@ -403,7 +642,6 @@ class KnowledgePromotionService:
                 else []
             )
             labels = [value for value in labels if value]
-
             metadata = payload.get("metadata")
             if not isinstance(metadata, dict):
                 invalid += 1
@@ -412,26 +650,25 @@ class KnowledgePromotionService:
             if not is_safe_navigation_metadata("navigation_origin_path", origin_value):
                 invalid += 1
                 continue
-            origins = [
-                value.strip()
-                for value in str(origin_value).split("||")
-                if value.strip()
-            ]
+            origins = [value.strip() for value in str(origin_value).split("||") if value.strip()]
             if not labels or len(labels) != len(origins):
                 invalid += 1
-
         if not invalid:
             return []
         return [
             PromotionBlocker(
                 "module_navigation_unreproducible",
-                "Todos los módulos de una versión promovible deben conservar navigation_path y navigation_origin_path reproducibles.",
+                "Todos los módulos de una versión promovible deben conservar "
+                "navigation_path y navigation_origin_path reproducibles.",
                 count=invalid,
                 entity_type="module",
             )
         ]
 
-    def _pipeline_provenance(self, version: KnowledgeVersionRecord) -> tuple[PipelineJob | None, PipelineJob | None]:
+    def _pipeline_provenance(
+        self,
+        version: KnowledgeVersionRecord,
+    ) -> tuple[PipelineJob | None, PipelineJob | None]:
         import_job = self.session.scalar(
             select(PipelineJob)
             .where(
@@ -444,7 +681,6 @@ class KnowledgePromotionService:
         )
         if import_job is None:
             return None, None
-
         source_id = (import_job.parameters or {}).get("source_canonical_job_id")
         try:
             source_uuid = uuid.UUID(str(source_id))
@@ -457,6 +693,23 @@ class KnowledgePromotionService:
         }:
             return import_job, None
         return import_job, source_job
+
+    def _origin_import(self, version: KnowledgeVersionRecord) -> PipelineJob | None:
+        jobs = list(
+            self.session.scalars(
+                select(PipelineJob).where(
+                    PipelineJob.kind == PipelineJobKind.CANONICAL_IMPORT,
+                    PipelineJob.status == PipelineJobStatus.SUCCEEDED,
+                    PipelineJob.knowledge_version_id == version.id,
+                )
+            )
+        )
+        jobs = [
+            job
+            for job in jobs
+            if dict(job.result_payload or {}).get("import_result") == "imported"
+        ]
+        return jobs[0] if len(jobs) == 1 else None
 
     def _version(self, version_id: uuid.UUID, *, for_update: bool) -> KnowledgeVersionRecord | None:
         query = select(KnowledgeVersionRecord).where(KnowledgeVersionRecord.id == version_id)
@@ -489,11 +742,19 @@ class KnowledgePromotionService:
             "version_status": value.version_status,
             "promotable": value.promotable,
             "bootstrap_promotion": value.bootstrap_promotion,
+            "promotion_mode": value.promotion_mode,
+            "current_active_version_id": value.current_active_version_id,
+            "current_active_knowledge_version": value.current_active_knowledge_version,
             "required_entity_types": list(value.required_entity_types),
             "required_review_counts": value.required_review_counts,
             "all_review_counts": value.all_review_counts,
+            "replacement_review_counts": value.replacement_review_counts,
+            "diff_totals": value.diff_totals,
             "pipeline_import_job_id": value.pipeline_import_job_id,
             "source_canonical_job_id": value.source_canonical_job_id,
+            "source_reconciliation_job_id": value.source_reconciliation_job_id,
+            "removal_review_set_id": value.removal_review_set_id,
+            "decision_set_hash": value.decision_set_hash,
             "build_warning_count": value.build_warning_count,
             "blockers": [
                 {

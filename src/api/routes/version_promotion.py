@@ -37,13 +37,19 @@ def _assessment(value: PromotionAssessment) -> PromotionAssessmentResponse:
         version_status=value.version_status,
         promotable=value.promotable,
         bootstrap_promotion=value.bootstrap_promotion,
+        promotion_mode=value.promotion_mode,
         current_active_version_id=value.current_active_version_id,
         current_active_knowledge_version=value.current_active_knowledge_version,
         required_entity_types=value.required_entity_types,
         required_review_counts=value.required_review_counts,
         all_review_counts=value.all_review_counts,
+        replacement_review_counts=value.replacement_review_counts,
+        diff_totals=value.diff_totals,
         pipeline_import_job_id=value.pipeline_import_job_id,
         source_canonical_job_id=value.source_canonical_job_id,
+        source_reconciliation_job_id=value.source_reconciliation_job_id,
+        removal_review_set_id=value.removal_review_set_id,
+        decision_set_hash=value.decision_set_hash,
         build_warning_count=value.build_warning_count,
         blockers=tuple(
             PromotionBlockerResponse(
@@ -95,7 +101,7 @@ def promote_knowledge_version(
 ) -> KnowledgeVersionPromotionResponse:
     service = KnowledgePromotionService(session)
     try:
-        result = service.promote_bootstrap(
+        result = service.promote(
             knowledge_version_id,
             reviewer=body.reviewer_id,
             reason=body.reason,

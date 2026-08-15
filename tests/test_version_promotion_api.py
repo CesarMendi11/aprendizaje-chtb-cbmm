@@ -162,7 +162,7 @@ def test_assessment_and_bootstrap_promotion(api):
             "reviewer_id": "reviewer:api",
             "reason": "Primera versión FULL vNext revisada para bootstrap.",
             "expected_knowledge_version": knowledge_version,
-            "confirm_bootstrap_promotion": True,
+            "confirm_promotion": True,
         },
     )
     assert promoted.status_code == 200, promoted.text
@@ -174,3 +174,37 @@ def test_assessment_and_bootstrap_promotion(api):
         version = session.get(KnowledgeVersionRecord, version_id)
         assert str(version.status) == "active"
         assert len(list(session.scalars(select(SyncJob)))) == 2
+
+
+def test_api_replacement_promotion_archives_previous_active(api):
+    from tests.test_version_diff_service import seed_reconciled
+
+    client, factory, tmp_path = api
+    with factory() as session:
+        active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+
+    assessment = client.get(
+        f"/api/admin/knowledge-versions/{candidate_id}/promotion-assessment"
+    )
+    assert assessment.status_code == 200, assessment.text
+    body = assessment.json()
+    assert body["promotion_mode"] == "replacement"
+    assert body["promotable"] is True
+
+    promoted = client.post(
+        f"/api/admin/knowledge-versions/{candidate_id}/promote",
+        json={
+            "reviewer_id": "reviewer:api",
+            "reason": "Reemplazo reconciliado revisado.",
+            "expected_knowledge_version": body["knowledge_version"],
+            "confirm_promotion": True,
+        },
+    )
+    assert promoted.status_code == 200, promoted.text
+    assert promoted.json()["previous_active_version_id"] == str(active_id)
+
+    with factory() as session:
+        active = session.get(KnowledgeVersionRecord, active_id)
+        candidate = session.get(KnowledgeVersionRecord, candidate_id)
+        assert str(active.status) == "archived"
+        assert str(candidate.status) == "active"
