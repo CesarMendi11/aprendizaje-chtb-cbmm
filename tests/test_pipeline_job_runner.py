@@ -320,12 +320,22 @@ def seed_active_module_tree(factory):
 
 def test_runner_executes_queued_crawl_and_persists_progress_and_result():
     engine, factory = build_factory()
+    version_id = seed_active_module_tree(factory)
     with factory.begin() as session:
         job = PipelineJobService(session).create(
             kind="crawl",
             scope="screen",
-            target="/admin/cuentasxcobrar/retenciones",
-            parameters={"headless": True, "slow_mo": 0},
+            target="/sales/tracking",
+            erp_id="erp:test",
+            knowledge_version_id=version_id,
+            parameters={
+                "headless": True,
+                "slow_mo": 0,
+                "target_screen_id": "screen:tracking",
+                "knowledge_version_id": str(version_id),
+                "knowledge_version": "v1",
+                "erp_id": "erp:test",
+            },
         )
         job_id = job.id
 

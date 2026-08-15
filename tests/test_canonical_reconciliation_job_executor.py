@@ -112,7 +112,8 @@ def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(
         assert payload["erp_id"] == pins["erp_id"]
         assert payload["decision_set_hash"] == result["decision_set_hash"]
     assert manifest["snapshot"] == {"mode": "full", "scope": "full", "target": None,
-                                    "target_module_id": None, "base_knowledge_version_id": None,
+                                    "target_module_id": None, "target_screen_id": None,
+                                    "base_knowledge_version_id": None,
                                     "base_knowledge_version": None, "erp_id": None}
     assert report["decision_set_hash"] == result["decision_set_hash"]
     for collection, item in (

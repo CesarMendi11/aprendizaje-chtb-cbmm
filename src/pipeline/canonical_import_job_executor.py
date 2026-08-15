@@ -150,17 +150,27 @@ class CanonicalImportJobExecutor:
             )
         if requires_active_base:
             merge_context = manifest_payload.get("merge")
-            expected_target = str(params.get("merged_target_module_id") or "").strip()
+            expected_scope = str(params.get("merged_from_scope") or "").strip()
+            if expected_scope not in {"module", "screen"}:
+                raise CanonicalImportJobExecutionError(
+                    "canonical_import merged requiere merged_from_scope válido"
+                )
+            target_key = (
+                "target_module_id" if expected_scope == "module" else "target_screen_id"
+            )
+            expected_target = str(params.get(f"merged_{target_key}") or "").strip()
+            if not expected_target:
+                raise CanonicalImportJobExecutionError(
+                    "canonical_import merged requiere target parcial fijado"
+                )
             if not isinstance(merge_context, dict) or (
                 str(merge_context.get("base_knowledge_version_id") or "")
                 != str(base_version_id)
                 or str(merge_context.get("base_knowledge_version") or "")
                 != base_version_name
                 or str(merge_context.get("erp_id") or "") != pinned_erp_id
-                or (
-                    expected_target
-                    and str(merge_context.get("target_module_id") or "") != expected_target
-                )
+                or str(merge_context.get("scope") or "") != expected_scope
+                or str(merge_context.get(target_key) or "") != expected_target
             ):
                 raise CanonicalImportJobExecutionError(
                     "El manifest merged no conserva la provenance base esperada"

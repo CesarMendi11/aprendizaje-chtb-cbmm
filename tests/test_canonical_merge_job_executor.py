@@ -273,6 +273,8 @@ def test_import_of_merged_candidate_rechecks_pinned_base_active(tmp_path):
                 "base_knowledge_version_id": str(base_id),
                 "base_knowledge_version": "base-v1",
                 "erp_id": "erp:test",
+                "merged_from_scope": "module",
+                "merged_target_module_id": "module:tracking",
             },
         )
     engine.dispose()
@@ -310,6 +312,7 @@ def test_import_of_merged_candidate_creates_staging_while_exact_base_remains_act
             "base_knowledge_version_id": str(base_id),
             "base_knowledge_version": "base-v1",
             "erp_id": "erp:test",
+            "merged_from_scope": "module",
             "merged_target_module_id": "module:tracking",
         },
     )
@@ -324,4 +327,139 @@ def test_import_of_merged_candidate_creates_staging_while_exact_base_remains_act
         )
         assert base.status == KnowledgeVersionStatus.ACTIVE
         assert staging.status == KnowledgeVersionStatus.IMPORTED
+    engine.dispose()
+
+
+def _setup_screen(tmp_path):
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'screen-merge.sqlite3'}")
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+
+    base = _knowledge(version="base-v1")
+    base_dir = tmp_path / "screen-base"
+    CanonicalKnowledgeExporter().export(
+        base,
+        base_dir,
+        snapshot_context=CanonicalSnapshotContext.full(),
+    )
+    with factory.begin() as session:
+        imported = CanonicalImportService(session).import_canonical(
+            base_dir / "knowledge.json",
+            base_dir / "manifest.json",
+            base_dir / "build_report.json",
+            activate=True,
+            create_sync_jobs=False,
+        )
+        base_id = uuid.UUID(imported.version_id)
+
+    crawl_id = uuid.uuid4()
+    partial = _knowledge(version="partial-v1", partial=True)
+    snapshot = CanonicalSnapshotContext(
+        mode="partial",
+        scope="screen",
+        target="/tracking",
+        target_screen_id="screen:tracking",
+        base_knowledge_version_id=str(base_id),
+        base_knowledge_version="base-v1",
+        erp_id="erp:test",
+    )
+    partial_dir = (
+        tmp_path
+        / "data"
+        / "runs"
+        / "pipeline"
+        / str(crawl_id)
+        / "processed"
+        / "canonical"
+    )
+    CanonicalKnowledgeExporter().export(
+        partial,
+        partial_dir,
+        snapshot_context=snapshot,
+    )
+    params = {
+        "source_canonical_job_id": str(uuid.uuid4()),
+        "source_crawl_job_id": str(crawl_id),
+        "knowledge_path": str(partial_dir.relative_to(tmp_path) / "knowledge.json"),
+        "manifest_path": str(partial_dir.relative_to(tmp_path) / "manifest.json"),
+        "build_report_path": str(partial_dir.relative_to(tmp_path) / "build_report.json"),
+        "expected_partial_knowledge_version": "partial-v1",
+        "target_screen_id": "screen:tracking",
+        "base_knowledge_version_id": str(base_id),
+        "base_knowledge_version": "base-v1",
+        "erp_id": "erp:test",
+    }
+    return engine, factory, base_id, crawl_id, params
+
+
+def test_screen_merge_executor_replaces_only_pinned_screen_and_exports_full_candidate(tmp_path):
+    engine, factory, base_id, _crawl_id, params = _setup_screen(tmp_path)
+    result = CanonicalMergeJobExecutor(
+        factory,
+        project_root=tmp_path,
+        runs_root="data/runs/pipeline",
+    ).execute(
+        job_id=uuid.uuid4(),
+        scope=PipelineJobScope.SCREEN,
+        target="/tracking",
+        parameters=params,
+    )
+
+    merged = CanonicalKnowledgeRepository(tmp_path / result["knowledge_path"]).knowledge
+    screens = {item.id: item for item in merged.screens}
+    assert set(screens) == {"screen:orders", "screen:tracking"}
+    assert screens["screen:tracking"].title == "Tracking refreshed"
+    assert screens["screen:orders"].title == "Orders"
+    assert result["merged_from_scope"] == "screen"
+    assert result["target_screen_id"] == "screen:tracking"
+    assert result["target_module_id"] is None
+    assert result["base_knowledge_version_id"] == str(base_id)
+    manifest = json.loads((tmp_path / result["manifest_path"]).read_text(encoding="utf-8"))
+    assert manifest["merge"]["scope"] == "screen"
+    assert manifest["merge"]["target"] == "/tracking"
+    assert manifest["merge"]["target_screen_id"] == "screen:tracking"
+    engine.dispose()
+
+
+def test_screen_merged_candidate_imports_as_staging_with_exact_base_pin(tmp_path):
+    engine, factory, base_id, crawl_id, params = _setup_screen(tmp_path)
+    merge_result = CanonicalMergeJobExecutor(
+        factory,
+        project_root=tmp_path,
+        runs_root="data/runs/pipeline",
+    ).execute(
+        job_id=uuid.uuid4(),
+        scope="screen",
+        target="/tracking",
+        parameters=params,
+    )
+
+    result = CanonicalImportJobExecutor(
+        factory,
+        project_root=tmp_path,
+        runs_root="data/runs/pipeline",
+    ).execute(
+        job_id=uuid.uuid4(),
+        scope="full",
+        target=None,
+        parameters={
+            "source_canonical_job_id": str(uuid.uuid4()),
+            "source_crawl_job_id": str(crawl_id),
+            "knowledge_path": merge_result["knowledge_path"],
+            "manifest_path": merge_result["manifest_path"],
+            "build_report_path": merge_result["build_report_path"],
+            "expected_knowledge_version": merge_result["knowledge_version"],
+            "requires_active_base": True,
+            "base_knowledge_version_id": str(base_id),
+            "base_knowledge_version": "base-v1",
+            "erp_id": "erp:test",
+            "merged_from_scope": "screen",
+            "merged_target_screen_id": "screen:tracking",
+        },
+    )
+
+    assert result["staging_ready"] is True
+    assert result["version_status"] == "imported"
+    with factory() as session:
+        assert session.get(KnowledgeVersionRecord, base_id).status == KnowledgeVersionStatus.ACTIVE
     engine.dispose()

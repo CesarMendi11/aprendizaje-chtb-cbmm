@@ -45,6 +45,11 @@ from .removal_reconciliation_review_service import (
     RemovalReviewDecisionState,
     RemovalReviewSetState,
 )
+from .screen_scope_resolver import (
+    ScreenCrawlTarget,
+    ScreenScopeResolutionError,
+    ScreenScopeResolver,
+)
 from .semantic_chroma_sync_service import (
     SemanticChromaSyncService,
     SemanticSafeDocumentBuilder,
@@ -99,6 +104,9 @@ __all__ = [
     "PipelineJobService",
     "PipelineJobTransitionError",
     "SafeDocumentBuilder",
+    "ScreenCrawlTarget",
+    "ScreenScopeResolutionError",
+    "ScreenScopeResolver",
     "SemanticChromaSyncService",
     "SemanticSafeDocumentBuilder",
     "SemanticEffectivePayloadService",

@@ -43,6 +43,7 @@ def test_packages_group_canonical_children_and_keep_partial_removals_unconfirmed
             select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
         )
         source.kind = PipelineJobKind.CANONICAL_MERGE
+        source.result_payload = {**source.result_payload, "merged_from_scope": "module"}
 
     result = StructuralReviewPackageService(session).build(candidate_id)
 

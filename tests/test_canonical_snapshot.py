@@ -39,6 +39,10 @@ def test_screen_snapshot_is_partial_and_route_scoped():
         mode="partial",
         scope="screen",
         target="/admin/tracking",
+        target_screen_id="screen:tracking",
+        base_knowledge_version_id="00000000-0000-0000-0000-000000000001",
+        base_knowledge_version="active-v10",
+        erp_id="erp:demo",
     )
     assert snapshot.target == "/admin/tracking"
 
@@ -47,4 +51,8 @@ def test_screen_snapshot_is_partial_and_route_scoped():
             mode="partial",
             scope="screen",
             target="https://example.test/admin/tracking",
+            target_screen_id="screen:tracking",
+            base_knowledge_version_id="00000000-0000-0000-0000-000000000001",
+            base_knowledge_version="active-v10",
+            erp_id="erp:demo",
         )

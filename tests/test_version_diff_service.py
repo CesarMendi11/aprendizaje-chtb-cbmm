@@ -517,3 +517,20 @@ def test_diff_reconciled_provenance_fails_closed(session, tmp_path, tamper):
 
     with pytest.raises(VersionDiffError):
         VersionDiffService(session).compare(candidate_id)
+
+
+def test_diff_recognizes_governed_screen_partial_merge_origin(session, tmp_path):
+    _active_id, candidate_id, _ = seed(session, tmp_path)
+    with session.begin():
+        source = session.scalar(
+            select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
+        )
+        source.kind = PipelineJobKind.CANONICAL_MERGE
+        source.result_payload = {
+            **source.result_payload,
+            "merged_from_scope": "screen",
+            "target_screen_id": "screen:retenciones",
+        }
+
+    result = VersionDiffService(session).compare(candidate_id)
+    assert result.candidate_origin == "partial_screen_merge"

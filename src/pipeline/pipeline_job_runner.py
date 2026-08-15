@@ -10,6 +10,8 @@ from src.database.services import (
     ModuleSubtreeResolutionError,
     ModuleSubtreeResolver,
     PipelineJobService,
+    ScreenScopeResolutionError,
+    ScreenScopeResolver,
 )
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecutor
@@ -171,70 +173,100 @@ class PipelineJobRunner:
             if erp_id != spec.erp_id:
                 raise RuntimeError("canonical_reconciliation contiene erp_id inconsistente")
             return parameters
-        if spec.kind != PipelineJobKind.CRAWL or spec.scope != PipelineJobScope.MODULE:
+        if spec.kind != PipelineJobKind.CRAWL or spec.scope not in {
+            PipelineJobScope.MODULE,
+            PipelineJobScope.SCREEN,
+        }:
             return parameters
-
-        target_module_id = str(
-            parameters.get("target_module_id") or spec.target or ""
-        ).strip()
-        if not target_module_id or target_module_id != str(spec.target or "").strip():
-            raise RuntimeError(
-                "El job MODULE no conserva un target_module_id consistente"
-            )
 
         pinned_version_id = spec.knowledge_version_id or parameters.get(
             "knowledge_version_id"
         )
         if pinned_version_id is None:
             raise RuntimeError(
-                "El job MODULE no conserva knowledge_version_id fijado"
+                f"El job {spec.scope.value.upper()} no conserva knowledge_version_id fijado"
             )
-
         parameter_version_id = str(parameters.get("knowledge_version_id") or "").strip()
         if parameter_version_id and parameter_version_id != str(pinned_version_id):
             raise RuntimeError(
-                "El job MODULE contiene knowledge_version_id inconsistente"
+                f"El job {spec.scope.value.upper()} contiene knowledge_version_id inconsistente"
             )
 
+        if spec.scope == PipelineJobScope.MODULE:
+            target_module_id = str(
+                parameters.get("target_module_id") or spec.target or ""
+            ).strip()
+            if not target_module_id or target_module_id != str(spec.target or "").strip():
+                raise RuntimeError(
+                    "El job MODULE no conserva un target_module_id consistente"
+                )
+            try:
+                with self.session_factory() as session:
+                    subtree = ModuleSubtreeResolver(session).resolve(
+                        target_module_id,
+                        knowledge_version_id=pinned_version_id,
+                    )
+            except ModuleSubtreeResolutionError as exc:
+                raise RuntimeError(
+                    f"No fue posible validar el scope MODULE fijado: {exc}"
+                ) from exc
+            if spec.erp_id and spec.erp_id != subtree.erp_id:
+                raise RuntimeError("El job MODULE pertenece a un ERP distinto del fijado")
+            parameter_erp_id = str(parameters.get("erp_id") or "").strip()
+            if parameter_erp_id and parameter_erp_id != subtree.erp_id:
+                raise RuntimeError("El job MODULE contiene erp_id inconsistente")
+            parameter_version = str(parameters.get("knowledge_version") or "").strip()
+            if parameter_version and parameter_version != subtree.knowledge_version:
+                raise RuntimeError("El job MODULE contiene knowledge_version inconsistente")
+            parameters.update(
+                {
+                    "target_module_id": subtree.root_module_id,
+                    "knowledge_version_id": str(subtree.knowledge_version_id),
+                    "knowledge_version": subtree.knowledge_version,
+                    "erp_id": subtree.erp_id,
+                    "module_scope": {
+                        "root_module_id": subtree.root_module_id,
+                        "root_module_name": subtree.root_module_name,
+                        "ancestor_module_ids": list(subtree.ancestor_module_ids),
+                        "module_ids": list(subtree.module_ids),
+                        "known_screen_ids": list(subtree.known_screen_ids),
+                        "known_screen_routes": list(subtree.known_screen_routes),
+                        "unroutable_screen_ids": list(subtree.unroutable_screen_ids),
+                        "navigation_path": list(subtree.navigation_path),
+                        "navigation_origin_path": list(subtree.navigation_origin_path),
+                    },
+                }
+            )
+            return parameters
+
+        route = str(spec.target or "").strip()
         try:
             with self.session_factory() as session:
-                subtree = ModuleSubtreeResolver(session).resolve(
-                    target_module_id,
+                screen = ScreenScopeResolver(session).resolve(
+                    route,
                     knowledge_version_id=pinned_version_id,
                 )
-        except ModuleSubtreeResolutionError as exc:
+        except ScreenScopeResolutionError as exc:
             raise RuntimeError(
-                f"No fue posible validar el scope MODULE fijado: {exc}"
+                f"No fue posible validar el scope SCREEN fijado: {exc}"
             ) from exc
-
-        if spec.erp_id and spec.erp_id != subtree.erp_id:
-            raise RuntimeError("El job MODULE pertenece a un ERP distinto del fijado")
+        expected_screen_id = str(parameters.get("target_screen_id") or "").strip()
+        if expected_screen_id and expected_screen_id != screen.screen_id:
+            raise RuntimeError("El job SCREEN contiene target_screen_id inconsistente")
+        if spec.erp_id and spec.erp_id != screen.erp_id:
+            raise RuntimeError("El job SCREEN pertenece a un ERP distinto del fijado")
         parameter_erp_id = str(parameters.get("erp_id") or "").strip()
-        if parameter_erp_id and parameter_erp_id != subtree.erp_id:
-            raise RuntimeError("El job MODULE contiene erp_id inconsistente")
+        if parameter_erp_id and parameter_erp_id != screen.erp_id:
+            raise RuntimeError("El job SCREEN contiene erp_id inconsistente")
         parameter_version = str(parameters.get("knowledge_version") or "").strip()
-        if parameter_version and parameter_version != subtree.knowledge_version:
-            raise RuntimeError(
-                "El job MODULE contiene knowledge_version inconsistente"
-            )
-
+        if parameter_version and parameter_version != screen.knowledge_version:
+            raise RuntimeError("El job SCREEN contiene knowledge_version inconsistente")
         parameters.update(
             {
-                "target_module_id": subtree.root_module_id,
-                "knowledge_version_id": str(subtree.knowledge_version_id),
-                "knowledge_version": subtree.knowledge_version,
-                "erp_id": subtree.erp_id,
-                "module_scope": {
-                    "root_module_id": subtree.root_module_id,
-                    "root_module_name": subtree.root_module_name,
-                    "ancestor_module_ids": list(subtree.ancestor_module_ids),
-                    "module_ids": list(subtree.module_ids),
-                    "known_screen_ids": list(subtree.known_screen_ids),
-                    "known_screen_routes": list(subtree.known_screen_routes),
-                    "unroutable_screen_ids": list(subtree.unroutable_screen_ids),
-                    "navigation_path": list(subtree.navigation_path),
-                    "navigation_origin_path": list(subtree.navigation_origin_path),
-                },
+                "target_screen_id": screen.screen_id,
+                "knowledge_version_id": str(screen.knowledge_version_id),
+                "knowledge_version": screen.knowledge_version,
+                "erp_id": screen.erp_id,
             }
         )
         return parameters

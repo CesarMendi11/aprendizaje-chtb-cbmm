@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 
 from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
+from src.knowledge.canonical.ids import stable_id
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 
 
@@ -73,7 +74,17 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         job_id=uuid.uuid4(),
         scope="screen",
         target="/admin/cuentasxcobrar/retenciones",
-        parameters={"source_crawl_job_id": str(source_id)},
+        parameters={
+            "source_crawl_job_id": str(source_id),
+            "target_screen_id": stable_id(
+                "screen",
+                stable_id("erp", "demo"),
+                "/admin/cuentasxcobrar/retenciones",
+            ),
+            "base_knowledge_version_id": str(uuid.uuid4()),
+            "base_knowledge_version": "active-v1",
+            "erp_id": stable_id("erp", "demo"),
+        },
         progress=lambda stage, payload: checkpoints.append((stage, payload)),
     )
 
@@ -95,9 +106,12 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         "scope": "screen",
         "target": "/admin/cuentasxcobrar/retenciones",
         "target_module_id": None,
-        "base_knowledge_version_id": None,
-        "base_knowledge_version": None,
-        "erp_id": None,
+        "target_screen_id": stable_id(
+            "screen", stable_id("erp", "demo"), "/admin/cuentasxcobrar/retenciones"
+        ),
+        "base_knowledge_version_id": result["base_knowledge_version_id"],
+        "base_knowledge_version": "active-v1",
+        "erp_id": stable_id("erp", "demo"),
     }
     assert checkpoints[-1][0] == "exporting_canonical"
     assert checkpoints[-1][1]["progress_total"] == 4

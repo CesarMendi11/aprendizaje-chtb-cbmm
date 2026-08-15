@@ -47,6 +47,7 @@ def partial_candidate(session, tmp_path):
             select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
         )
         source.kind = PipelineJobKind.CANONICAL_MERGE
+        source.result_payload = {**source.result_payload, "merged_from_scope": "module"}
         source.result_payload = {
             **source.result_payload,
             "base_knowledge_version_id": str(active.id),
@@ -101,6 +102,7 @@ def test_full_candidate_removals_are_unresolved_and_bad_partial_base_fails(sessi
             select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
         )
         source.kind = PipelineJobKind.CANONICAL_MERGE
+        source.result_payload = {**source.result_payload, "merged_from_scope": "module"}
         source.result_payload = {
             **source.result_payload,
             "base_knowledge_version_id": str(uuid.uuid4()),
@@ -287,3 +289,31 @@ def test_removal_reconciliation_plan_api(tmp_path):
     assert invalid.status_code == 422
     assert invalid.json()["category"] == "invalid_removal_reconciliation_plan"
     engine.dispose()
+
+
+def test_screen_partial_removed_is_retained_with_screen_specific_reason(session, tmp_path):
+    active_id, candidate_id, _ = seed(session, tmp_path)
+    with session.begin():
+        active = session.get(KnowledgeVersionRecord, active_id)
+        source = session.scalar(
+            select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
+        )
+        source.kind = PipelineJobKind.CANONICAL_MERGE
+        source.result_payload = {
+            **source.result_payload,
+            "merged_from_scope": "screen",
+            "target_screen_id": "screen:retenciones",
+            "base_knowledge_version_id": str(active.id),
+            "base_knowledge_version": active.knowledge_version,
+            "erp_id": active.erp_id,
+        }
+
+    plan = RemovalReconciliationPlanService(session).build(candidate_id)
+    assert plan.candidate_origin == "partial_screen_merge"
+    assert plan.removal_total == plan.retain_from_active_total
+    assert plan.unresolved_total == 0
+    assert all(
+        item.reason == "not_observed_in_partial_screen_crawl"
+        and item.requires_human_review
+        for item in plan.decisions
+    )

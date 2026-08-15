@@ -8,7 +8,7 @@ from typing import Any, Callable
 
 from sqlalchemy import select
 
-from src.database.enums import KnowledgeVersionStatus
+from src.database.enums import KnowledgeVersionStatus, PipelineJobScope
 from src.database.models import KnowledgeVersionRecord
 from src.database.services import (
     CanonicalKnowledgeMaterializationError,
@@ -44,7 +44,7 @@ def _relative_project_path(root: Path, value: str | Path) -> str:
 
 
 class CanonicalMergeJobExecutor:
-    """Merge one MODULE partial with the exact ACTIVE PostgreSQL base it pinned."""
+    """Merge one governed MODULE or SCREEN partial into its exact ACTIVE base."""
 
     def __init__(
         self,
@@ -69,6 +69,11 @@ class CanonicalMergeJobExecutor:
         parameters: dict[str, Any] | None = None,
         progress: ProgressCallback | None = None,
     ) -> dict[str, Any]:
+        normalized_scope = PipelineJobScope(scope)
+        if normalized_scope not in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN}:
+            raise CanonicalMergeJobExecutionError(
+                "canonical_merge sólo admite scope MODULE o SCREEN"
+            )
         params = dict(parameters or {})
         emit = progress or (lambda _stage, _payload: None)
         source_canonical_job_id = self._uuid_param(params, "source_canonical_job_id")
@@ -76,25 +81,29 @@ class CanonicalMergeJobExecutor:
         base_version_id = self._uuid_param(params, "base_knowledge_version_id")
         base_version_name = self._required_text(params, "base_knowledge_version")
         erp_id = self._required_text(params, "erp_id")
-        target_module_id = self._required_text(params, "target_module_id")
-        if target_module_id != str(target or "").strip():
+        clean_target = str(target or "").strip()
+        target_key = (
+            "target_module_id"
+            if normalized_scope == PipelineJobScope.MODULE
+            else "target_screen_id"
+        )
+        target_entity_id = self._required_text(params, target_key)
+        if normalized_scope == PipelineJobScope.MODULE and target_entity_id != clean_target:
             raise CanonicalMergeJobExecutionError(
                 "canonical_merge conserva un target_module_id inconsistente"
             )
+        if normalized_scope == PipelineJobScope.SCREEN and not clean_target.startswith("/"):
+            raise CanonicalMergeJobExecutionError(
+                "canonical_merge SCREEN requiere una ruta objetivo interna"
+            )
 
         run_root = (self.runs_root / str(source_crawl_job_id)).resolve()
-        knowledge_path = self._artifact(
-            params.get("knowledge_path"), run_root, "knowledge.json"
-        )
-        manifest_path = self._artifact(
-            params.get("manifest_path"), run_root, "manifest.json"
-        )
+        knowledge_path = self._artifact(params.get("knowledge_path"), run_root, "knowledge.json")
+        manifest_path = self._artifact(params.get("manifest_path"), run_root, "manifest.json")
         build_report_path = self._artifact(
             params.get("build_report_path"), run_root, "build_report.json"
         )
-        if not (
-            knowledge_path.parent == manifest_path.parent == build_report_path.parent
-        ):
+        if not (knowledge_path.parent == manifest_path.parent == build_report_path.parent):
             raise CanonicalMergeJobExecutionError(
                 "Los artefactos canonical partial no pertenecen al mismo directorio"
             )
@@ -129,14 +138,23 @@ class CanonicalMergeJobExecutor:
             )
         if (
             snapshot.mode != "partial"
-            or snapshot.scope != "module"
-            or snapshot.target_module_id != target_module_id
+            or snapshot.scope != normalized_scope.value
+            or snapshot.target != clean_target
             or snapshot.base_knowledge_version_id != str(base_version_id)
             or snapshot.base_knowledge_version != base_version_name
             or snapshot.erp_id != erp_id
         ):
             raise CanonicalMergeJobExecutionError(
-                "La provenance del canonical MODULE no coincide con el job de merge"
+                "La provenance del canonical partial no coincide con el job de merge"
+            )
+        if normalized_scope == PipelineJobScope.MODULE:
+            if snapshot.target_module_id != target_entity_id:
+                raise CanonicalMergeJobExecutionError(
+                    "La provenance MODULE no coincide con el target fijado"
+                )
+        elif snapshot.target_screen_id != target_entity_id:
+            raise CanonicalMergeJobExecutionError(
+                "La provenance SCREEN no coincide con el target fijado"
             )
 
         emit(
@@ -175,11 +193,7 @@ class CanonicalMergeJobExecutor:
                     base_version_id,
                     require_active=True,
                 )
-                merged, report = CanonicalPartialMerger().merge(
-                    base,
-                    partial,
-                    snapshot,
-                )
+                merged, report = CanonicalPartialMerger().merge(base, partial, snapshot)
         except CanonicalMergeJobExecutionError:
             raise
         except (CanonicalKnowledgeMaterializationError, CanonicalPartialMergeError) as exc:
@@ -223,16 +237,15 @@ class CanonicalMergeJobExecutor:
                 "work_units": 4,
                 "progress_total": 4,
                 "knowledge_version": merged.knowledge_version,
-                "target_module_id": target_module_id,
+                target_key: target_entity_id,
             },
         )
-        return {
+        result = {
             "source_canonical_job_id": str(source_canonical_job_id),
             "source_crawl_job_id": str(source_crawl_job_id),
             "scope": "full",
             "target": None,
-            "merged_from_scope": "module",
-            "target_module_id": target_module_id,
+            "merged_from_scope": normalized_scope.value,
             "erp_id": erp_id,
             "base_knowledge_version_id": str(base_version_id),
             "base_knowledge_version": base_version_name,
@@ -252,7 +265,11 @@ class CanonicalMergeJobExecutor:
             ),
             "merge_report": report.as_dict(),
             "statistics": dict(merged.statistics),
+            "target_module_id": snapshot.target_module_id,
+            "target_screen_id": snapshot.target_screen_id,
+            "partial_target": snapshot.target,
         }
+        return result
 
     @staticmethod
     def _uuid_param(params: dict[str, Any], name: str) -> uuid.UUID:
@@ -268,9 +285,7 @@ class CanonicalMergeJobExecutor:
     def _required_text(params: dict[str, Any], name: str) -> str:
         value = str(params.get(name) or "").strip()
         if not value:
-            raise CanonicalMergeJobExecutionError(
-                f"canonical_merge requiere {name}"
-            )
+            raise CanonicalMergeJobExecutionError(f"canonical_merge requiere {name}")
         return value
 
     def _artifact(self, raw: Any, run_root: Path, expected_name: str) -> Path:

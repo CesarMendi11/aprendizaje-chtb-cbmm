@@ -4,12 +4,15 @@ import pytest
 
 from src.knowledge.canonical.builder import ArtifactLoadError, CanonicalKnowledgeBuilder
 from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
-from src.knowledge.canonical.ids import content_hash
 from src.knowledge.canonical.repository import CanonicalKnowledgeRepository
 from tests.canonical_fixtures import fictional_artifacts, fictional_profile
 
 
-def build(): return CanonicalKnowledgeBuilder().build(fictional_profile(), fictional_artifacts())
+def build():
+    return CanonicalKnowledgeBuilder().build(
+        fictional_profile(),
+        fictional_artifacts(),
+    )
 
 
 def test_builder_preserves_typed_elements_and_transitions():
@@ -80,8 +83,13 @@ def test_knowledge_version_is_deterministic():
 
 
 def test_export_manifest_hashes_and_repository(tmp_path):
-    builder = CanonicalKnowledgeBuilder(); kb = builder.build(fictional_profile(), fictional_artifacts())
-    CanonicalKnowledgeExporter().export(kb, tmp_path, build_report=builder.build_report(kb))
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(fictional_profile(), fictional_artifacts())
+    CanonicalKnowledgeExporter().export(
+        kb,
+        tmp_path,
+        build_report=builder.build_report(kb),
+    )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert manifest["knowledge_version"] == kb.knowledge_version
     assert len(manifest["canonical_document_hash"]) == 64
@@ -90,6 +98,7 @@ def test_export_manifest_hashes_and_repository(tmp_path):
         "scope": "full",
         "target": None,
         "target_module_id": None,
+        "target_screen_id": None,
         "base_knowledge_version_id": None,
         "base_knowledge_version": None,
         "erp_id": None,
@@ -103,15 +112,21 @@ def test_export_manifest_hashes_and_repository(tmp_path):
 
 
 def test_missing_and_corrupt_artifacts(tmp_path):
-    builder=CanonicalKnowledgeBuilder(tmp_path)
-    (tmp_path/"profile.yaml").write_text("erp:\n  name: Test\n  code: test\noutput: {}\n", encoding="utf-8")
+    builder = CanonicalKnowledgeBuilder(tmp_path)
+    (tmp_path / "profile.yaml").write_text(
+        "erp:\n  name: Test\n  code: test\noutput: {}\n",
+        encoding="utf-8",
+    )
     with pytest.raises(ArtifactLoadError, match="ausente"):
         builder.build_from_paths("profile.yaml", "missing")
-    (tmp_path/"structural").mkdir()
-    (tmp_path/"structural"/"screen_index.json").write_text("{bad", encoding="utf-8")
+    (tmp_path / "structural").mkdir()
+    (tmp_path / "structural" / "screen_index.json").write_text(
+        "{bad",
+        encoding="utf-8",
+    )
     with pytest.raises(ArtifactLoadError, match="corrupto"):
         builder.build_from_paths("profile.yaml", "structural")
-    (tmp_path/"profile.yaml").write_text("erp: [", encoding="utf-8")
+    (tmp_path / "profile.yaml").write_text("erp: [", encoding="utf-8")
     with pytest.raises(ArtifactLoadError, match="Perfil inválido"):
         builder.build_from_paths("profile.yaml")
 
@@ -140,7 +155,15 @@ def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_pare
                         "base_route": "/app/home",
                         "path": {
                             "depth": 1,
-                            "steps": [{"event": {"event_type": "expand_menu", "label": "Sales", "selector": "nav > menu:nth(1)"}}],
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Sales",
+                                        "selector": "nav > menu:nth(1)",
+                                    }
+                                }
+                            ],
                         },
                     },
                 },
@@ -153,8 +176,20 @@ def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_pare
                         "path": {
                             "depth": 2,
                             "steps": [
-                                {"event": {"event_type": "expand_menu", "label": "Sales", "selector": "nav > menu:nth(1)"}},
-                                {"event": {"event_type": "expand_menu", "label": "Tracking", "selector": "nav > menu:nth(1) > submenu"}},
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Sales",
+                                        "selector": "nav > menu:nth(1)",
+                                    }
+                                },
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Tracking",
+                                        "selector": "nav > menu:nth(1) > submenu",
+                                    }
+                                },
                             ],
                         },
                     },
@@ -182,7 +217,10 @@ def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_pare
                     "target": nested_state,
                     "label": "Tracking",
                     "kind": "ui_event",
-                    "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(1) > submenu"},
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > menu:nth(1) > submenu",
+                    },
                 },
                 {
                     "source": nested_state,
@@ -243,7 +281,15 @@ def test_case_distinct_top_level_modules_do_not_collide():
                 "base_route": "/app/home",
                 "path": {
                     "depth": 1,
-                    "steps": [{"event": {"event_type": "expand_menu", "label": label, "selector": selector}}],
+                    "steps": [
+                        {
+                            "event": {
+                                "event_type": "expand_menu",
+                                "label": label,
+                                "selector": selector,
+                            }
+                        }
+                    ],
                 },
             },
         }
@@ -265,10 +311,36 @@ def test_case_distinct_top_level_modules_do_not_collide():
                 {"id": "/app/rentas/conceptos", "route": "/app/rentas/conceptos"},
             ],
             "edges": [
-                {"source": "/app/home", "target": lower, "label": "rentas", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(6)"}},
-                {"source": lower, "target": "/app/rentas/cajas", "label": "Boxes", "metadata": {}},
-                {"source": "/app/home", "target": upper, "label": "Rentas", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(7)"}},
-                {"source": upper, "target": "/app/rentas/conceptos", "label": "Concepts", "metadata": {}},
+                {
+                    "source": "/app/home",
+                    "target": lower,
+                    "label": "rentas",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > menu:nth(6)",
+                    },
+                },
+                {
+                    "source": lower,
+                    "target": "/app/rentas/cajas",
+                    "label": "Boxes",
+                    "metadata": {},
+                },
+                {
+                    "source": "/app/home",
+                    "target": upper,
+                    "label": "Rentas",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > menu:nth(7)",
+                    },
+                },
+                {
+                    "source": upper,
+                    "target": "/app/rentas/conceptos",
+                    "label": "Concepts",
+                    "metadata": {},
+                },
             ],
         },
         "state_registry.json": {"states": []},
@@ -281,8 +353,12 @@ def test_case_distinct_top_level_modules_do_not_collide():
     modules = {module.name: module for module in kb.modules}
     assert set(modules) == {"rentas", "Rentas"}
     assert modules["rentas"].id != modules["Rentas"].id
-    assert next(screen for screen in kb.screens if screen.route == "/app/rentas/cajas").module_id == modules["rentas"].id
-    assert next(screen for screen in kb.screens if screen.route == "/app/rentas/conceptos").module_id == modules["Rentas"].id
+    assert next(
+        screen for screen in kb.screens if screen.route == "/app/rentas/cajas"
+    ).module_id == modules["rentas"].id
+    assert next(
+        screen for screen in kb.screens if screen.route == "/app/rentas/conceptos"
+    ).module_id == modules["Rentas"].id
 
 
 def test_top_level_module_without_functional_screen_is_not_published():
@@ -304,15 +380,36 @@ def test_top_level_module_without_functional_screen_is_not_published():
                         "base_route": "/app/home",
                         "path": {
                             "depth": 1,
-                            "steps": [{"event": {"event_type": "expand_menu", "label": "Unavailable", "selector": "nav > menu:nth(1)"}}],
+                            "steps": [
+                                {
+                                    "event": {
+                                        "event_type": "expand_menu",
+                                        "label": "Unavailable",
+                                        "selector": "nav > menu:nth(1)",
+                                    }
+                                }
+                            ],
                         },
                     },
                 },
                 {"id": "/app/unavailable/a", "route": "/app/unavailable/a", "status": "not_found"},
             ],
             "edges": [
-                {"source": "/app/home", "target": unavailable_state, "label": "Unavailable", "metadata": {"event_category": "expand_menu", "selector": "nav > menu:nth(1)"}},
-                {"source": unavailable_state, "target": "/app/unavailable/a", "label": "A", "metadata": {}},
+                {
+                    "source": "/app/home",
+                    "target": unavailable_state,
+                    "label": "Unavailable",
+                    "metadata": {
+                        "event_category": "expand_menu",
+                        "selector": "nav > menu:nth(1)",
+                    },
+                },
+                {
+                    "source": unavailable_state,
+                    "target": "/app/unavailable/a",
+                    "label": "A",
+                    "metadata": {},
+                },
             ],
         },
         "state_registry.json": {"states": []},

@@ -91,7 +91,10 @@ class StructuralReviewPackageService:
         active = self.session.get(KnowledgeVersionRecord, uuid.UUID(diff.active_version_id))
         if candidate is None or active is None or candidate.erp_id != active.erp_id:
             raise StructuralReviewPackageError("Candidate y ACTIVE no corresponden al mismo ERP.")
-        partial_merge = diff.candidate_origin == "partial_module_merge"
+        partial_merge = diff.candidate_origin in {
+            "partial_module_merge",
+            "partial_screen_merge",
+        }
         active_items = self._items(active.id)
         candidate_items = self._items(candidate.id)
         packages, unscoped = self._group(diff, active_items, candidate_items, partial_merge)

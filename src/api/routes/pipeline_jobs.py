@@ -36,6 +36,8 @@ from src.database.services import (
     RemovalReconciliationReviewError,
     RemovalReconciliationReviewNotPreparedError,
     RemovalReconciliationReviewService,
+    ScreenScopeResolutionError,
+    ScreenScopeResolver,
 )
 from src.knowledge.canonical.enums import ReviewStatus
 
@@ -138,6 +140,23 @@ def create_crawl_job(
                 "erp_id": subtree.erp_id,
             }
         )
+    elif payload.scope == PipelineJobScope.SCREEN:
+        try:
+            screen = ScreenScopeResolver(session).resolve(payload.target or "")
+        except ScreenScopeResolutionError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        target = screen.route
+        erp_id = screen.erp_id
+        knowledge_version_id = screen.knowledge_version_id
+        parameters.update(
+            {
+                "active_only": True,
+                "target_screen_id": screen.screen_id,
+                "knowledge_version_id": str(screen.knowledge_version_id),
+                "knowledge_version": screen.knowledge_version,
+                "erp_id": screen.erp_id,
+            }
+        )
 
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CRAWL,
@@ -187,22 +206,28 @@ def create_canonical_build_job(
         )
 
     parameters = {"source_crawl_job_id": str(source.id)}
-    if source.scope == PipelineJobScope.MODULE:
+    if source.scope in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN}:
         source_parameters = dict(source.parameters or {})
-        required_module_context = {
-            "target_module_id": source_parameters.get("target_module_id"),
+        required_context = {
             "base_knowledge_version_id": (
                 str(source.knowledge_version_id) if source.knowledge_version_id else None
             ),
             "base_knowledge_version": source_parameters.get("knowledge_version"),
             "erp_id": source.erp_id or source_parameters.get("erp_id"),
         }
-        if any(not value for value in required_module_context.values()):
+        if source.scope == PipelineJobScope.MODULE:
+            required_context["target_module_id"] = source_parameters.get("target_module_id")
+        else:
+            required_context["target_screen_id"] = source_parameters.get("target_screen_id")
+        if any(not value for value in required_context.values()):
             raise HTTPException(
                 status_code=409,
-                detail="El crawl MODULE fuente no conserva su versión base fijada.",
+                detail=(
+                    f"El crawl {source.scope.value.upper()} fuente no conserva "
+                    "su versión base fijada."
+                ),
             )
-        parameters.update(required_module_context)
+        parameters.update(required_context)
 
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CANONICAL_BUILD,
@@ -233,41 +258,52 @@ def create_canonical_merge_job(
     if source is None:
         raise HTTPException(status_code=404, detail="PipelineJob fuente no encontrado.")
     if source.kind != PipelineJobKind.CANONICAL_BUILD:
-        raise HTTPException(
-            status_code=409,
-            detail="El job fuente debe ser de tipo canonical_build.",
-        )
+        raise HTTPException(status_code=409, detail="El job fuente debe ser canonical_build.")
     if source.status != PipelineJobStatus.SUCCEEDED:
         raise HTTPException(
             status_code=409,
             detail="El canonical build fuente debe haber finalizado correctamente.",
         )
-    if source.scope != PipelineJobScope.MODULE:
+    if source.scope not in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN}:
         raise HTTPException(
             status_code=409,
-            detail="canonical_merge sólo admite canonical builds de scope MODULE.",
+            detail="canonical_merge sólo admite canonical builds MODULE o SCREEN.",
         )
 
     result = dict(source.result_payload or {})
-    required = (
+    required = [
         "source_crawl_job_id",
         "knowledge_path",
         "manifest_path",
         "build_report_path",
         "knowledge_version",
-        "target_module_id",
         "base_knowledge_version_id",
         "base_knowledge_version",
+    ]
+    target_key = (
+        "target_module_id"
+        if source.scope == PipelineJobScope.MODULE
+        else "target_screen_id"
     )
+    required.append(target_key)
     if any(not result.get(key) for key in required):
         raise HTTPException(
             status_code=409,
-            detail="El canonical MODULE fuente no conserva artefactos/provenance fusionables.",
+            detail=(
+                f"El canonical {source.scope.value.upper()} fuente no conserva "
+                "artefactos/provenance fusionables."
+            ),
         )
-    if result.get("snapshot_mode") != "partial" or result.get("snapshot_scope") != "module":
+    if (
+        result.get("snapshot_mode") != "partial"
+        or result.get("snapshot_scope") != source.scope.value
+    ):
         raise HTTPException(
             status_code=409,
-            detail="canonical_merge requiere un snapshot parcial de scope MODULE.",
+            detail=(
+                "canonical_merge requiere un snapshot parcial consistente con "
+                f"scope={source.scope.value}."
+            ),
         )
 
     try:
@@ -275,7 +311,7 @@ def create_canonical_merge_job(
     except (TypeError, ValueError) as exc:
         raise HTTPException(
             status_code=409,
-            detail="El canonical MODULE no conserva knowledge_version_id base válida.",
+            detail="El canonical parcial no conserva knowledge_version_id base válida.",
         ) from exc
 
     base = session.get(KnowledgeVersionRecord, base_version_id)
@@ -288,41 +324,48 @@ def create_canonical_merge_job(
     ):
         raise HTTPException(
             status_code=409,
-            detail="La versión base fijada por el canonical MODULE ya no es la ACTIVE esperada.",
+            detail="La versión base fijada por el canonical parcial ya no es ACTIVE.",
         )
     if source.knowledge_version_id and source.knowledge_version_id != base.id:
         raise HTTPException(
             status_code=409,
             detail="El canonical build fuente conserva una versión base inconsistente.",
         )
-    target_module_id = str(result["target_module_id"]).strip()
-    if target_module_id != str(source.target or "").strip():
+
+    target_value = str(result[target_key]).strip()
+    expected_target = (
+        target_value
+        if source.scope == PipelineJobScope.MODULE
+        else str(result.get("snapshot_target") or source.target or "").strip()
+    )
+    if expected_target != str(source.target or "").strip():
         raise HTTPException(
             status_code=409,
-            detail="El canonical build fuente conserva un módulo objetivo inconsistente.",
+            detail="El canonical build fuente conserva un target inconsistente.",
         )
 
+    parameters = {
+        "source_canonical_job_id": str(source.id),
+        "source_crawl_job_id": str(result["source_crawl_job_id"]),
+        "knowledge_path": str(result["knowledge_path"]),
+        "manifest_path": str(result["manifest_path"]),
+        "build_report_path": str(result["build_report_path"]),
+        "expected_partial_knowledge_version": str(result["knowledge_version"]),
+        "base_knowledge_version_id": str(base.id),
+        "base_knowledge_version": base.knowledge_version,
+        "erp_id": base.erp_id,
+        "active_only": True,
+        target_key: target_value,
+    }
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.CANONICAL_MERGE,
-        scope=PipelineJobScope.MODULE,
-        target=target_module_id,
+        scope=source.scope,
+        target=str(source.target),
         profile_name=source.profile_name,
         erp_id=base.erp_id,
         knowledge_version_id=base.id,
         request_source="admin_api",
-        parameters={
-            "source_canonical_job_id": str(source.id),
-            "source_crawl_job_id": str(result["source_crawl_job_id"]),
-            "knowledge_path": str(result["knowledge_path"]),
-            "manifest_path": str(result["manifest_path"]),
-            "build_report_path": str(result["build_report_path"]),
-            "expected_partial_knowledge_version": str(result["knowledge_version"]),
-            "target_module_id": target_module_id,
-            "base_knowledge_version_id": str(base.id),
-            "base_knowledge_version": base.knowledge_version,
-            "erp_id": base.erp_id,
-            "active_only": True,
-        },
+        parameters=parameters,
     )
     session.commit()
     request.app.state.pipeline_job_dispatcher.submit(job.id)
@@ -356,10 +399,10 @@ def create_canonical_reconciliation_job(
                 "Canonical reconciliation requiere resolver todas las decisiones de Removal HITL."
             ),
         )
-    if review.candidate_origin != "partial_module_merge":
+    if review.candidate_origin not in {"partial_module_merge", "partial_screen_merge"}:
         raise HTTPException(
             status_code=409,
-            detail="Removal HITL no corresponde a un candidate partial_module_merge.",
+            detail="Removal HITL no corresponde a un candidate partial merge.",
         )
 
     try:
@@ -573,12 +616,26 @@ def create_canonical_import_job(
             "base_knowledge_version_id",
             "base_knowledge_version",
             "erp_id",
-            "target_module_id",
+            "merged_from_scope",
         )
         if any(not result.get(key) for key in required_merge):
             raise HTTPException(
                 status_code=409,
                 detail="El canonical_merge fuente no conserva su versión base fijada.",
+            )
+        merged_scope = str(result["merged_from_scope"]).strip()
+        if merged_scope not in {"module", "screen"}:
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_merge conserva un scope parcial inválido.",
+            )
+        target_key = (
+            "target_module_id" if merged_scope == "module" else "target_screen_id"
+        )
+        if not result.get(target_key):
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_merge no conserva el target parcial fijado.",
             )
         try:
             pinned_base_id = uuid.UUID(str(result["base_knowledge_version_id"]))
@@ -605,7 +662,8 @@ def create_canonical_import_job(
                 "base_knowledge_version_id": str(base.id),
                 "base_knowledge_version": base.knowledge_version,
                 "erp_id": base.erp_id,
-                "merged_target_module_id": str(result["target_module_id"]),
+                "merged_from_scope": merged_scope,
+                f"merged_{target_key}": str(result[target_key]),
             }
         )
 

@@ -126,6 +126,7 @@ def test_pipeline_job_not_found_and_validation(api):
 
 def test_create_crawl_job_queues_controlled_worker(api):
     client, factory, dispatcher = api
+    version_id, erp_id, screen_id = seed_active_crawl_screen(factory)
     response = client.post(
         "/api/admin/pipeline-jobs/crawl",
         json={
@@ -140,7 +141,17 @@ def test_create_crawl_job_queues_controlled_worker(api):
     assert body["kind"] == "crawl"
     assert body["scope"] == "screen"
     assert body["status"] == "queued"
-    assert body["parameters"] == {"headless": False, "slow_mo": 120}
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"] == {
+        "headless": False,
+        "slow_mo": 120,
+        "active_only": True,
+        "target_screen_id": screen_id,
+        "knowledge_version_id": version_id,
+        "knowledge_version": "active-v1",
+        "erp_id": erp_id,
+    }
     assert [str(value) for value in dispatcher.submitted] == [body["id"]]
 
     with factory() as session:
@@ -281,6 +292,7 @@ def test_pipeline_job_api_is_hidden_when_admin_api_is_disabled(tmp_path):
 
 def test_create_canonical_build_job_requires_succeeded_crawl(api):
     client, factory, dispatcher = api
+    version_id, erp_id, screen_id = seed_active_crawl_screen(factory)
     with factory.begin() as session:
         service = PipelineJobService(session)
         source = service.create(
@@ -288,6 +300,14 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
             scope="screen",
             target="/admin/cuentasxcobrar/retenciones",
             profile_name="cbmm",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+            parameters={
+                "target_screen_id": screen_id,
+                "knowledge_version_id": version_id,
+                "knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
         )
         source_id = source.id
         service.start(source.id, stage="running")
@@ -305,7 +325,13 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
     assert body["kind"] == "canonical_build"
     assert body["scope"] == "screen"
     assert body["target"] == "/admin/cuentasxcobrar/retenciones"
-    assert body["parameters"]["source_crawl_job_id"] == str(source_id)
+    assert body["parameters"] == {
+        "source_crawl_job_id": str(source_id),
+        "base_knowledge_version_id": version_id,
+        "base_knowledge_version": "active-v1",
+        "erp_id": erp_id,
+        "target_screen_id": screen_id,
+    }
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
@@ -424,6 +450,36 @@ def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
         session.add(version)
         session.flush()
         return str(version.id), erp.id
+
+
+def seed_active_crawl_screen(
+    factory,
+    *,
+    route="/admin/cuentasxcobrar/retenciones",
+    status=KnowledgeVersionStatus.ACTIVE,
+):
+    version_id, erp_id = seed_active_version(factory, status=status)
+    with factory.begin() as session:
+        screen = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="screen:retenciones",
+            entity_type="screen",
+            parent_canonical_id=None,
+            title="Retenciones",
+            normalized_title="retenciones",
+            route=route,
+            content_hash="b" * 64,
+            source_payload={
+                "id": "screen:retenciones",
+                "erp_id": erp_id,
+                "route": route,
+                "title": "Retenciones",
+            },
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        session.add(screen)
+    return version_id, erp_id, "screen:retenciones"
 
 
 def test_create_canonical_build_preserves_module_base_provenance(api):
@@ -788,6 +844,7 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
                 "knowledge_version": "merged-v2",
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
+                "merged_from_scope": "module",
                 "target_module_id": "module:tracking",
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
@@ -809,6 +866,7 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
     assert body["parameters"]["requires_active_base"] is True
     assert body["parameters"]["base_knowledge_version_id"] == version_id
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
+    assert body["parameters"]["merged_from_scope"] == "module"
     assert body["parameters"]["merged_target_module_id"] == "module:tracking"
     assert str(dispatcher.submitted[-1]) == body["id"]
 
@@ -920,4 +978,102 @@ def test_create_canonical_import_accepts_hitl_reconciliation_source(api):
     assert body["parameters"]["source_reconciliation_job_id"] == str(source_id)
     assert body["parameters"]["expected_knowledge_version"] == "reconciled-v3"
     assert body["parameters"]["expected_decision_set_hash"] == "c" * 64
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_merge_accepts_screen_partial_with_exact_active_pin(api):
+    client, factory, dispatcher = api
+    version_id, erp_id, screen_id = seed_active_crawl_screen(factory)
+    crawl_id = uuid.uuid4()
+    route = "/admin/cuentasxcobrar/retenciones"
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="screen",
+            target=route,
+            profile_name="cbmm",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+        )
+        source_id = source.id
+        service.start(source.id, stage="building", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "partial-screen-v1",
+                "snapshot_mode": "partial",
+                "snapshot_scope": "screen",
+                "snapshot_target": route,
+                "target_screen_id": screen_id,
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-merge",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["scope"] == "screen"
+    assert body["target"] == route
+    assert body["erp_id"] == erp_id
+    assert body["knowledge_version_id"] == version_id
+    assert body["parameters"]["target_screen_id"] == screen_id
+    assert body["parameters"]["base_knowledge_version_id"] == version_id
+    assert body["parameters"]["base_knowledge_version"] == "active-v1"
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_import_accepts_full_screen_merge_and_repins_base(api):
+    client, factory, dispatcher = api
+    version_id, erp_id, screen_id = seed_active_crawl_screen(factory)
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_merge",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+        )
+        source_id = source.id
+        service.start(source.id, stage="merging", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "merged-screen-v2",
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+                "merged_from_scope": "screen",
+                "target_screen_id": screen_id,
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["scope"] == "full"
+    assert body["parameters"]["requires_active_base"] is True
+    assert body["parameters"]["merged_from_scope"] == "screen"
+    assert body["parameters"]["merged_target_screen_id"] == screen_id
+    assert body["parameters"]["base_knowledge_version_id"] == version_id
     assert str(dispatcher.submitted[-1]) == body["id"]

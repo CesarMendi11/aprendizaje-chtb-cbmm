@@ -79,8 +79,8 @@ class RemovalReconciliationPlanService:
             raise RemovalReconciliationPlanError("Candidate y ACTIVE no corresponden al mismo ERP.")
         if candidate.id == active.id:
             raise RemovalReconciliationPlanError("Candidate y ACTIVE deben ser distintos.")
-        if package.candidate_origin == "partial_module_merge":
-            self._validate_partial_base(candidate, active)
+        if package.candidate_origin in {"partial_module_merge", "partial_screen_merge"}:
+            self._validate_partial_base(candidate, active, package.candidate_origin)
         elif package.candidate_origin != "full_canonical":
             raise RemovalReconciliationPlanError("candidate_origin no reconocido.")
 
@@ -100,13 +100,17 @@ class RemovalReconciliationPlanService:
             confirmation = change.removal_confirmation
             if confirmation not in {None, "unconfirmed", "confirmed_removed"}:
                 raise RemovalReconciliationPlanError("removal_confirmation no reconocido.")
-            if package.candidate_origin == "partial_module_merge":
+            if package.candidate_origin in {"partial_module_merge", "partial_screen_merge"}:
                 if confirmation != "unconfirmed" or not change.requires_removal_review:
                     raise RemovalReconciliationPlanError(
-                        "REMOVED de partial_module_merge no conserva estado unconfirmed gobernado."
+                        "REMOVED de partial merge no conserva estado unconfirmed gobernado."
                     )
                 decision = RemovalReconciliationDecisionType.RETAIN_FROM_ACTIVE
-                reason = "not_observed_in_partial_module_crawl"
+                reason = (
+                    "not_observed_in_partial_module_crawl"
+                    if package.candidate_origin == "partial_module_merge"
+                    else "not_observed_in_partial_screen_crawl"
+                )
                 review = True
             else:
                 decision = RemovalReconciliationDecisionType.UNRESOLVED
@@ -150,7 +154,7 @@ class RemovalReconciliationPlanService:
             decisions=tuple(decisions),
         )
 
-    def _validate_partial_base(self, candidate, active) -> None:
+    def _validate_partial_base(self, candidate, active, candidate_origin: str) -> None:
         origin = self._origin_import(candidate)
         try:
             source_id = uuid.UUID(str((origin.parameters or {}).get("source_canonical_job_id")))
@@ -158,16 +162,20 @@ class RemovalReconciliationPlanService:
             raise RemovalReconciliationPlanError("La provenance merge fuente es inválida.") from exc
         source = self.session.get(PipelineJob, source_id)
         result = dict(source.result_payload or {}) if source else {}
+        expected_scope = (
+            "module" if candidate_origin == "partial_module_merge" else "screen"
+        )
         if (
             source is None
             or source.kind != PipelineJobKind.CANONICAL_MERGE
             or source.status != PipelineJobStatus.SUCCEEDED
+            or result.get("merged_from_scope") != expected_scope
             or str(result.get("base_knowledge_version_id") or "") != str(active.id)
             or result.get("base_knowledge_version") != active.knowledge_version
             or result.get("erp_id") != active.erp_id
         ):
             raise RemovalReconciliationPlanError(
-                "La base ACTIVE del partial_module_merge no coincide con provenance."
+                "La base ACTIVE del partial merge no coincide con provenance."
             )
 
     def _origin_import(self, candidate):

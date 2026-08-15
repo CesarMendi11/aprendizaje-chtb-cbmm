@@ -151,6 +151,19 @@ class CanonicalBuildJobExecutor:
             raise CanonicalBuildJobExecutionError(
                 "El canonical MODULE no reconstruyó el módulo objetivo fijado"
             )
+        if snapshot_context.scope == "screen":
+            target_screen = next(
+                (
+                    screen
+                    for screen in knowledge.screens
+                    if screen.id == snapshot_context.target_screen_id
+                ),
+                None,
+            )
+            if target_screen is None or target_screen.route != snapshot_context.target:
+                raise CanonicalBuildJobExecutionError(
+                    "El canonical SCREEN no reconstruyó la pantalla objetivo fijada"
+                )
 
         report = builder.build_report(knowledge, issues)
         report["snapshot"] = snapshot_context.model_dump(mode="json")
@@ -188,6 +201,7 @@ class CanonicalBuildJobExecutor:
             "snapshot_scope": snapshot_context.scope,
             "snapshot_target": snapshot_context.target,
             "target_module_id": snapshot_context.target_module_id,
+            "target_screen_id": snapshot_context.target_screen_id,
             "base_knowledge_version_id": snapshot_context.base_knowledge_version_id,
             "base_knowledge_version": snapshot_context.base_knowledge_version,
         }
@@ -202,18 +216,26 @@ class CanonicalBuildJobExecutor:
             return CanonicalSnapshotContext.full()
 
         if scope == PipelineJobScope.SCREEN:
-            return CanonicalSnapshotContext(
-                mode="partial",
-                scope="screen",
-                target=target,
-                erp_id=str(parameters.get("erp_id") or "").strip() or None,
-                base_knowledge_version_id=(
-                    str(parameters.get("base_knowledge_version_id") or "").strip() or None
-                ),
-                base_knowledge_version=(
-                    str(parameters.get("base_knowledge_version") or "").strip() or None
-                ),
-            )
+            try:
+                return CanonicalSnapshotContext(
+                    mode="partial",
+                    scope="screen",
+                    target=target,
+                    target_screen_id=str(
+                        parameters.get("target_screen_id") or ""
+                    ).strip(),
+                    erp_id=str(parameters.get("erp_id") or "").strip(),
+                    base_knowledge_version_id=str(
+                        parameters.get("base_knowledge_version_id") or ""
+                    ).strip(),
+                    base_knowledge_version=str(
+                        parameters.get("base_knowledge_version") or ""
+                    ).strip(),
+                )
+            except ValueError as exc:
+                raise CanonicalBuildJobExecutionError(
+                    f"El crawl SCREEN no conserva provenance canónica válida: {exc}"
+                ) from exc
 
         if scope == PipelineJobScope.MODULE:
             try:

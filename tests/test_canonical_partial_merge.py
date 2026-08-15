@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from datetime import datetime, timezone
 
 import pytest
@@ -272,8 +271,73 @@ def test_merge_knowledge_version_is_deterministic_for_same_inputs():
     second, _ = merger.merge(base, partial, _snapshot())
 
     assert first.knowledge_version == second.knowledge_version
-    assert first.generator_version == "canonical-partial-merge-1.0.0"
+    assert first.generator_version == "canonical-partial-merge-1.1.0"
     assert first.source_artifact_hashes == {
         "base:screen_index.json": "hash-base-v1",
         "partial:screen_index.json": "hash-partial-v1",
     }
+
+
+def _screen_snapshot() -> CanonicalSnapshotContext:
+    return CanonicalSnapshotContext(
+        mode="partial",
+        scope="screen",
+        target="/tracking",
+        target_screen_id="screen:tracking",
+        base_knowledge_version_id="00000000-0000-0000-0000-000000000001",
+        base_knowledge_version="base-v1",
+        erp_id="erp:test",
+    )
+
+
+def test_screen_partial_replaces_only_target_screen_and_preserves_module_context():
+    base = _knowledge(version="base-v1")
+    partial_payload = _knowledge(version="partial-v1", partial=True).model_dump(mode="json")
+    target = next(item for item in partial_payload["screens"] if item["id"] == "screen:tracking")
+    target["module_id"] = None
+    partial = CanonicalKnowledgeBase.model_validate(partial_payload)
+
+    merged, report = CanonicalPartialMerger().merge(base, partial, _screen_snapshot())
+
+    modules = {item.id for item in merged.modules}
+    screens = {item.id: item for item in merged.screens}
+    fields = {item.id for item in merged.fields}
+
+    assert modules == {
+        "module:sales",
+        "module:orders",
+        "module:tracking",
+        "module:integrations",
+    }
+    assert set(screens) == {
+        "screen:home",
+        "screen:orders",
+        "screen:tracking",
+        "screen:external-old",
+    }
+    assert screens["screen:tracking"].title == "Tracking refreshed"
+    assert screens["screen:tracking"].module_id == "module:tracking"
+    assert "screen:provider" not in screens
+    assert "screen:external-new" not in screens
+    assert fields == {"field:orders:number", "field:tracking:new"}
+    assert not merged.tables
+    assert report.scope == "screen"
+    assert report.target == "/tracking"
+    assert report.target_screen_id == "screen:tracking"
+    assert report.target_module_id is None
+    assert report.removed_counts["screens"] == 1
+    assert report.inserted_counts["screens"] == 1
+
+
+def test_screen_partial_requires_same_pinned_screen_route():
+    base = _knowledge(version="base-v1")
+    partial = _knowledge(version="partial-v1", partial=True)
+    payload = _screen_snapshot().model_dump()
+    payload["target"] = "/other"
+
+    with pytest.raises(CanonicalPartialMergeError, match="ruta"):
+        CanonicalPartialMerger().merge(
+            base,
+            partial,
+            CanonicalSnapshotContext.model_validate(payload),
+        )

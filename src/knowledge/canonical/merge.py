@@ -16,7 +16,10 @@ class CanonicalPartialMergeError(ValueError):
 
 @dataclass(frozen=True)
 class CanonicalPartialMergeReport:
-    target_module_id: str
+    scope: str
+    target: str
+    target_module_id: str | None
+    target_screen_id: str | None
     base_knowledge_version: str
     partial_knowledge_version: str
     removed_counts: dict[str, int]
@@ -25,7 +28,10 @@ class CanonicalPartialMergeReport:
 
     def as_dict(self) -> dict[str, object]:
         return {
+            "scope": self.scope,
+            "target": self.target,
             "target_module_id": self.target_module_id,
+            "target_screen_id": self.target_screen_id,
             "base_knowledge_version": self.base_knowledge_version,
             "partial_knowledge_version": self.partial_knowledge_version,
             "removed_counts": dict(self.removed_counts),
@@ -50,15 +56,9 @@ _COLLECTIONS = (
 
 
 class CanonicalPartialMerger:
-    """Deterministically replace one MODULE subtree inside a full canonical snapshot.
+    """Replace exactly one governed MODULE subtree or SCREEN inside a FULL snapshot."""
 
-    Ancestor modules carried by the partial crawl are navigation context only. The
-    functional replacement starts exactly at ``snapshot.target_module_id`` and includes
-    that module, every descendant module and every entity owned by screens in that
-    subtree. Everything outside that scope is preserved from the full base snapshot.
-    """
-
-    GENERATOR_VERSION = "canonical-partial-merge-1.0.0"
+    GENERATOR_VERSION = "canonical-partial-merge-1.1.0"
 
     def merge(
         self,
@@ -67,22 +67,23 @@ class CanonicalPartialMerger:
         snapshot: CanonicalSnapshotContext,
     ) -> tuple[CanonicalKnowledgeBase, CanonicalPartialMergeReport]:
         self._validate_inputs(base, partial, snapshot)
-        target = snapshot.target_module_id
-        assert target is not None
+        base_scope = self._scope_for_snapshot(base, snapshot)
+        partial_scope = self._scope_for_snapshot(partial, snapshot)
+        partial_screen_override = self._screen_override(base, partial, snapshot)
 
-        base_scope = self._scope(base, target)
-        partial_scope = self._scope(partial, target)
-
-        base_target = next(item for item in base.modules if item.id == target)
-        partial_target = next(item for item in partial.modules if item.id == target)
-        if (
-            base_target.parent_module_id != partial_target.parent_module_id
-            or base_target.depth != partial_target.depth
-            or base_target.navigation_path != partial_target.navigation_path
-        ):
-            raise CanonicalPartialMergeError(
-                "El módulo raíz parcial cambió su ubicación jerárquica respecto de la base"
-            )
+        if snapshot.scope == "module":
+            target_module_id = snapshot.target_module_id
+            assert target_module_id is not None
+            base_target = next(item for item in base.modules if item.id == target_module_id)
+            partial_target = next(item for item in partial.modules if item.id == target_module_id)
+            if (
+                base_target.parent_module_id != partial_target.parent_module_id
+                or base_target.depth != partial_target.depth
+                or base_target.navigation_path != partial_target.navigation_path
+            ):
+                raise CanonicalPartialMergeError(
+                    "El módulo raíz parcial cambió su ubicación jerárquica respecto de la base"
+                )
 
         merged_collections: dict[str, list] = {}
         removed_counts: dict[str, int] = {}
@@ -97,12 +98,18 @@ class CanonicalPartialMerger:
 
             preserved = [item for item in base_items if item.id not in removed_ids]
             inserted = [item for item in partial_items if item.id in inserted_ids]
+            if name == "screens" and partial_screen_override is not None:
+                inserted = [
+                    partial_screen_override if item.id == partial_screen_override.id else item
+                    for item in inserted
+                ]
 
             preserved_ids = {item.id for item in preserved}
             collisions = sorted(preserved_ids & {item.id for item in inserted})
             if collisions:
                 raise CanonicalPartialMergeError(
-                    f"El partial colisiona con entidades preservadas fuera del scope: {collisions[0]}"
+                    "El partial colisiona con entidades preservadas fuera del scope: "
+                    f"{collisions[0]}"
                 )
 
             merged_collections[name] = sorted([*preserved, *inserted], key=lambda item: item.id)
@@ -123,12 +130,8 @@ class CanonicalPartialMerger:
             partial_entity_ids,
         )
 
-        statistics = {
-            name: len(merged_collections[name])
-            for name in _COLLECTIONS
-        }
+        statistics = {name: len(merged_collections[name]) for name in _COLLECTIONS}
         source_artifacts, source_hashes = self._merge_provenance(base, partial)
-
         functional = {
             "erp_system": base.erp_system.model_dump(mode="json"),
             **{
@@ -138,7 +141,6 @@ class CanonicalPartialMerger:
             },
         }
         knowledge_version = content_hash(functional)[:16]
-
         merged = CanonicalKnowledgeBase(
             schema_version=base.schema_version,
             knowledge_version=knowledge_version,
@@ -160,8 +162,12 @@ class CanonicalPartialMerger:
                 f"El resultado del merge canónico es inválido: {codes}"
             )
 
+        assert snapshot.target is not None
         report = CanonicalPartialMergeReport(
-            target_module_id=target,
+            scope=snapshot.scope,
+            target=snapshot.target,
+            target_module_id=snapshot.target_module_id,
+            target_screen_id=snapshot.target_screen_id,
             base_knowledge_version=base.knowledge_version,
             partial_knowledge_version=partial.knowledge_version,
             removed_counts=removed_counts,
@@ -176,9 +182,9 @@ class CanonicalPartialMerger:
         partial: CanonicalKnowledgeBase,
         snapshot: CanonicalSnapshotContext,
     ) -> None:
-        if snapshot.mode != "partial" or snapshot.scope != "module":
+        if snapshot.mode != "partial" or snapshot.scope not in {"module", "screen"}:
             raise CanonicalPartialMergeError(
-                "El merger requiere un snapshot parcial de scope MODULE"
+                "El merger requiere un snapshot parcial de scope MODULE o SCREEN"
             )
         if base.schema_version != partial.schema_version:
             raise CanonicalPartialMergeError("Base y partial usan schema_version distintos")
@@ -190,11 +196,35 @@ class CanonicalPartialMerger:
             raise CanonicalPartialMergeError(
                 "El partial no fue construido sobre la knowledge_version base indicada"
             )
-        target = snapshot.target_module_id
-        if target not in {item.id for item in base.modules}:
-            raise CanonicalPartialMergeError("El módulo objetivo no existe en la base FULL")
-        if target not in {item.id for item in partial.modules}:
-            raise CanonicalPartialMergeError("El módulo objetivo no existe en el partial MODULE")
+
+        if snapshot.scope == "module":
+            target = snapshot.target_module_id
+            if target not in {item.id for item in base.modules}:
+                raise CanonicalPartialMergeError("El módulo objetivo no existe en la base FULL")
+            if target not in {item.id for item in partial.modules}:
+                raise CanonicalPartialMergeError(
+                    "El módulo objetivo no existe en el partial MODULE"
+                )
+        else:
+            target_screen_id = snapshot.target_screen_id
+            base_screen = next(
+                (item for item in base.screens if item.id == target_screen_id),
+                None,
+            )
+            partial_screen = next(
+                (item for item in partial.screens if item.id == target_screen_id),
+                None,
+            )
+            if base_screen is None:
+                raise CanonicalPartialMergeError("La pantalla objetivo no existe en la base FULL")
+            if partial_screen is None:
+                raise CanonicalPartialMergeError(
+                    "La pantalla objetivo no existe en el partial SCREEN"
+                )
+            if base_screen.route != snapshot.target or partial_screen.route != snapshot.target:
+                raise CanonicalPartialMergeError(
+                    "La ruta de la pantalla objetivo no coincide con el scope SCREEN fijado"
+                )
 
         for label, knowledge in (("base", base), ("partial", partial)):
             errors = CanonicalKnowledgeValidator().errors(knowledge)
@@ -202,6 +232,21 @@ class CanonicalPartialMerger:
                 raise CanonicalPartialMergeError(
                     f"El canonical {label} es inválido antes del merge"
                 )
+
+    @staticmethod
+    def _screen_override(
+        base: CanonicalKnowledgeBase,
+        partial: CanonicalKnowledgeBase,
+        snapshot: CanonicalSnapshotContext,
+    ):
+        if snapshot.scope != "screen":
+            return None
+        target_screen_id = snapshot.target_screen_id
+        base_screen = next(item for item in base.screens if item.id == target_screen_id)
+        partial_screen = next(item for item in partial.screens if item.id == target_screen_id)
+        # MODULE ownership is outside a SCREEN crawl boundary. Preserve it from ACTIVE;
+        # a screen-only crawl may refresh screen content, not move the screen in hierarchy.
+        return partial_screen.model_copy(update={"module_id": base_screen.module_id})
 
     @staticmethod
     def _module_subtree(knowledge: CanonicalKnowledgeBase, root_id: str) -> set[str]:
@@ -222,14 +267,30 @@ class CanonicalPartialMerger:
             pending.extend(children.get(current, ()))
         return result
 
-    def _scope(self, knowledge: CanonicalKnowledgeBase, root_id: str) -> dict[str, set[str]]:
-        module_ids = self._module_subtree(knowledge, root_id)
-        screen_ids = {
-            item.id for item in knowledge.screens if item.module_id in module_ids
-        }
-        state_ids = {
-            item.id for item in knowledge.ui_states if item.screen_id in screen_ids
-        }
+    def _scope_for_snapshot(
+        self,
+        knowledge: CanonicalKnowledgeBase,
+        snapshot: CanonicalSnapshotContext,
+    ) -> dict[str, set[str]]:
+        if snapshot.scope == "module":
+            assert snapshot.target_module_id is not None
+            module_ids = self._module_subtree(knowledge, snapshot.target_module_id)
+            screen_ids = {
+                item.id for item in knowledge.screens if item.module_id in module_ids
+            }
+            return self._entity_scope(knowledge, module_ids, screen_ids)
+
+        assert snapshot.target_screen_id is not None
+        screen_ids = {snapshot.target_screen_id}
+        return self._entity_scope(knowledge, set(), screen_ids)
+
+    def _entity_scope(
+        self,
+        knowledge: CanonicalKnowledgeBase,
+        module_ids: set[str],
+        screen_ids: set[str],
+    ) -> dict[str, set[str]]:
+        state_ids = {item.id for item in knowledge.ui_states if item.screen_id in screen_ids}
         field_ids = {item.id for item in knowledge.fields if item.screen_id in screen_ids}
         control_ids = {item.id for item in knowledge.controls if item.screen_id in screen_ids}
         table_ids = {item.id for item in knowledge.tables if item.screen_id in screen_ids}
@@ -245,7 +306,6 @@ class CanonicalPartialMerger:
             or item.target_state_id in state_ids
             or (item.event_id is not None and item.event_id in event_ids)
         }
-
         owned_entity_ids = set().union(
             module_ids,
             screen_ids,
@@ -276,7 +336,6 @@ class CanonicalPartialMerger:
             if item.source_entity_id in owned_entity_ids
             or item.id in referenced_evidence_ids
         }
-
         return {
             "modules": module_ids,
             "screens": screen_ids,
@@ -323,9 +382,7 @@ class CanonicalPartialMerger:
     ) -> list[BuildWarning]:
         kept = [item for item in base if not item.entity_id or item.entity_id not in removed_ids]
         inserted = [
-            item
-            for item in partial
-            if not item.entity_id or item.entity_id in partial_ids
+            item for item in partial if not item.entity_id or item.entity_id in partial_ids
         ]
         unique: dict[tuple, BuildWarning] = {}
         for item in [*kept, *inserted]:
@@ -335,7 +392,12 @@ class CanonicalPartialMerger:
                 unique[key] = item
         return sorted(
             unique.values(),
-            key=lambda item: (item.code, item.entity_type or "", item.entity_id or "", item.message),
+            key=lambda item: (
+                item.code,
+                item.entity_type or "",
+                item.entity_id or "",
+                item.message,
+            ),
         )
 
     @staticmethod
@@ -348,7 +410,10 @@ class CanonicalPartialMerger:
             *[f"partial:{item}" for item in partial.source_artifacts],
         ]
         hashes = {
-            **{f"base:{key}": value for key, value in sorted(base.source_artifact_hashes.items())},
+            **{
+                f"base:{key}": value
+                for key, value in sorted(base.source_artifact_hashes.items())
+            },
             **{
                 f"partial:{key}": value
                 for key, value in sorted(partial.source_artifact_hashes.items())

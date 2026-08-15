@@ -32,6 +32,7 @@ class VersionDiffChangeType(StrEnum):
 class VersionDiffCandidateOrigin(StrEnum):
     FULL_CANONICAL = "full_canonical"
     PARTIAL_MODULE_MERGE = "partial_module_merge"
+    PARTIAL_SCREEN_MERGE = "partial_screen_merge"
     RECONCILED_FULL = "reconciled_full"
 
 
@@ -223,7 +224,12 @@ class VersionDiffService:
                 "El canonical fuente no demuestra snapshot_mode=full y snapshot_scope=full."
             )
         if source.kind == PipelineJobKind.CANONICAL_MERGE:
-            return VersionDiffCandidateOrigin.PARTIAL_MODULE_MERGE
+            merged_scope = str(source_result.get("merged_from_scope") or "").strip()
+            if merged_scope == "module":
+                return VersionDiffCandidateOrigin.PARTIAL_MODULE_MERGE
+            if merged_scope == "screen":
+                return VersionDiffCandidateOrigin.PARTIAL_SCREEN_MERGE
+            raise VersionDiffError("El canonical_merge fuente no conserva scope parcial válido.")
         return VersionDiffCandidateOrigin.FULL_CANONICAL
 
     def _validate_reconciled_provenance(
