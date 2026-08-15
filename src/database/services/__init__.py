@@ -27,6 +27,13 @@ from .pipeline_job_service import (
     PipelineJobService,
     PipelineJobTransitionError,
 )
+from .removal_reconciliation_plan_service import (
+    RemovalReconciliationDecision,
+    RemovalReconciliationDecisionType,
+    RemovalReconciliationPlan,
+    RemovalReconciliationPlanError,
+    RemovalReconciliationPlanService,
+)
 from .semantic_chroma_sync_service import (
     SemanticChromaSyncService,
     SemanticSafeDocumentBuilder,
@@ -83,6 +90,11 @@ __all__ = [
     "SemanticEffectivePayloadService",
     "SemanticProposalService",
     "SemanticReviewService",
+    "RemovalReconciliationDecision",
+    "RemovalReconciliationDecisionType",
+    "RemovalReconciliationPlan",
+    "RemovalReconciliationPlanError",
+    "RemovalReconciliationPlanService",
     "SemanticRetrievalAuthorizationService",
     "StructuralReviewChange",
     "StructuralReviewPackage",

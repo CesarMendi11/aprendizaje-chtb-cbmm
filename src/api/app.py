@@ -60,8 +60,9 @@ def create_app(
         from src.api.routes.admin_knowledge import router as admin_knowledge_router
         from src.api.routes.admin_system import router as admin_system_router
         from src.api.routes.pipeline_jobs import router as pipeline_jobs_router
-        from src.api.routes.structural_review import router as structural_review_router
-        from src.api.routes.version_promotion import router as version_promotion_router
+        from src.api.routes.removal_reconciliation_plans import (
+            router as removal_reconciliation_plans_router,
+        )
         from src.api.routes.semantic_review import (
             AdminSemanticApiError,
             admin_semantic_error_handler,
@@ -70,10 +71,12 @@ def create_app(
         from src.api.routes.semantic_review import (
             router as semantic_review_router,
         )
+        from src.api.routes.structural_review import router as structural_review_router
         from src.api.routes.structural_review_packages import (
             router as structural_review_packages_router,
         )
         from src.api.routes.version_diff import router as version_diff_router
+        from src.api.routes.version_promotion import router as version_promotion_router
         from src.config.database_settings import DatabaseSettings
         from src.database.session import create_engine_from_settings
 
@@ -135,6 +138,7 @@ def create_app(
         app.include_router(admin_knowledge_router, prefix="/api/admin")
         app.include_router(admin_system_router, prefix="/api/admin")
         app.include_router(pipeline_jobs_router, prefix="/api/admin")
+        app.include_router(removal_reconciliation_plans_router, prefix="/api/admin")
         app.include_router(structural_review_router, prefix="/api/admin")
         app.include_router(structural_review_packages_router, prefix="/api/admin")
         app.include_router(version_promotion_router, prefix="/api/admin")
