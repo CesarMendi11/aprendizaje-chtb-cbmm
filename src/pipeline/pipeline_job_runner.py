@@ -123,6 +123,38 @@ class PipelineJobRunner:
 
     def _execution_parameters(self, spec: PipelineJobSpec) -> dict[str, Any]:
         parameters = dict(spec.parameters)
+        if (
+            spec.kind == PipelineJobKind.CANONICAL_IMPORT
+            and parameters.get("source_reconciliation_job_id") is not None
+        ):
+            raw_candidate_version_id = str(
+                parameters.get("raw_candidate_version_id") or ""
+            ).strip()
+            erp_id = str(parameters.get("erp_id") or "").strip()
+            if spec.scope != PipelineJobScope.VERSION or spec.target is not None:
+                raise RuntimeError(
+                    "canonical_import reconciliation requiere scope VERSION sin target"
+                )
+            if spec.knowledge_version_id is None:
+                raise RuntimeError(
+                    "canonical_import reconciliation requiere knowledge_version_id RAW fijado"
+                )
+            try:
+                raw_candidate_id = uuid.UUID(raw_candidate_version_id)
+            except ValueError as exc:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene raw_candidate_version_id inválido"
+                ) from exc
+            if spec.knowledge_version_id != raw_candidate_id:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene "
+                    "raw_candidate_version_id inconsistente"
+                )
+            if not spec.erp_id or spec.erp_id != erp_id:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene erp_id inconsistente"
+                )
+            return parameters
         if spec.kind == PipelineJobKind.CANONICAL_RECONCILIATION:
             candidate_version_id = str(parameters.get("candidate_version_id") or "").strip()
             erp_id = str(parameters.get("erp_id") or "").strip()
