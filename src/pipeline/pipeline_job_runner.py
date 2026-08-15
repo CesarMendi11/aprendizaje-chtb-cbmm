@@ -14,6 +14,9 @@ from src.database.services import (
 from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
 from src.pipeline.canonical_import_job_executor import CanonicalImportJobExecutor
 from src.pipeline.canonical_merge_job_executor import CanonicalMergeJobExecutor
+from src.pipeline.canonical_reconciliation_job_executor import (
+    CanonicalReconciliationJobExecutor,
+)
 from src.pipeline.chroma_sync_job_executor import ChromaSyncJobExecutor
 from src.pipeline.crawl_job_executor import CrawlJobExecutor
 from src.pipeline.neo4j_sync_job_executor import Neo4jSyncJobExecutor
@@ -43,6 +46,7 @@ class PipelineJobRunner:
         canonical_build_executor: CanonicalBuildJobExecutor | None = None,
         canonical_import_executor: CanonicalImportJobExecutor | None = None,
         canonical_merge_executor: CanonicalMergeJobExecutor | None = None,
+        canonical_reconciliation_executor: CanonicalReconciliationJobExecutor | None = None,
         neo4j_sync_executor: Neo4jSyncJobExecutor | None = None,
         chroma_sync_executor: ChromaSyncJobExecutor | None = None,
         semantic_inference_executor: SemanticInferenceJobExecutor | None = None,
@@ -57,6 +61,8 @@ class PipelineJobRunner:
             or CanonicalMergeJobExecutor(session_factory),
             PipelineJobKind.CANONICAL_IMPORT: canonical_import_executor
             or CanonicalImportJobExecutor(session_factory),
+            PipelineJobKind.CANONICAL_RECONCILIATION: canonical_reconciliation_executor
+            or CanonicalReconciliationJobExecutor(session_factory),
             PipelineJobKind.NEO4J_SYNC: neo4j_sync_executor
             or Neo4jSyncJobExecutor(session_factory),
             PipelineJobKind.CHROMA_SYNC: chroma_sync_executor
@@ -117,6 +123,22 @@ class PipelineJobRunner:
 
     def _execution_parameters(self, spec: PipelineJobSpec) -> dict[str, Any]:
         parameters = dict(spec.parameters)
+        if spec.kind == PipelineJobKind.CANONICAL_RECONCILIATION:
+            candidate_version_id = str(parameters.get("candidate_version_id") or "").strip()
+            erp_id = str(parameters.get("erp_id") or "").strip()
+            if spec.knowledge_version_id is None:
+                raise RuntimeError(
+                    "canonical_reconciliation requiere knowledge_version_id RAW fijado"
+                )
+            if candidate_version_id != str(spec.knowledge_version_id):
+                raise RuntimeError(
+                    "canonical_reconciliation contiene candidate_version_id inconsistente"
+                )
+            if not spec.erp_id:
+                raise RuntimeError("canonical_reconciliation requiere ERP RAW fijado")
+            if erp_id != spec.erp_id:
+                raise RuntimeError("canonical_reconciliation contiene erp_id inconsistente")
+            return parameters
         if spec.kind != PipelineJobKind.CRAWL or spec.scope != PipelineJobScope.MODULE:
             return parameters
 

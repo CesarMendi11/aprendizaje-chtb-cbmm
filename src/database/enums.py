@@ -38,6 +38,7 @@ class PipelineJobKind(StrEnum):
     CANONICAL_BUILD = "canonical_build"
     CANONICAL_MERGE = "canonical_merge"
     CANONICAL_IMPORT = "canonical_import"
+    CANONICAL_RECONCILIATION = "canonical_reconciliation"
     NEO4J_SYNC = "neo4j_sync"
     CHROMA_SYNC = "chroma_sync"
     SEMANTIC_INFERENCE = "semantic_inference"

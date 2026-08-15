@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import replace
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -191,6 +192,31 @@ def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_pat
         )
         assert materialized.model_dump(mode="json") == active_payloads[(entity_type, item_id)]
     assert result.unresolved_total == 0
+
+
+def test_reconciliation_uses_new_generated_at_without_mutating_raw(session, tmp_path, monkeypatch):
+    _, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
+    raw_generated_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    original_materialize = CanonicalKnowledgeMaterializer.materialize
+    original_raw = original_materialize(CanonicalKnowledgeMaterializer(session), candidate_id)
+
+    def materialize_with_old_raw(materializer, version_id, **kwargs):
+        canonical = original_materialize(materializer, version_id, **kwargs)
+        if str(version_id) == str(candidate_id):
+            return canonical.model_copy(update={"generated_at": raw_generated_at})
+        return canonical
+
+    monkeypatch.setattr(
+        CanonicalKnowledgeMaterializer,
+        "materialize",
+        materialize_with_old_raw,
+    )
+    result = CanonicalReconciliationService(session).reconcile(candidate_id)
+
+    raw_after = original_materialize(CanonicalKnowledgeMaterializer(session), candidate_id)
+    assert raw_after.generated_at == original_raw.generated_at
+    assert result.canonical.generated_at > raw_generated_at
+    assert result.canonical.generated_at != raw_generated_at
 
 
 def test_unresolved_plan_fails_closed_before_materialization(session, tmp_path):

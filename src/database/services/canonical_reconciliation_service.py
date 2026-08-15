@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,6 +16,7 @@ from src.knowledge.canonical.validator import CanonicalKnowledgeValidator
 from .canonical_materialization_service import ENTITY_COLLECTIONS, CanonicalKnowledgeMaterializer
 from .removal_reconciliation_plan_service import (
     RemovalReconciliationDecisionType,
+    RemovalReconciliationPlan,
     RemovalReconciliationPlanError,
     RemovalReconciliationPlanService,
 )
@@ -38,6 +40,7 @@ class CanonicalReconciliationResult:
     retained_from_active_total: int
     confirmed_removed_total: int
     unresolved_total: int
+    plan: RemovalReconciliationPlan
     canonical: CanonicalKnowledgeBase
 
 
@@ -116,6 +119,7 @@ class CanonicalReconciliationService:
         }
         payload["knowledge_version"] = self._knowledge_version(payload)
         payload["generator_version"] = self.GENERATOR_VERSION
+        payload["generated_at"] = datetime.now(timezone.utc)
         try:
             canonical = CanonicalKnowledgeBase.model_validate(payload)
         except Exception as exc:
@@ -143,6 +147,7 @@ class CanonicalReconciliationService:
             retained_from_active_total=retained,
             confirmed_removed_total=confirmed,
             unresolved_total=plan.unresolved_total,
+            plan=plan,
             canonical=canonical,
         )
 

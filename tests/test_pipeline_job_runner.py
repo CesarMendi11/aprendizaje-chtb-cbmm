@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import create_engine
@@ -112,6 +113,19 @@ class FakeCanonicalImportExecutor:
             "source_canonical_job_id": parameters["source_canonical_job_id"],
             "staging_ready": True,
         }
+
+
+class FakeCanonicalReconciliationExecutor:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, *, job_id, scope, target, parameters, progress):
+        self.calls.append((job_id, scope, target, parameters))
+        progress(
+            "reconciled_canonical_ready",
+            {"work_units": 4, "progress_total": 4, "knowledge_version": "reconciled-test"},
+        )
+        return {"knowledge_version": "reconciled-test", "snapshot_mode": "full"}
 
 
 class FakeProjectionSyncExecutor:
@@ -406,6 +420,32 @@ def test_runner_dispatches_canonical_merge_executor():
     engine.dispose()
 
 
+def test_runner_dispatches_canonical_reconciliation_executor():
+    engine, factory = build_factory()
+    candidate_id = "00000000-0000-0000-0000-000000000791"
+    with factory.begin() as session:
+        job = PipelineJobService(session).create(
+            kind="canonical_reconciliation",
+            scope="version",
+            erp_id="erp:test",
+            knowledge_version_id=uuid.UUID(candidate_id),
+            parameters={"candidate_version_id": candidate_id, "erp_id": "erp:test"},
+        )
+        job_id = job.id
+
+    executor = FakeCanonicalReconciliationExecutor()
+    PipelineJobRunner(factory, canonical_reconciliation_executor=executor).run(job_id)
+
+    with factory() as session:
+        stored = PipelineJobRepository(session).get(job_id)
+        assert stored is not None
+        assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.progress_current == stored.progress_total == 4
+        assert stored.result_payload["knowledge_version"] == "reconciled-test"
+    assert len(executor.calls) == 1
+    engine.dispose()
+
+
 def test_runner_dispatches_canonical_import_executor():
     engine, factory = build_factory()
     source_id = "00000000-0000-0000-0000-000000000789"
@@ -464,7 +504,7 @@ def test_runner_dispatches_projection_sync_executors():
         runner.run(job_id)
 
     with factory() as session:
-        for kind, job_id in jobs:
+        for _kind, job_id in jobs:
             stored = PipelineJobRepository(session).get(job_id)
             assert stored is not None
             assert stored.status == PipelineJobStatus.SUCCEEDED
