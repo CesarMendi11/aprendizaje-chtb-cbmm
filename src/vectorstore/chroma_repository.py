@@ -44,6 +44,13 @@ class ChromaRepository:
             self.collection.delete(ids=stale)
         return len(ids), len(stale)
 
+    def delete_version(self, *, erp_id: str, knowledge_version: str) -> int:
+        scope = {"$and": [{"erp_id": erp_id}, {"knowledge_version": knowledge_version}]}
+        ids = list(self.collection.get(where=scope, include=[])["ids"])
+        if ids:
+            self.collection.delete(ids=ids)
+        return len(ids)
+
     def query(self, embedding, *, top_k=5, erp_id=None, knowledge_version=None):
         clauses = []
         if erp_id:

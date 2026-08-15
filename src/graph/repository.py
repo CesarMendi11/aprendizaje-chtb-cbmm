@@ -82,16 +82,28 @@ class Neo4jRepository:
                 total += len(rows)
         return total
 
-    def replace_version(self, erp_id: str, knowledge_version: str):
-        query = (
+    def delete_version(self, erp_id: str, knowledge_version: str) -> int:
+        parameters = {
+            "managed_by": MANAGED_BY,
+            "erp_id": erp_id,
+            "knowledge_version": knowledge_version,
+        }
+        rows = self.client.execute(
             "MATCH (n:ERPAssistantEntity {managed_by: $managed_by, erp_id: $erp_id, "
-            "knowledge_version: $knowledge_version}) DETACH DELETE n"
+            "knowledge_version: $knowledge_version}) RETURN count(n) AS count",
+            parameters,
         )
+        count = int(rows[0]["count"]) if rows else 0
         self.client.execute(
-            query,
-            {"managed_by": MANAGED_BY, "erp_id": erp_id, "knowledge_version": knowledge_version},
+            "MATCH (n:ERPAssistantEntity {managed_by: $managed_by, erp_id: $erp_id, "
+            "knowledge_version: $knowledge_version}) DETACH DELETE n",
+            parameters,
             write=True,
         )
+        return count
+
+    def replace_version(self, erp_id: str, knowledge_version: str):
+        return self.delete_version(erp_id, knowledge_version)
 
     def status(self):
         constraints = self.client.execute(

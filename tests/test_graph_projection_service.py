@@ -41,16 +41,25 @@ def test_repository_uses_parameterized_merge_and_batches():
 
 def test_replace_is_strictly_namespaced_and_parameterized():
     client = FakeClient()
-    Neo4jRepository(client).replace_version("erp:test", "v1")
-    query, parameters, write = client.calls[0]
-    assert "MATCH (n:ERPAssistantEntity" in query and "DETACH DELETE n" in query
-    assert "MATCH (n) DETACH DELETE n" not in query
-    assert parameters == {
+    removed = Neo4jRepository(client).replace_version("erp:test", "v1")
+    assert removed == 0
+    assert len(client.calls) == 2
+    count_query, count_parameters, count_write = client.calls[0]
+    delete_query, delete_parameters, delete_write = client.calls[1]
+    assert "MATCH (n:ERPAssistantEntity" in count_query
+    assert "RETURN count(n) AS count" in count_query
+    assert count_write is False
+    assert "MATCH (n:ERPAssistantEntity" in delete_query
+    assert "DETACH DELETE n" in delete_query
+    assert "MATCH (n) DETACH DELETE n" not in delete_query
+    expected = {
         "managed_by": "erp_assistant",
         "erp_id": "erp:test",
         "knowledge_version": "v1",
     }
-    assert write is True
+    assert count_parameters == expected
+    assert delete_parameters == expected
+    assert delete_write is True
 
 
 def test_relationship_merge_is_parameterized_and_batched():

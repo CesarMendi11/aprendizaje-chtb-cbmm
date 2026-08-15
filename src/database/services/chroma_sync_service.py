@@ -13,6 +13,7 @@ from src.knowledge.canonical.privacy import sanitize_text
 from src.vectorstore import collection_name, document_id
 
 from .effective_knowledge_service import EffectiveKnowledgeService
+from .projection_replacement_service import ProjectionReplacementService
 
 TYPE_NAMES = {
     "erp_system": "ERP",
@@ -187,6 +188,7 @@ class ChromaSyncService:
         version, documents, summary = self.prepare(
             erp_id=erp_id, knowledge_version=knowledge_version
         )
+        lineage = ProjectionReplacementService(self.session).resolve(version.id)
         if not self.repository or not self.embeddings:
             raise ValueError("ChromaDB y cliente de embeddings deben estar configurados")
         job = self.jobs.get(version.id, SyncTarget.CHROMADB, for_update=True)
@@ -204,12 +206,25 @@ class ChromaSyncService:
                 erp_id=version.erp_id,
                 knowledge_version=version.knowledge_version,
             )
+            removed_previous_version = 0
+            if lineage.previous_active_knowledge_version is not None:
+                removed_previous_version = self.repository.delete_version(
+                    erp_id=lineage.erp_id,
+                    knowledge_version=lineage.previous_active_knowledge_version,
+                )
             summary.update(
                 {
                     "embedding_model": self.embeddings.model,
                     "embedding_dimensions": self.embeddings.dimensions,
                     "inserted_or_updated": changed,
                     "removed_stale": removed,
+                    "previous_version_id": (
+                        str(lineage.previous_active_version_id)
+                        if lineage.previous_active_version_id is not None
+                        else None
+                    ),
+                    "previous_knowledge_version": lineage.previous_active_knowledge_version,
+                    "removed_previous_version": removed_previous_version,
                 }
             )
             job.status, job.finished_at = SyncStatus.SUCCEEDED, utcnow()
@@ -221,6 +236,9 @@ class ChromaSyncService:
                     "embedding_dimensions",
                     "inserted_or_updated",
                     "removed_stale",
+                    "previous_version_id",
+                    "previous_knowledge_version",
+                    "removed_previous_version",
                 )
             }
             self.session.flush()
@@ -268,6 +286,9 @@ class ChromaSyncService:
             "collection_name": collection_name(),
             "inserted_or_updated": 0,
             "removed_stale": 0,
+            "previous_version_id": None,
+            "previous_knowledge_version": None,
+            "removed_previous_version": 0,
             "skipped": sum(reasons.values()),
             "skipped_reasons": reasons,
         }

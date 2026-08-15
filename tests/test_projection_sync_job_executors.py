@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine
@@ -18,6 +18,7 @@ from src.database.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
+    KnowledgeVersionPromotion,
     KnowledgeVersionRecord,
     SyncJob,
 )
@@ -45,6 +46,10 @@ class FakeNeo4jRepository:
     def replace_version(self, erp_id, knowledge_version):
         self.replaced.append((erp_id, knowledge_version))
 
+    def delete_version(self, erp_id, knowledge_version):
+        self.replaced.append((erp_id, knowledge_version))
+        return 7
+
     def upsert_nodes(self, nodes, *, batch_size=200):
         self.nodes = list(nodes)
         return len(self.nodes)
@@ -58,11 +63,16 @@ class FakeChromaRepository:
     def __init__(self):
         self.documents = []
         self.embeddings = []
+        self.deleted_versions = []
 
     def sync(self, documents, embeddings, *, erp_id, knowledge_version):
         self.documents = list(documents)
         self.embeddings = list(embeddings)
         return len(self.documents), 0
+
+    def delete_version(self, *, erp_id, knowledge_version):
+        self.deleted_versions.append((erp_id, knowledge_version))
+        return 5
 
 
 class FakeEmbeddings:
@@ -250,6 +260,148 @@ def test_projection_executor_refuses_version_that_is_no_longer_active(executor_f
     engine.dispose()
 
 
+def seed_replacement_active(factory):
+    with factory.begin() as session:
+        erp = ERPSystemRecord(
+            id="erp:replacement-projection",
+            slug="replacement-projection",
+            name="ERP Replacement Projection",
+            profile_name="test",
+            safe_metadata={},
+        )
+        old_run = ImportRun(
+            erp=erp,
+            source_knowledge_path="old.json",
+            source_manifest_path="old-manifest.json",
+            requested_knowledge_version="old-v1",
+            status=ImportStatus.SUCCEEDED,
+            source_hashes={},
+        )
+        new_run = ImportRun(
+            erp=erp,
+            source_knowledge_path="new.json",
+            source_manifest_path="new-manifest.json",
+            requested_knowledge_version="new-v2",
+            status=ImportStatus.SUCCEEDED,
+            source_hashes={},
+        )
+        previous = KnowledgeVersionRecord(
+            erp=erp,
+            import_run=old_run,
+            schema_version="1.0",
+            knowledge_version="old-v1",
+            canonical_hash="c" * 64,
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=KnowledgeVersionStatus.ARCHIVED,
+        )
+        current = KnowledgeVersionRecord(
+            erp=erp,
+            import_run=new_run,
+            schema_version="1.0",
+            knowledge_version="new-v2",
+            canonical_hash="d" * 64,
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=KnowledgeVersionStatus.ACTIVE,
+        )
+        item = KnowledgeItem(
+            knowledge_version=current,
+            canonical_id="screen:replacement",
+            entity_type="screen",
+            title="Pantalla replacement",
+            normalized_title="pantalla replacement",
+            route="/replacement",
+            content_hash="e" * 64,
+            source_payload={
+                "id": "screen:replacement",
+                "title": "Pantalla replacement",
+                "route": "/replacement",
+            },
+            generated_review_status=ReviewStatus.PENDING_REVIEW,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        session.add_all([previous, current, item])
+        session.flush()
+        session.add_all(
+            [
+                KnowledgeVersionPromotion(
+                    knowledge_version_id=current.id,
+                    previous_active_version_id=previous.id,
+                    reviewer_subject="reviewer:test",
+                    reason="replacement",
+                    source="api",
+                    gate_snapshot={},
+                ),
+                SyncJob(
+                    knowledge_version=current,
+                    target=SyncTarget.NEO4J,
+                    status=SyncStatus.PENDING,
+                ),
+                SyncJob(
+                    knowledge_version=current,
+                    target=SyncTarget.CHROMADB,
+                    status=SyncStatus.PENDING,
+                ),
+            ]
+        )
+        session.flush()
+        return str(current.id), erp.id, current.knowledge_version
+
+
+def test_neo4j_replacement_sync_deletes_previous_archived_projection_after_upsert():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_replacement_active(factory)
+    repository = FakeNeo4jRepository()
+
+    result = Neo4jSyncJobExecutor(
+        factory,
+        repository_factory=lambda: repository,
+    ).execute(
+        job_id="00000000-0000-0000-0000-000000000006",
+        scope="version",
+        target=knowledge_version,
+        parameters={
+            **parameters(version_id, erp_id, knowledge_version),
+            "batch_size": 100,
+            "replace_version": False,
+        },
+        progress=lambda *_: None,
+    )
+
+    assert repository.replaced == [(erp_id, "old-v1")]
+    assert result["previous_knowledge_version"] == "old-v1"
+    assert result["removed_previous_version"] == 7
+    engine.dispose()
+
+
+def test_chroma_replacement_sync_deletes_previous_archived_projection_after_upsert():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_replacement_active(factory)
+    repository = FakeChromaRepository()
+
+    result = ChromaSyncJobExecutor(
+        factory,
+        repository_factory=lambda: repository,
+        embeddings_factory=FakeEmbeddings,
+    ).execute(
+        job_id="00000000-0000-0000-0000-000000000007",
+        scope="version",
+        target=knowledge_version,
+        parameters=parameters(version_id, erp_id, knowledge_version),
+        progress=lambda *_: None,
+    )
+
+    assert repository.deleted_versions == [(erp_id, "old-v1")]
+    assert result["previous_knowledge_version"] == "old-v1"
+    assert result["removed_previous_version"] == 5
+    engine.dispose()
+
+
 class FailingNeo4jRepository(FakeNeo4jRepository):
     def upsert_nodes(self, nodes, *, batch_size=200):
         raise RuntimeError("neo4j failure")
@@ -296,4 +448,51 @@ def test_failed_projection_persists_underlying_sync_job_failure_before_pipeline_
         version = session.get(KnowledgeVersionRecord, uuid.UUID(version_id))
         chroma_job = next(job for job in version.sync_jobs if job.target == SyncTarget.CHROMADB)
         assert chroma_job.status == SyncStatus.FAILED
+    engine.dispose()
+
+
+def test_failed_neo4j_replacement_keeps_previous_projection_intact():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_replacement_active(factory)
+    repository = FailingNeo4jRepository()
+
+    with pytest.raises(Neo4jSyncJobExecutionError):
+        Neo4jSyncJobExecutor(
+            factory,
+            repository_factory=lambda: repository,
+        ).execute(
+            job_id="00000000-0000-0000-0000-000000000008",
+            scope="version",
+            target=knowledge_version,
+            parameters={
+                **parameters(version_id, erp_id, knowledge_version),
+                "replace_version": False,
+                "batch_size": 200,
+            },
+            progress=lambda *_: None,
+        )
+
+    assert repository.replaced == []
+    engine.dispose()
+
+
+def test_failed_chroma_replacement_keeps_previous_projection_intact():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_replacement_active(factory)
+    repository = FailingChromaRepository()
+
+    with pytest.raises(ChromaSyncJobExecutionError):
+        ChromaSyncJobExecutor(
+            factory,
+            repository_factory=lambda: repository,
+            embeddings_factory=FakeEmbeddings,
+        ).execute(
+            job_id="00000000-0000-0000-0000-000000000009",
+            scope="version",
+            target=knowledge_version,
+            parameters=parameters(version_id, erp_id, knowledge_version),
+            progress=lambda *_: None,
+        )
+
+    assert repository.deleted_versions == []
     engine.dispose()

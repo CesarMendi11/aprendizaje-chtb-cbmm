@@ -11,6 +11,7 @@ from src.graph.projection_service import GraphProjectionService
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .effective_knowledge_service import EffectiveKnowledgeService
+from .projection_replacement_service import ProjectionReplacementService
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class Neo4jSyncService:
         allow_empty=False,
     ):
         version = self._version(erp_id, knowledge_version)
+        lineage = ProjectionReplacementService(self.session).resolve(version.id)
         plan = self.prepare(erp_id=version.erp_id, knowledge_version=version.knowledge_version)
         if not plan.eligible_items and not allow_empty:
             raise ValueError("No existen elementos approved/corrected; use --allow-empty")
@@ -80,6 +82,12 @@ class Neo4jSyncService:
             relationships = self.repository.upsert_relationships(
                 plan.relationships, batch_size=batch_size
             )
+            removed_previous_version = 0
+            if lineage.previous_active_knowledge_version is not None:
+                removed_previous_version = self.repository.delete_version(
+                    lineage.erp_id,
+                    lineage.previous_active_knowledge_version,
+                )
             job.status = SyncStatus.SUCCEEDED
             job.finished_at = utcnow()
             job.checkpoint = self._checkpoint(
@@ -87,6 +95,13 @@ class Neo4jSyncService:
                 batch_number=max(1, (len(plan.nodes) + batch_size - 1) // batch_size),
                 nodes=nodes,
                 relationships=relationships,
+                previous_version_id=(
+                    str(lineage.previous_active_version_id)
+                    if lineage.previous_active_version_id is not None
+                    else None
+                ),
+                previous_knowledge_version=lineage.previous_active_knowledge_version,
+                removed_previous_version=removed_previous_version,
             )
             self.session.flush()
             self.session.refresh(job)
@@ -123,7 +138,16 @@ class Neo4jSyncService:
         return version
 
     @staticmethod
-    def _checkpoint(plan, *, batch_number, nodes=None, relationships=None):
+    def _checkpoint(
+        plan,
+        *,
+        batch_number,
+        nodes=None,
+        relationships=None,
+        previous_version_id=None,
+        previous_knowledge_version=None,
+        removed_previous_version=0,
+    ):
         return {
             "eligible_items": plan.eligible_items,
             "projected_nodes": len(plan.nodes) if nodes is None else nodes,
@@ -133,6 +157,9 @@ class Neo4jSyncService:
             "skipped_relationships": plan.skipped_relationships,
             "batch_number": batch_number,
             "projection_hash": plan.projection_hash,
+            "previous_version_id": previous_version_id,
+            "previous_knowledge_version": previous_knowledge_version,
+            "removed_previous_version": removed_previous_version,
         }
 
     @staticmethod
@@ -144,5 +171,13 @@ class Neo4jSyncService:
             "attempt_count": job.attempt_count,
             "checkpoint": dict(job.checkpoint or {}),
         }
+        checkpoint = dict(job.checkpoint or {})
+        summary["previous_version_id"] = checkpoint.get("previous_version_id")
+        summary["previous_knowledge_version"] = checkpoint.get(
+            "previous_knowledge_version"
+        )
+        summary["removed_previous_version"] = int(
+            checkpoint.get("removed_previous_version") or 0
+        )
         summary["job_status"] = str(job.status)
         return summary

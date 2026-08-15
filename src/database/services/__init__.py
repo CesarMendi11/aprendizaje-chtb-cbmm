@@ -32,6 +32,11 @@ from .pipeline_job_service import (
     PipelineJobService,
     PipelineJobTransitionError,
 )
+from .projection_replacement_service import (
+    ProjectionReplacementError,
+    ProjectionReplacementLineage,
+    ProjectionReplacementService,
+)
 from .removal_reconciliation_plan_service import (
     RemovalReconciliationDecision,
     RemovalReconciliationPlan,
@@ -103,6 +108,9 @@ __all__ = [
     "PipelineJobNotFoundError",
     "PipelineJobService",
     "PipelineJobTransitionError",
+    "ProjectionReplacementError",
+    "ProjectionReplacementLineage",
+    "ProjectionReplacementService",
     "SafeDocumentBuilder",
     "ScreenCrawlTarget",
     "ScreenScopeResolutionError",
