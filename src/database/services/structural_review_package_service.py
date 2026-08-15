@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.database.enums import PipelineJobKind, PipelineJobStatus, ReviewSource
-from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, ReviewAction
+from src.database.enums import ReviewSource
+from src.database.models import KnowledgeItem, KnowledgeVersionRecord, ReviewAction
 
 from .version_diff_service import (
     VersionDiff,
@@ -91,7 +91,7 @@ class StructuralReviewPackageService:
         active = self.session.get(KnowledgeVersionRecord, uuid.UUID(diff.active_version_id))
         if candidate is None or active is None or candidate.erp_id != active.erp_id:
             raise StructuralReviewPackageError("Candidate y ACTIVE no corresponden al mismo ERP.")
-        partial_merge = self._is_partial_merge_candidate(candidate)
+        partial_merge = diff.candidate_origin == "partial_module_merge"
         active_items = self._items(active.id)
         candidate_items = self._items(candidate.id)
         packages, unscoped = self._group(diff, active_items, candidate_items, partial_merge)
@@ -106,7 +106,7 @@ class StructuralReviewPackageService:
             candidate_version_id=diff.candidate_version_id,
             candidate_knowledge_version=diff.candidate_knowledge_version,
             erp_id=diff.erp_id,
-            candidate_origin="partial_module_merge" if partial_merge else "full_canonical",
+            candidate_origin=diff.candidate_origin,
             diff_totals=diff.totals,
             affected_screens=len(packages),
             screens_with_changes=changed_screens,
@@ -118,36 +118,6 @@ class StructuralReviewPackageService:
             unscoped_changes=tuple(unscoped),
             packages=page,
         )
-
-    def _is_partial_merge_candidate(self, candidate: KnowledgeVersionRecord) -> bool:
-        imports = list(
-            self.session.scalars(
-                select(PipelineJob).where(
-                    PipelineJob.kind == PipelineJobKind.CANONICAL_IMPORT,
-                    PipelineJob.status == PipelineJobStatus.SUCCEEDED,
-                    PipelineJob.knowledge_version_id == candidate.id,
-                )
-            )
-        )
-        origins = [
-            job
-            for job in imports
-            if dict(job.result_payload or {}).get("import_result") == "imported"
-        ]
-        if len(origins) != 1:
-            raise StructuralReviewPackageError(
-                "La provenance canonical_import originaria es ausente o ambigua."
-            )
-        source_id = (origins[0].parameters or {}).get("source_canonical_job_id")
-        try:
-            source = self.session.get(PipelineJob, uuid.UUID(str(source_id)))
-        except (TypeError, ValueError) as exc:
-            raise StructuralReviewPackageError(
-                "La provenance canonical fuente es inválida."
-            ) from exc
-        if source is None or source.status != PipelineJobStatus.SUCCEEDED:
-            raise StructuralReviewPackageError("La provenance canonical fuente es inválida.")
-        return source.kind == PipelineJobKind.CANONICAL_MERGE
 
     def _items(self, version_id: uuid.UUID) -> dict[tuple[str, str], KnowledgeItem]:
         return {

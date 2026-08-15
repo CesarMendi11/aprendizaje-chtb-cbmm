@@ -49,6 +49,130 @@ def _candidate_paths(tmp_path, canonical_dir):
     return knowledge_path, manifest_path
 
 
+def _versioned_paths(tmp_path, canonical_dir, knowledge_version):
+    knowledge = json.loads((canonical_dir / "knowledge.json").read_text())
+    manifest = json.loads((canonical_dir / "manifest.json").read_text())
+    knowledge["knowledge_version"] = knowledge_version
+    manifest["knowledge_version"] = knowledge_version
+    manifest["canonical_document_hash"] = content_hash(knowledge)
+    knowledge_path = tmp_path / f"{knowledge_version}.json"
+    manifest_path = tmp_path / f"{knowledge_version}-manifest.json"
+    knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    return knowledge_path, manifest_path
+
+
+def seed_reconciled(session, tmp_path):
+    canonical_dir = exported_fictional_canonical(tmp_path / "reconciled-canonical")
+    with session.begin():
+        active_result = CanonicalImportService(session).import_canonical(
+            canonical_dir / "knowledge.json",
+            canonical_dir / "manifest.json",
+            canonical_dir / "build_report.json",
+        )
+    with session.begin():
+        raw_result = CanonicalImportService(session).import_canonical(
+            *_versioned_paths(tmp_path, canonical_dir, "diff-raw"),
+            activate=False,
+            create_sync_jobs=False,
+        )
+        candidate_result = CanonicalImportService(session).import_canonical(
+            *_versioned_paths(tmp_path, canonical_dir, "diff-reconciled"),
+            activate=False,
+            create_sync_jobs=False,
+        )
+        active = session.get(KnowledgeVersionRecord, uuid.UUID(active_result.version_id))
+        raw = session.get(KnowledgeVersionRecord, uuid.UUID(raw_result.version_id))
+        candidate = session.get(KnowledgeVersionRecord, uuid.UUID(candidate_result.version_id))
+        decision_set_hash = content_hash([])
+        source = PipelineJob(
+            kind=PipelineJobKind.CANONICAL_RECONCILIATION,
+            status=PipelineJobStatus.SUCCEEDED,
+            scope=PipelineJobScope.VERSION,
+            target=None,
+            profile_name="test",
+            erp_id=candidate.erp_id,
+            knowledge_version_id=raw.id,
+            request_source="test",
+            parameters={
+                "candidate_version_id": str(raw.id),
+                "candidate_knowledge_version": raw.knowledge_version,
+                "active_version_id": str(active.id),
+                "active_knowledge_version": active.knowledge_version,
+                "erp_id": candidate.erp_id,
+            },
+            stage="completed",
+            progress_current=4,
+            progress_total=4,
+            checkpoint={},
+            result_payload={
+                "erp_id": candidate.erp_id,
+                "candidate_origin": "partial_module_merge",
+                "raw_candidate_version_id": str(raw.id),
+                "raw_candidate_knowledge_version": raw.knowledge_version,
+                "base_active_version_id": str(active.id),
+                "base_active_knowledge_version": active.knowledge_version,
+                "knowledge_version": candidate.knowledge_version,
+                "reconciled_knowledge_version": candidate.knowledge_version,
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+                "unresolved_total": 0,
+                "decision_set_hash": decision_set_hash,
+                "decisions": [],
+            },
+            requested_at=datetime.now(timezone.utc),
+            started_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(timezone.utc),
+        )
+        session.add(source)
+        session.flush()
+        origin = PipelineJob(
+            kind=PipelineJobKind.CANONICAL_IMPORT,
+            status=PipelineJobStatus.SUCCEEDED,
+            scope=PipelineJobScope.VERSION,
+            target=None,
+            profile_name="test",
+            erp_id=candidate.erp_id,
+            knowledge_version_id=candidate.id,
+            request_source="test",
+            parameters={
+                "source_reconciliation_job_id": str(source.id),
+                "erp_id": candidate.erp_id,
+                "expected_knowledge_version": candidate.knowledge_version,
+                "expected_decision_set_hash": decision_set_hash,
+                "raw_candidate_version_id": str(raw.id),
+                "base_active_version_id": str(active.id),
+                "activation_mode": "staging_only",
+            },
+            stage="completed",
+            progress_current=4,
+            progress_total=4,
+            checkpoint={},
+            result_payload={
+                "source_reconciliation_job_id": str(source.id),
+                "scope": "version",
+                "target": None,
+                "erp_id": candidate.erp_id,
+                "knowledge_version_id": str(candidate.id),
+                "knowledge_version": candidate.knowledge_version,
+                "version_status": "imported",
+                "import_result": "imported",
+                "staging_ready": True,
+                "activation_performed": False,
+                "raw_candidate_version_id": str(raw.id),
+                "raw_candidate_knowledge_version": raw.knowledge_version,
+                "base_active_version_id": str(active.id),
+                "base_active_knowledge_version": active.knowledge_version,
+                "decision_set_hash": decision_set_hash,
+            },
+            requested_at=datetime.now(timezone.utc),
+            started_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(timezone.utc),
+        )
+        session.add(origin)
+    return active.id, raw.id, candidate.id, source.id, origin.id
+
+
 class Client:
     def __init__(self, app):
         self.app = app
@@ -312,3 +436,48 @@ def test_diff_api_filters_paginates_and_uses_admin_errors(tmp_path):
     assert invalid.status_code == 422
     assert invalid.json()["category"] == "invalid_version_diff"
     engine.dispose()
+
+
+def test_diff_accepts_governed_reconciled_full_candidate(session, tmp_path):
+    active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+
+    result = VersionDiffService(session).compare(candidate_id)
+
+    assert result.active_version_id == str(active_id)
+    assert result.candidate_version_id == str(candidate_id)
+    assert result.candidate_origin == "reconciled_full"
+    assert result.totals["removed"] == 0
+    assert sum(result.totals.values()) > 0
+
+
+@pytest.mark.parametrize(
+    "tamper",
+    (
+        "decision_hash",
+        "base_active",
+        "unresolved",
+        "source_parameters",
+    ),
+)
+def test_diff_reconciled_provenance_fails_closed(session, tmp_path, tamper):
+    _, _, candidate_id, source_id, origin_id = seed_reconciled(session, tmp_path)
+    with session.begin():
+        source = session.get(PipelineJob, source_id)
+        origin = session.get(PipelineJob, origin_id)
+        if tamper == "decision_hash":
+            origin.result_payload = {**origin.result_payload, "decision_set_hash": "f" * 64}
+        elif tamper == "base_active":
+            source.result_payload = {
+                **source.result_payload,
+                "base_active_version_id": str(uuid.uuid4()),
+            }
+        elif tamper == "unresolved":
+            source.result_payload = {**source.result_payload, "unresolved_total": 1}
+        else:
+            source.parameters = {
+                **source.parameters,
+                "candidate_knowledge_version": "tampered",
+            }
+
+    with pytest.raises(VersionDiffError):
+        VersionDiffService(session).compare(candidate_id)

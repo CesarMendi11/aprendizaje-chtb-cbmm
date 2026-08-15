@@ -25,7 +25,7 @@ from src.database.models import (
 from src.database.services import StructuralReviewPackageService
 from src.database.services.structural_review_package_service import StructuralReviewPackageError
 from src.database.services.version_diff_service import VersionDiffChangeType, VersionDiffItem
-from tests.test_version_diff_service import seed
+from tests.test_version_diff_service import seed, seed_reconciled
 
 
 @pytest.fixture
@@ -336,3 +336,13 @@ def test_review_package_api_success_404_and_invalid_provenance(tmp_path):
     assert invalid.status_code == 422
     assert invalid.json()["category"] == "invalid_structural_review_package"
     engine.dispose()
+
+
+def test_review_package_accepts_reconciled_full_candidate(session, tmp_path):
+    _, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+
+    result = StructuralReviewPackageService(session).build(candidate_id)
+
+    assert result.candidate_origin == "reconciled_full"
+    assert result.diff_totals["removed"] == 0
+    assert result.unconfirmed_removals == 0
