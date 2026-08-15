@@ -3,6 +3,8 @@ import {
   AdminApiError,
   createCanonicalBuildJob,
   createCanonicalImportJob,
+  createCanonicalMergeJob,
+  createCanonicalReconciliationJob,
   createChromaSyncJob,
   createCrawlJob,
   createNeo4jSyncJob,
@@ -74,6 +76,8 @@ const formatTime = (value: string | null) => value ? new Date(value).toLocaleTim
 const kindLabel = (kind: string) => ({
   crawl: 'Crawler',
   canonical_build: 'Canonical Builder',
+  canonical_merge: 'Canonical Merge',
+  canonical_reconciliation: 'Reconciliación canónica',
   canonical_import: 'Importación staging',
   neo4j_sync: 'Sync Neo4j',
   chroma_sync: 'Sync Chroma',
@@ -170,11 +174,36 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
+  const launchCanonicalMerge = async () => {
+    const source = state.active
+    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_build' || source.scope !== 'module' || source.status !== 'succeeded') return
+    setState((old) => ({ ...old, launching: true, message: null }))
+    try { rememberJob(await createCanonicalMergeJob({ source_canonical_job_id: source.id })) }
+    catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
+  }
+
   const launchCanonicalImport = async () => {
     const source = state.active
-    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_build' || source.status !== 'succeeded') return
+    if (dataMode !== 'live' || isBusy || !source || source.status !== 'succeeded') return
+    if (!['canonical_build', 'canonical_merge', 'canonical_reconciliation'].includes(source.kind)) return
     setState((old) => ({ ...old, launching: true, message: null }))
-    try { rememberJob(await createCanonicalImportJob({ source_canonical_job_id: source.id })) }
+    try {
+      const payload = source.kind === 'canonical_reconciliation'
+        ? { source_reconciliation_job_id: source.id }
+        : { source_canonical_job_id: source.id }
+      rememberJob(await createCanonicalImportJob(payload))
+    }
+    catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
+  }
+
+  const launchCanonicalReconciliation = async () => {
+    const source = state.active
+    const candidateVersionId = source?.result_payload && typeof source.result_payload.knowledge_version_id === 'string'
+      ? source.result_payload.knowledge_version_id
+      : source?.knowledge_version_id
+    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_import' || source.status !== 'succeeded' || !candidateVersionId) return
+    setState((old) => ({ ...old, launching: true, message: null }))
+    try { rememberJob(await createCanonicalReconciliationJob({ candidate_version_id: candidateVersionId })) }
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
@@ -225,7 +254,9 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
   const canonicalDir = asString(result.canonical_dir)
   const knowledgeVersion = asString(result.knowledge_version) ?? asString(checkpoint.knowledge_version)
   const canBuild = Boolean(job && job.kind === 'crawl' && job.status === 'succeeded' && !isBusy)
-  const canImport = Boolean(job && job.kind === 'canonical_build' && job.status === 'succeeded' && !isBusy)
+  const canMerge = Boolean(job && job.kind === 'canonical_build' && job.scope === 'module' && job.status === 'succeeded' && !isBusy)
+  const canImport = Boolean(job && ['canonical_build', 'canonical_merge', 'canonical_reconciliation'].includes(job.kind) && job.status === 'succeeded' && !isBusy && !(job.kind === 'canonical_build' && job.scope === 'module'))
+  const canReconcile = Boolean(job && job.kind === 'canonical_import' && job.status === 'succeeded' && job.parameters.requires_active_base === true && !job.parameters.source_reconciliation_job_id && !isBusy)
 
   const system = state.system
   const activeVersion = system?.knowledge.active_version ?? null
@@ -253,6 +284,8 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
         <button className="pipeline-primary" onClick={launchRetenciones} disabled={dataMode !== 'live' || isBusy}>Recorrer Retenciones</button>
         <button onClick={launchFull} disabled={dataMode !== 'live' || isBusy}>Recorrer ERP completo</button>
         <button className="pipeline-next" onClick={() => void launchCanonicalBuild()} disabled={dataMode !== 'live' || !canBuild}>Construir canonical</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalMerge()} disabled={dataMode !== 'live' || !canMerge}>Fusionar módulo</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalReconciliation()} disabled={dataMode !== 'live' || !canReconcile}>Reconciliar removals</button>
         <button className="pipeline-next" onClick={() => void launchCanonicalImport()} disabled={dataMode !== 'live' || !canImport}>Importar a staging</button>
         <button className="pipeline-refresh" onClick={() => void loadRecent()} disabled={dataMode !== 'live' || state.loading}>Actualizar jobs</button>
       </div>
@@ -291,7 +324,9 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
           {artifactRoot && <p className="pipeline-artifacts"><span>Artefactos aislados</span><code>{artifactRoot}</code></p>}
           {canonicalDir && <p className="pipeline-artifacts"><span>Canonical</span><code>{canonicalDir}</code></p>}
           {canBuild && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalBuild()}>Construir canonical desde este crawl</button></div>}
-          {canImport && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalImport()}>Importar este canonical a staging</button></div>}
+          {canMerge && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalMerge()}>Fusionar este módulo con ACTIVE</button></div>}
+          {canReconcile && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalReconciliation()}>Reconciliar removals con HITL resuelto</button></div>}
+          {canImport && <div className="pipeline-next-step"><span>Siguiente etapa disponible</span><button onClick={() => void launchCanonicalImport()}>{job?.kind === 'canonical_reconciliation' ? 'Importar reconciliado a staging' : 'Importar este canonical a staging'}</button></div>}
         </>}
       </article>
 

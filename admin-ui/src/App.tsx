@@ -67,7 +67,7 @@ export default function App() {
     reloading={tree.status === 'loading'}
   >
     {section === 'overview' && <OverviewPage erp={erp} />}
-    {section === 'structural' && (knowledgePageProps ? <StructuralKnowledgePage {...knowledgePageProps} /> : <KnowledgeUnavailable state={tree} retry={loadTree} />)}
+    {section === 'structural' && (knowledgePageProps ? <StructuralKnowledgePage {...knowledgePageProps} onOpenJob={(jobId) => { setPipelineFocusJobId(jobId); setSection('pipeline') }} /> : <KnowledgeUnavailable state={tree} retry={loadTree} />)}
     {section === 'semantic' && (knowledgePageProps ? <SemanticKnowledgePage {...knowledgePageProps} /> : <KnowledgeUnavailable state={tree} retry={loadTree} />)}
     {section === 'publication' && <PublicationPage onOpenJob={(jobId) => { setPipelineFocusJobId(jobId); setSection('pipeline') }} />}
     {section === 'pipeline' && <PipelinePage focusJobId={pipelineFocusJobId} />}

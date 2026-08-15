@@ -17,6 +17,8 @@ from src.database.enums import ImportStatus, KnowledgeVersionStatus
 from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
 from src.database.services import PipelineJobService
 from src.knowledge.canonical.enums import ReviewStatus
+from tests.removal_review_fixtures import resolve_all_removals
+from tests.test_removal_reconciliation_plan_service import partial_candidate
 
 
 class Client:
@@ -26,9 +28,7 @@ class Client:
     def get(self, path):
         async def send():
             async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(
-                    app=self.app, client=("127.0.0.1", 50000)
-                ),
+                transport=httpx.ASGITransport(app=self.app, client=("127.0.0.1", 50000)),
                 base_url="http://test",
             ) as client:
                 return await client.get(path)
@@ -38,9 +38,7 @@ class Client:
     def post(self, path, json):
         async def send():
             async with httpx.AsyncClient(
-                transport=httpx.ASGITransport(
-                    app=self.app, client=("127.0.0.1", 50000)
-                ),
+                transport=httpx.ASGITransport(app=self.app, client=("127.0.0.1", 50000)),
                 base_url="http://test",
             ) as client:
                 return await client.post(path, json=json)
@@ -63,9 +61,7 @@ class FakeDispatcher:
 def api(tmp_path):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    settings = replace(
-        ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True
-    )
+    settings = replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True)
     database_path = tmp_path / "pipeline_jobs.sqlite3"
     engine = create_engine(f"sqlite+pysqlite:///{database_path}")
     Base.metadata.create_all(engine)
@@ -153,8 +149,6 @@ def test_create_crawl_job_queues_controlled_worker(api):
         assert stored.target == "/admin/cuentasxcobrar/retenciones"
 
 
-
-
 def test_create_module_crawl_pins_target_to_active_knowledge_version(api):
     client, factory, dispatcher = api
     version_id, erp_id = seed_active_module(factory)
@@ -197,22 +191,31 @@ def test_create_module_crawl_pins_target_to_active_knowledge_version(api):
 def test_module_crawl_requires_canonical_module_id_and_rejects_route_target(api):
     client, _, dispatcher = api
 
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={"scope": "module"},
-    ).status_code == 422
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={"scope": "module", "target_module_id": "tracking"},
-    ).status_code == 422
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={
-            "scope": "module",
-            "target": "/admin/tracking",
-            "target_module_id": "module:tracking",
-        },
-    ).status_code == 422
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "module"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "module", "target_module_id": "tracking"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={
+                "scope": "module",
+                "target": "/admin/tracking",
+                "target_module_id": "module:tracking",
+            },
+        ).status_code
+        == 422
+    )
     assert dispatcher.submitted == []
 
 
@@ -231,26 +234,38 @@ def test_module_crawl_rejects_target_not_present_in_active_knowledge(api):
 
 def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api):
     client, _, dispatcher = api
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={"scope": "full", "target": "/admin/retenciones"},
-    ).status_code == 422
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={"scope": "screen", "target": "https://example.test/admin/x"},
-    ).status_code == 422
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={
-            "scope": "screen",
-            "target": "/admin/x",
-            "target_module_id": "module:x",
-        },
-    ).status_code == 422
-    assert client.post(
-        "/api/admin/pipeline-jobs/crawl",
-        json={"scope": "full", "target_module_id": "module:x"},
-    ).status_code == 422
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "full", "target": "/admin/retenciones"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "screen", "target": "https://example.test/admin/x"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={
+                "scope": "screen",
+                "target": "/admin/x",
+                "target_module_id": "module:x",
+            },
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "full", "target_module_id": "module:x"},
+        ).status_code
+        == 422
+    )
     assert dispatcher.submitted == []
 
 
@@ -325,9 +340,13 @@ def test_create_canonical_import_job_is_staging_only(api):
             source.id,
             result_payload={
                 "source_crawl_job_id": crawl_id,
-                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "knowledge_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json"
+                ),
                 "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
-                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "build_report_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json"
+                ),
                 "knowledge_version": "canonical-staging-test",
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
@@ -356,16 +375,21 @@ def test_create_canonical_import_rejects_wrong_or_unfinished_source(api):
         pending = PipelineJobService(session).create(kind="canonical_build", scope="full")
         pending_id = pending.id
 
-    assert client.post(
-        "/api/admin/pipeline-jobs/canonical-import",
-        json={"source_canonical_job_id": str(wrong_id)},
-    ).status_code == 409
-    assert client.post(
-        "/api/admin/pipeline-jobs/canonical-import",
-        json={"source_canonical_job_id": str(pending_id)},
-    ).status_code == 409
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/canonical-import",
+            json={"source_canonical_job_id": str(wrong_id)},
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/canonical-import",
+            json={"source_canonical_job_id": str(pending_id)},
+        ).status_code
+        == 409
+    )
     assert dispatcher.submitted == []
-
 
 
 def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
@@ -400,8 +424,6 @@ def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
         session.add(version)
         session.flush()
         return str(version.id), erp.id
-
-
 
 
 def test_create_canonical_build_preserves_module_base_provenance(api):
@@ -467,9 +489,13 @@ def test_create_canonical_import_rejects_partial_snapshot(api):
             source.id,
             result_payload={
                 "source_crawl_job_id": crawl_id,
-                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "knowledge_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json"
+                ),
                 "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
-                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "build_report_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json"
+                ),
                 "knowledge_version": "partial-module-test",
                 "snapshot_mode": "partial",
                 "snapshot_scope": "module",
@@ -566,7 +592,6 @@ def test_projection_sync_rejects_when_there_is_no_active_version(api):
     assert dispatcher.submitted == []
 
 
-
 def seed_active_screen(factory, *, review=ReviewStatus.APPROVED):
     version_id, erp_id = seed_active_version(factory)
     with factory.begin() as session:
@@ -654,9 +679,13 @@ def test_create_canonical_merge_pins_partial_to_exact_active_base(api):
             source.id,
             result_payload={
                 "source_crawl_job_id": str(crawl_id),
-                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json",
+                "knowledge_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/knowledge.json"
+                ),
                 "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/manifest.json",
-                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json",
+                "build_report_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical/build_report.json"
+                ),
                 "knowledge_version": "partial-v1",
                 "snapshot_mode": "partial",
                 "snapshot_scope": "module",
@@ -715,9 +744,9 @@ def test_create_canonical_merge_rejects_when_pinned_base_is_no_longer_active(api
                 "erp_id": erp_id,
             },
         )
-        session.get(KnowledgeVersionRecord, uuid.UUID(version_id)).status = (
-            KnowledgeVersionStatus.ARCHIVED
-        )
+        session.get(
+            KnowledgeVersionRecord, uuid.UUID(version_id)
+        ).status = KnowledgeVersionStatus.ARCHIVED
 
     response = client.post(
         "/api/admin/pipeline-jobs/canonical-merge",
@@ -747,9 +776,15 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
             source.id,
             result_payload={
                 "source_crawl_job_id": str(crawl_id),
-                "knowledge_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/knowledge.json",
-                "manifest_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/manifest.json",
-                "build_report_path": f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/build_report.json",
+                "knowledge_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/knowledge.json"
+                ),
+                "manifest_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/manifest.json"
+                ),
+                "build_report_path": (
+                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/build_report.json"
+                ),
                 "knowledge_version": "merged-v2",
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
@@ -775,4 +810,114 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
     assert body["parameters"]["base_knowledge_version_id"] == version_id
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
     assert body["parameters"]["merged_target_module_id"] == "module:tracking"
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_reconciliation_queues_resolved_removal_hitl(api, tmp_path):
+    client, factory, dispatcher = api
+    with factory() as session:
+        _active_id, candidate_id = partial_candidate(session, tmp_path)
+        resolve_all_removals(session, candidate_id)
+        session.commit()
+        candidate_id_text = str(candidate_id)
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-reconciliation",
+        json={"candidate_version_id": candidate_id_text},
+    )
+
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_reconciliation"
+    assert body["scope"] == "version"
+    assert body["target"] is None
+    assert body["knowledge_version_id"] == candidate_id_text
+    assert body["parameters"]["candidate_version_id"] == candidate_id_text
+    assert body["parameters"]["candidate_knowledge_version"]
+    assert body["parameters"]["active_version_id"]
+    assert body["parameters"]["active_knowledge_version"]
+    assert body["parameters"]["erp_id"]
+    assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_import_accepts_hitl_reconciliation_source(api):
+    client, factory, dispatcher = api
+    active_id, erp_id = seed_active_version(factory)
+    with factory.begin() as session:
+        active = session.get(KnowledgeVersionRecord, uuid.UUID(active_id))
+        raw_run = ImportRun(
+            erp=active.erp,
+            source_knowledge_path="raw-knowledge.json",
+            source_manifest_path="raw-manifest.json",
+            requested_knowledge_version="raw-v2",
+            status=ImportStatus.SUCCEEDED,
+            source_hashes={},
+        )
+        raw = KnowledgeVersionRecord(
+            erp=active.erp,
+            import_run=raw_run,
+            schema_version="1.0",
+            knowledge_version="raw-v2",
+            canonical_hash="b" * 64,
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=KnowledgeVersionStatus.IMPORTED,
+        )
+        session.add(raw)
+        session.flush()
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_reconciliation",
+            scope="version",
+            erp_id=erp_id,
+            knowledge_version_id=raw.id,
+            parameters={
+                "candidate_version_id": str(raw.id),
+                "candidate_knowledge_version": raw.knowledge_version,
+                "active_version_id": active_id,
+                "active_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+        source_id = source.id
+        service.start(source.id, stage="reconciling", progress_total=4)
+        service.succeed(
+            source.id,
+            result_payload={
+                "erp_id": erp_id,
+                "raw_candidate_version_id": str(raw.id),
+                "raw_candidate_knowledge_version": raw.knowledge_version,
+                "base_active_version_id": active_id,
+                "base_active_knowledge_version": "active-v1",
+                "reconciled_knowledge_version": "reconciled-v3",
+                "decision_set_hash": "c" * 64,
+                "unresolved_total": 0,
+                "decisions": [
+                    {
+                        "decision": "retain_from_active",
+                        "requires_human_review": False,
+                        "review_set_id": str(uuid.uuid4()),
+                        "review_decision_id": str(uuid.uuid4()),
+                        "review_action_id": str(uuid.uuid4()),
+                        "review_revision": 1,
+                    }
+                ],
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_reconciliation_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_import"
+    assert body["scope"] == "version"
+    assert body["erp_id"] == erp_id
+    assert body["parameters"]["source_reconciliation_job_id"] == str(source_id)
+    assert body["parameters"]["expected_knowledge_version"] == "reconciled-v3"
+    assert body["parameters"]["expected_decision_set_hash"] == "c" * 64
     assert str(dispatcher.submitted[-1]) == body["id"]

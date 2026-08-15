@@ -101,8 +101,25 @@ class CanonicalMergePipelineJobCreateRequest(BaseModel):
     source_canonical_job_id: uuid.UUID
 
 
+class CanonicalReconciliationPipelineJobCreateRequest(BaseModel):
+    candidate_version_id: uuid.UUID
+
+
 class CanonicalImportPipelineJobCreateRequest(BaseModel):
-    source_canonical_job_id: uuid.UUID
+    source_canonical_job_id: uuid.UUID | None = None
+    source_reconciliation_job_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def validate_source(self):
+        supplied = [
+            self.source_canonical_job_id is not None,
+            self.source_reconciliation_job_id is not None,
+        ]
+        if sum(supplied) != 1:
+            raise ValueError(
+                "canonical_import requiere exactamente un source canonical o reconciliation"
+            )
+        return self
 
 
 class Neo4jSyncPipelineJobCreateRequest(BaseModel):

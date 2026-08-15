@@ -12,13 +12,14 @@ from src.api.schemas.pipeline_jobs import (
     CanonicalBuildPipelineJobCreateRequest,
     CanonicalImportPipelineJobCreateRequest,
     CanonicalMergePipelineJobCreateRequest,
+    CanonicalReconciliationPipelineJobCreateRequest,
     ChromaSyncPipelineJobCreateRequest,
     CrawlPipelineJobCreateRequest,
     Neo4jSyncPipelineJobCreateRequest,
-    SemanticInferencePipelineJobCreateRequest,
-    SemanticSyncPipelineJobCreateRequest,
     PipelineJobDetail,
     PipelineJobListResponse,
+    SemanticInferencePipelineJobCreateRequest,
+    SemanticSyncPipelineJobCreateRequest,
 )
 from src.database.enums import (
     KnowledgeVersionStatus,
@@ -32,6 +33,9 @@ from src.database.services import (
     ModuleSubtreeResolutionError,
     ModuleSubtreeResolver,
     PipelineJobService,
+    RemovalReconciliationReviewError,
+    RemovalReconciliationReviewNotPreparedError,
+    RemovalReconciliationReviewService,
 )
 from src.knowledge.canonical.enums import ReviewStatus
 
@@ -118,9 +122,7 @@ def create_crawl_job(
 
     if payload.scope == PipelineJobScope.MODULE:
         try:
-            subtree = ModuleSubtreeResolver(session).resolve(
-                payload.target_module_id or ""
-            )
+            subtree = ModuleSubtreeResolver(session).resolve(payload.target_module_id or "")
         except ModuleSubtreeResolutionError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -328,6 +330,92 @@ def create_canonical_merge_job(
 
 
 @router.post(
+    "/canonical-reconciliation",
+    response_model=PipelineJobDetail,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def create_canonical_reconciliation_job(
+    payload: CanonicalReconciliationPipelineJobCreateRequest,
+    request: Request,
+    session: WriteSessionDependency,
+) -> PipelineJobDetail:
+    try:
+        review = RemovalReconciliationReviewService(session).get(payload.candidate_version_id)
+    except RemovalReconciliationReviewNotPreparedError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="El RAW candidate requiere preparar Removal HITL antes de reconciliar.",
+        ) from exc
+    except (RemovalReconciliationReviewError, LookupError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    if review.pending_review != 0:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Canonical reconciliation requiere resolver todas las decisiones de Removal HITL."
+            ),
+        )
+    if review.candidate_origin != "partial_module_merge":
+        raise HTTPException(
+            status_code=409,
+            detail="Removal HITL no corresponde a un candidate partial_module_merge.",
+        )
+
+    try:
+        active_id = uuid.UUID(review.active_version_id)
+        candidate_id = uuid.UUID(review.candidate_version_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="Removal HITL conserva identificadores de versión inválidos.",
+        ) from exc
+
+    candidate = session.get(KnowledgeVersionRecord, candidate_id)
+    active = session.get(KnowledgeVersionRecord, active_id)
+    if (
+        candidate is None
+        or candidate.status != KnowledgeVersionStatus.IMPORTED
+        or candidate.knowledge_version != review.candidate_knowledge_version
+        or candidate.erp_id != review.erp_id
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="El RAW candidate de Removal HITL ya no está IMPORTED o cambió.",
+        )
+    if (
+        active is None
+        or active.status != KnowledgeVersionStatus.ACTIVE
+        or active.knowledge_version != review.active_knowledge_version
+        or active.erp_id != review.erp_id
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="La versión ACTIVE fijada por Removal HITL ya no es válida.",
+        )
+
+    job = PipelineJobService(session).create(
+        kind=PipelineJobKind.CANONICAL_RECONCILIATION,
+        scope=PipelineJobScope.VERSION,
+        target=None,
+        profile_name=request.app.state.pipeline_crawl_profile_name,
+        erp_id=review.erp_id,
+        knowledge_version_id=candidate.id,
+        request_source="admin_api",
+        parameters={
+            "candidate_version_id": str(candidate.id),
+            "candidate_knowledge_version": candidate.knowledge_version,
+            "active_version_id": str(active.id),
+            "active_knowledge_version": active.knowledge_version,
+            "erp_id": review.erp_id,
+        },
+    )
+    session.commit()
+    request.app.state.pipeline_job_dispatcher.submit(job.id)
+    return pipeline_job_detail(job)
+
+
+@router.post(
     "/canonical-import",
     response_model=PipelineJobDetail,
     status_code=status.HTTP_202_ACCEPTED,
@@ -337,6 +425,100 @@ def create_canonical_import_job(
     request: Request,
     session: WriteSessionDependency,
 ) -> PipelineJobDetail:
+    if payload.source_reconciliation_job_id is not None:
+        source = PipelineJobRepository(session).get(payload.source_reconciliation_job_id)
+        if source is None:
+            raise HTTPException(status_code=404, detail="PipelineJob fuente no encontrado.")
+        if source.kind != PipelineJobKind.CANONICAL_RECONCILIATION:
+            raise HTTPException(
+                status_code=409,
+                detail="El job fuente debe ser canonical_reconciliation.",
+            )
+        if source.status != PipelineJobStatus.SUCCEEDED:
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical reconciliation fuente debe haber finalizado correctamente.",
+            )
+        result = dict(source.result_payload or {})
+        required = (
+            "erp_id",
+            "raw_candidate_version_id",
+            "base_active_version_id",
+            "reconciled_knowledge_version",
+            "decision_set_hash",
+            "unresolved_total",
+            "decisions",
+        )
+        if any(key not in result or result[key] is None for key in required):
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_reconciliation fuente no conserva provenance importable.",
+            )
+        if result["unresolved_total"] != 0:
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_reconciliation mantiene removals sin resolver.",
+            )
+        decisions = result["decisions"]
+        if not isinstance(decisions, list) or any(
+            not isinstance(value, dict)
+            or value.get("requires_human_review") is not False
+            or not value.get("review_set_id")
+            or not value.get("review_decision_id")
+            or not value.get("review_action_id")
+            or not isinstance(value.get("review_revision"), int)
+            or value["review_revision"] <= 0
+            for value in decisions
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_reconciliation no conserva Removal HITL resuelto.",
+            )
+        try:
+            raw_id = uuid.UUID(str(result["raw_candidate_version_id"]))
+            active_id = uuid.UUID(str(result["base_active_version_id"]))
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(
+                status_code=409,
+                detail="El canonical_reconciliation conserva pins de versión inválidos.",
+            ) from exc
+        raw = session.get(KnowledgeVersionRecord, raw_id)
+        active = session.get(KnowledgeVersionRecord, active_id)
+        erp_id = str(result["erp_id"])
+        if (
+            raw is None
+            or raw.status != KnowledgeVersionStatus.IMPORTED
+            or raw.erp_id != erp_id
+            or active is None
+            or active.status != KnowledgeVersionStatus.ACTIVE
+            or active.erp_id != erp_id
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Los pins RAW/ACTIVE del canonical_reconciliation ya no son válidos.",
+            )
+        job = PipelineJobService(session).create(
+            kind=PipelineJobKind.CANONICAL_IMPORT,
+            scope=PipelineJobScope.VERSION,
+            target=None,
+            profile_name=source.profile_name,
+            erp_id=erp_id,
+            knowledge_version_id=raw.id,
+            request_source="admin_api",
+            parameters={
+                "source_reconciliation_job_id": str(source.id),
+                "activation_mode": "staging_only",
+                "erp_id": erp_id,
+                "raw_candidate_version_id": str(raw.id),
+                "base_active_version_id": str(active.id),
+                "expected_decision_set_hash": str(result["decision_set_hash"]),
+                "expected_knowledge_version": str(result["reconciled_knowledge_version"]),
+            },
+        )
+        session.commit()
+        request.app.state.pipeline_job_dispatcher.submit(job.id)
+        return pipeline_job_detail(job)
+
     source = PipelineJobRepository(session).get(payload.source_canonical_job_id)
     if source is None:
         raise HTTPException(status_code=404, detail="PipelineJob fuente no encontrado.")
@@ -479,8 +661,6 @@ def create_chroma_sync_job(
         kind=PipelineJobKind.CHROMA_SYNC,
         parameters={},
     )
-
-
 
 
 @router.post(

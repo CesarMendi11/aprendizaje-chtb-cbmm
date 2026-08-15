@@ -103,8 +103,17 @@ export interface CanonicalBuildJobRequest {
   source_crawl_job_id: string
 }
 
-export interface CanonicalImportJobRequest {
+export interface CanonicalMergeJobRequest {
   source_canonical_job_id: string
+}
+
+export interface CanonicalReconciliationJobRequest {
+  candidate_version_id: string
+}
+
+export interface CanonicalImportJobRequest {
+  source_canonical_job_id?: string
+  source_reconciliation_job_id?: string
 }
 
 
@@ -194,4 +203,116 @@ export interface StructuralCorrectionRequest extends StructuralReviewRequest {
 
 export interface StructuralReviewResult extends StructuralReviewItemDetail {
   performed_action: 'approve' | 'correct' | 'reject' | 'reset_to_pending'
+}
+
+
+export type RemovalDecision = 'retain_from_active' | 'confirmed_remove'
+
+export interface RemovalReviewDecision {
+  id: string
+  entity_type: string
+  canonical_id: string
+  active_item_id: string
+  candidate_item_id: string | null
+  screen_id: string | null
+  plan_reason: string
+  removal_confirmation: string | null
+  proposed_decision: string
+  current_decision: RemovalDecision | null
+  requires_human_review: boolean
+  review_revision: number
+  decision_fingerprint: string
+}
+
+export interface RemovalReviewSet {
+  id: string
+  candidate_version_id: string
+  candidate_knowledge_version: string
+  active_version_id: string
+  active_knowledge_version: string
+  erp_id: string
+  candidate_origin: string
+  raw_diff_totals: Record<string, number>
+  plan_hash: string
+  decision_count: number
+  pending_review: number
+  retain_from_active: number
+  confirmed_remove: number
+  decisions: RemovalReviewDecision[]
+}
+
+export interface RemovalReviewRequest {
+  reviewer_id: string
+  reason: string
+  expected_revision: number
+}
+
+export interface RemovalReviewResult extends RemovalReviewDecision {
+  performed_action: 'confirm_retain' | 'confirm_remove' | 'reset_to_pending'
+}
+
+export interface RemovalReviewAction {
+  id: string
+  action: string
+  previous_decision: RemovalDecision | null
+  new_decision: RemovalDecision | null
+  review_notes: string
+  reviewer_subject: string
+  source: string
+  decision_fingerprint: string
+  created_at: string
+}
+
+export interface RemovalReviewHistory {
+  decision_id: string
+  actions: RemovalReviewAction[]
+}
+
+export interface PromotionBlocker {
+  code: string
+  message: string
+  count: number
+  entity_type: string | null
+}
+
+export interface PromotionAssessment {
+  knowledge_version_id: string
+  knowledge_version: string
+  erp_id: string
+  version_status: string
+  promotable: boolean
+  bootstrap_promotion: boolean
+  promotion_mode: string
+  current_active_version_id: string | null
+  current_active_knowledge_version: string | null
+  required_entity_types: string[]
+  required_review_counts: Record<string, Record<string, number>>
+  all_review_counts: Record<string, number>
+  replacement_review_counts: Record<string, number>
+  diff_totals: Record<string, number> | null
+  pipeline_import_job_id: string | null
+  source_canonical_job_id: string | null
+  source_reconciliation_job_id: string | null
+  removal_review_set_id: string | null
+  decision_set_hash: string | null
+  build_warning_count: number
+  blockers: PromotionBlocker[]
+  warnings: string[]
+}
+
+export interface KnowledgeVersionPromoteRequest {
+  reviewer_id: string
+  reason: string
+  expected_knowledge_version: string
+  confirm_promotion: true
+}
+
+export interface KnowledgeVersionPromotionResult {
+  promotion_id: string
+  knowledge_version_id: string
+  knowledge_version: string
+  erp_id: string
+  previous_active_version_id: string | null
+  sync_jobs: Record<string, string>
+  assessment: PromotionAssessment
 }

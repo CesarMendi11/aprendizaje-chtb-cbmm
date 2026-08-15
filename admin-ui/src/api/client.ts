@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CrawlJobRequest, KnowledgeTreeResponse, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -41,6 +41,45 @@ const validStructuralReviewDetail = (value: unknown): value is StructuralReviewI
   isRecord(value.effective_payload) && Array.isArray(value.review_history) && value.reviewer_identity_verified === false
 const validStructuralReviewResult = (value: unknown): value is StructuralReviewResult =>
   validStructuralReviewDetail(value) && isRecord(value) && hasString(value, 'performed_action')
+
+const validRemovalDecision = (value: unknown): boolean =>
+  isRecord(value) && hasString(value, 'id') && hasString(value, 'entity_type') &&
+  hasString(value, 'canonical_id') && hasString(value, 'active_item_id') &&
+  hasString(value, 'plan_reason') && hasString(value, 'proposed_decision') &&
+  typeof value.requires_human_review === 'boolean' && typeof value.review_revision === 'number' &&
+  hasString(value, 'decision_fingerprint')
+
+const validRemovalReviewSet = (value: unknown): value is RemovalReviewSet =>
+  isRecord(value) && hasString(value, 'id') && hasString(value, 'candidate_version_id') &&
+  hasString(value, 'candidate_knowledge_version') && hasString(value, 'active_version_id') &&
+  hasString(value, 'active_knowledge_version') && hasString(value, 'erp_id') &&
+  hasString(value, 'candidate_origin') && isRecord(value.raw_diff_totals) &&
+  typeof value.decision_count === 'number' && typeof value.pending_review === 'number' &&
+  typeof value.retain_from_active === 'number' && typeof value.confirmed_remove === 'number' &&
+  Array.isArray(value.decisions) && value.decisions.every(validRemovalDecision)
+
+const validRemovalReviewResult = (value: unknown): value is RemovalReviewResult =>
+  validRemovalDecision(value) && isRecord(value) && hasString(value, 'performed_action')
+
+const validRemovalReviewHistory = (value: unknown): value is RemovalReviewHistory =>
+  isRecord(value) && hasString(value, 'decision_id') && Array.isArray(value.actions) &&
+  value.actions.every((item) => isRecord(item) && hasString(item, 'id') &&
+    hasString(item, 'action') && hasString(item, 'review_notes') &&
+    hasString(item, 'reviewer_subject') && hasString(item, 'created_at'))
+
+const validPromotionAssessment = (value: unknown): value is PromotionAssessment =>
+  isRecord(value) && hasString(value, 'knowledge_version_id') &&
+  hasString(value, 'knowledge_version') && hasString(value, 'erp_id') &&
+  hasString(value, 'version_status') && typeof value.promotable === 'boolean' &&
+  typeof value.bootstrap_promotion === 'boolean' && hasString(value, 'promotion_mode') &&
+  Array.isArray(value.required_entity_types) && isRecord(value.required_review_counts) &&
+  isRecord(value.all_review_counts) && isRecord(value.replacement_review_counts) &&
+  Array.isArray(value.blockers) && Array.isArray(value.warnings)
+
+const validPromotionResult = (value: unknown): value is KnowledgeVersionPromotionResult =>
+  isRecord(value) && hasString(value, 'promotion_id') && hasString(value, 'knowledge_version_id') &&
+  hasString(value, 'knowledge_version') && hasString(value, 'erp_id') &&
+  isRecord(value.sync_jobs) && validPromotionAssessment(value.assessment)
 
 const pipelineStatuses = new Set(['queued', 'running', 'succeeded', 'failed', 'cancelled'])
 const pipelineScopes = new Set(['full', 'module', 'screen', 'version', 'system'])
@@ -125,6 +164,24 @@ export async function createCrawlJob(payload: CrawlJobRequest): Promise<Pipeline
 export async function createCanonicalBuildJob(payload: CanonicalBuildJobRequest): Promise<PipelineJobDetail> {
   if (dataMode !== 'live') throw new AdminApiError('http', 'El Canonical Builder sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/canonical-build', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createCanonicalMergeJob(payload: CanonicalMergeJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'El Canonical Merge sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/canonical-merge', validPipelineJobDetail, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function createCanonicalReconciliationJob(payload: CanonicalReconciliationJobRequest): Promise<PipelineJobDetail> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'La reconciliación canónica sólo puede ejecutarse en modo live.')
+  return request('/api/admin/pipeline-jobs/canonical-reconciliation', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -231,3 +288,49 @@ export const approveStructuralReviewItem = (itemId: string, payload: StructuralR
 export const rejectStructuralReviewItem = (itemId: string, payload: StructuralReviewRequest) => postStructuralReviewAction(itemId, 'reject', payload)
 export const resetStructuralReviewItem = (itemId: string, payload: StructuralReviewRequest) => postStructuralReviewAction(itemId, 'reset', payload)
 export const correctStructuralReviewItem = (itemId: string, payload: StructuralCorrectionRequest) => postStructuralReviewAction(itemId, 'correct', payload)
+
+
+export async function prepareRemovalReview(candidateVersionId: string): Promise<RemovalReviewSet> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'Removal HITL sólo puede operar en modo live.')
+  return request(`/api/admin/removal-reconciliation-reviews/${encodeURIComponent(candidateVersionId)}/prepare`, validRemovalReviewSet, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+export async function getRemovalReview(candidateVersionId: string): Promise<RemovalReviewSet> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Removal HITL sólo está disponible en modo live.', 404)
+  return request(`/api/admin/removal-reconciliation-reviews/${encodeURIComponent(candidateVersionId)}`, validRemovalReviewSet)
+}
+
+async function postRemovalReviewAction(decisionId: string, action: string, payload: RemovalReviewRequest): Promise<RemovalReviewResult> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'Removal HITL sólo puede operar en modo live.')
+  return request(`/api/admin/removal-reconciliation-reviews/decisions/${encodeURIComponent(decisionId)}/${action}`, validRemovalReviewResult, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export const confirmRemovalRetain = (decisionId: string, payload: RemovalReviewRequest) => postRemovalReviewAction(decisionId, 'confirm-retain', payload)
+export const confirmRemovalRemove = (decisionId: string, payload: RemovalReviewRequest) => postRemovalReviewAction(decisionId, 'confirm-remove', payload)
+export const resetRemovalDecision = (decisionId: string, payload: RemovalReviewRequest) => postRemovalReviewAction(decisionId, 'reset', payload)
+
+export async function getRemovalReviewHistory(decisionId: string): Promise<RemovalReviewHistory> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Removal HITL sólo está disponible en modo live.', 404)
+  return request(`/api/admin/removal-reconciliation-reviews/decisions/${encodeURIComponent(decisionId)}/history`, validRemovalReviewHistory)
+}
+
+export async function getPromotionAssessment(knowledgeVersionId: string): Promise<PromotionAssessment> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Promotion Gate sólo está disponible en modo live.', 404)
+  return request(`/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/promotion-assessment`, validPromotionAssessment)
+}
+
+export async function promoteKnowledgeVersion(knowledgeVersionId: string, payload: KnowledgeVersionPromoteRequest): Promise<KnowledgeVersionPromotionResult> {
+  if (dataMode !== 'live') throw new AdminApiError('http', 'Promotion Gate sólo puede operar en modo live.')
+  return request(`/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/promote`, validPromotionResult, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
