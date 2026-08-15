@@ -3,6 +3,11 @@ from .canonical_materialization_service import (
     CanonicalKnowledgeMaterializationError,
     CanonicalKnowledgeMaterializer,
 )
+from .canonical_reconciliation_service import (
+    CanonicalReconciliationError,
+    CanonicalReconciliationResult,
+    CanonicalReconciliationService,
+)
 from .chroma_sync_service import ChromaSyncService, SafeDocumentBuilder
 from .effective_knowledge_service import EffectiveKnowledgeService
 from .knowledge_promotion_service import (
@@ -61,6 +66,9 @@ __all__ = [
     "CanonicalImportService",
     "CanonicalKnowledgeMaterializationError",
     "CanonicalKnowledgeMaterializer",
+    "CanonicalReconciliationError",
+    "CanonicalReconciliationResult",
+    "CanonicalReconciliationService",
     "ChromaSyncService",
     "EffectiveKnowledgeService",
     "KnowledgeReviewService",
