@@ -26,6 +26,7 @@ class EvidenceType(StrEnum):
     SCREENSHOT = "screenshot"
     EVENT_AUDIT = "event_audit"
     TRANSITION_AUDIT = "transition_audit"
+    NETWORK_TRACE = "network_trace"
     OTHER = "other"
 
 

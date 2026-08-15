@@ -12,6 +12,8 @@ from src.knowledge.canonical import (
     CanonicalKnowledgeBuilder,
     CanonicalKnowledgeExporter,
     CanonicalKnowledgeValidator,
+    CanonicalNetworkEvidenceError,
+    CanonicalNetworkEvidenceIntegrator,
     CanonicalSnapshotContext,
 )
 
@@ -127,6 +129,17 @@ class CanonicalBuildJobExecutor:
         except (ArtifactLoadError, OSError, ValueError) as exc:
             raise CanonicalBuildJobExecutionError(str(exc)) from exc
 
+        try:
+            network_result = CanonicalNetworkEvidenceIntegrator(
+                PROJECT_ROOT
+            ).integrate(
+                knowledge,
+                structural_dir / "network_evidence.json",
+            )
+        except CanonicalNetworkEvidenceError as exc:
+            raise CanonicalBuildJobExecutionError(str(exc)) from exc
+        knowledge = network_result.knowledge
+
         emit(
             "validating_canonical",
             {
@@ -166,6 +179,17 @@ class CanonicalBuildJobExecutor:
                 )
 
         report = builder.build_report(knowledge, issues)
+        report["network_evidence"] = network_result.report()
+        report["sensitive_regions_excluded"] += (
+            network_result.sensitive_exclusions
+        )
+        if network_result.omitted_observations:
+            omitted = dict(report.get("omitted_entities") or {})
+            omitted["network_evidence"] = (
+                omitted.get("network_evidence", 0)
+                + network_result.omitted_observations
+            )
+            report["omitted_entities"] = omitted
         report["snapshot"] = snapshot_context.model_dump(mode="json")
 
         emit(
@@ -197,6 +221,8 @@ class CanonicalBuildJobExecutor:
             "statistics": dict(knowledge.statistics),
             "warnings": len(knowledge.build_warnings),
             "validation_errors": 0,
+            "network_evidence": network_result.observation_count,
+            "network_evidence_screens": network_result.screen_count,
             "snapshot_mode": snapshot_context.mode,
             "snapshot_scope": snapshot_context.scope,
             "snapshot_target": snapshot_context.target,

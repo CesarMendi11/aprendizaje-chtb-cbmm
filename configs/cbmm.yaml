@@ -328,3 +328,13 @@ forms:
     default_text: "PRUEBA"
     default_number: "1"
     default_date: "2026-01-01"
+
+# Evidencia de red estructural. Solo registra metadata XHR/fetch sanitizada.
+# Nunca captura bodies, headers ni valores de query.
+network_evidence:
+  enabled: true
+  resource_types:
+    - xhr
+    - fetch
+  include_query_keys: true
+  max_records: 2000

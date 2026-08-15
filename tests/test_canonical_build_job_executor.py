@@ -63,6 +63,32 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         ),
         encoding="utf-8",
     )
+    (structural / "network_evidence.json").write_text(
+        json.dumps(
+            {
+                "capture_policy": {
+                    "bodies_captured": False,
+                    "headers_captured": False,
+                    "query_values_captured": False,
+                    "resource_types": ["xhr"],
+                },
+                "observations": [
+                    {
+                        "screen_route": "/admin/cuentasxcobrar/retenciones",
+                        "method": "GET",
+                        "endpoint_path": "/api/retenciones/{id}",
+                        "origin_id": "same_origin",
+                        "origin_kind": "same_origin",
+                        "resource_type": "xhr",
+                        "query_keys": ["page"],
+                        "status_codes": [200],
+                        "observed_count": 2,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     profile = tmp_path / "profile.yaml"
     write_profile(profile, structural)
     checkpoints = []
@@ -97,9 +123,20 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     assert result["statistics"]["fields"] == 1
     assert result["statistics"]["controls"] == 1
     assert result["validation_errors"] == 0
+    assert result["network_evidence"] == 2
+    assert result["network_evidence_screens"] == 1
     assert result["snapshot_mode"] == "partial"
     assert result["snapshot_scope"] == "screen"
     assert result["snapshot_target"] == "/admin/cuentasxcobrar/retenciones"
+    knowledge = json.loads((canonical / "knowledge.json").read_text(encoding="utf-8"))
+    network = [
+        item
+        for item in knowledge["evidence"]
+        if item["evidence_type"] == "network_trace"
+    ]
+    assert len(network) == 1
+    assert network[0]["metadata"]["bodies_captured"] is False
+    assert network[0]["metadata"]["headers_captured"] is False
     manifest = json.loads((canonical / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["snapshot"] == {
         "mode": "partial",

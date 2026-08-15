@@ -258,4 +258,10 @@ class CrawlJobExecutor:
             "routes_graph_path": _relative_project_path(summary.routes_graph_path),
             "screen_index_path": _relative_project_path(summary.screen_index_path),
             "state_flow_graph_path": _relative_project_path(summary.state_flow_graph_path),
+            "network_evidence": summary.network_evidence_count,
+            "network_evidence_path": (
+                _relative_project_path(summary.network_evidence_path)
+                if summary.network_evidence_path
+                else ""
+            ),
         }

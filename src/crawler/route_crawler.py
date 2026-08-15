@@ -6,8 +6,9 @@ from typing import Any, Callable
 from playwright.sync_api import Page
 
 from src.browser.navigator import ERPNavigator
-from src.crawler.module_scope import ModuleCrawlBoundary
 from src.crawler.frontier import CrawlTarget, Frontier
+from src.crawler.module_scope import ModuleCrawlBoundary
+from src.crawler.network_evidence import NetworkEvidenceCollector
 from src.crawler.path_replayer import PathReplayer
 from src.crawler.screen_availability import ScreenAvailabilityClassifier
 from src.crawler.state_frontier import StateFrontier
@@ -46,6 +47,8 @@ class CrawlSummary:
     state_frontier_explored_count: int = 0
     functional_screen_count: int = 0
     unavailable_count: int = 0
+    network_evidence_count: int = 0
+    network_evidence_path: str = ""
 
 
 class RouteCrawler:
@@ -91,6 +94,7 @@ class RouteCrawler:
         self.extractor = ScreenExtractor(page, profile)
         self.discovery = LinkDiscovery(self.policy)
         self.storage = ArtifactStorage(profile)
+        self.network_evidence = NetworkEvidenceCollector(page, profile)
         self.screen_availability = ScreenAvailabilityClassifier(profile)
 
         self.frontier = Frontier()
@@ -1549,6 +1553,11 @@ class RouteCrawler:
             filename="state_exploration_summary.partial.json",
         )
 
+        self.storage.save_processed_structural_json(
+            data=self.network_evidence.to_dict(),
+            filename="network_evidence.partial.json",
+        )
+
     @staticmethod
     def _route_identity(route: str) -> str:
         value = str(route or "").split("#", 1)[0].split("?", 1)[0].strip()
@@ -1628,6 +1637,11 @@ class RouteCrawler:
             filename="state_exploration_summary.json",
         )
 
+        network_evidence_path = self.storage.save_processed_structural_json(
+            data=self.network_evidence.to_dict(),
+            filename="network_evidence.json",
+        )
+
         self._emit_progress("saving_outputs")
 
         return CrawlSummary(
@@ -1644,6 +1658,8 @@ class RouteCrawler:
             state_frontier_explored_count=self.state_frontier.explored_count(),
             functional_screen_count=self.screen_index.screen_count(),
             unavailable_count=len(self._unavailable_routes),
+            network_evidence_count=self.network_evidence.unique_observation_count,
+            network_evidence_path=str(network_evidence_path),
         )
 
     def _build_artifact_prefix(self, route: str) -> str:
