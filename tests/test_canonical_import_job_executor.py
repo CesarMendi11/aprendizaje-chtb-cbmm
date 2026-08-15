@@ -18,6 +18,7 @@ from src.database.enums import (
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
 from src.database.repositories import PipelineJobRepository
 from src.database.services import CanonicalImportService, PipelineJobService
+from src.knowledge.canonical.ids import content_hash
 from src.pipeline.canonical_import_job_executor import (
     CanonicalImportJobExecutionError,
     CanonicalImportJobExecutor,
@@ -25,6 +26,7 @@ from src.pipeline.canonical_import_job_executor import (
 from src.pipeline.canonical_reconciliation_job_executor import CanonicalReconciliationJobExecutor
 from src.pipeline.pipeline_job_runner import PipelineJobRunner
 from tests.canonical_fixtures import exported_fictional_canonical
+from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_canonical_reconciliation_service import _materializable_partial_candidate
 
 
@@ -43,6 +45,8 @@ def _reconciliation_source(tmp_path):
     engine, factory = _factory(tmp_path)
     with factory() as session:
         active_id, raw_id, _ = _materializable_partial_candidate(session, tmp_path)
+    with factory.begin() as session:
+        resolve_all_removals(session, raw_id)
     with factory() as session:
         active = session.get(KnowledgeVersionRecord, active_id)
         raw = session.get(KnowledgeVersionRecord, raw_id)
@@ -251,6 +255,7 @@ def test_reconciliation_source_import_is_idempotent_and_rejects_invalid_provenan
         ("tampered_manifest", "artifacts reconciliation"),
         ("tampered_counts", "artifacts reconciliation"),
         ("source_parameters", "parameters del source"),
+        ("unresolved_review_decision", "Removal HITL resuelto"),
     ],
 )
 def test_reconciliation_source_import_fails_closed_for_runtime_provenance(
@@ -278,6 +283,18 @@ def test_reconciliation_source_import_fails_closed_for_runtime_provenance(
         with factory.begin() as session:
             source = session.get(PipelineJob, source_id)
             source.parameters = {**source.parameters, "candidate_knowledge_version": "wrong"}
+    elif mutation == "unresolved_review_decision":
+        with factory.begin() as session:
+            source = session.get(PipelineJob, source_id)
+            decisions = [dict(value) for value in source.result_payload["decisions"]]
+            decisions[0]["requires_human_review"] = True
+            decision_hash = content_hash(decisions)
+            source.result_payload = {
+                **source.result_payload,
+                "decisions": decisions,
+                "decision_set_hash": decision_hash,
+            }
+            params["expected_decision_set_hash"] = decision_hash
     elif mutation == "tampered_counts":
         report_path = case_root / source_result["build_report_path"]
         report = json.loads(report_path.read_text(encoding="utf-8"))

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from enum import StrEnum
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.database.enums import PipelineJobKind, PipelineJobStatus
+from src.database.enums import (
+    PipelineJobKind,
+    PipelineJobStatus,
+    RemovalReconciliationDecisionType,
+)
 from src.database.models import KnowledgeVersionRecord, PipelineJob
 
 from .structural_review_package_service import (
@@ -18,12 +21,6 @@ from .version_diff_service import VersionDiffChangeType, VersionDiffService
 
 class RemovalReconciliationPlanError(ValueError):
     pass
-
-
-class RemovalReconciliationDecisionType(StrEnum):
-    RETAIN_FROM_ACTIVE = "retain_from_active"
-    CONFIRMED_REMOVE = "confirmed_remove"
-    UNRESOLVED = "unresolved"
 
 
 @dataclass(frozen=True)
@@ -37,6 +34,10 @@ class RemovalReconciliationDecision:
     decision: RemovalReconciliationDecisionType
     removal_confirmation: str | None
     requires_human_review: bool
+    review_set_id: str | None = None
+    review_decision_id: str | None = None
+    review_action_id: str | None = None
+    review_revision: int | None = None
 
 
 @dataclass(frozen=True)

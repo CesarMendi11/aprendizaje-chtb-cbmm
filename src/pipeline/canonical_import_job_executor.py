@@ -480,6 +480,37 @@ class CanonicalImportJobExecutor:
             raise CanonicalImportJobExecutionError(
                 "El decision_set_hash del source reconciliation job no coincide."
             )
+        decisions = payload["decisions"]
+        allowed = {"retain_from_active", "confirmed_remove"}
+        if any(
+            not isinstance(value, dict)
+            or value.get("decision") not in allowed
+            or value.get("requires_human_review") is not False
+            or not value.get("review_set_id")
+            or not value.get("review_decision_id")
+            or not value.get("review_action_id")
+            or not isinstance(value.get("review_revision"), int)
+            or value["review_revision"] <= 0
+            for value in decisions
+        ):
+            raise CanonicalImportJobExecutionError(
+                "El source reconciliation no conserva Removal HITL resuelto."
+            )
+        review_set_ids = {value["review_set_id"] for value in decisions}
+        if len(review_set_ids) > 1:
+            raise CanonicalImportJobExecutionError(
+                "El source reconciliation mezcla removal review sets."
+            )
+        retained = sum(value["decision"] == "retain_from_active" for value in decisions)
+        removed = sum(value["decision"] == "confirmed_remove" for value in decisions)
+        if (
+            retained != payload["retain_from_active_total"]
+            or removed != payload["confirmed_removed_total"]
+            or len(decisions) != retained + removed
+        ):
+            raise CanonicalImportJobExecutionError(
+                "Los totales Removal HITL del source reconciliation son inconsistentes."
+            )
 
     @staticmethod
     def _validate_import_pins(expected, payload) -> None:

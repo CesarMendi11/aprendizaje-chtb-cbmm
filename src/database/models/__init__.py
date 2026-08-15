@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -27,6 +28,8 @@ from ..enums import (
     PipelineJobKind,
     PipelineJobScope,
     PipelineJobStatus,
+    RemovalReconciliationDecisionType,
+    RemovalReviewActionType,
     ReviewActionType,
     ReviewSource,
     SemanticType,
@@ -173,6 +176,167 @@ class ReviewAction(TimestampMixin, Base):
     knowledge_item: Mapped[KnowledgeItem] = relationship(
         back_populates="review_actions", foreign_keys=[knowledge_item_id]
     )
+
+
+class RemovalReconciliationReviewSet(TimestampMixin, Base):
+    __tablename__ = "removal_reconciliation_review_sets"
+    __table_args__ = (
+        UniqueConstraint(
+            "candidate_version_id",
+            name="uq_removal_reconciliation_review_sets_candidate",
+        ),
+        CheckConstraint(
+            "candidate_version_id <> active_version_id",
+            name="removal_review_versions_distinct",
+        ),
+        CheckConstraint("length(plan_hash) = 64", name="removal_review_plan_hash_length"),
+        CheckConstraint("decision_count >= 0", name="removal_review_decision_count_nonnegative"),
+        Index("ix_removal_review_sets_erp_created", "erp_id", "created_at"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    candidate_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT"), nullable=False
+    )
+    active_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT"), nullable=False
+    )
+    erp_id: Mapped[str] = mapped_column(ForeignKey("erp_systems.id", ondelete="RESTRICT"))
+    candidate_knowledge_version: Mapped[str] = mapped_column(String(120), nullable=False)
+    active_knowledge_version: Mapped[str] = mapped_column(String(120), nullable=False)
+    candidate_origin: Mapped[str] = mapped_column(String(80), nullable=False)
+    raw_diff_totals: Mapped[dict[str, Any]] = mapped_column(JSONType, nullable=False)
+    plan_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    decision_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    decisions: Mapped[list["RemovalReconciliationDecisionRecord"]] = relationship(
+        back_populates="review_set",
+        order_by="RemovalReconciliationDecisionRecord.entity_type, "
+        "RemovalReconciliationDecisionRecord.canonical_id",
+    )
+
+
+class RemovalReconciliationDecisionRecord(TimestampMixin, Base):
+    __tablename__ = "removal_reconciliation_decisions"
+    __table_args__ = (
+        UniqueConstraint(
+            "review_set_id",
+            "entity_type",
+            "canonical_id",
+            name="uq_removal_reconciliation_decision_identity",
+        ),
+        CheckConstraint("review_revision >= 0", name="removal_decision_revision_nonnegative"),
+        CheckConstraint(
+            "current_decision IS NULL OR current_decision IN "
+            "('retain_from_active', 'confirmed_remove')",
+            name="removal_current_decision_resolved",
+        ),
+        CheckConstraint(
+            "proposed_decision IN ('retain_from_active', 'confirmed_remove', 'unresolved')",
+            name="removal_proposed_decision_supported",
+        ),
+        CheckConstraint(
+            "length(decision_fingerprint) = 64",
+            name="removal_decision_fingerprint_length",
+        ),
+        CheckConstraint(
+            "candidate_item_id IS NULL",
+            name="removal_decision_candidate_item_absent",
+        ),
+        Index("ix_removal_decisions_set_current", "review_set_id", "current_decision"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    review_set_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("removal_reconciliation_review_sets.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    active_item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("knowledge_items.id", ondelete="RESTRICT"), nullable=False
+    )
+    candidate_item_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("knowledge_items.id", ondelete="RESTRICT")
+    )
+    entity_type: Mapped[str] = mapped_column(String(60), nullable=False)
+    canonical_id: Mapped[str] = mapped_column(String(200), nullable=False)
+    screen_id: Mapped[str | None] = mapped_column(String(200))
+    plan_reason: Mapped[str] = mapped_column(String(240), nullable=False)
+    removal_confirmation: Mapped[str | None] = mapped_column(String(60))
+    proposed_decision: Mapped[RemovalReconciliationDecisionType] = mapped_column(
+        StringEnum(RemovalReconciliationDecisionType), nullable=False
+    )
+    current_decision: Mapped[RemovalReconciliationDecisionType | None] = mapped_column(
+        StringEnum(RemovalReconciliationDecisionType)
+    )
+    requires_human_review: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    decision_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    review_revision: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+    review_set: Mapped[RemovalReconciliationReviewSet] = relationship(back_populates="decisions")
+    actions: Mapped[list["RemovalReconciliationReviewAction"]] = relationship(
+        back_populates="decision",
+        order_by="RemovalReconciliationReviewAction.created_at, "
+        "RemovalReconciliationReviewAction.id",
+    )
+
+
+class RemovalReconciliationReviewAction(TimestampMixin, Base):
+    __tablename__ = "removal_reconciliation_review_actions"
+    __table_args__ = (
+        CheckConstraint(
+            "action IN ('confirm_retain', 'confirm_remove', 'reset_to_pending')",
+            name="removal_review_action_supported",
+        ),
+        CheckConstraint(
+            "previous_decision IS NULL OR previous_decision IN "
+            "('retain_from_active', 'confirmed_remove')",
+            name="removal_review_previous_decision_resolved",
+        ),
+        CheckConstraint(
+            "new_decision IS NULL OR new_decision IN "
+            "('retain_from_active', 'confirmed_remove')",
+            name="removal_review_new_decision_resolved",
+        ),
+        CheckConstraint(
+            "(action = 'confirm_retain' AND previous_decision IS NULL "
+            "AND new_decision = 'retain_from_active') OR "
+            "(action = 'confirm_remove' AND previous_decision IS NULL "
+            "AND new_decision = 'confirmed_remove') OR "
+            "(action = 'reset_to_pending' AND previous_decision IS NOT NULL "
+            "AND new_decision IS NULL)",
+            name="removal_review_action_matches_decision",
+        ),
+        CheckConstraint(
+            "length(decision_fingerprint) = 64",
+            name="removal_review_action_fingerprint_length",
+        ),
+        CheckConstraint(
+            "trim(review_notes) <> ''",
+            name="removal_review_action_notes_nonempty",
+        ),
+        CheckConstraint(
+            "trim(reviewer_subject) <> ''",
+            name="removal_review_action_reviewer_nonempty",
+        ),
+        Index("ix_removal_review_actions_decision_created", "decision_id", "created_at"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
+    decision_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("removal_reconciliation_decisions.id", ondelete="RESTRICT"), nullable=False
+    )
+    action: Mapped[RemovalReviewActionType] = mapped_column(
+        StringEnum(RemovalReviewActionType), nullable=False
+    )
+    previous_decision: Mapped[RemovalReconciliationDecisionType | None] = mapped_column(
+        StringEnum(RemovalReconciliationDecisionType)
+    )
+    new_decision: Mapped[RemovalReconciliationDecisionType | None] = mapped_column(
+        StringEnum(RemovalReconciliationDecisionType)
+    )
+    review_notes: Mapped[str] = mapped_column(Text, nullable=False)
+    reviewer_subject: Mapped[str] = mapped_column(String(240), nullable=False)
+    source: Mapped[ReviewSource] = mapped_column(StringEnum(ReviewSource), nullable=False)
+    decision_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    decision: Mapped[RemovalReconciliationDecisionRecord] = relationship(back_populates="actions")
 
 
 class SemanticProposal(TimestampMixin, Base):
@@ -413,6 +577,36 @@ def _immutable_review_actions(*_: Any) -> None:
     raise ValueError("review_actions es un historial inmutable")
 
 
+@event.listens_for(RemovalReconciliationReviewSet, "before_update")
+@event.listens_for(RemovalReconciliationReviewSet, "before_delete")
+def _immutable_removal_review_set(*_: Any) -> None:
+    raise ValueError("removal_reconciliation_review_sets es inmutable")
+
+
+@event.listens_for(RemovalReconciliationReviewAction, "before_update")
+@event.listens_for(RemovalReconciliationReviewAction, "before_delete")
+def _immutable_removal_review_actions(*_: Any) -> None:
+    raise ValueError("removal_reconciliation_review_actions es un historial inmutable")
+
+
+@event.listens_for(RemovalReconciliationDecisionRecord, "before_update")
+def _immutable_removal_decision(_mapper: Any, _connection: Any, target) -> None:
+    state = inspect(target)
+    mutable = {"current_decision", "review_revision", "updated_at"}
+    changed = {
+        attribute.key
+        for attribute in state.mapper.column_attrs
+        if attribute.key not in mutable and state.attrs[attribute.key].history.has_changes()
+    }
+    if changed:
+        raise ValueError("La identidad y procedencia de removal decision son inmutables")
+
+
+@event.listens_for(RemovalReconciliationDecisionRecord, "before_delete")
+def _prevent_removal_decision_delete(*_: Any) -> None:
+    raise ValueError("RemovalReconciliationDecisionRecord no puede eliminarse")
+
+
 @event.listens_for(SemanticReviewAction, "before_update")
 @event.listens_for(SemanticReviewAction, "before_delete")
 def _immutable_semantic_review_actions(*_: Any) -> None:
@@ -464,6 +658,9 @@ __all__ = [
     "KnowledgeVersionRecord",
     "KnowledgeItem",
     "ReviewAction",
+    "RemovalReconciliationReviewSet",
+    "RemovalReconciliationDecisionRecord",
+    "RemovalReconciliationReviewAction",
     "SemanticProposal",
     "SemanticReviewAction",
     "KnowledgeVersionPromotion",

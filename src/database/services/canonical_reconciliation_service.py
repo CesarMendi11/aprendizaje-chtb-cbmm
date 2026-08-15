@@ -8,17 +8,17 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.database.enums import RemovalReconciliationDecisionType
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord
 from src.knowledge.canonical.ids import content_hash
 from src.knowledge.canonical.models import CanonicalKnowledgeBase
 from src.knowledge.canonical.validator import CanonicalKnowledgeValidator
 
 from .canonical_materialization_service import ENTITY_COLLECTIONS, CanonicalKnowledgeMaterializer
-from .removal_reconciliation_plan_service import (
-    RemovalReconciliationDecisionType,
-    RemovalReconciliationPlan,
-    RemovalReconciliationPlanError,
-    RemovalReconciliationPlanService,
+from .removal_reconciliation_plan_service import RemovalReconciliationPlan
+from .removal_reconciliation_review_service import (
+    RemovalReconciliationReviewError,
+    RemovalReconciliationReviewService,
 )
 
 
@@ -54,8 +54,10 @@ class CanonicalReconciliationService:
 
     def reconcile(self, candidate_version_id: uuid.UUID | str) -> CanonicalReconciliationResult:
         try:
-            plan = RemovalReconciliationPlanService(self.session).build(candidate_version_id)
-        except RemovalReconciliationPlanError as exc:
+            plan = RemovalReconciliationReviewService(self.session).resolved_plan(
+                candidate_version_id
+            )
+        except RemovalReconciliationReviewError as exc:
             raise CanonicalReconciliationError(str(exc)) from exc
         if plan.unresolved_total:
             raise CanonicalReconciliationError("El plan contiene REMOVED UNRESOLVED.")

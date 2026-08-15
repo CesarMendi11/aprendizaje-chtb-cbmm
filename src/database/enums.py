@@ -22,6 +22,18 @@ class ReviewActionType(StrEnum):
     RESET_TO_PENDING = "reset_to_pending"
 
 
+class RemovalReconciliationDecisionType(StrEnum):
+    RETAIN_FROM_ACTIVE = "retain_from_active"
+    CONFIRMED_REMOVE = "confirmed_remove"
+    UNRESOLVED = "unresolved"
+
+
+class RemovalReviewActionType(StrEnum):
+    CONFIRM_RETAIN = "confirm_retain"
+    CONFIRM_REMOVE = "confirm_remove"
+    RESET_TO_PENDING = "reset_to_pending"
+
+
 class ReviewSource(StrEnum):
     CLI = "cli"
     API = "api"

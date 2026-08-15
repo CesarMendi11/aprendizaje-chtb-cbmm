@@ -116,6 +116,8 @@ def seed_reconciled(session, tmp_path):
                 "reconciled_knowledge_version": candidate.knowledge_version,
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
+                "retain_from_active_total": 0,
+                "confirmed_removed_total": 0,
                 "unresolved_total": 0,
                 "decision_set_hash": decision_set_hash,
                 "decisions": [],
@@ -457,6 +459,7 @@ def test_diff_accepts_governed_reconciled_full_candidate(session, tmp_path):
         "base_active",
         "unresolved",
         "source_parameters",
+        "unresolved_review",
     ),
 )
 def test_diff_reconciled_provenance_fails_closed(session, tmp_path, tamper):
@@ -473,10 +476,43 @@ def test_diff_reconciled_provenance_fails_closed(session, tmp_path, tamper):
             }
         elif tamper == "unresolved":
             source.result_payload = {**source.result_payload, "unresolved_total": 1}
-        else:
+        elif tamper == "source_parameters":
             source.parameters = {
                 **source.parameters,
                 "candidate_knowledge_version": "tampered",
+            }
+        else:
+            decisions = [
+                {
+                    "entity_type": "screen",
+                    "canonical_id": "screen:fake",
+                    "active_item_id": str(uuid.uuid4()),
+                    "candidate_item_id": None,
+                    "screen_id": "screen:fake",
+                    "decision": "retain_from_active",
+                    "reason": "test",
+                    "removal_confirmation": "unconfirmed",
+                    "requires_human_review": True,
+                    "review_set_id": None,
+                    "review_decision_id": None,
+                    "review_action_id": None,
+                    "review_revision": None,
+                }
+            ]
+            decision_hash = content_hash(decisions)
+            source.result_payload = {
+                **source.result_payload,
+                "retain_from_active_total": 1,
+                "decisions": decisions,
+                "decision_set_hash": decision_hash,
+            }
+            origin.parameters = {
+                **origin.parameters,
+                "expected_decision_set_hash": decision_hash,
+            }
+            origin.result_payload = {
+                **origin.result_payload,
+                "decision_set_hash": decision_hash,
             }
 
     with pytest.raises(VersionDiffError):

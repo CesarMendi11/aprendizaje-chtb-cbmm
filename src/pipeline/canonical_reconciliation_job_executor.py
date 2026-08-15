@@ -254,6 +254,25 @@ class CanonicalReconciliationJobExecutor:
             raise CanonicalReconciliationJobExecutionError(
                 "La reconciliación contiene REMOVED UNRESOLVED."
             )
+        if any(
+            value.requires_human_review
+            or not value.review_set_id
+            or not value.review_decision_id
+            or not value.review_action_id
+            or not isinstance(value.review_revision, int)
+            or value.review_revision <= 0
+            for value in plan.decisions
+        ):
+            raise CanonicalReconciliationJobExecutionError(
+                "Canonical reconciliation requiere Removal HITL resuelto y trazable."
+            )
+        if (
+            len(plan.decisions)
+            != result.retained_from_active_total + result.confirmed_removed_total
+        ):
+            raise CanonicalReconciliationJobExecutionError(
+                "Los totales del Removal HITL no coinciden con sus decisiones."
+            )
 
     @staticmethod
     def _normalized_decisions(plan) -> list[dict[str, Any]]:
@@ -268,6 +287,10 @@ class CanonicalReconciliationJobExecutor:
                 "reason": value.reason,
                 "removal_confirmation": value.removal_confirmation,
                 "requires_human_review": value.requires_human_review,
+                "review_set_id": value.review_set_id,
+                "review_decision_id": value.review_decision_id,
+                "review_action_id": value.review_action_id,
+                "review_revision": value.review_revision,
             }
             for value in plan.decisions
         ]

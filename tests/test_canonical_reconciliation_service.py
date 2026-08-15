@@ -15,6 +15,9 @@ from src.database.models import (
     KnowledgeItem,
     KnowledgeVersionRecord,
     PipelineJob,
+    RemovalReconciliationDecisionRecord,
+    RemovalReconciliationReviewAction,
+    RemovalReconciliationReviewSet,
     ReviewAction,
     SyncJob,
 )
@@ -22,11 +25,10 @@ from src.database.services import (
     CanonicalKnowledgeMaterializer,
     CanonicalReconciliationError,
     CanonicalReconciliationService,
-)
-from src.database.services.removal_reconciliation_plan_service import (
-    RemovalReconciliationPlanService,
+    RemovalReconciliationReviewService,
 )
 from src.knowledge.canonical.ids import content_hash
+from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_removal_reconciliation_plan_service import partial_candidate
 from tests.test_version_diff_service import seed
 
@@ -97,6 +99,7 @@ def _materializable_partial_candidate(session, tmp_path):
 
 def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_path):
     active_id, candidate_id, removed_items = _materializable_partial_candidate(session, tmp_path)
+    resolve_all_removals(session, candidate_id)
     control = removed_items["control"]
     column = removed_items["table_column"]
     state = removed_items["ui_state"]
@@ -110,6 +113,9 @@ def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_pat
         session.query(ReviewAction).count(),
         session.query(PipelineJob).count(),
         session.query(SyncJob).count(),
+        session.query(RemovalReconciliationReviewSet).count(),
+        session.query(RemovalReconciliationDecisionRecord).count(),
+        session.query(RemovalReconciliationReviewAction).count(),
     )
     raw_before = (
         CanonicalKnowledgeMaterializer(session).materialize(candidate_id).model_dump(mode="json")
@@ -124,6 +130,9 @@ def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_pat
         session.query(ReviewAction).count(),
         session.query(PipelineJob).count(),
         session.query(SyncJob).count(),
+        session.query(RemovalReconciliationReviewSet).count(),
+        session.query(RemovalReconciliationDecisionRecord).count(),
+        session.query(RemovalReconciliationReviewAction).count(),
     )
     assert before == after
     assert (
@@ -194,8 +203,35 @@ def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_pat
     assert result.unresolved_total == 0
 
 
+def test_human_confirmed_remove_changes_reconciled_content(session, tmp_path):
+    _, candidate_id, removed_items = _materializable_partial_candidate(session, tmp_path)
+    removed_control = removed_items["control"]
+    resolve_all_removals(
+        session,
+        candidate_id,
+        confirmed_remove={("control", removed_control.canonical_id)},
+    )
+
+    result = CanonicalReconciliationService(session).reconcile(candidate_id)
+
+    assert result.retained_from_active_total == 3
+    assert result.confirmed_removed_total == 1
+    assert result.unresolved_total == 0
+    assert result.reconciled_item_total == result.raw_candidate_item_total + 3
+    assert removed_control.canonical_id not in {item.id for item in result.canonical.controls}
+    assert all(not value.requires_human_review for value in result.plan.decisions)
+    selected = next(
+        value
+        for value in result.plan.decisions
+        if value.entity_type == "control" and value.canonical_id == removed_control.canonical_id
+    )
+    assert selected.decision == "confirmed_remove"
+    assert selected.review_action_id is not None
+
+
 def test_reconciliation_uses_new_generated_at_without_mutating_raw(session, tmp_path, monkeypatch):
     _, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
+    resolve_all_removals(session, candidate_id)
     raw_generated_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
     original_materialize = CanonicalKnowledgeMaterializer.materialize
     original_raw = original_materialize(CanonicalKnowledgeMaterializer(session), candidate_id)
@@ -219,9 +255,12 @@ def test_reconciliation_uses_new_generated_at_without_mutating_raw(session, tmp_
     assert result.canonical.generated_at != raw_generated_at
 
 
-def test_unresolved_plan_fails_closed_before_materialization(session, tmp_path):
+def test_full_candidate_removals_require_explicit_human_review(session, tmp_path):
     _, candidate_id, _ = seed(session, tmp_path)
-    with pytest.raises(CanonicalReconciliationError, match="UNRESOLVED"):
+    prepared = RemovalReconciliationReviewService(session).prepare(candidate_id)
+    assert prepared.pending_review == prepared.decision_count > 0
+    assert all(value.proposed_decision == "unresolved" for value in prepared.decisions)
+    with pytest.raises(CanonicalReconciliationError, match="resolver todas"):
         CanonicalReconciliationService(session).reconcile(candidate_id)
 
 
@@ -248,13 +287,14 @@ def test_active_retention_identity_mismatches_fail_closed(session, tmp_path):
             service._active_item(active_id, decision)
 
 
-def test_duplicate_plan_decision_fails_closed(session, tmp_path, monkeypatch):
+def test_duplicate_effective_decision_fails_closed(session, tmp_path, monkeypatch):
     _, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
-    plan = RemovalReconciliationPlanService(session).build(candidate_id)
+    resolve_all_removals(session, candidate_id)
+    plan = RemovalReconciliationReviewService(session).resolved_plan(candidate_id)
     duplicate_plan = replace(plan, decisions=(*plan.decisions, plan.decisions[0]))
     monkeypatch.setattr(
-        RemovalReconciliationPlanService,
-        "build",
+        RemovalReconciliationReviewService,
+        "resolved_plan",
         lambda _self, _candidate_version_id: duplicate_plan,
     )
 
@@ -264,7 +304,8 @@ def test_duplicate_plan_decision_fails_closed(session, tmp_path, monkeypatch):
 
 def test_raw_identity_conflicts_with_retain_fails_closed(session, tmp_path, monkeypatch):
     active_id, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
-    plan = RemovalReconciliationPlanService(session).build(candidate_id)
+    resolve_all_removals(session, candidate_id)
+    plan = RemovalReconciliationReviewService(session).resolved_plan(candidate_id)
     raw_item = session.scalar(
         select(KnowledgeItem).where(
             KnowledgeItem.knowledge_version_id == candidate_id,
@@ -291,8 +332,8 @@ def test_raw_identity_conflicts_with_retain_fails_closed(session, tmp_path, monk
         decisions=(conflicting_decision, *plan.decisions[1:]),
     )
     monkeypatch.setattr(
-        RemovalReconciliationPlanService,
-        "build",
+        RemovalReconciliationReviewService,
+        "resolved_plan",
         lambda _self, _candidate_version_id: conflicting_plan,
     )
 

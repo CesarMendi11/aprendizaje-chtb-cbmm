@@ -63,6 +63,9 @@ def create_app(
         from src.api.routes.removal_reconciliation_plans import (
             router as removal_reconciliation_plans_router,
         )
+        from src.api.routes.removal_reconciliation_reviews import (
+            router as removal_reconciliation_reviews_router,
+        )
         from src.api.routes.semantic_review import (
             AdminSemanticApiError,
             admin_semantic_error_handler,
@@ -139,6 +142,7 @@ def create_app(
         app.include_router(admin_system_router, prefix="/api/admin")
         app.include_router(pipeline_jobs_router, prefix="/api/admin")
         app.include_router(removal_reconciliation_plans_router, prefix="/api/admin")
+        app.include_router(removal_reconciliation_reviews_router, prefix="/api/admin")
         app.include_router(structural_review_router, prefix="/api/admin")
         app.include_router(structural_review_packages_router, prefix="/api/admin")
         app.include_router(version_promotion_router, prefix="/api/admin")

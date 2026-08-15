@@ -17,9 +17,9 @@ from src.database.enums import (
 )
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord
 from src.database.repositories import PipelineJobRepository
-from src.database.services import PipelineJobService
-from src.database.services.removal_reconciliation_plan_service import (
-    RemovalReconciliationPlanService,
+from src.database.services import (
+    PipelineJobService,
+    RemovalReconciliationReviewService,
 )
 from src.knowledge.canonical import CanonicalKnowledgeExporter, CanonicalKnowledgeRepository
 from src.knowledge.canonical.ids import content_hash
@@ -28,6 +28,7 @@ from src.pipeline.canonical_reconciliation_job_executor import (
     CanonicalReconciliationJobExecutor,
 )
 from src.pipeline.pipeline_job_runner import PipelineJobRunner
+from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_canonical_reconciliation_service import _materializable_partial_candidate
 from tests.test_version_diff_service import seed
 
@@ -51,11 +52,17 @@ def _pins(factory, active_id, candidate_id):
         }
 
 
+def _resolve_removals(factory, candidate_id):
+    with factory.begin() as session:
+        resolve_all_removals(session, candidate_id)
+
+
 def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(tmp_path):
     engine, factory = _factory(tmp_path)
     with factory() as session:
         active_id, candidate_id, removed = _materializable_partial_candidate(session, tmp_path)
     pins = _pins(factory, active_id, candidate_id)
+    _resolve_removals(factory, candidate_id)
     raw_dir = tmp_path / "data" / "runs" / "pipeline" / "raw-crawl"
     raw_dir.mkdir(parents=True)
     raw_path = raw_dir / "knowledge.json"
@@ -90,7 +97,11 @@ def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(
     assert result["decisions"] == sorted(
         result["decisions"], key=lambda value: (value["entity_type"], value["canonical_id"])
     )
-    assert all(value["requires_human_review"] for value in result["decisions"])
+    assert all(not value["requires_human_review"] for value in result["decisions"])
+    assert all(value["review_set_id"] for value in result["decisions"])
+    assert all(value["review_decision_id"] for value in result["decisions"])
+    assert all(value["review_action_id"] for value in result["decisions"])
+    assert all(value["review_revision"] == 1 for value in result["decisions"])
     assert raw_path.read_text(encoding="utf-8") == '{"raw": true}\n'
 
     manifest = json.loads((tmp_path / result["manifest_path"]).read_text(encoding="utf-8"))
@@ -160,8 +171,10 @@ def test_reconciliation_executor_fails_closed_for_pinned_context_and_unresolved(
     with factory() as session:
         active_id, candidate_id, _ = seed(session, unresolved_root)
     pins = _pins(factory, active_id, candidate_id)
+    with factory.begin() as session:
+        RemovalReconciliationReviewService(session).prepare(candidate_id)
     job_id = uuid.uuid4()
-    with pytest.raises(CanonicalReconciliationJobExecutionError, match="UNRESOLVED"):
+    with pytest.raises(CanonicalReconciliationJobExecutionError, match="resolver todas"):
         CanonicalReconciliationJobExecutor(
             factory, project_root=unresolved_root, runs_root="data/runs/pipeline"
         ).execute(job_id=job_id, scope="version", target=None, parameters=pins)
@@ -182,6 +195,7 @@ def test_reconciliation_executor_rejects_tampered_exported_manifest(tmp_path, mo
     with factory() as session:
         active_id, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
     pins = _pins(factory, active_id, candidate_id)
+    _resolve_removals(factory, candidate_id)
     original_export = CanonicalKnowledgeExporter.export
 
     def tampered_export(self, *args, **kwargs):
@@ -200,20 +214,25 @@ def test_reconciliation_executor_rejects_tampered_exported_manifest(tmp_path, mo
     engine.dispose()
 
 
-def test_reconciliation_executor_builds_one_plan_and_hashes_that_plan(tmp_path, monkeypatch):
+def test_reconciliation_executor_hashes_the_single_resolved_review_plan(tmp_path, monkeypatch):
     engine, factory = _factory(tmp_path)
     with factory() as session:
         active_id, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
     pins = _pins(factory, active_id, candidate_id)
-    original_build = RemovalReconciliationPlanService.build
+    _resolve_removals(factory, candidate_id)
+    original_resolved = RemovalReconciliationReviewService.resolved_plan
     plans = []
 
-    def tracked_build(service, *args, **kwargs):
-        plan = original_build(service, *args, **kwargs)
+    def tracked_resolved(service, *args, **kwargs):
+        plan = original_resolved(service, *args, **kwargs)
         plans.append(plan)
         return plan
 
-    monkeypatch.setattr(RemovalReconciliationPlanService, "build", tracked_build)
+    monkeypatch.setattr(
+        RemovalReconciliationReviewService,
+        "resolved_plan",
+        tracked_resolved,
+    )
     executor = CanonicalReconciliationJobExecutor(
         factory, project_root=tmp_path, runs_root="data/runs/pipeline"
     )
@@ -225,6 +244,7 @@ def test_reconciliation_executor_builds_one_plan_and_hashes_that_plan(tmp_path, 
     expected_decisions = executor._normalized_decisions(plans[0])
     assert result["decisions"] == expected_decisions
     assert result["decision_set_hash"] == content_hash(expected_decisions)
+    assert all(not value["requires_human_review"] for value in expected_decisions)
     manifest = json.loads((tmp_path / result["manifest_path"]).read_text(encoding="utf-8"))
     assert manifest["reconciliation"]["decision_set_hash"] == result["decision_set_hash"]
     engine.dispose()
@@ -235,6 +255,7 @@ def test_runner_executes_real_canonical_reconciliation_job_end_to_end(tmp_path):
     with factory() as session:
         active_id, candidate_id, _ = _materializable_partial_candidate(session, tmp_path)
     pins = _pins(factory, active_id, candidate_id)
+    _resolve_removals(factory, candidate_id)
     with factory.begin() as session:
         job = PipelineJobService(session).create(
             kind=PipelineJobKind.CANONICAL_RECONCILIATION,

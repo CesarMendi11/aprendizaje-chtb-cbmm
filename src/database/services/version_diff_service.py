@@ -302,11 +302,38 @@ class VersionDiffService:
             or not isinstance(decisions, list)
             or source_result.get("decision_set_hash") != expected_hash
             or content_hash(decisions) != expected_hash
+            or not self._resolved_removal_decisions_valid(source_result, decisions)
         ):
             raise VersionDiffError(
                 "El source reconciliation job no demuestra un FULL reconciliado gobernado."
             )
         return VersionDiffCandidateOrigin.RECONCILED_FULL
+
+    @staticmethod
+    def _resolved_removal_decisions_valid(source_result: dict, decisions: list) -> bool:
+        allowed = {"retain_from_active", "confirmed_remove"}
+        if any(
+            not isinstance(value, dict)
+            or value.get("decision") not in allowed
+            or value.get("requires_human_review") is not False
+            or not value.get("review_set_id")
+            or not value.get("review_decision_id")
+            or not value.get("review_action_id")
+            or not isinstance(value.get("review_revision"), int)
+            or value["review_revision"] <= 0
+            for value in decisions
+        ):
+            return False
+        review_set_ids = {value["review_set_id"] for value in decisions}
+        if len(review_set_ids) > 1:
+            return False
+        retained = sum(value["decision"] == "retain_from_active" for value in decisions)
+        removed = sum(value["decision"] == "confirmed_remove" for value in decisions)
+        return (
+            source_result.get("retain_from_active_total") == retained
+            and source_result.get("confirmed_removed_total") == removed
+            and len(decisions) == retained + removed
+        )
 
     def _items(
         self, active: KnowledgeVersionRecord, candidate: KnowledgeVersionRecord

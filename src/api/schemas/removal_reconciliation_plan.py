@@ -13,6 +13,10 @@ class RemovalReconciliationDecisionResponse(StrictModel):
     decision: str
     removal_confirmation: str | None
     requires_human_review: bool
+    review_set_id: str | None = None
+    review_decision_id: str | None = None
+    review_action_id: str | None = None
+    review_revision: int | None = None
 
 
 class RemovalReconciliationPlanResponse(StrictModel):
