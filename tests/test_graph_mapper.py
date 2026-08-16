@@ -114,6 +114,30 @@ def test_mapper_supports_each_canonical_entity_with_whitelist(entity_type):
     assert all(not isinstance(value, (dict, list)) for value in node.properties.values())
 
 
+def test_mapper_omits_operational_evidence_artifact_path_with_run_identifier():
+    payload = {
+        **PAYLOADS["evidence"],
+        "artifact_path": (
+            "data/runs/pipeline/0849439c-5452-4cc1-9266-cf9a3f34f320/"
+            "processed/structural/network_evidence.json"
+        ),
+    }
+
+    node = GraphMapper().map_node(
+        entity_type="evidence",
+        payload=payload,
+        content_hash="a" * 64,
+        review_status="approved",
+        erp_id="erp:synthetic",
+        knowledge_version="version-one",
+        projected_at="2026-01-01T00:00:00+00:00",
+    )
+
+    assert node.properties["evidence_type"] == "structural_json"
+    assert node.properties["source_entity_type"] == "screen"
+    assert "artifact_path" not in node.properties
+
+
 def test_mapper_rejects_unknown_types_and_sensitive_properties():
     with pytest.raises(GraphMappingError, match="no soportado"):
         GraphMapper().map_node(

@@ -50,7 +50,8 @@ ALLOWED_PROPERTIES = {
     "link": ("label", "normalized_label", "target_route"),
     "event": ("label", "normalized_label", "category", "policy_decision", "mutative"),
     "transition": ("category", "changed", "route_changed", "depth", "observed"),
-    "evidence": ("evidence_type", "artifact_path", "source_entity_type"),
+    # artifact_path is run-scoped provenance kept in PostgreSQL, not graph knowledge.
+    "evidence": ("evidence_type", "source_entity_type"),
 }
 
 
