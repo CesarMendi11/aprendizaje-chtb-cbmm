@@ -13,8 +13,19 @@ from sqlalchemy.orm import sessionmaker
 from src.api.app import create_app
 from src.config.api_settings import ApiSettings
 from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
+from src.database.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SyncStatus,
+    SyncTarget,
+)
+from src.database.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SyncJob,
+)
 from src.database.services import PipelineJobService
 from src.knowledge.canonical.enums import ReviewStatus
 from tests.removal_review_fixtures import resolve_all_removals
@@ -667,6 +678,34 @@ def test_projection_sync_jobs_capture_only_the_single_active_version(api):
     assert duplicate.status_code == 409
     assert "Ya existe un job semantic_sync" in duplicate.json()["detail"]
     assert len(dispatcher.submitted) == 3
+
+
+def test_failed_structural_sync_is_queued_as_a_retry_with_lineage(api):
+    client, factory, dispatcher = api
+    version_id, _erp_id = seed_active_version(factory)
+    with factory.begin() as session:
+        sync_job = SyncJob(
+            knowledge_version_id=uuid.UUID(version_id),
+            target=SyncTarget.NEO4J,
+            status=SyncStatus.FAILED,
+            attempt_count=2,
+            error_summary="Synthetic projection failure",
+        )
+        session.add(sync_job)
+        session.flush()
+        sync_job_id = str(sync_job.id)
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/neo4j-sync",
+        json={"batch_size": 200, "replace_version": False},
+    )
+    assert response.status_code == 202, response.text
+    payload = response.json()
+    assert payload["request_source"] == "admin_api_retry"
+    assert payload["parameters"]["sync_job_id"] == sync_job_id
+    assert payload["parameters"]["sync_job_status_at_queue"] == "failed"
+    assert payload["parameters"]["sync_job_attempt_count_at_queue"] == 2
+    assert len(dispatcher.submitted) == 1
 
 
 def test_projection_sync_rejects_when_there_is_no_active_version(api):

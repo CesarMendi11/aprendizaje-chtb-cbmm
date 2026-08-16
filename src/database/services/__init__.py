@@ -37,6 +37,10 @@ from .projection_replacement_service import (
     ProjectionReplacementLineage,
     ProjectionReplacementService,
 )
+from .projection_sync_recovery_service import (
+    ProjectionSyncRecoveryResult,
+    ProjectionSyncRecoveryService,
+)
 from .removal_reconciliation_plan_service import (
     RemovalReconciliationDecision,
     RemovalReconciliationPlan,
@@ -108,6 +112,8 @@ __all__ = [
     "PipelineJobNotFoundError",
     "PipelineJobService",
     "PipelineJobTransitionError",
+    "ProjectionSyncRecoveryResult",
+    "ProjectionSyncRecoveryService",
     "ProjectionReplacementError",
     "ProjectionReplacementLineage",
     "ProjectionReplacementService",

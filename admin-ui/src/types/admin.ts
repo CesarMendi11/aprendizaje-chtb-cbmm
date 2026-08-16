@@ -47,7 +47,7 @@ export interface AdminSystemStatusResponse {
     rejected: number
     items_by_status: Record<string, number>
     latest_import: { id: string; status: string; requested_knowledge_version: string; inserted_items: number; started_at: string | null; finished_at: string | null } | null
-    sync_jobs: Array<{ id: string; target: string; status: string; attempt_count: number; requested_at: string | null; started_at: string | null; finished_at: string | null }>
+    sync_jobs: Array<{ id: string; target: string; status: string; attempt_count: number; requested_at: string | null; started_at: string | null; finished_at: string | null; error_summary: string | null; checkpoint: Record<string, unknown> }>
   }
 }
 

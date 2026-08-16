@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -27,7 +28,39 @@ def create_app(
     repository = StructuralKnowledgeRepository(settings.screen_index_path)
     repository.load()
 
-    app = FastAPI(title="ERP Assistant API", version="0.1.0", docs_url="/api/docs", redoc_url=None)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if settings.semantic_review_api_enabled:
+            from src.database.services import ProjectionSyncRecoveryService
+
+            session_factory = getattr(app.state, "semantic_review_session_factory", None)
+            if session_factory is not None:
+                try:
+                    with session_factory.begin() as session:
+                        result = ProjectionSyncRecoveryService(session).recover_orphaned_jobs()
+                    app.state.projection_sync_recovery = result.as_dict()
+                except Exception as exc:
+                    app.state.projection_sync_recovery = {
+                        "pipeline_jobs_failed": 0,
+                        "sync_jobs_failed": 0,
+                        "error": type(exc).__name__,
+                    }
+        try:
+            yield
+        finally:
+            if settings.semantic_review_api_enabled:
+                dispatcher = getattr(app.state, "pipeline_job_dispatcher", None)
+                shutdown = getattr(dispatcher, "shutdown", None)
+                if callable(shutdown):
+                    shutdown()
+
+    app = FastAPI(
+        title="ERP Assistant API",
+        version="0.1.0",
+        docs_url="/api/docs",
+        redoc_url=None,
+        lifespan=lifespan,
+    )
     app.state.settings = settings
     app.state.repository = repository
     app.state.search_service = StructuralSearchService(
@@ -96,6 +129,7 @@ def create_app(
 
             pipeline_job_dispatcher = PipelineJobDispatcher(semantic_review_session_factory)
         app.state.pipeline_job_dispatcher = pipeline_job_dispatcher
+
         app.state.pipeline_crawl_profile_name = Path(
             os.getenv("ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml")
         ).stem

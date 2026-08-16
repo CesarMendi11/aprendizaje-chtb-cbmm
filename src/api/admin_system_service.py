@@ -115,6 +115,8 @@ def probe_postgresql(session_factory) -> tuple[dict[str, Any], dict[str, Any]]:
                             "requested_at": job.requested_at,
                             "started_at": job.started_at,
                             "finished_at": job.finished_at,
+                            "error_summary": job.error_summary,
+                            "checkpoint": dict(job.checkpoint or {}),
                         }
                         for job in jobs
                     ],

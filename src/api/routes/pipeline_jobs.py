@@ -26,9 +26,15 @@ from src.database.enums import (
     PipelineJobKind,
     PipelineJobScope,
     PipelineJobStatus,
+    SyncStatus,
+    SyncTarget,
 )
 from src.database.models import KnowledgeVersionRecord
-from src.database.repositories import KnowledgeRepository, PipelineJobRepository
+from src.database.repositories import (
+    KnowledgeRepository,
+    PipelineJobRepository,
+    SyncJobRepository,
+)
 from src.database.services import (
     ModuleSubtreeResolutionError,
     ModuleSubtreeResolver,
@@ -60,6 +66,13 @@ def _single_active_version(session: Session):
     return active[0]
 
 
+def _structural_sync_target(kind: PipelineJobKind) -> SyncTarget | None:
+    return {
+        PipelineJobKind.NEO4J_SYNC: SyncTarget.NEO4J,
+        PipelineJobKind.CHROMA_SYNC: SyncTarget.CHROMADB,
+    }.get(kind)
+
+
 def _queue_active_projection_job(
     *,
     request: Request,
@@ -81,11 +94,29 @@ def _queue_active_projection_job(
             ),
         )
 
+    request_source = "admin_api"
+    sync_target = _structural_sync_target(kind)
+    sync_job = (
+        SyncJobRepository(session).get(version.id, sync_target)
+        if sync_target is not None
+        else None
+    )
+    lifecycle = {}
+    if sync_job is not None:
+        lifecycle = {
+            "sync_job_id": str(sync_job.id),
+            "sync_job_status_at_queue": str(sync_job.status),
+            "sync_job_attempt_count_at_queue": sync_job.attempt_count,
+        }
+        if sync_job.status == SyncStatus.FAILED:
+            request_source = "admin_api_retry"
+
     payload = {
         "active_only": True,
         "knowledge_version_id": str(version.id),
         "knowledge_version": version.knowledge_version,
         "erp_id": version.erp_id,
+        **lifecycle,
         **parameters,
     }
     job = PipelineJobService(session).create(
@@ -95,7 +126,7 @@ def _queue_active_projection_job(
         profile_name=request.app.state.pipeline_crawl_profile_name,
         erp_id=version.erp_id,
         knowledge_version_id=version.id,
-        request_source="admin_api",
+        request_source=request_source,
         parameters=payload,
     )
     session.commit()

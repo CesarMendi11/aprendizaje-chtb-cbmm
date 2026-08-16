@@ -201,6 +201,14 @@ def test_neo4j_executor_syncs_only_captured_active_version():
 def test_chroma_executor_syncs_only_captured_active_version():
     engine, factory = build_factory()
     version_id, erp_id, knowledge_version = seed_active(factory)
+    with factory.begin() as session:
+        sync_job = session.query(SyncJob).filter_by(
+            knowledge_version_id=uuid.UUID(version_id),
+            target=SyncTarget.CHROMADB,
+        ).one()
+        sync_job.status = SyncStatus.FAILED
+        sync_job.error_summary = "old failure"
+        sync_job.checkpoint = {"phase": "old"}
     repository = FakeChromaRepository()
     result = ChromaSyncJobExecutor(
         factory,
@@ -220,6 +228,15 @@ def test_chroma_executor_syncs_only_captured_active_version():
     assert result["embedding_model"] == "fake-embedding"
     assert result["embedding_dimensions"] == 3
     assert len(repository.documents) == 1
+    with factory() as session:
+        sync_job = session.query(SyncJob).filter_by(
+            knowledge_version_id=uuid.UUID(version_id),
+            target=SyncTarget.CHROMADB,
+        ).one()
+        assert sync_job.status == SyncStatus.SUCCEEDED
+        assert sync_job.error_summary is None
+        assert sync_job.checkpoint.get("phase") is None
+        assert sync_job.attempt_count == 2
     engine.dispose()
 
 

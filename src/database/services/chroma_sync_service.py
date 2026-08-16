@@ -198,6 +198,13 @@ class ChromaSyncService:
             raise ValueError("El SyncJob ChromaDB ya está en ejecución")
         job.status, job.started_at, job.finished_at = SyncStatus.RUNNING, utcnow(), None
         job.attempt_count += 1
+        job.error_summary = None
+        job.checkpoint = {
+            "eligible_items": summary["eligible_items"],
+            "documents": summary["documents"],
+            "phase": "prepared",
+        }
+        self.session.flush()
         try:
             vectors = self.embeddings.embed([document.text for document in documents])
             changed, removed = self.repository.sync(
@@ -228,6 +235,7 @@ class ChromaSyncService:
                 }
             )
             job.status, job.finished_at = SyncStatus.SUCCEEDED, utcnow()
+            job.error_summary = None
             job.checkpoint = {
                 key: summary[key]
                 for key in (

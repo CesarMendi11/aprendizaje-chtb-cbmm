@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { AdminApiError, getSystemStatus } from '../../api/client'
+import { AdminApiError, createChromaSyncJob, createNeo4jSyncJob, getSystemStatus } from '../../api/client'
 import type { AdminSystemStatusResponse } from '../../types/admin'
 import './system-dashboard.css'
 
@@ -40,11 +40,30 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 
 export function SystemDashboard() {
   const [state, setState] = useState<DashboardState>({ status: 'loading' })
+  const [retryingSyncId, setRetryingSyncId] = useState<string | null>(null)
+  const [syncMessage, setSyncMessage] = useState<string | null>(null)
   const load = useCallback(async () => {
     setState((old) => ({ status: 'loading', data: old.data }))
     try { setState({ status: 'ready', data: await getSystemStatus() }) }
     catch (error: unknown) { setState((old) => ({ status: 'error', message: messageOf(error), data: old.data })) }
   }, [])
+
+  const retrySync = useCallback(async (job: AdminSystemStatusResponse['knowledge']['sync_jobs'][number]) => {
+    if (job.status !== 'failed' || retryingSyncId) return
+    setRetryingSyncId(job.id)
+    setSyncMessage(null)
+    try {
+      if (job.target === 'neo4j') await createNeo4jSyncJob()
+      else if (job.target === 'chromadb') await createChromaSyncJob()
+      else throw new AdminApiError('http', `Target de sincronización no soportado: ${job.target}`)
+      setSyncMessage(`Reintento ${job.target} encolado.`)
+      await load()
+    } catch (error: unknown) {
+      setSyncMessage(messageOf(error))
+    } finally {
+      setRetryingSyncId(null)
+    }
+  }, [load, retryingSyncId])
 
   useEffect(() => {
     void load()
@@ -71,7 +90,7 @@ export function SystemDashboard() {
     </div>
     <div className="system-lower">
       <div className="system-knowledge"><div className="system-section-title"><div><span>Fuente de verdad</span><h3>Conocimiento activo</h3></div><code>{data.knowledge.active_version ?? 'sin-versión'}</code></div><div className="system-metrics"><Metric label="Items" value={data.knowledge.total_items}/><Metric label="Aprobados" value={data.knowledge.approved}/><Metric label="Pendientes" value={data.knowledge.pending_review}/><Metric label="Corregidos" value={data.knowledge.corrected}/><Metric label="Rechazados" value={data.knowledge.rejected}/></div></div>
-      <div className="system-syncs"><div className="system-section-title"><div><span>Proyecciones gobernadas</span><h3>Sincronizaciones</h3></div></div>{syncJobs.length === 0 ? <p className="system-empty">No existen sincronizaciones registradas para la versión activa.</p> : <div className="system-sync-list">{syncJobs.map((job) => <div className="system-sync-row" key={job.id}><div><strong>{job.target}</strong><span>Intento {job.attempt_count}</span></div><span className={`system-state system-state--${stateTone(job.status)}`}><i aria-hidden="true" />{stateLabel(job.status)}</span></div>)}</div>}</div>
+      <div className="system-syncs"><div className="system-section-title"><div><span>Proyecciones gobernadas</span><h3>Sincronizaciones</h3></div></div>{syncMessage && <p className="system-sync-message">{syncMessage}</p>}{syncJobs.length === 0 ? <p className="system-empty">No existen sincronizaciones registradas para la versión activa.</p> : <div className="system-sync-list">{syncJobs.map((job) => <div className="system-sync-row" key={job.id}><div className="system-sync-copy"><strong>{job.target}</strong><span>Intento {job.attempt_count}</span>{job.error_summary && <small>{job.error_summary}</small>}</div><div className="system-sync-actions"><span className={`system-state system-state--${stateTone(job.status)}`}><i aria-hidden="true" />{stateLabel(job.status)}</span>{job.status === 'failed' && ['neo4j', 'chromadb'].includes(job.target) && <button onClick={() => void retrySync(job)} disabled={retryingSyncId !== null}>{retryingSyncId === job.id ? 'Encolando…' : 'Reintentar'}</button>}</div></div>)}</div>}</div>
     </div>
   </section>
 }
