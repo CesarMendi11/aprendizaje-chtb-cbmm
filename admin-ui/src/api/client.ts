@@ -122,8 +122,13 @@ async function request<T>(path: string, validate: (value: unknown) => value is T
   } finally { window.clearTimeout(timeout) }
 }
 
-export async function getKnowledgeTree(): Promise<KnowledgeTreeResponse> {
-  return dataMode === 'demo' ? Promise.resolve(demoTree) : request('/api/admin/knowledge-tree', validTree)
+export async function getKnowledgeTree(options: { includeEmptyModules?: boolean } = {}): Promise<KnowledgeTreeResponse> {
+  if (dataMode === 'demo') return Promise.resolve(demoTree)
+  const query = new URLSearchParams()
+  if (options.includeEmptyModules) query.set('include_empty_modules', 'true')
+  const serialized = query.toString()
+  const suffix = serialized ? `?${serialized}` : ''
+  return request(`/api/admin/knowledge-tree${suffix}`, validTree)
 }
 
 export async function getScreenReviewContext(screenId: string): Promise<ScreenReviewContextResponse> {

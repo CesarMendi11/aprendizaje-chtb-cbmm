@@ -58,6 +58,9 @@ class KnowledgeTreeScreen(StrictResponseModel):
 
 class KnowledgeTreeModule(StrictResponseModel):
     module_id: str
+    parent_module_id: str | None
+    depth: int
+    navigation_path: tuple[str, ...]
     name: str | None
     route: str | None
     available: bool = True

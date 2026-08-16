@@ -3,7 +3,7 @@ export type ScreenSemanticState = 'no_proposal' | ReviewStatus | 'mixed' | 'unav
 
 export interface AdminCounters { total_screens: number; no_proposal: number; pending_review: number; approved: number; corrected: number; rejected: number; unavailable: number; warnings_total: number }
 export interface KnowledgeTreeScreen { screen_id: string; title: string | null; route: string | null; structural_review_status: ReviewStatus; structural_available: boolean; diagnostic: string | null; semantic_state: ScreenSemanticState; proposal_count: number; pending_count: number; latest_semantic_id: string | null; latest_semantic_status: ReviewStatus | null; capabilities_count: number | null; evidence_available: boolean; warnings_count: number }
-export interface KnowledgeTreeModule { module_id: string; name: string | null; route: string | null; available: boolean; diagnostic: string | null; order: number; screens: KnowledgeTreeScreen[]; counters: AdminCounters }
+export interface KnowledgeTreeModule { module_id: string; parent_module_id: string | null; depth: number; navigation_path: string[]; name: string | null; route: string | null; available: boolean; diagnostic: string | null; order: number; screens: KnowledgeTreeScreen[]; counters: AdminCounters }
 export interface KnowledgeTreeErp { erp_id: string; name: string; slug: string; active_knowledge_version_id: string; knowledge_version: string; modules: KnowledgeTreeModule[]; unassigned_screens: KnowledgeTreeScreen[]; warnings: string[]; counters: AdminCounters }
 export interface KnowledgeTreeResponse { erps: KnowledgeTreeErp[] }
 export interface AdminScreenListResponse { items: { erp_id: string; knowledge_version_id: string; module_id: string | null; module_name: string | null; screen: KnowledgeTreeScreen }[]; total: number; limit: number; offset: number; next_offset: number | null }
@@ -95,6 +95,7 @@ export interface CrawlJobRequest {
   scope: PipelineJobScope
   target?: string | null
   target_module_id?: string | null
+  knowledge_version_id?: string | null
   headless: boolean
   slow_mo: number
 }

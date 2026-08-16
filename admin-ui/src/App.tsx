@@ -20,7 +20,7 @@ export default function App() {
 
   const loadTree = useCallback(async () => {
     setTree((old) => ({ status: 'loading', data: old.data }))
-    try { setTree({ status: 'ready', data: await getKnowledgeTree() }) }
+    try { setTree({ status: 'ready', data: await getKnowledgeTree({ includeEmptyModules: true }) }) }
     catch (error: unknown) { setTree((old) => ({ status: 'error', message: messageOf(error), data: old.data })) }
   }, [])
 
@@ -60,7 +60,7 @@ export default function App() {
   return <AdminLayout
     activeSection={section}
     onNavigate={setSection}
-    erpName={erp?.name ?? 'CBMM'}
+    erpName={erp?.name ?? 'ERP'}
     knowledgeVersion={erp?.knowledge_version ?? null}
     sourceStatus={tree.status}
     onReload={() => void loadTree()}

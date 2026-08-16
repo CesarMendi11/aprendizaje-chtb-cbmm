@@ -43,6 +43,34 @@ class EffectiveModule:
     def route(self) -> str | None:
         return self.value.route_prefix if self.value else self.item.route
 
+    @property
+    def parent_module_id(self) -> str | None:
+        if self.value:
+            return self.value.parent_module_id
+        payload = self.payload or {}
+        parent = str(payload.get("parent_module_id") or "").strip()
+        return parent or None
+
+    @property
+    def depth(self) -> int:
+        if self.value:
+            return self.value.depth
+        payload = self.payload or {}
+        try:
+            return max(0, int(payload.get("depth") or 0))
+        except (TypeError, ValueError):
+            return 0
+
+    @property
+    def navigation_path(self) -> tuple[str, ...]:
+        if self.value:
+            return tuple(self.value.navigation_path)
+        payload = self.payload or {}
+        raw = payload.get("navigation_path")
+        if not isinstance(raw, (list, tuple)):
+            return ()
+        return tuple(clean for value in raw if (clean := str(value or "").strip()))
+
 
 @dataclass(frozen=True)
 class EffectiveScreen:

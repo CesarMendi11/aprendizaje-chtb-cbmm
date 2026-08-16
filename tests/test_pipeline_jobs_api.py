@@ -133,6 +133,7 @@ def test_create_crawl_job_queues_controlled_worker(api):
         json={
             "scope": "screen",
             "target": "/admin/cuentasxcobrar/retenciones",
+            "knowledge_version_id": version_id,
             "headless": False,
             "slow_mo": 120,
         },
@@ -170,6 +171,7 @@ def test_create_module_crawl_pins_target_to_active_knowledge_version(api):
         json={
             "scope": "module",
             "target_module_id": "module:tracking",
+            "knowledge_version_id": version_id,
             "headless": True,
             "slow_mo": 50,
         },
@@ -231,6 +233,26 @@ def test_module_crawl_requires_canonical_module_id_and_rejects_route_target(api)
     assert dispatcher.submitted == []
 
 
+def test_partial_crawl_rejects_target_when_pinned_active_version_does_not_match(api):
+    client, factory, dispatcher = api
+    version_id, _erp_id, _screen_id = seed_active_crawl_screen(factory)
+    wrong_version_id = str(uuid.uuid4())
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/crawl",
+        json={
+            "scope": "screen",
+            "target": "/admin/cuentasxcobrar/retenciones",
+            "knowledge_version_id": wrong_version_id,
+        },
+    )
+
+    assert response.status_code == 409
+    assert "versión ACTIVE indicada" in response.json()["detail"]
+    assert wrong_version_id != version_id
+    assert dispatcher.submitted == []
+
+
 def test_module_crawl_rejects_target_not_present_in_active_knowledge(api):
     client, _, dispatcher = api
 
@@ -275,6 +297,13 @@ def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api
         client.post(
             "/api/admin/pipeline-jobs/crawl",
             json={"scope": "full", "target_module_id": "module:x"},
+        ).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/admin/pipeline-jobs/crawl",
+            json={"scope": "full", "knowledge_version_id": str(uuid.uuid4())},
         ).status_code
         == 422
     )

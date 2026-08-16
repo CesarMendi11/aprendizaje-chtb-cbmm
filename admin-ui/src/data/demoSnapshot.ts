@@ -14,21 +14,21 @@ const counters = {
   warnings_total: 0,
 }
 
-const screenId = 'screen:admin-cuentasxcobrar-retenciones'
+const screenId = 'screen:demo-inventory-products'
 const versionId = 'demo-snapshot-verified-repository'
 const structureHash = 'no-disponible-en-snapshot-demo'
 
 const payload = {
   semantic_type: 'screen_purpose' as const,
   screen_id: screenId,
-  purpose_summary: 'Permite buscar y consultar retenciones.',
+  purpose_summary: 'Permite buscar y consultar productos.',
   supported_capabilities: [
     {
-      statement: 'Permite buscar retenciones.',
+      statement: 'Permite buscar productos.',
       evidence_refs: ['control:search'],
     },
     {
-      statement: 'Permite visualizar retenciones.',
+      statement: 'Permite visualizar productos.',
       evidence_refs: ['table:results'],
     },
   ],
@@ -38,11 +38,11 @@ const payload = {
 
 const commonEvidence = {
   screen_id: screenId,
-  screen_title: 'Retenciones',
-  screen_route: null,
+  screen_title: 'Consulta de productos',
+  screen_route: '/demo/inventory/products',
   module: {
-    module_id: 'module:cuentasxcobrar',
-    name: 'Cuentas por cobrar',
+    module_id: 'module:inventory',
+    name: 'Inventario',
   },
   fields: [],
   controls: [],
@@ -55,14 +55,14 @@ const commonEvidence = {
 
 const proposal = {
   summary: {
-    semantic_id: 'semantic:retenciones-purpose',
+    semantic_id: 'semantic:demo-products-purpose',
     semantic_type: 'screen_purpose',
     current_review_status: 'pending_review' as const,
     review_revision: 0,
-    erp_id: 'erp:cbmm',
+    erp_id: 'erp:demo',
     knowledge_version_id: versionId,
     screen_id: screenId,
-    subject_title: 'Retenciones',
+    subject_title: 'Consulta de productos',
     purpose_summary: payload.purpose_summary,
     generation_model: 'No disponible en el snapshot de demostración',
     prompt_version: 'No disponible en el snapshot de demostración',
@@ -89,15 +89,18 @@ const proposal = {
 export const demoTree: KnowledgeTreeResponse = {
   erps: [
     {
-      erp_id: 'erp:cbmm',
-      name: 'Cuerpo de Bomberos Municipal de Machala / CBMM',
-      slug: 'cbmm',
+      erp_id: 'erp:demo',
+      name: 'ERP de demostración',
+      slug: 'demo',
       active_knowledge_version_id: versionId,
       knowledge_version: 'Snapshot demostrable verificado',
       modules: [
         {
-          module_id: 'module:cuentasxcobrar',
-          name: 'Cuentas por cobrar',
+          module_id: 'module:inventory',
+          parent_module_id: null,
+          depth: 0,
+          navigation_path: ['Inventario'],
+          name: 'Inventario',
           route: null,
           available: true,
           diagnostic: null,
@@ -105,8 +108,8 @@ export const demoTree: KnowledgeTreeResponse = {
           screens: [
             {
               screen_id: screenId,
-              title: 'Retenciones',
-              route: null,
+              title: 'Consulta de productos',
+              route: '/demo/inventory/products',
               structural_review_status: 'approved',
               structural_available: true,
               diagnostic: null,
@@ -133,9 +136,9 @@ export const demoTree: KnowledgeTreeResponse = {
 export const demoContexts: Record<string, ScreenReviewContextResponse> = {
   [screenId]: {
     erp: {
-      erp_id: 'erp:cbmm',
+      erp_id: 'erp:demo',
       name: demoTree.erps[0]!.name,
-      slug: 'cbmm',
+      slug: 'demo',
     },
     version: {
       knowledge_version_id: versionId,
@@ -143,14 +146,14 @@ export const demoContexts: Record<string, ScreenReviewContextResponse> = {
       status: 'active',
     },
     module: {
-      module_id: 'module:cuentasxcobrar',
-      name: 'Cuentas por cobrar',
+      module_id: 'module:inventory',
+      name: 'Inventario',
       route: null,
     },
     screen: {
       screen_id: screenId,
-      title: 'Retenciones',
-      route: null,
+      title: 'Consulta de productos',
+      route: '/demo/inventory/products',
       structural_review_status: 'approved',
       structural_available: true,
       diagnostic: null,

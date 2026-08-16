@@ -15,9 +15,9 @@ import {
   getSystemStatus,
 } from '../../api/client'
 import type { AdminSystemStatusResponse, CrawlJobRequest, PipelineJobDetail, PipelineJobSummary } from '../../types/admin'
+import { CrawlTargetPicker } from './CrawlTargetPicker'
 import './pipeline-control.css'
 
-const RETENCIONES_ROUTE = '/admin/cuentasxcobrar/retenciones'
 const terminalStatuses = new Set(['succeeded', 'failed', 'cancelled'])
 
 type PanelState = {
@@ -86,7 +86,8 @@ const kindLabel = (kind: string) => ({
 }[kind] ?? kind.replaceAll('_', ' '))
 
 const targetLabel = (job: PipelineJobSummary | PipelineJobDetail) => {
-  if (job.scope === 'screen') return 'Retenciones'
+  if (job.scope === 'screen') return job.target ? `Pantalla ${job.target}` : 'Pantalla'
+  if (job.scope === 'module') return job.target ? `Módulo ${job.target}` : 'Módulo'
   if (job.scope === 'full') return 'ERP completo'
   if (job.scope === 'version') return job.target ? `Versión ${job.target}` : 'Versión activa'
   return job.target ?? 'Sistema'
@@ -160,7 +161,6 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }, [isBusy])
 
-  const launchRetenciones = () => void launchCrawl({ scope: 'screen', target: RETENCIONES_ROUTE, headless: false, slow_mo: 100 })
   const launchFull = () => {
     if (!window.confirm('El recorrido completo explora el ERP y puede tardar varios minutos. ¿Desea iniciarlo?')) return
     void launchCrawl({ scope: 'full', target: null, headless: false, slow_mo: 100 })
@@ -281,8 +281,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
     <div className="pipeline-console__heading">
       <div><span className="pipeline-eyebrow">Pipeline operativo</span><h2>Construcción de conocimiento</h2><p>Ejecuta crawling, canonicalización e importación staging con trazabilidad persistente. Los runs cortos no reemplazan la versión activa del ERP.</p></div>
       <div className="pipeline-actions">
-        <button className="pipeline-primary" onClick={launchRetenciones} disabled={dataMode !== 'live' || isBusy}>Recorrer Retenciones</button>
-        <button onClick={launchFull} disabled={dataMode !== 'live' || isBusy}>Recorrer ERP completo</button>
+        <button className="pipeline-primary" onClick={launchFull} disabled={dataMode !== 'live' || isBusy}>Recorrer ERP completo</button>
         <button className="pipeline-next" onClick={() => void launchCanonicalBuild()} disabled={dataMode !== 'live' || !canBuild}>Construir canonical</button>
         <button className="pipeline-next" onClick={() => void launchCanonicalMerge()} disabled={dataMode !== 'live' || !canMerge}>{job?.scope === 'screen' ? 'Fusionar pantalla' : 'Fusionar módulo'}</button>
         <button className="pipeline-next" onClick={() => void launchCanonicalReconciliation()} disabled={dataMode !== 'live' || !canReconcile}>Reconciliar removals</button>
@@ -291,6 +290,8 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
       </div>
     </div>
 
+    <CrawlTargetPicker disabled={isBusy} onLaunch={(payload) => void launchCrawl(payload)} />
+
     <div className="pipeline-flow" aria-label="Etapas habilitadas">
       <span>Crawler</span><i>→</i><span>Canonical Builder</span><i>→</i><span>PostgreSQL staging</span>
     </div>
@@ -298,7 +299,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
     <div className="pipeline-grid">
       <article className="pipeline-active">
         <div className="pipeline-card-head"><div><span>Job seleccionado</span><h3>{job ? jobTitle(job) : 'Sin ejecuciones seleccionadas'}</h3></div>{job && <JobBadge status={job.status} />}</div>
-        {!job ? <p className="pipeline-empty">Ejecuta Retenciones para iniciar una demostración corta del pipeline o selecciona un job reciente.</p> : <>
+        {!job ? <p className="pipeline-empty">Selecciona un target gobernado para un crawl parcial, ejecuta un FULL o abre un job reciente.</p> : <>
           <div className="pipeline-job-meta"><span>Etapa <strong>{labelStage(job.stage)}</strong></span><span>Inicio <strong>{formatTime(job.started_at)}</strong></span><span>Fin <strong>{formatTime(job.finished_at)}</strong></span></div>
           <div className="pipeline-progress"><div className={`pipeline-progress__bar pipeline-progress__bar--${job.status}`}><span style={job.progress_percent !== null && job.status !== 'running' ? { width: `${job.progress_percent}%` } : undefined} /></div><small>{job.progress_total ? `${job.progress_current} / ${job.progress_total} · ${job.progress_percent ?? 0}%` : job.status === 'running' ? `Unidades procesadas: ${job.progress_current} · progreso total no estimado` : labelStatus(job.status)}</small></div>
 

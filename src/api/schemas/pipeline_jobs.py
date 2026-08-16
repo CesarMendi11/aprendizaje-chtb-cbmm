@@ -49,6 +49,7 @@ class CrawlPipelineJobCreateRequest(BaseModel):
     scope: PipelineJobScope
     target: str | None = Field(default=None, max_length=1000)
     target_module_id: str | None = Field(default=None, max_length=240)
+    knowledge_version_id: uuid.UUID | None = None
     headless: bool = False
     slow_mo: int = Field(default=0, ge=0, le=5000)
 
@@ -86,8 +87,10 @@ class CrawlPipelineJobCreateRequest(BaseModel):
             self.target_module_id = module_id
             return self
 
-        if target or module_id:
-            raise ValueError("scope=full no acepta target ni target_module_id")
+        if target or module_id or self.knowledge_version_id is not None:
+            raise ValueError(
+                "scope=full no acepta target, target_module_id ni knowledge_version_id"
+            )
         self.target = None
         self.target_module_id = None
         return self

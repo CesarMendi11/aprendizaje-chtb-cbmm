@@ -124,7 +124,10 @@ def create_crawl_job(
 
     if payload.scope == PipelineJobScope.MODULE:
         try:
-            subtree = ModuleSubtreeResolver(session).resolve(payload.target_module_id or "")
+            subtree = ModuleSubtreeResolver(session).resolve(
+                payload.target_module_id or "",
+                knowledge_version_id=payload.knowledge_version_id,
+            )
         except ModuleSubtreeResolutionError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
@@ -142,7 +145,10 @@ def create_crawl_job(
         )
     elif payload.scope == PipelineJobScope.SCREEN:
         try:
-            screen = ScreenScopeResolver(session).resolve(payload.target or "")
+            screen = ScreenScopeResolver(session).resolve(
+                payload.target or "",
+                knowledge_version_id=payload.knowledge_version_id,
+            )
         except ScreenScopeResolutionError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         target = screen.route

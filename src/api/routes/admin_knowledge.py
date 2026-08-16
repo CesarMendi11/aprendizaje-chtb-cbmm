@@ -48,6 +48,11 @@ def _sort_key(name: str, canonical_id: str) -> tuple[str, str]:
     return " ".join(name.casefold().split()), canonical_id
 
 
+def _module_sort_key(module) -> tuple[int, tuple[str, ...], str]:
+    path = tuple(" ".join(value.casefold().split()) for value in module.navigation_path)
+    return module.depth, path, module.module_id
+
+
 def _check_scope(
     repository: AdminKnowledgeRepository,
     erp_id: str | None,
@@ -111,10 +116,7 @@ def _tree(
             else:
                 unassigned.append(summary)
         modules = []
-        ordered_modules = sorted(
-            snapshot.modules,
-            key=lambda value: _sort_key(value.name or "", value.module_id),
-        )
+        ordered_modules = sorted(snapshot.modules, key=_module_sort_key)
         warnings = []
         for order, module in enumerate(ordered_modules):
             if module.diagnostic:
@@ -129,6 +131,9 @@ def _tree(
                 modules.append(
                     KnowledgeTreeModule(
                         module_id=module.module_id,
+                        parent_module_id=module.parent_module_id,
+                        depth=module.depth,
+                        navigation_path=module.navigation_path,
                         name=module.name,
                         route=module.route,
                         available=module.diagnostic is None,

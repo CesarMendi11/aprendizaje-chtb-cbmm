@@ -301,6 +301,9 @@ def test_tree_hierarchy_corrections_order_states_counters_and_filters(admin_api)
     assert response.status_code == 200, response.text
     erp = response.json()["erps"][0]
     assert [module["name"] for module in erp["modules"]] == ["Alpha", "Beta"]
+    assert erp["modules"][0]["parent_module_id"] is None
+    assert erp["modules"][0]["depth"] == 0
+    assert erp["modules"][0]["navigation_path"] == ["Alpha"]
     assert [screen["title"] for screen in erp["modules"][0]["screens"]] == ["Alpha", "Zulu"]
     assert erp["modules"][1]["screens"][0]["title"] == "Corrected Loose"
     assert erp["unassigned_screens"] == []
@@ -319,6 +322,28 @@ def test_tree_hierarchy_corrections_order_states_counters_and_filters(admin_api)
     assert filtered.json()["erps"][0]["counters"]["total_screens"] == 1
     assert client.get("/api/admin/knowledge-tree?semantic_status=bad").status_code == 422
     assert client.get("/api/admin/knowledge-tree?knowledge_version_id=bad").status_code == 422
+
+
+def test_tree_exposes_recursive_module_metadata(admin_api):
+    client, factory, _ = admin_api
+    seeded = seed_tree(factory)
+    with factory.begin() as session:
+        version = session.get(KnowledgeVersionRecord, uuid.UUID(seeded["version_id"]))
+        child_payload = {
+            **_module("module:child", "Child"),
+            "parent_module_id": "module:a",
+            "depth": 1,
+            "navigation_path": ["Alpha", "Child"],
+        }
+        child = _add_item(session, version, child_payload, "module")
+        child.parent_canonical_id = "module:a"
+
+    response = client.get("/api/admin/knowledge-tree?include_empty_modules=true")
+    assert response.status_code == 200, response.text
+    modules = {row["module_id"]: row for row in response.json()["erps"][0]["modules"]}
+    assert modules["module:child"]["parent_module_id"] == "module:a"
+    assert modules["module:child"]["depth"] == 1
+    assert modules["module:child"]["navigation_path"] == ["Alpha", "Child"]
 
 
 def test_screen_list_pagination_and_review_context(admin_api):
