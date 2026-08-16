@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewPackagesResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -41,6 +41,26 @@ const validStructuralReviewDetail = (value: unknown): value is StructuralReviewI
   isRecord(value.effective_payload) && Array.isArray(value.review_history) && value.reviewer_identity_verified === false
 const validStructuralReviewResult = (value: unknown): value is StructuralReviewResult =>
   validStructuralReviewDetail(value) && isRecord(value) && hasString(value, 'performed_action')
+
+const changeTypes = new Set(['unchanged', 'new', 'modified', 'removed'])
+const validStructuralReviewChange = (value: unknown): boolean =>
+  isRecord(value) && hasString(value, 'change_type') && changeTypes.has(String(value.change_type)) &&
+  hasString(value, 'entity_type') && hasString(value, 'canonical_id') &&
+  typeof value.requires_removal_review === 'boolean'
+const validStructuralReviewPackage = (value: unknown): boolean =>
+  isRecord(value) && hasString(value, 'screen_id') && isRecord(value.counts) &&
+  typeof value.unconfirmed_removals === 'number' && typeof value.review_required === 'boolean' &&
+  Array.isArray(value.module_path) && value.module_path.every((item) => typeof item === 'string') &&
+  Array.isArray(value.changes) && value.changes.every(validStructuralReviewChange)
+const validStructuralReviewPackages = (value: unknown): value is StructuralReviewPackagesResponse =>
+  isRecord(value) && hasString(value, 'active_version_id') && hasString(value, 'active_knowledge_version') &&
+  hasString(value, 'candidate_version_id') && hasString(value, 'candidate_knowledge_version') &&
+  hasString(value, 'erp_id') && hasString(value, 'candidate_origin') && isRecord(value.diff_totals) &&
+  typeof value.affected_screens === 'number' && typeof value.screens_with_changes === 'number' &&
+  typeof value.screens_unchanged === 'number' && typeof value.unconfirmed_removals === 'number' &&
+  Array.isArray(value.unscoped_changes) && value.unscoped_changes.every(validStructuralReviewChange) &&
+  Array.isArray(value.packages) && value.packages.every(validStructuralReviewPackage) &&
+  typeof value.total === 'number' && typeof value.limit === 'number' && typeof value.offset === 'number'
 
 const validRemovalDecision = (value: unknown): boolean =>
   isRecord(value) && hasString(value, 'id') && hasString(value, 'entity_type') &&
@@ -273,6 +293,13 @@ export async function getStructuralReviewItems(queryInput: StructuralReviewListQ
   if (queryInput.entityType) query.set('entity_type', queryInput.entityType)
   if (queryInput.search?.trim()) query.set('search', queryInput.search.trim())
   return request(`/api/admin/structural-review/items?${query.toString()}`, validStructuralReviewList)
+}
+
+
+export async function getStructuralReviewPackages(candidateVersionId: string): Promise<StructuralReviewPackagesResponse> {
+  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Los paquetes de revisión sólo están disponibles en modo live.', 404)
+  const query = new URLSearchParams({ changed_only: 'true', limit: '200', offset: '0' })
+  return request(`/api/admin/knowledge-versions/${encodeURIComponent(candidateVersionId)}/review-packages?${query.toString()}`, validStructuralReviewPackages)
 }
 
 export async function getStructuralReviewItem(itemId: string): Promise<StructuralReviewItemDetail> {

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 import httpx
 import pytest
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 import src.database.models  # noqa: F401
@@ -23,6 +23,7 @@ from src.database.enums import (
 )
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
 from src.database.services import CanonicalImportService, VersionDiffError, VersionDiffService
+from src.database.services.payloads import item_content_hash
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.ids import content_hash
 from tests.canonical_fixtures import exported_fictional_canonical
@@ -534,3 +535,39 @@ def test_diff_recognizes_governed_screen_partial_merge_origin(session, tmp_path)
 
     result = VersionDiffService(session).compare(candidate_id)
     assert result.candidate_origin == "partial_screen_merge"
+
+
+
+def test_diff_ignores_provenance_only_refresh(session, tmp_path):
+    active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+    active_screen = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == active_id,
+            KnowledgeItem.entity_type == "screen",
+        )
+    )
+    candidate_screen = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == candidate_id,
+            KnowledgeItem.entity_type == "screen",
+            KnowledgeItem.canonical_id == active_screen.canonical_id,
+        )
+    )
+    payload = dict(candidate_screen.source_payload)
+    payload["source_refs"] = [*payload.get("source_refs", []), "network_evidence.json"]
+    payload["evidence_ids"] = [*payload.get("evidence_ids", []), "evidence:network"]
+    session.execute(
+        update(KnowledgeItem)
+        .where(KnowledgeItem.id == candidate_screen.id)
+        .values(source_payload=payload, content_hash=item_content_hash(payload))
+    )
+    session.expire_all()
+
+    diff = VersionDiffService(session).compare(candidate_id)
+    screen_diff = next(
+        item
+        for item in diff.items
+        if item.entity_type == "screen" and item.canonical_id == active_screen.canonical_id
+    )
+    assert screen_diff.change_type == "unchanged"
+    assert screen_diff.active_content_hash == screen_diff.candidate_content_hash

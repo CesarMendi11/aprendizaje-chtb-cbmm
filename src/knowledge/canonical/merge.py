@@ -6,6 +6,7 @@ from typing import Iterable
 
 from .ids import content_hash
 from .models import BuildWarning, CanonicalKnowledgeBase
+from .privacy import build_safe_structural_text
 from .snapshot import CanonicalSnapshotContext
 from .validator import CanonicalKnowledgeValidator
 
@@ -58,7 +59,7 @@ _COLLECTIONS = (
 class CanonicalPartialMerger:
     """Replace exactly one governed MODULE subtree or SCREEN inside a FULL snapshot."""
 
-    GENERATOR_VERSION = "canonical-partial-merge-1.1.0"
+    GENERATOR_VERSION = "canonical-partial-merge-1.1.3"
 
     def merge(
         self,
@@ -89,6 +90,11 @@ class CanonicalPartialMerger:
         removed_counts: dict[str, int] = {}
         inserted_counts: dict[str, int] = {}
         preserved_counts: dict[str, int] = {}
+        merged_screen_ids = (
+            {item.id for item in base.screens} - base_scope["screens"]
+        ) | partial_scope["screens"]
+        base_links_by_id = {item.id: item for item in base.links}
+        base_screens_by_id = {item.id: item for item in base.screens}
 
         for name in _COLLECTIONS:
             base_items = list(getattr(base, name))
@@ -98,9 +104,26 @@ class CanonicalPartialMerger:
 
             preserved = [item for item in base_items if item.id not in removed_ids]
             inserted = [item for item in partial_items if item.id in inserted_ids]
-            if name == "screens" and partial_screen_override is not None:
+            if name == "screens":
+                if partial_screen_override is not None:
+                    inserted = [
+                        partial_screen_override if item.id == partial_screen_override.id else item
+                        for item in inserted
+                    ]
                 inserted = [
-                    partial_screen_override if item.id == partial_screen_override.id else item
+                    self._restore_screen_title(
+                        item,
+                        base_screens_by_id=base_screens_by_id,
+                    )
+                    for item in inserted
+                ]
+            if name == "links":
+                inserted = [
+                    self._restore_link_target(
+                        item,
+                        base_links_by_id=base_links_by_id,
+                        merged_screen_ids=merged_screen_ids,
+                    )
                     for item in inserted
                 ]
 
@@ -232,6 +255,84 @@ class CanonicalPartialMerger:
                 raise CanonicalPartialMergeError(
                     f"El canonical {label} es inválido antes del merge"
                 )
+
+    @staticmethod
+    def _restore_screen_title(screen, *, base_screens_by_id):
+        if str(screen.title_source or "").strip() != "route_fallback":
+            return screen
+
+        base_screen = base_screens_by_id.get(screen.id)
+        if base_screen is None or base_screen.route != screen.route:
+            return screen
+
+        base_source = str(base_screen.title_source or "").strip()
+        if base_source in {"", "unknown", "route_fallback"}:
+            return screen
+        if not str(base_screen.title or "").strip():
+            return screen
+
+        # A partial crawl can reach a known route without the discovery context that
+        # originally named it. In that case the title resolver may fall back to the
+        # pathname (including opaque numeric IDs). That weak heuristic must not
+        # overwrite a stronger title already observed in the pinned ACTIVE snapshot.
+        # Fresh direct evidence (heading, breadcrumb, discovery hint, etc.) is kept.
+        rebased_main_content = CanonicalPartialMerger._rebase_main_content_title(
+            screen.main_content_text,
+            partial_title=screen.title,
+            restored_title=base_screen.title,
+        )
+        return screen.model_copy(
+            update={
+                "title": base_screen.title,
+                "normalized_title": base_screen.normalized_title,
+                "title_source": base_screen.title_source,
+                "main_content_text": rebased_main_content,
+            }
+        )
+
+    @staticmethod
+    def _rebase_main_content_title(
+        main_content_text: str,
+        *,
+        partial_title: str,
+        restored_title: str,
+    ) -> str:
+        fragments = [
+            fragment.strip()
+            for fragment in str(main_content_text or "").split(" | ")
+            if fragment.strip()
+        ]
+        if fragments and fragments[0].casefold() == str(partial_title).strip().casefold():
+            fragments = fragments[1:]
+
+        # ``main_content_text`` is derived by the canonical builder from the
+        # screen title plus already-sanitized structural labels. If a partial
+        # crawl only recovered a weak route fallback, restoring the stronger
+        # ACTIVE title must also rebase this derived text. Rebuilding it keeps
+        # every label observed by the partial while de-duplicating a restored
+        # title that may also appear later in navigation labels.
+        rebased, _ = build_safe_structural_text(restored_title, fragments)
+        return rebased
+
+    @staticmethod
+    def _restore_link_target(link, *, base_links_by_id, merged_screen_ids):
+        if link.target_screen_id is not None:
+            return link
+
+        base_link = base_links_by_id.get(link.id)
+        if (
+            base_link is None
+            or base_link.target_screen_id is None
+            or base_link.target_route != link.target_route
+            or base_link.target_screen_id not in merged_screen_ids
+        ):
+            return link
+
+        # A partial crawl only knows screens inside its governed boundary. Global or
+        # cross-scope links can therefore keep the same route while losing the resolved
+        # canonical target. Preserve the ACTIVE target only when the logical link is the
+        # same and that target screen still exists in the merged FULL snapshot.
+        return link.model_copy(update={"target_screen_id": base_link.target_screen_id})
 
     @staticmethod
     def _screen_override(

@@ -17,6 +17,8 @@ from src.database.enums import (
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
 from src.knowledge.canonical.ids import content_hash
 
+from .payloads import structural_review_hash
+
 
 class VersionDiffError(ValueError):
     """The candidate cannot be proven to be a governed FULL snapshot."""
@@ -360,11 +362,30 @@ class VersionDiffService:
         for key in sorted(set(active_by_key) | set(candidate_by_key)):
             active_item = active_by_key.get(key)
             candidate_item = candidate_by_key.get(key)
+            active_review_hash = (
+                structural_review_hash(active_item.entity_type, active_item.source_payload)
+                if active_item
+                else None
+            )
+            candidate_review_hash = (
+                structural_review_hash(candidate_item.entity_type, candidate_item.source_payload)
+                if candidate_item
+                else None
+            )
             if active_item is None:
                 kind = VersionDiffChangeType.NEW
             elif candidate_item is None:
                 kind = VersionDiffChangeType.REMOVED
             elif active_item.content_hash == candidate_item.content_hash:
+                kind = VersionDiffChangeType.UNCHANGED
+            elif (
+                active_item.source_payload != candidate_item.source_payload
+                and active_review_hash == candidate_review_hash
+            ):
+                # The generated payload changed only in review-irrelevant
+                # provenance/operational fields. A raw hash mismatch over the
+                # exact same source payload remains MODIFIED because that is an
+                # integrity inconsistency, not a provenance refresh.
                 kind = VersionDiffChangeType.UNCHANGED
             else:
                 kind = VersionDiffChangeType.MODIFIED
@@ -375,8 +396,8 @@ class VersionDiffService:
                     canonical_id=key[1],
                     active_item_id=str(active_item.id) if active_item else None,
                     candidate_item_id=str(candidate_item.id) if candidate_item else None,
-                    active_content_hash=active_item.content_hash if active_item else None,
-                    candidate_content_hash=candidate_item.content_hash if candidate_item else None,
+                    active_content_hash=active_review_hash,
+                    candidate_content_hash=candidate_review_hash,
                     active_review_status=(
                         str(active_item.current_review_status) if active_item else None
                     ),

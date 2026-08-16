@@ -190,6 +190,55 @@ export interface StructuralReviewListResponse {
   next_offset: number | null
 }
 
+
+export interface StructuralReviewChange {
+  change_type: 'unchanged' | 'new' | 'modified' | 'removed'
+  entity_type: string
+  canonical_id: string
+  active_item_id: string | null
+  candidate_item_id: string | null
+  removal_confirmation: string | null
+  requires_removal_review: boolean
+}
+
+export interface StructuralScreenReviewPackage {
+  screen_id: string
+  active_item_id: string | null
+  candidate_item_id: string | null
+  title: string | null
+  route: string | null
+  module_id: string | null
+  module_path: string[]
+  change_type: string
+  active_review_status: string | null
+  candidate_review_status: string | null
+  carry_forward: boolean | null
+  counts: Record<string, number>
+  unconfirmed_removals: number
+  review_required: boolean
+  changes: StructuralReviewChange[]
+}
+
+export interface StructuralReviewPackagesResponse {
+  active_version_id: string
+  active_knowledge_version: string
+  candidate_version_id: string
+  candidate_knowledge_version: string
+  erp_id: string
+  candidate_origin: string
+  diff_totals: Record<string, number>
+  affected_screens: number
+  screens_with_changes: number
+  screens_unchanged: number
+  unconfirmed_removals: number
+  unscoped_changes: StructuralReviewChange[]
+  packages: StructuralScreenReviewPackage[]
+  total: number
+  limit: number
+  offset: number
+  next_offset: number | null
+}
+
 export interface StructuralReviewRequest {
   reviewer_id: string
   reason?: string | null

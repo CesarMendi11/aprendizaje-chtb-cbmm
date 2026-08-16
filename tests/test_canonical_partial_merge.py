@@ -271,7 +271,7 @@ def test_merge_knowledge_version_is_deterministic_for_same_inputs():
     second, _ = merger.merge(base, partial, _snapshot())
 
     assert first.knowledge_version == second.knowledge_version
-    assert first.generator_version == "canonical-partial-merge-1.1.0"
+    assert first.generator_version == "canonical-partial-merge-1.1.3"
     assert first.source_artifact_hashes == {
         "base:screen_index.json": "hash-base-v1",
         "partial:screen_index.json": "hash-partial-v1",
@@ -341,3 +341,182 @@ def test_screen_partial_requires_same_pinned_screen_route():
             partial,
             CanonicalSnapshotContext.model_validate(payload),
         )
+
+
+def _with_cross_scope_dashboard_link(knowledge: CanonicalKnowledgeBase, *, target_screen_id):
+    payload = knowledge.model_dump(mode="json")
+    payload["links"].append(
+        {
+            "id": "link:tracking:dashboard",
+            "screen_id": "screen:tracking",
+            "label": "Dashboard",
+            "normalized_label": "dashboard",
+            "target_route": "/app/home",
+            "target_screen_id": target_screen_id,
+            "region": "global_navigation",
+            "source_refs": ["screen_index.json"],
+            "evidence_ids": [],
+        }
+    )
+    payload["statistics"]["links"] = len(payload["links"])
+    return CanonicalKnowledgeBase.model_validate(payload)
+
+
+def test_module_partial_preserves_resolved_cross_scope_link_target_from_base():
+    base = _with_cross_scope_dashboard_link(
+        _knowledge(version="base-v1"),
+        target_screen_id="screen:home",
+    )
+    partial = _with_cross_scope_dashboard_link(
+        _knowledge(version="partial-v1", partial=True),
+        target_screen_id=None,
+    )
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _snapshot())
+
+    dashboard = next(item for item in merged.links if item.id == "link:tracking:dashboard")
+    assert dashboard.target_route == "/app/home"
+    assert dashboard.target_screen_id == "screen:home"
+
+
+def test_screen_partial_preserves_resolved_cross_scope_link_target_from_base():
+    base = _with_cross_scope_dashboard_link(
+        _knowledge(version="base-v1"),
+        target_screen_id="screen:home",
+    )
+    partial = _with_cross_scope_dashboard_link(
+        _knowledge(version="partial-v1", partial=True),
+        target_screen_id=None,
+    )
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _screen_snapshot())
+
+    dashboard = next(item for item in merged.links if item.id == "link:tracking:dashboard")
+    assert dashboard.target_screen_id == "screen:home"
+
+
+def test_partial_does_not_restore_link_target_removed_from_merged_full():
+    base_payload = _knowledge(version="base-v1").model_dump(mode="json")
+    base_payload["links"].append(
+        {
+            "id": "link:tracking:legacy",
+            "screen_id": "screen:tracking",
+            "label": "Legacy external",
+            "normalized_label": "legacy external",
+            "target_route": "/tracking/integrations/external-old",
+            "target_screen_id": "screen:external-old",
+            "region": "main_content",
+            "source_refs": ["screen_index.json"],
+            "evidence_ids": [],
+        }
+    )
+    base_payload["statistics"]["links"] = 1
+    base = CanonicalKnowledgeBase.model_validate(base_payload)
+
+    partial_payload = _knowledge(version="partial-v1", partial=True).model_dump(mode="json")
+    partial_payload["links"].append(
+        {
+            "id": "link:tracking:legacy",
+            "screen_id": "screen:tracking",
+            "label": "Legacy external",
+            "normalized_label": "legacy external",
+            "target_route": "/tracking/integrations/external-old",
+            "target_screen_id": None,
+            "region": "main_content",
+            "source_refs": ["screen_index.json"],
+            "evidence_ids": [],
+        }
+    )
+    partial_payload["statistics"]["links"] = 1
+    partial = CanonicalKnowledgeBase.model_validate(partial_payload)
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _snapshot())
+
+    legacy = next(item for item in merged.links if item.id == "link:tracking:legacy")
+    assert "screen:external-old" not in {item.id for item in merged.screens}
+    assert legacy.target_screen_id is None
+
+
+def _with_tracking_title(
+    knowledge: CanonicalKnowledgeBase,
+    *,
+    title: str,
+    title_source: str,
+) -> CanonicalKnowledgeBase:
+    payload = knowledge.model_dump(mode="json")
+    screen = next(item for item in payload["screens"] if item["id"] == "screen:tracking")
+    screen["title"] = title
+    screen["normalized_title"] = title.casefold()
+    screen["title_source"] = title_source
+    return CanonicalKnowledgeBase.model_validate(payload)
+
+
+@pytest.mark.parametrize("snapshot", [_snapshot(), _screen_snapshot()])
+def test_partial_route_fallback_does_not_replace_stronger_active_title(snapshot):
+    base = _with_tracking_title(
+        _knowledge(version="base-v1"),
+        title="InspInformeRiesgo",
+        title_source="discovery_hint",
+    )
+    partial = _with_tracking_title(
+        _knowledge(version="partial-v1", partial=True),
+        title="7",
+        title_source="route_fallback",
+    )
+    partial_payload = partial.model_dump(mode="json")
+    partial_screen = next(
+        item for item in partial_payload["screens"] if item["id"] == "screen:tracking"
+    )
+    partial_screen["main_content_text"] = (
+        "7 | Primera página | InspInformeRiesgo | Etiqueta nueva"
+    )
+    partial = CanonicalKnowledgeBase.model_validate(partial_payload)
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, snapshot)
+
+    tracking = next(item for item in merged.screens if item.id == "screen:tracking")
+    assert tracking.title == "InspInformeRiesgo"
+    assert tracking.normalized_title == "inspinformeriesgo"
+    assert tracking.title_source == "discovery_hint"
+    assert tracking.main_content_text == (
+        "InspInformeRiesgo | Primera página | Etiqueta nueva"
+    )
+
+
+@pytest.mark.parametrize("snapshot", [_snapshot(), _screen_snapshot()])
+def test_partial_direct_title_evidence_can_replace_active_title(snapshot):
+    base = _with_tracking_title(
+        _knowledge(version="base-v1"),
+        title="Tracking",
+        title_source="discovery_hint",
+    )
+    partial = _with_tracking_title(
+        _knowledge(version="partial-v1", partial=True),
+        title="Tracking refreshed",
+        title_source="main_heading",
+    )
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, snapshot)
+
+    tracking = next(item for item in merged.screens if item.id == "screen:tracking")
+    assert tracking.title == "Tracking refreshed"
+    assert tracking.title_source == "main_heading"
+
+
+def test_partial_route_fallback_can_refresh_previous_route_fallback():
+    base = _with_tracking_title(
+        _knowledge(version="base-v1"),
+        title="Old route label",
+        title_source="route_fallback",
+    )
+    partial = _with_tracking_title(
+        _knowledge(version="partial-v1", partial=True),
+        title="Tracking",
+        title_source="route_fallback",
+    )
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _snapshot())
+
+    tracking = next(item for item in merged.screens if item.id == "screen:tracking")
+    assert tracking.title == "Tracking"
+    assert tracking.title_source == "route_fallback"

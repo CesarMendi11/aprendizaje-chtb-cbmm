@@ -4,9 +4,7 @@ import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from src.database.enums import (
@@ -28,13 +26,16 @@ from src.database.models import (
 from src.database.repositories import KnowledgeRepository, ReviewRepository
 from src.database.types import utcnow
 from src.knowledge.canonical.enums import ReviewStatus
-from src.knowledge.canonical.ids import content_hash
 from src.knowledge.canonical.models import CanonicalKnowledgeBase
 from src.knowledge.canonical.privacy import safe_metadata
 from src.knowledge.canonical.repository import CanonicalKnowledgeRepository
 from src.knowledge.canonical.validator import CanonicalKnowledgeValidator
 
-from .payloads import item_content_hash
+from .payloads import (
+    item_content_hash,
+    rebase_structural_correction,
+    structural_review_hash,
+)
 
 COLLECTION_TYPES = {
     "modules": "module",
@@ -164,8 +165,14 @@ class CanonicalImportService:
         for entity_type, payload in self._items(knowledge):
             old = old_items.get((entity_type, payload["id"]))
             digest = item_content_hash(payload)
+            raw_unchanged = bool(old and old.content_hash == digest)
+            review_unchanged = bool(
+                old
+                and structural_review_hash(old.entity_type, old.source_payload)
+                == structural_review_hash(entity_type, payload)
+            )
             status = ReviewStatus(payload.get("review_status", ReviewStatus.PENDING_REVIEW))
-            if old and old.content_hash == digest:
+            if old and review_unchanged:
                 status = old.current_review_status
             item = KnowledgeItem(
                 knowledge_version_id=version.id,
@@ -188,11 +195,16 @@ class CanonicalImportService:
             )
             self.session.add(item)
             self.session.flush()
-            if old and old.content_hash == digest and (
+            if old and review_unchanged and (
                 old.current_review_status != ReviewStatus.PENDING_REVIEW
                 or ReviewRepository(self.session).latest_correction(old.id)
             ):
                 correction = ReviewRepository(self.session).latest_correction(old.id)
+                corrected_payload = correction.corrected_payload if correction else None
+                if correction and not raw_unchanged and corrected_payload is not None:
+                    corrected_payload = rebase_structural_correction(
+                        entity_type, corrected_payload, payload
+                    )
                 self.session.add(
                     ReviewAction(
                         knowledge_item_id=item.id,
@@ -206,8 +218,13 @@ class CanonicalImportService:
                         ),
                         previous_status=ReviewStatus.PENDING_REVIEW,
                         new_status=status,
-                        corrected_payload=correction.corrected_payload if correction else None,
-                        review_notes="Revisión arrastrada sin cambios funcionales",
+                        corrected_payload=corrected_payload,
+                        review_notes=(
+                            "Revisión arrastrada sin cambios estructurales; "
+                            "provenance actualizada"
+                            if not raw_unchanged
+                            else "Revisión arrastrada sin cambios funcionales"
+                        ),
                         item_content_hash=digest,
                         source=ReviewSource.CARRY_FORWARD,
                     )

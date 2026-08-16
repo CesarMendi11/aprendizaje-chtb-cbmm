@@ -1,21 +1,28 @@
 from __future__ import annotations
 
-import uuid
 import json
+import uuid
 
 import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from src.database.base import Base
 import src.database.models  # noqa: F401
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SyncStatus
+from src.database.base import Base
+from src.database.enums import KnowledgeVersionStatus, SyncStatus
 from src.database.models import ImportRun, KnowledgeItem, KnowledgeVersionRecord, SyncJob
-from src.database.services import CanonicalImportService
-from src.database.services.payloads import item_content_hash
-from src.database.services import KnowledgeReviewService, EffectiveKnowledgeService
-from src.knowledge.canonical.ids import content_hash
+from src.database.services import (
+    CanonicalImportService,
+    EffectiveKnowledgeService,
+    KnowledgeReviewService,
+)
+from src.database.services.payloads import (
+    item_content_hash,
+    rebase_structural_correction,
+    structural_review_hash,
+)
 from src.knowledge.canonical.enums import ReviewStatus
+from src.knowledge.canonical.ids import content_hash
 from tests.canonical_fixtures import exported_fictional_canonical
 
 
@@ -46,6 +53,90 @@ def test_content_hash_is_deterministic_and_ignores_review_metadata():
     b = {"nested": {"a": 1, "b": 2}, "title": "A", "id": "screen:1", "reviewed_at": "tomorrow"}
     assert item_content_hash(a) == item_content_hash(b)
     assert item_content_hash(a) != item_content_hash({**a, "title": "B"})
+
+
+def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_changes():
+    screen = {
+        "id": "screen:1",
+        "title": "Facturas",
+        "route": "/facturas",
+        "source_refs": ["screen_index.json"],
+        "evidence_ids": ["evidence:old"],
+    }
+    refreshed_screen = {
+        **screen,
+        "source_refs": ["screen_index.json", "network_evidence.json"],
+        "evidence_ids": ["evidence:old", "evidence:network"],
+    }
+    assert structural_review_hash("screen", screen) == structural_review_hash(
+        "screen", refreshed_screen
+    )
+    assert structural_review_hash("screen", screen) != structural_review_hash(
+        "screen", {**refreshed_screen, "title": "Consulta de facturas"}
+    )
+
+    evidence = {
+        "id": "evidence:1",
+        "evidence_type": "structural_json",
+        "artifact_path": "data/run-a/screen_index.json",
+        "artifact_hash": "a" * 64,
+        "source_entity_type": "screen",
+        "source_entity_id": "screen:1",
+        "metadata": {},
+    }
+    refreshed_evidence = {
+        **evidence,
+        "artifact_path": "data/run-b/screen_index.json",
+        "artifact_hash": "b" * 64,
+    }
+    assert structural_review_hash("evidence", evidence) == structural_review_hash(
+        "evidence", refreshed_evidence
+    )
+    assert structural_review_hash("evidence", evidence) != structural_review_hash(
+        "evidence", {**refreshed_evidence, "metadata": {"endpoint_count": 2}}
+    )
+
+    state = {
+        "id": "ui_state:1",
+        "screen_id": "screen:1",
+        "route": "/facturas",
+        "title": "Facturas",
+        "structural_fingerprint": "structural",
+        "exact_fingerprint": "exact-a",
+        "observed_path": [{"selector": "old"}],
+        "restore_path": [{"selector": "old"}],
+    }
+    refreshed_state = {
+        **state,
+        "exact_fingerprint": "exact-b",
+        "observed_path": [{"selector": "new"}],
+        "restore_path": [{"selector": "new"}],
+    }
+    assert structural_review_hash("ui_state", state) == structural_review_hash(
+        "ui_state", refreshed_state
+    )
+    assert structural_review_hash("ui_state", state) != structural_review_hash(
+        "ui_state", {**refreshed_state, "structural_fingerprint": "changed"}
+    )
+
+
+def test_rebase_structural_correction_keeps_human_fields_and_refreshes_provenance():
+    corrected = {
+        "id": "screen:1",
+        "title": "Título corregido",
+        "source_refs": ["screen_index.json"],
+        "evidence_ids": ["evidence:old"],
+    }
+    current = {
+        "id": "screen:1",
+        "title": "Título generado",
+        "source_refs": ["screen_index.json", "network_evidence.json"],
+        "evidence_ids": ["evidence:new", "evidence:network"],
+    }
+    rebased = rebase_structural_correction("screen", corrected, current)
+    assert rebased["title"] == "Título corregido"
+    assert rebased["source_refs"] == current["source_refs"]
+    assert rebased["evidence_ids"] == current["evidence_ids"]
 
 
 def test_new_import_and_idempotency(session, canonical_dir):
@@ -127,8 +218,12 @@ def _next_version(tmp_path, canonical_dir, *, change_screen=False):
 
 
 def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir):
-    first = import_once(session, canonical_dir)
-    item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
+    import_once(session, canonical_dir)
+    item = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.entity_type == "screen"
+        ).limit(1)
+    )
     session.rollback()
     with session.begin():
         KnowledgeReviewService(session).approve(item.id)
@@ -146,7 +241,11 @@ def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir)
 
 def test_identical_correction_is_carried_forward(session, tmp_path, canonical_dir):
     import_once(session, canonical_dir)
-    item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
+    item = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.entity_type == "screen"
+        ).limit(1)
+    )
     payload = {
         key: value for key, value in item.source_payload.items()
         if key not in {"review_status", "reviewed_at", "reviewed_by", "review_notes"}
@@ -170,7 +269,11 @@ def test_identical_correction_is_carried_forward(session, tmp_path, canonical_di
 
 def test_changed_hash_does_not_carry_review(session, tmp_path, canonical_dir):
     import_once(session, canonical_dir)
-    item = session.scalar(select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1))
+    item = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.entity_type == "screen"
+        ).limit(1)
+    )
     session.rollback()
     with session.begin():
         KnowledgeReviewService(session).approve(item.id)
@@ -249,3 +352,47 @@ def test_imported_child_module_keeps_canonical_module_parent(session, tmp_path, 
 
     assert imported_child is not None
     assert imported_child.parent_canonical_id == parent["id"]
+
+
+def test_import_carries_approval_across_provenance_only_refresh(session, canonical_dir, tmp_path):
+    first = import_once(session, canonical_dir)
+    active_id = uuid.UUID(first.version_id)
+    screen = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == active_id,
+            KnowledgeItem.entity_type == "screen",
+        )
+    )
+    with session.begin_nested():
+        KnowledgeReviewService(session).approve(screen.id, reviewer="reviewer:test")
+    session.commit()
+
+    knowledge = json.loads((canonical_dir / "knowledge.json").read_text(encoding="utf-8"))
+    manifest = json.loads((canonical_dir / "manifest.json").read_text(encoding="utf-8"))
+    target = next(item for item in knowledge["screens"] if item["id"] == screen.canonical_id)
+    target["source_refs"] = [*target.get("source_refs", []), "network_evidence.json"]
+    knowledge["knowledge_version"] = "provenance-refresh"
+    manifest["knowledge_version"] = "provenance-refresh"
+    manifest["canonical_document_hash"] = content_hash(knowledge)
+    knowledge_path = tmp_path / "provenance-refresh.json"
+    manifest_path = tmp_path / "provenance-refresh-manifest.json"
+    knowledge_path.write_text(json.dumps(knowledge), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with session.begin():
+        result = CanonicalImportService(session).import_canonical(
+            knowledge_path,
+            manifest_path,
+            canonical_dir / "build_report.json",
+            activate=False,
+            create_sync_jobs=False,
+        )
+    candidate = session.get(KnowledgeVersionRecord, uuid.UUID(result.version_id))
+    carried = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == candidate.id,
+            KnowledgeItem.canonical_id == screen.canonical_id,
+        )
+    )
+    assert carried.current_review_status == ReviewStatus.APPROVED
+    assert carried.content_hash != screen.content_hash
