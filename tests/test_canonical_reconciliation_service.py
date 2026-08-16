@@ -97,6 +97,62 @@ def _materializable_partial_candidate(session, tmp_path):
     return active_id, candidate_id, removed_items
 
 
+
+def _materializable_full_candidate(session, tmp_path):
+    active_id, candidate_id, _ = seed(session, tmp_path)
+    with session.begin():
+        active_screens = {
+            item.canonical_id: item
+            for item in session.scalars(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == active_id,
+                    KnowledgeItem.entity_type == "screen",
+                )
+            )
+        }
+        candidate_screen_ids = set(
+            session.scalars(
+                select(KnowledgeItem.canonical_id).where(
+                    KnowledgeItem.knowledge_version_id == candidate_id,
+                    KnowledgeItem.entity_type == "screen",
+                )
+            )
+        )
+        for screen_id in active_screens.keys() - candidate_screen_ids:
+            source = active_screens[screen_id]
+            session.add(
+                KnowledgeItem(
+                    knowledge_version_id=candidate_id,
+                    canonical_id=source.canonical_id,
+                    entity_type=source.entity_type,
+                    parent_canonical_id=source.parent_canonical_id,
+                    title=source.title,
+                    normalized_title=source.normalized_title,
+                    route=source.route,
+                    content_hash=source.content_hash,
+                    source_payload=source.source_payload,
+                    generated_review_status=source.generated_review_status,
+                    current_review_status=source.current_review_status,
+                )
+            )
+        for item in session.scalars(
+            select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == candidate_id)
+        ):
+            if item.source_payload.get("id") != item.canonical_id:
+                session.delete(item)
+        removed_items = {}
+        for entity_type in ("control", "table_column", "ui_state", "transition"):
+            item = session.scalar(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == candidate_id,
+                    KnowledgeItem.entity_type == entity_type,
+                )
+            )
+            assert item is not None
+            removed_items[entity_type] = item
+            session.delete(item)
+    return active_id, candidate_id, removed_items
+
 def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_path):
     active_id, candidate_id, removed_items = _materializable_partial_candidate(session, tmp_path)
     resolve_all_removals(session, candidate_id)
@@ -263,6 +319,28 @@ def test_full_candidate_removals_require_explicit_human_review(session, tmp_path
     with pytest.raises(CanonicalReconciliationError, match="resolver todas"):
         CanonicalReconciliationService(session).reconcile(candidate_id)
 
+
+
+def test_full_candidate_reconciliation_applies_explicit_human_decisions(session, tmp_path):
+    _, candidate_id, removed_items = _materializable_full_candidate(session, tmp_path)
+    removed_control = removed_items["control"]
+    resolved = resolve_all_removals(
+        session,
+        candidate_id,
+        confirmed_remove={("control", removed_control.canonical_id)},
+    )
+
+    assert resolved.candidate_origin == "full_canonical"
+    assert resolved.pending_review == 0
+    result = CanonicalReconciliationService(session).reconcile(candidate_id)
+
+    assert result.candidate_origin == "full_canonical"
+    assert result.unresolved_total == 0
+    assert result.confirmed_removed_total == 1
+    assert result.retained_from_active_total == len(removed_items) - 1
+    assert removed_control.canonical_id not in {item.id for item in result.canonical.controls}
+    assert all(not decision.requires_human_review for decision in result.plan.decisions)
+    assert all(decision.review_action_id for decision in result.plan.decisions)
 
 def test_active_retention_identity_mismatches_fail_closed(session, tmp_path):
     active_id, _ = partial_candidate(session, tmp_path)

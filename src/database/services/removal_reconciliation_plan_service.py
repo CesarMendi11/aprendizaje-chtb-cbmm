@@ -113,8 +113,12 @@ class RemovalReconciliationPlanService:
                 )
                 review = True
             else:
+                if confirmation != "unconfirmed" or not change.requires_removal_review:
+                    raise RemovalReconciliationPlanError(
+                        "REMOVED de FULL candidate no conserva estado unconfirmed gobernado."
+                    )
                 decision = RemovalReconciliationDecisionType.UNRESOLVED
-                reason = "full_candidate_removal_policy_not_implemented"
+                reason = "not_observed_in_full_crawl"
                 review = True
             decisions.append(
                 RemovalReconciliationDecision(

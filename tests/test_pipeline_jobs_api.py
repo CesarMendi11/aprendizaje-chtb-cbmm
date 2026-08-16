@@ -19,6 +19,7 @@ from src.database.services import PipelineJobService
 from src.knowledge.canonical.enums import ReviewStatus
 from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_removal_reconciliation_plan_service import partial_candidate
+from tests.test_version_diff_service import seed as seed_version_diff
 
 
 class Client:
@@ -833,13 +834,16 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
             result_payload={
                 "source_crawl_job_id": str(crawl_id),
                 "knowledge_path": (
-                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/knowledge.json"
+                    f"data/runs/pipeline/{crawl_id}/processed/"
+                    f"canonical-merged/{source.id}/knowledge.json"
                 ),
                 "manifest_path": (
-                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/manifest.json"
+                    f"data/runs/pipeline/{crawl_id}/processed/"
+                    f"canonical-merged/{source.id}/manifest.json"
                 ),
                 "build_report_path": (
-                    f"data/runs/pipeline/{crawl_id}/processed/canonical-merged/{source.id}/build_report.json"
+                    f"data/runs/pipeline/{crawl_id}/processed/"
+                    f"canonical-merged/{source.id}/build_report.json"
                 ),
                 "knowledge_version": "merged-v2",
                 "snapshot_mode": "full",
@@ -897,6 +901,29 @@ def test_create_canonical_reconciliation_queues_resolved_removal_hitl(api, tmp_p
     assert body["parameters"]["erp_id"]
     assert str(dispatcher.submitted[-1]) == body["id"]
 
+
+
+def test_create_canonical_reconciliation_accepts_resolved_full_candidate(api, tmp_path):
+    client, factory, dispatcher = api
+    with factory() as session:
+        _active_id, candidate_id, _ = seed_version_diff(session, tmp_path)
+        review = resolve_all_removals(session, candidate_id)
+        assert review.candidate_origin == "full_canonical"
+        session.commit()
+        candidate_id_text = str(candidate_id)
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-reconciliation",
+        json={"candidate_version_id": candidate_id_text},
+    )
+
+    assert response.status_code == 202, response.text
+    body = response.json()
+    assert body["kind"] == "canonical_reconciliation"
+    assert body["scope"] == "version"
+    assert body["knowledge_version_id"] == candidate_id_text
+    assert body["parameters"]["candidate_version_id"] == candidate_id_text
+    assert str(dispatcher.submitted[-1]) == body["id"]
 
 def test_create_canonical_import_accepts_hitl_reconciliation_source(api):
     client, factory, dispatcher = api

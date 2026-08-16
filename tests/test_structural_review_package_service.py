@@ -61,6 +61,28 @@ def test_packages_group_canonical_children_and_keep_partial_removals_unconfirmed
     )
 
 
+
+def test_full_candidate_removals_are_unconfirmed_and_require_review(session, tmp_path):
+    _, candidate_id, _ = seed(session, tmp_path)
+
+    result = StructuralReviewPackageService(session).build(candidate_id)
+
+    assert result.candidate_origin == "full_canonical"
+    assert result.unconfirmed_removals == result.diff_totals["removed"] > 0
+    removed = [
+        change
+        for package in result.packages
+        for change in package.changes
+        if change.change_type == "removed"
+    ] + [
+        change for change in result.unscoped_changes if change.change_type == "removed"
+    ]
+    assert len(removed) == result.diff_totals["removed"]
+    assert all(
+        change.removal_confirmation == "unconfirmed" and change.requires_removal_review
+        for change in removed
+    )
+
 def test_unowned_change_is_unscoped_never_route_guessed(session, tmp_path):
     _, candidate_id, _ = seed(session, tmp_path)
     with session.begin():

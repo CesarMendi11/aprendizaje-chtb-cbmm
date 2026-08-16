@@ -191,7 +191,7 @@ export function RemovalReviewConsole({ onOpenJob }: { onOpenJob?: (jobId: string
       <div>
         <span>Removal HITL</span>
         <h2>Reconciliación humana de ausencias</h2>
-        <p>Una ausencia en un crawl parcial no prueba eliminación. Confirme retención o eliminación antes de construir el candidate reconciliado final.</p>
+        <p>Una ausencia en un candidate FULL o parcial no prueba eliminación. Confirme retención o eliminación antes de construir el candidate reconciliado final.</p>
       </div>
       <button onClick={() => void loadImports()} disabled={dataMode !== 'live' || state.loading}>Actualizar</button>
     </div>

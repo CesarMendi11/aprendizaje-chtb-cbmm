@@ -91,13 +91,14 @@ class StructuralReviewPackageService:
         active = self.session.get(KnowledgeVersionRecord, uuid.UUID(diff.active_version_id))
         if candidate is None or active is None or candidate.erp_id != active.erp_id:
             raise StructuralReviewPackageError("Candidate y ACTIVE no corresponden al mismo ERP.")
-        partial_merge = diff.candidate_origin in {
+        raw_candidate = diff.candidate_origin in {
+            "full_canonical",
             "partial_module_merge",
             "partial_screen_merge",
         }
         active_items = self._items(active.id)
         candidate_items = self._items(candidate.id)
-        packages, unscoped = self._group(diff, active_items, candidate_items, partial_merge)
+        packages, unscoped = self._group(diff, active_items, candidate_items, raw_candidate)
         visible = [package for package in packages if not changed_only or package.review_required]
         if module_id is not None:
             visible = [package for package in visible if package.module_id == module_id]
@@ -130,19 +131,19 @@ class StructuralReviewPackageService:
             )
         }
 
-    def _group(self, diff: VersionDiff, active_items, candidate_items, partial_merge):
+    def _group(self, diff: VersionDiff, active_items, candidate_items, raw_candidate):
         grouped: dict[str, list[VersionDiffItem]] = defaultdict(list)
         unscoped: list[VersionDiffItem] = []
         for item in diff.items:
             screen_id = self._screen_owner(item, active_items, candidate_items)
             (grouped[screen_id] if screen_id else unscoped).append(item)
         packages = [
-            self._package(screen_id, entries, active_items, candidate_items, partial_merge)
+            self._package(screen_id, entries, active_items, candidate_items, raw_candidate)
             for screen_id, entries in grouped.items()
         ]
         packages.sort(key=lambda value: value.screen_id)
         return packages, [
-            self._change(item, partial_merge)
+            self._change(item, raw_candidate)
             for item in sorted(unscoped, key=lambda value: (value.entity_type, value.canonical_id))
         ]
 
@@ -196,7 +197,7 @@ class StructuralReviewPackageService:
     def _valid_screen(screen_id, items):
         return screen_id if ("screen", screen_id) in items else None
 
-    def _package(self, screen_id, entries, active_items, candidate_items, partial_merge):
+    def _package(self, screen_id, entries, active_items, candidate_items, raw_candidate):
         screen = next((item for item in entries if item.entity_type == "screen"), None)
         active = active_items.get(("screen", screen_id))
         candidate = candidate_items.get(("screen", screen_id))
@@ -204,7 +205,7 @@ class StructuralReviewPackageService:
         payload = dict(source.source_payload or {}) if source else {}
         counts = Counter(item.change_type.value for item in entries)
         changes = tuple(
-            self._change(item, partial_merge)
+            self._change(item, raw_candidate)
             for item in sorted(entries, key=lambda value: (value.entity_type, value.canonical_id))
         )
         removed = counts[VersionDiffChangeType.REMOVED.value]
@@ -224,7 +225,7 @@ class StructuralReviewPackageService:
             candidate_review_status=str(candidate.current_review_status) if candidate else None,
             carry_forward=self._carry_forward(screen, active, candidate),
             counts={kind.value: counts[kind.value] for kind in VersionDiffChangeType},
-            unconfirmed_removals=removed if partial_merge else 0,
+            unconfirmed_removals=removed if raw_candidate else 0,
             review_required=any(
                 counts[kind.value]
                 for kind in (
@@ -275,7 +276,7 @@ class StructuralReviewPackageService:
         return action is not None
 
     @staticmethod
-    def _change(item, partial_merge):
+    def _change(item, raw_candidate):
         removed = item.change_type == VersionDiffChangeType.REMOVED
         return StructuralReviewChange(
             change_type=item.change_type.value,
@@ -283,6 +284,6 @@ class StructuralReviewPackageService:
             canonical_id=item.canonical_id,
             active_item_id=item.active_item_id,
             candidate_item_id=item.candidate_item_id,
-            removal_confirmation="unconfirmed" if removed and partial_merge else None,
-            requires_removal_review=removed and partial_merge,
+            removal_confirmation="unconfirmed" if removed and raw_candidate else None,
+            requires_removal_review=removed and raw_candidate,
         )

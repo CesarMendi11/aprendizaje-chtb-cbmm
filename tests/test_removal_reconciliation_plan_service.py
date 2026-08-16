@@ -94,8 +94,17 @@ def test_partial_removed_is_retained_and_plan_is_read_only(session, tmp_path):
 def test_full_candidate_removals_are_unresolved_and_bad_partial_base_fails(session, tmp_path):
     active_id, candidate_id, _ = seed(session, tmp_path)
     full = RemovalReconciliationPlanService(session).build(candidate_id)
-    assert full.unresolved_total == full.removal_total
+    assert full.candidate_origin == "full_canonical"
+    assert full.unresolved_total == full.removal_total > 0
     assert full.confirmed_removed_total == 0
+    assert full.retain_from_active_total == 0
+    assert all(
+        item.decision == "unresolved"
+        and item.reason == "not_observed_in_full_crawl"
+        and item.removal_confirmation == "unconfirmed"
+        and item.requires_human_review
+        for item in full.decisions
+    )
     session.rollback()
     with session.begin():
         source = session.scalar(
@@ -113,6 +122,44 @@ def test_full_candidate_removals_are_unresolved_and_bad_partial_base_fails(sessi
         RemovalReconciliationPlanService(session).build(candidate_id)
     assert session.get(KnowledgeVersionRecord, active_id) is not None
 
+
+
+def test_full_candidate_removal_requires_unconfirmed_structural_review_state(
+    session, tmp_path, monkeypatch
+):
+    _, candidate_id, _ = seed(session, tmp_path)
+    original = StructuralReviewPackageService.build
+
+    def missing_full_review_state(self, *args, **kwargs):
+        package = original(self, *args, **kwargs)
+        target = next(
+            value
+            for value in package.packages
+            if any(change.change_type == "removed" for change in value.changes)
+        )
+        changes = tuple(
+            (
+                replace(
+                    change,
+                    removal_confirmation=None,
+                    requires_removal_review=False,
+                )
+                if change.change_type == "removed"
+                else change
+            )
+            for change in target.changes
+        )
+        return replace(
+            package,
+            packages=tuple(
+                replace(value, changes=changes) if value.screen_id == target.screen_id else value
+                for value in package.packages
+            ),
+        )
+
+    monkeypatch.setattr(StructuralReviewPackageService, "build", missing_full_review_state)
+    with pytest.raises(RemovalReconciliationPlanError, match="FULL candidate"):
+        RemovalReconciliationPlanService(session).build(candidate_id)
 
 def test_partial_policy_applies_equally_to_removed_entity_types(session, tmp_path):
     _, candidate_id = partial_candidate(session, tmp_path)

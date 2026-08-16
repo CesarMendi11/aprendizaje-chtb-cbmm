@@ -399,10 +399,14 @@ def create_canonical_reconciliation_job(
                 "Canonical reconciliation requiere resolver todas las decisiones de Removal HITL."
             ),
         )
-    if review.candidate_origin not in {"partial_module_merge", "partial_screen_merge"}:
+    if review.candidate_origin not in {
+        "full_canonical",
+        "partial_module_merge",
+        "partial_screen_merge",
+    }:
         raise HTTPException(
             status_code=409,
-            detail="Removal HITL no corresponde a un candidate partial merge.",
+            detail="Removal HITL no corresponde a un RAW candidate reconciliable.",
         )
 
     try:

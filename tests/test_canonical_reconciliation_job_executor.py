@@ -29,7 +29,10 @@ from src.pipeline.canonical_reconciliation_job_executor import (
 )
 from src.pipeline.pipeline_job_runner import PipelineJobRunner
 from tests.removal_review_fixtures import resolve_all_removals
-from tests.test_canonical_reconciliation_service import _materializable_partial_candidate
+from tests.test_canonical_reconciliation_service import (
+    _materializable_full_candidate,
+    _materializable_partial_candidate,
+)
 from tests.test_version_diff_service import seed
 
 
@@ -135,6 +138,36 @@ def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(
     assert raw_after == raw_before
     engine.dispose()
 
+
+
+def test_reconciliation_executor_supports_governed_full_candidate(tmp_path):
+    engine, factory = _factory(tmp_path)
+    with factory() as session:
+        active_id, candidate_id, removed = _materializable_full_candidate(session, tmp_path)
+    pins = _pins(factory, active_id, candidate_id)
+    with factory.begin() as session:
+        resolve_all_removals(
+            session,
+            candidate_id,
+            confirmed_remove={("control", removed["control"].canonical_id)},
+        )
+
+    result = CanonicalReconciliationJobExecutor(
+        factory, project_root=tmp_path, runs_root="data/runs/pipeline"
+    ).execute(
+        job_id=uuid.uuid4(),
+        scope=PipelineJobScope.VERSION,
+        target=None,
+        parameters=pins,
+    )
+
+    assert result["candidate_origin"] == "full_canonical"
+    assert result["unresolved_total"] == 0
+    assert result["confirmed_removed_total"] == 1
+    assert result["retain_from_active_total"] == len(removed) - 1
+    assert result["decision_set_hash"] == content_hash(result["decisions"])
+    assert all(value["review_action_id"] for value in result["decisions"])
+    engine.dispose()
 
 def test_reconciliation_executor_fails_closed_for_pinned_context_and_unresolved(tmp_path):
     engine, factory = _factory(tmp_path)
