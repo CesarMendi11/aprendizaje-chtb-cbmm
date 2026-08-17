@@ -107,6 +107,9 @@ def create_app(
         from src.api.routes.semantic_review import (
             router as semantic_review_router,
         )
+        from src.api.routes.structural_publication_review import (
+            router as structural_publication_review_router,
+        )
         from src.api.routes.structural_review import router as structural_review_router
         from src.api.routes.structural_review_packages import (
             router as structural_review_packages_router,
@@ -177,6 +180,7 @@ def create_app(
         app.include_router(pipeline_jobs_router, prefix="/api/admin")
         app.include_router(removal_reconciliation_plans_router, prefix="/api/admin")
         app.include_router(removal_reconciliation_reviews_router, prefix="/api/admin")
+        app.include_router(structural_publication_review_router, prefix="/api/admin")
         app.include_router(structural_review_router, prefix="/api/admin")
         app.include_router(structural_review_packages_router, prefix="/api/admin")
         app.include_router(version_promotion_router, prefix="/api/admin")

@@ -67,6 +67,15 @@ from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
 from .semantic_retrieval_authorization_service import SemanticRetrievalAuthorizationService
 from .semantic_review_service import SemanticReviewService
+from .structural_publication_review_service import (
+    StructuralPublicationApprovalResult,
+    StructuralPublicationReviewConflictError,
+    StructuralPublicationReviewError,
+    StructuralPublicationReviewItem,
+    StructuralPublicationReviewPackage,
+    StructuralPublicationReviewService,
+    StructuralPublicationReviewSummary,
+)
 from .structural_review_package_service import (
     StructuralReviewChange,
     StructuralReviewPackage,
@@ -136,6 +145,13 @@ __all__ = [
     "RemovalReviewDecisionState",
     "RemovalReviewSetState",
     "SemanticRetrievalAuthorizationService",
+    "StructuralPublicationApprovalResult",
+    "StructuralPublicationReviewConflictError",
+    "StructuralPublicationReviewError",
+    "StructuralPublicationReviewItem",
+    "StructuralPublicationReviewPackage",
+    "StructuralPublicationReviewService",
+    "StructuralPublicationReviewSummary",
     "StructuralReviewChange",
     "StructuralReviewPackage",
     "StructuralReviewPackageError",

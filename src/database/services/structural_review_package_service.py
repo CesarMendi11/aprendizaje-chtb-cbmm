@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from src.database.enums import ReviewSource
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, ReviewAction
 
+from .structural_ownership import StructuralOwnershipResolver
 from .version_diff_service import (
     VersionDiff,
     VersionDiffChangeType,
@@ -72,10 +73,9 @@ class StructuralReviewPackage:
 class StructuralReviewPackageService:
     """Read-only, canonical-reference-only review grouping for a governed version diff."""
 
-    _SCREEN_TYPES = {"ui_state", "field", "control", "table", "link", "event"}
-
     def __init__(self, session: Session):
         self.session = session
+        self.ownership = StructuralOwnershipResolver()
 
     def build(
         self,
@@ -166,36 +166,8 @@ class StructuralReviewPackageService:
         )
 
     def _owner_for_item(self, item, items):
-        payload = dict(item.source_payload or {})
-        if item.entity_type == "screen":
-            return item.canonical_id
-        if item.entity_type in self._SCREEN_TYPES:
-            return self._valid_screen(str(payload.get("screen_id") or ""), items)
-        if item.entity_type == "table_column":
-            table = items.get(("table", str(payload.get("table_id") or "")))
-            return self._owner_for_item(table, items) if table else None
-        if item.entity_type == "transition":
-            source = items.get(("ui_state", str(payload.get("source_state_id") or "")))
-            target = items.get(("ui_state", str(payload.get("target_state_id") or "")))
-            if source is None or target is None:
-                return None
-            source_owner = self._owner_for_item(source, items)
-            target_owner = self._owner_for_item(target, items)
-            return (
-                source_owner if source_owner is not None and source_owner == target_owner else None
-            )
-        if item.entity_type == "evidence":
-            source_type = payload.get("source_entity_type")
-            source_id = str(payload.get("source_entity_id") or "")
-            if not isinstance(source_type, str) or not source_type or not source_id:
-                return None
-            source = items.get((source_type, source_id))
-            return self._owner_for_item(source, items) if source is not None else None
-        return None
-
-    @staticmethod
-    def _valid_screen(screen_id, items):
-        return screen_id if ("screen", screen_id) in items else None
+        owner = self.ownership.owner_for_item(item, items)
+        return owner.scope_id if owner is not None and owner.scope_type == "screen" else None
 
     def _package(self, screen_id, entries, active_items, candidate_items, raw_candidate):
         screen = next((item for item in entries if item.entity_type == "screen"), None)
