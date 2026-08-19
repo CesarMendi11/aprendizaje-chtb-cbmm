@@ -5,10 +5,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from src.database.enums import KnowledgeVersionStatus, PipelineJobScope
+from src.database.enums import KnowledgeVersionStatus, PipelineJobScope, SyncTarget
 from src.database.models import KnowledgeVersionRecord
 from src.database.services import ChromaSyncService
 from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
+
+from .projection_sync_state import fail_preflight_sync, sync_attempt_count
 
 
 class ChromaSyncJobExecutionError(RuntimeError):
@@ -43,12 +45,27 @@ class ChromaSyncJobExecutor:
             "validating_active_version",
             {"work_units": 1, "progress_total": 4, "knowledge_version_id": str(version_id)},
         )
-        with self.session_factory() as session:
-            version = self._require_active_version(session, version_id, parameters)
-            _version, documents, summary = ChromaSyncService(session).prepare(
-                erp_id=version.erp_id,
-                knowledge_version=version.knowledge_version,
+        attempt_count_before = sync_attempt_count(
+            self.session_factory, version_id, SyncTarget.CHROMADB
+        )
+        try:
+            with self.session_factory() as session:
+                version = self._require_active_version(session, version_id, parameters)
+                _version, documents, summary = ChromaSyncService(session).prepare(
+                    erp_id=version.erp_id,
+                    knowledge_version=version.knowledge_version,
+                )
+        except ChromaSyncJobExecutionError:
+            raise
+        except Exception as exc:
+            fail_preflight_sync(
+                self.session_factory,
+                version_id=version_id,
+                target=SyncTarget.CHROMADB,
+                attempt_count_before=attempt_count_before,
+                error=exc,
             )
+            raise ChromaSyncJobExecutionError(str(exc)[:400]) from exc
 
         progress(
             "documents_prepared",

@@ -106,6 +106,20 @@ def test_module_hierarchy_validates_depth_and_navigation_path():
     assert "module_navigation_path_mismatch" in result
 
 
+def test_validator_rejects_sensitive_event_label():
+    payload = build().model_dump(mode="json")
+    payload["events"][0]["label"] = "01/08/2026 - 31/08/2026"
+    payload["events"][0]["normalized_label"] = "01/08/2026 - 31/08/2026"
+    knowledge = CanonicalKnowledgeBase.model_validate(payload)
+
+    issues = CanonicalKnowledgeValidator().validate(knowledge)
+
+    assert any(
+        item.code == "sensitive_content" and item.entity_type == "event"
+        for item in issues
+    )
+
+
 def test_schema_v1_is_rejected_after_vnext_cutover():
     payload = build().model_dump(mode="json")
     payload["schema_version"] = "1.0.0"

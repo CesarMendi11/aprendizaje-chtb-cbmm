@@ -33,6 +33,30 @@ def test_privacy_removes_sensitive_and_volatile_content():
     assert all(item.label != "Secret" for item in kb.fields)
 
 
+def test_sensitive_event_label_falls_back_to_structural_category():
+    artifacts = fictional_artifacts()
+    transition = artifacts["state_flow_graph.json"]["transitions"][0]
+    transition["event"].update(
+        {
+            "event_type": "open_dropdown",
+            "label": "01/08/2026 - 31/08/2026",
+            "decision": "allow",
+        }
+    )
+
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(fictional_profile(), artifacts)
+
+    assert len(kb.events) == 1
+    assert kb.events[0].label == "open_dropdown"
+    assert kb.events[0].normalized_label == "open dropdown"
+    assert any(
+        warning.code == "sensitive_event_label_replaced"
+        for warning in kb.build_warnings
+    )
+    assert builder.sensitive_exclusions >= 2
+
+
 def test_main_content_is_only_deduplicated_structural_text():
     artifacts = fictional_artifacts()
     artifacts["screen_index.json"]["screens"][1].update({

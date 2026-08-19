@@ -93,7 +93,7 @@ def build_factory():
     return engine, sessionmaker(bind=engine, expire_on_commit=False)
 
 
-def seed_active(factory):
+def seed_active(factory, *, screen_title="Pantalla prueba"):
     with factory.begin() as session:
         erp = ERPSystemRecord(
             id="erp:projection-test",
@@ -126,13 +126,13 @@ def seed_active(factory):
             knowledge_version=version,
             canonical_id="screen:test",
             entity_type="screen",
-            title="Pantalla prueba",
-            normalized_title="pantalla prueba",
+            title=screen_title,
+            normalized_title=screen_title.casefold(),
             route="/test",
             content_hash="b" * 64,
             source_payload={
                 "id": "screen:test",
-                "title": "Pantalla prueba",
+                "title": screen_title,
                 "route": "/test",
                 "description": "Pantalla aprobada de prueba",
             },
@@ -512,4 +512,67 @@ def test_failed_chroma_replacement_keeps_previous_projection_intact():
         )
 
     assert repository.deleted_versions == []
+    engine.dispose()
+
+
+def test_neo4j_preflight_failure_marks_previous_success_as_failed_attempt():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_active(
+        factory, screen_title="001-001-000000001"
+    )
+    with pytest.raises(Neo4jSyncJobExecutionError, match="sensible"):
+        Neo4jSyncJobExecutor(
+            factory, repository_factory=FakeNeo4jRepository
+        ).execute(
+            job_id="00000000-0000-0000-0000-000000000010",
+            scope="version",
+            target=knowledge_version,
+            parameters=parameters(version_id, erp_id, knowledge_version),
+            progress=lambda *_: None,
+        )
+
+    with factory() as session:
+        sync_job = session.query(SyncJob).filter_by(
+            knowledge_version_id=uuid.UUID(version_id),
+            target=SyncTarget.NEO4J,
+        ).one()
+        assert sync_job.status == SyncStatus.FAILED
+        assert sync_job.attempt_count == 2
+        assert "sensible" in (sync_job.error_summary or "")
+    engine.dispose()
+
+
+def test_chroma_preflight_failure_marks_previous_success_as_failed_attempt(monkeypatch):
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version = seed_active(factory)
+
+    def fail_prepare(*_args, **_kwargs):
+        raise RuntimeError("synthetic chroma prepare failure")
+
+    monkeypatch.setattr(
+        "src.pipeline.chroma_sync_job_executor.ChromaSyncService.prepare",
+        fail_prepare,
+    )
+
+    with pytest.raises(ChromaSyncJobExecutionError, match="prepare failure"):
+        ChromaSyncJobExecutor(
+            factory,
+            repository_factory=FakeChromaRepository,
+            embeddings_factory=FakeEmbeddings,
+        ).execute(
+            job_id="00000000-0000-0000-0000-000000000011",
+            scope="version",
+            target=knowledge_version,
+            parameters=parameters(version_id, erp_id, knowledge_version),
+            progress=lambda *_: None,
+        )
+
+    with factory() as session:
+        sync_job = session.query(SyncJob).filter_by(
+            knowledge_version_id=uuid.UUID(version_id),
+            target=SyncTarget.CHROMADB,
+        ).one()
+        assert sync_job.status == SyncStatus.FAILED
+        assert sync_job.attempt_count == 2
+        assert "prepare failure" in (sync_job.error_summary or "")
     engine.dispose()

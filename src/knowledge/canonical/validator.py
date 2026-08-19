@@ -105,6 +105,18 @@ class CanonicalKnowledgeValidator:
             screen_text = (screen.title, screen.document_title, screen.main_content_text, screen.description)
             if any(contains_sensitive(value) for value in screen_text if value):
                 issues.append(self._issue("error", "sensitive_content", "Contenido sensible en pantalla", "screen", screen.id))
+        for event in knowledge.events:
+            event_text = (event.label, event.normalized_label)
+            if any(contains_sensitive(value) for value in event_text if value):
+                issues.append(
+                    self._issue(
+                        "error",
+                        "sensitive_content",
+                        "Contenido sensible en evento",
+                        "event",
+                        event.id,
+                    )
+                )
         for evidence in knowledge.evidence:
             if contains_sensitive(evidence.observed_text):
                 issues.append(self._issue("error", "sensitive_content", "Contenido sensible en evidencia", "evidence", evidence.id))

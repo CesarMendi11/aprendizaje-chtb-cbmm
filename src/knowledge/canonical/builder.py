@@ -13,11 +13,16 @@ from .models import (
     BuildWarning, CanonicalKnowledgeBase, Control, ERPSystem, Event, Evidence,
     FieldEntity, Link, Module, Screen, Table, TableColumn, Transition, UIState,
 )
-from .privacy import SENSITIVE_REGIONS, build_safe_structural_text, safe_metadata, sanitize_text
+from .privacy import (
+    SENSITIVE_REGIONS,
+    build_safe_structural_text,
+    safe_metadata,
+    sanitize_text,
+)
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.0"
+GENERATOR_VERSION = "4.0.1"
 ARTIFACT_NAMES = (
     "screen_index.json", "routes_graph.json", "state_registry.json",
     "state_flow_graph.json", "event_policy_audit.json", "ui_event_execution_audit.json",
@@ -156,6 +161,16 @@ class CanonicalKnowledgeBuilder:
             event_raw = raw.get("event") or {}
             category = str(event_raw.get("event_type") or event_raw.get("event_category") or "unknown")
             label = str(event_raw.get("label") or category)
+            _, sensitive_detections = sanitize_text(label, 300)
+            if sensitive_detections:
+                self.sensitive_exclusions += sensitive_detections
+                self._warn(
+                    "sensitive_event_label_replaced",
+                    "Etiqueta dinámica/sensible de Event reemplazada "
+                    "por su categoría estructural",
+                    "event",
+                )
+                label = category
             event_id = stable_id("event", source.id, category, normalize_text(label), event_raw.get("selector"))
             if event_id not in {item.id for item in events}:
                 region = (event_raw.get("metadata") or {}).get("region") or event_raw.get("region") or "unknown"

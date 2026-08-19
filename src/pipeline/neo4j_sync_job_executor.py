@@ -4,12 +4,14 @@ import uuid
 from typing import Any
 
 from src.config.neo4j_settings import Neo4jSettings
-from src.database.enums import KnowledgeVersionStatus, PipelineJobScope
+from src.database.enums import KnowledgeVersionStatus, PipelineJobScope, SyncTarget
 from src.database.models import KnowledgeVersionRecord
 from src.database.services import Neo4jSyncService
 from src.graph.client import Neo4jClient
 from src.graph.repository import Neo4jRepository
 from src.knowledge.canonical.privacy import sanitize_text
+
+from .projection_sync_state import fail_preflight_sync, sync_attempt_count
 
 
 class Neo4jSyncJobExecutionError(RuntimeError):
@@ -40,14 +42,32 @@ class Neo4jSyncJobExecutor:
             "validating_active_version",
             {"work_units": 1, "progress_total": 4, "knowledge_version_id": str(version_id)},
         )
-        with self.session_factory() as session:
-            version = self._require_active_version(session, version_id, parameters)
-            service = Neo4jSyncService(session)
-            plan = service.prepare(
-                erp_id=version.erp_id,
-                knowledge_version=version.knowledge_version,
+        attempt_count_before = sync_attempt_count(
+            self.session_factory, version_id, SyncTarget.NEO4J
+        )
+        try:
+            with self.session_factory() as session:
+                version = self._require_active_version(session, version_id, parameters)
+                service = Neo4jSyncService(session)
+                plan = service.prepare(
+                    erp_id=version.erp_id,
+                    knowledge_version=version.knowledge_version,
+                )
+                plan_summary = plan.summary()
+        except Neo4jSyncJobExecutionError:
+            raise
+        except Exception as exc:
+            fail_preflight_sync(
+                self.session_factory,
+                version_id=version_id,
+                target=SyncTarget.NEO4J,
+                attempt_count_before=attempt_count_before,
+                error=exc,
             )
-            plan_summary = plan.summary()
+            clean, _ = sanitize_text(str(exc), 400)
+            raise Neo4jSyncJobExecutionError(
+                clean or "Error Neo4j sanitizado"
+            ) from exc
 
         progress(
             "projection_planned",
