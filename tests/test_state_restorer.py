@@ -225,3 +225,209 @@ def test_state_restorer_reuses_canonical_registered_title_on_direct_route():
     assert result.observed_title == "Facturación Electronica"
     assert result.screen_data["observed_functional_title"] == "Facturacion"
     assert navigator.paths == ["/admin/facturacion"]
+
+
+
+def test_state_restorer_reports_safe_summary_diff_for_navigation_only_mismatch():
+    cfg = {
+        "navigation": {"home_url": ROUTE},
+        "exploration": {"page_wait_ms": 0},
+        "state_detection": {
+            "navigation_state_routes": [ROUTE],
+            "stability": {"enabled": False},
+        },
+        "state_replay": {"page_wait_ms": 0, "restore_attempts": 1},
+    }
+    builder = StateSignatureBuilder.from_profile(cfg)
+    registry = StateRegistry()
+
+    target_data = {
+        "path": ROUTE,
+        "title": "Dashboard",
+        "functional_title": "Dashboard",
+        "visible_text": "Dashboard",
+        "main_visible_text": "Dashboard",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "regions": {
+            "main_content": {
+                "visible_text": "Dashboard",
+                "elements_count": 1,
+            }
+        },
+        "custom_interactives": [
+            {
+                "text": "Cuentas por cobrar",
+                "tag": "div",
+                "role": "menuitem",
+                "region": "global_navigation",
+                "aria_expanded": "false",
+            }
+        ],
+    }
+    observed_data = {
+        **target_data,
+        "custom_interactives": [
+            {
+                **target_data["custom_interactives"][0],
+                "aria_expanded": "true",
+            }
+        ],
+    }
+
+    target_signature = builder.build(target_data)
+    target_id = registry.build_state_id(target_signature.structural_fingerprint)
+    target = registry.register_signature(
+        target_signature,
+        path=CrawlPath(root_state_id=target_id),
+    ).state
+
+    class DummyPage:
+        def wait_for_timeout(self, milliseconds):
+            return None
+
+    class DummyNavigator:
+        def __init__(self):
+            self.page = DummyPage()
+            self.paths = []
+
+        def goto_path(self, path):
+            self.paths.append(path)
+
+    class FixedExtractor:
+        def extract(self, title_hint=""):
+            return dict(observed_data)
+
+    navigator = DummyNavigator()
+    restorer = StateRestorer(
+        profile=cfg,
+        navigator=navigator,
+        extractor=FixedExtractor(),
+        signature_builder=builder,
+        registry=registry,
+        path_replayer=object(),
+    )
+
+    result = restorer.restore(target)
+
+    assert result.success is False
+    assert result.error == (
+        "La navegación directa llegó a una firma estructural diferente "
+        "de la esperada."
+    )
+    assert result.summary_comparison == {
+        "different_top_level_keys": ["navigation_state"],
+        "equal_without_navigation_state": True,
+        "navigation_state_changed": True,
+    }
+    assert result.diagnostics()["summary_comparison"] == result.summary_comparison
+    assert navigator.paths == [ROUTE]
+
+
+def test_state_restorer_keeps_safe_history_when_retry_recovers_navigation_mismatch():
+    cfg = {
+        "navigation": {"home_url": ROUTE},
+        "exploration": {"page_wait_ms": 0},
+        "state_detection": {
+            "navigation_state_routes": [ROUTE],
+            "stability": {"enabled": False},
+        },
+        "state_replay": {"page_wait_ms": 0, "restore_attempts": 2},
+    }
+    builder = StateSignatureBuilder.from_profile(cfg)
+    registry = StateRegistry()
+
+    target_data = {
+        "path": ROUTE,
+        "title": "Dashboard",
+        "functional_title": "Dashboard",
+        "visible_text": "Dashboard",
+        "main_visible_text": "Dashboard",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "regions": {
+            "main_content": {
+                "visible_text": "Dashboard",
+                "elements_count": 1,
+            }
+        },
+        "custom_interactives": [
+            {
+                "text": "Cuentas por cobrar",
+                "tag": "div",
+                "role": "menuitem",
+                "region": "global_navigation",
+                "aria_expanded": "false",
+            }
+        ],
+    }
+    mismatch_data = {
+        **target_data,
+        "custom_interactives": [
+            {
+                **target_data["custom_interactives"][0],
+                "aria_expanded": "true",
+            }
+        ],
+    }
+
+    target_signature = builder.build(target_data)
+    target_id = registry.build_state_id(target_signature.structural_fingerprint)
+    target = registry.register_signature(
+        target_signature,
+        path=CrawlPath(root_state_id=target_id),
+    ).state
+
+    class DummyPage:
+        def wait_for_timeout(self, milliseconds):
+            return None
+
+    class DummyNavigator:
+        def __init__(self):
+            self.page = DummyPage()
+            self.paths = []
+
+        def goto_path(self, path):
+            self.paths.append(path)
+
+    class SequenceExtractor:
+        def __init__(self):
+            self.values = [mismatch_data, mismatch_data, target_data]
+            self.index = 0
+
+        def extract(self, title_hint=""):
+            value = self.values[min(self.index, len(self.values) - 1)]
+            self.index += 1
+            return dict(value)
+
+    navigator = DummyNavigator()
+    restorer = StateRestorer(
+        profile=cfg,
+        navigator=navigator,
+        extractor=SequenceExtractor(),
+        signature_builder=builder,
+        registry=registry,
+        path_replayer=object(),
+    )
+
+    result = restorer.restore(target)
+
+    assert result.success is True
+    assert result.attempts == 2
+    assert len(result.attempt_history) == 2
+    assert result.attempt_history[0]["success"] is False
+    assert result.attempt_history[0]["summary_comparison"] == {
+        "different_top_level_keys": ["navigation_state"],
+        "equal_without_navigation_state": True,
+        "navigation_state_changed": True,
+    }
+    assert result.attempt_history[1]["success"] is True
+    assert result.attempt_history[1]["summary_comparison"] == {}
+    assert result.diagnostics()["attempt_history"] == result.attempt_history
+    assert navigator.paths == [ROUTE, ROUTE]

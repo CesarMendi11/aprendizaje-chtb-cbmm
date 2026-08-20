@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import uuid
 from pathlib import Path
@@ -36,6 +37,60 @@ def _relative_project_path(value: str | Path) -> str:
         return str(path.resolve().relative_to(PROJECT_ROOT.resolve()))
     except ValueError:
         return str(path)
+
+
+def _crawl_execution_quality(review_dir: Path) -> dict[str, Any]:
+    """Summarize persisted UI-event execution failures for a crawl run.
+
+    ``state_restore_failed`` is a trust-boundary failure: the crawler could not
+    restore the source UI state and therefore did not execute that candidate.
+    Other interaction errors remain observable but do not by themselves prove
+    that structural coverage was truncated.
+    """
+
+    files = sorted(review_dir.glob("*_ui_events_*_uncertainty.json"))
+    events_evaluated = 0
+    state_restore_failures = 0
+    other_error_events = 0
+
+    for path in files:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise CanonicalBuildJobExecutionError(
+                "No se pudo validar la calidad de ejecución UI del crawl fuente"
+            ) from exc
+        if not isinstance(payload, dict):
+            raise CanonicalBuildJobExecutionError(
+                "La evidencia de ejecución UI del crawl fuente es inválida"
+            )
+
+        results = payload.get("results", [])
+        if not isinstance(results, list):
+            raise CanonicalBuildJobExecutionError(
+                "La evidencia de ejecución UI del crawl fuente es inválida"
+            )
+
+        for result in results:
+            if not isinstance(result, dict):
+                raise CanonicalBuildJobExecutionError(
+                    "La evidencia de ejecución UI del crawl fuente es inválida"
+                )
+            events_evaluated += 1
+            error = result.get("error")
+            if error == "state_restore_failed":
+                state_restore_failures += 1
+            elif error:
+                other_error_events += 1
+
+    return {
+        "execution_evidence_present": bool(files),
+        "ui_event_result_files": len(files),
+        "events_evaluated": events_evaluated,
+        "state_restore_failures": state_restore_failures,
+        "other_error_events": other_error_events,
+        "gate_passed": state_restore_failures == 0,
+    }
 
 
 class CanonicalBuildJobExecutor:
@@ -99,6 +154,18 @@ class CanonicalBuildJobExecutor:
             raise CanonicalBuildJobExecutionError(
                 "El crawl fuente no contiene screen_index.json final"
             )
+
+        execution_quality = _crawl_execution_quality(
+            run_root / "review" / "structural"
+        )
+        if not execution_quality["gate_passed"]:
+            raise CanonicalBuildJobExecutionError(
+                "El crawl fuente no supera el gate de calidad estructural: "
+                f"{execution_quality['state_restore_failures']} evento(s) "
+                "fallaron al restaurar su estado fuente "
+                "(state_restore_failed)."
+            )
+
         if not self.profile_path.is_file():
             raise CanonicalBuildJobExecutionError("Perfil de crawler no encontrado")
 
@@ -191,6 +258,7 @@ class CanonicalBuildJobExecutor:
             )
             report["omitted_entities"] = omitted
         report["snapshot"] = snapshot_context.model_dump(mode="json")
+        report["crawl_execution_quality"] = execution_quality
 
         emit(
             "exporting_canonical",
@@ -230,6 +298,7 @@ class CanonicalBuildJobExecutor:
             "target_screen_id": snapshot_context.target_screen_id,
             "base_knowledge_version_id": snapshot_context.base_knowledge_version_id,
             "base_knowledge_version": snapshot_context.base_knowledge_version,
+            "crawl_execution_quality": execution_quality,
         }
 
     @staticmethod

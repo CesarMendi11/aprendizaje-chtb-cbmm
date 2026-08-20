@@ -30,6 +30,8 @@ class RestoreResult:
     observed_fingerprint: str | None = None
     expected_title: str | None = None
     observed_title: str | None = None
+    summary_comparison: dict[str, Any] = field(default_factory=dict)
+    attempt_history: list[dict[str, Any]] = field(default_factory=list)
 
     def diagnostics(self) -> dict[str, Any]:
         return {
@@ -42,6 +44,8 @@ class RestoreResult:
             "observed_fingerprint": self.observed_fingerprint,
             "expected_title": self.expected_title,
             "observed_title": self.observed_title,
+            "summary_comparison": self.summary_comparison,
+            "attempt_history": self.attempt_history,
             "observation": self.observation,
         }
 
@@ -61,6 +65,8 @@ class RestoreResult:
             "observed_fingerprint": self.observed_fingerprint,
             "expected_title": self.expected_title,
             "observed_title": self.observed_title,
+            "summary_comparison": self.summary_comparison,
+            "attempt_history": self.attempt_history,
         }
 
 
@@ -121,6 +127,7 @@ class StateRestorer:
         last_observation: dict[str, Any] = (
             current.diagnostics() if current else {}
         )
+        attempt_history: list[dict[str, Any]] = []
 
         for attempt in range(1, self.max_attempts + 1):
             if target.path and target.path.depth > 0:
@@ -158,12 +165,14 @@ class StateRestorer:
                 continue
 
             direct = self._restore_root_state(target)
+            attempt_history.append(self._attempt_diagnostic(attempt, direct))
             last_screen = direct.screen_data
             last_signature = direct.signature
             last_error = direct.error
             last_observation = direct.observation
             if direct.success:
                 direct.attempts = attempt
+                direct.attempt_history = list(attempt_history)
                 return direct
 
         return RestoreResult(
@@ -183,6 +192,12 @@ class StateRestorer:
             ),
             expected_title=target.title,
             observed_title=(last_signature.title if last_signature else None),
+            summary_comparison=(
+                self._compare_summaries(target.summary, last_signature.summary)
+                if last_signature
+                else {}
+            ),
+            attempt_history=attempt_history,
         )
 
     def _restore_root_state(self, target: UIState) -> RestoreResult:
@@ -215,6 +230,10 @@ class StateRestorer:
                     ),
                     expected_title=target.title,
                     observed_title=observation.signature.title,
+                    summary_comparison=self._compare_summaries(
+                        target.summary,
+                        observation.signature.summary,
+                    ),
                 )
 
             return self._success_result(
@@ -274,6 +293,53 @@ class StateRestorer:
     @staticmethod
     def _matches(signature: StateSignature, state: UIState) -> bool:
         return signature.structural_fingerprint == state.structural_signature
+
+
+    @staticmethod
+    def _attempt_diagnostic(
+        attempt: int,
+        result: RestoreResult,
+    ) -> dict[str, Any]:
+        observation = result.observation or {}
+        return {
+            "attempt": attempt,
+            "strategy": result.strategy,
+            "success": result.success,
+            "error": result.error,
+            "expected_fingerprint": result.expected_fingerprint,
+            "observed_fingerprint": result.observed_fingerprint,
+            "summary_comparison": result.summary_comparison,
+            "stable": observation.get("stable"),
+            "samples_count": observation.get("samples_count"),
+            "elapsed_ms": observation.get("elapsed_ms"),
+        }
+
+    @staticmethod
+    def _compare_summaries(
+        expected: dict[str, Any],
+        observed: dict[str, Any],
+    ) -> dict[str, Any]:
+        different_top_level_keys = sorted(
+            key
+            for key in set(expected) | set(observed)
+            if expected.get(key) != observed.get(key)
+        )
+
+        expected_without_navigation = dict(expected)
+        observed_without_navigation = dict(observed)
+        expected_without_navigation.pop("navigation_state", None)
+        observed_without_navigation.pop("navigation_state", None)
+
+        return {
+            "different_top_level_keys": different_top_level_keys,
+            "equal_without_navigation_state": (
+                expected_without_navigation == observed_without_navigation
+            ),
+            "navigation_state_changed": (
+                expected.get("navigation_state")
+                != observed.get("navigation_state")
+            ),
+        }
 
     @staticmethod
     def _success_result(

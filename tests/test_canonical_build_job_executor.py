@@ -4,9 +4,14 @@ import json
 import uuid
 from pathlib import Path
 
+import pytest
+
 from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
 from src.knowledge.canonical.ids import stable_id
-from src.pipeline.canonical_build_job_executor import CanonicalBuildJobExecutor
+from src.pipeline.canonical_build_job_executor import (
+    CanonicalBuildJobExecutionError,
+    CanonicalBuildJobExecutor,
+)
 
 
 def write_profile(path: Path, structural_dir: Path) -> None:
@@ -89,6 +94,23 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         ),
         encoding="utf-8",
     )
+    review = runs_root / str(source_id) / "review" / "structural"
+    review.mkdir(parents=True)
+    (review / "screen_ui_events_state_20260819_010000_uncertainty.json").write_text(
+        json.dumps(
+            {
+                "route": "/admin/cuentasxcobrar/retenciones",
+                "results": [
+                    {
+                        "candidate": {"event_category": "open_dropdown"},
+                        "changed": False,
+                        "error": "timeout: overlay intercepts pointer events",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
     profile = tmp_path / "profile.yaml"
     write_profile(profile, structural)
     checkpoints = []
@@ -128,6 +150,14 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     assert result["snapshot_mode"] == "partial"
     assert result["snapshot_scope"] == "screen"
     assert result["snapshot_target"] == "/admin/cuentasxcobrar/retenciones"
+    assert result["crawl_execution_quality"] == {
+        "execution_evidence_present": True,
+        "ui_event_result_files": 1,
+        "events_evaluated": 1,
+        "state_restore_failures": 0,
+        "other_error_events": 1,
+        "gate_passed": True,
+    }
     knowledge = json.loads((canonical / "knowledge.json").read_text(encoding="utf-8"))
     network = [
         item
@@ -137,6 +167,8 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     assert len(network) == 1
     assert network[0]["metadata"]["bodies_captured"] is False
     assert network[0]["metadata"]["headers_captured"] is False
+    report = json.loads((canonical / "build_report.json").read_text(encoding="utf-8"))
+    assert report["crawl_execution_quality"] == result["crawl_execution_quality"]
     manifest = json.loads((canonical / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["snapshot"] == {
         "mode": "partial",
@@ -152,6 +184,58 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     }
     assert checkpoints[-1][0] == "exporting_canonical"
     assert checkpoints[-1][1]["progress_total"] == 4
+
+
+@pytest.mark.parametrize("scope", ["full", "module", "screen"])
+def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scope):
+    source_id = uuid.uuid4()
+    runs_root = tmp_path / "runs"
+    structural = runs_root / str(source_id) / "processed" / "structural"
+    structural.mkdir(parents=True)
+    (structural / "screen_index.json").write_text(
+        json.dumps({"screens": []}),
+        encoding="utf-8",
+    )
+
+    review = runs_root / str(source_id) / "review" / "structural"
+    review.mkdir(parents=True)
+    (review / "home_ui_events_state_20260819_010000_uncertainty.json").write_text(
+        json.dumps(
+            {
+                "route": "/admin/home",
+                "results": [
+                    {
+                        "candidate": {
+                            "event_category": "expand_menu",
+                            "label": "Menu",
+                        },
+                        "changed": False,
+                        "interaction_succeeded": False,
+                        "error": "state_restore_failed",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        CanonicalBuildJobExecutionError,
+        match="state_restore_failed",
+    ):
+        CanonicalBuildJobExecutor(
+            profile_path=tmp_path / "profile.yaml",
+            runs_root=runs_root,
+        ).execute(
+            job_id=uuid.uuid4(),
+            scope=scope,
+            target=None,
+            parameters={"source_crawl_job_id": str(source_id)},
+        )
+
+    assert not (
+        runs_root / str(source_id) / "processed" / "canonical"
+    ).exists()
 
 
 def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
