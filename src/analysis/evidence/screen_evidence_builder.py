@@ -352,6 +352,9 @@ class ScreenEvidenceBuilder:
             *transitions,
         ]
         selected_ids = {item.canonical_id for item in selected}
+        primary_evidence_ids = self._primary_evidence_ids(
+            items, screen.canonical_id, warnings
+        )
         evidence_ids = self._evidence_ids(selected, payloads, items, selected_ids, warnings)
         main_text = self._main_text(
             module_name,
@@ -379,6 +382,7 @@ class ScreenEvidenceBuilder:
             "events": event_dtos,
             "transitions": transition_dtos,
             "main_content_text": main_text,
+            "primary_evidence_ids": primary_evidence_ids,
             "evidence_ids": evidence_ids,
             "warnings": warnings[:MAX_WARNINGS],
         }
@@ -568,6 +572,23 @@ class ScreenEvidenceBuilder:
             self._warn(warnings, f"invalid_relation:{owner}:{kind}")
             return None
         return reference
+
+    def _primary_evidence_ids(self, items, screen_id, warnings):
+        evidence = self._relation_candidates(
+            items, "evidence", "source_entity_id", {screen_id}, warnings
+        )
+        values = []
+        for item, payload in evidence:
+            if str(payload.get("source_entity_type") or "") != "screen":
+                self._warn(warnings, f"invalid_relation:{item.canonical_id}:source_entity_type")
+                continue
+            if str(payload.get("evidence_type") or "") == "network_trace":
+                continue
+            values.append(item.canonical_id)
+        ordered = sorted(set(values))
+        if len(ordered) > MAX_EVIDENCE_IDS:
+            self._warn(warnings, "limit_exceeded:primary_evidence_ids")
+        return ordered[:MAX_EVIDENCE_IDS]
 
     def _evidence_ids(self, selected, payloads, items, selected_ids, warnings):
         evidence = self._relation_candidates(

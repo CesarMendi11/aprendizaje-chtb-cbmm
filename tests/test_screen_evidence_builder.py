@@ -624,3 +624,38 @@ def test_limits_hash_changes_and_insertion_order_is_irrelevant(session):
     )
     changed = ScreenEvidenceBuilder(session).build(version.id, screen.id)
     assert changed.evidence_hash != first.evidence_hash
+
+
+def test_primary_evidence_requires_direct_non_network_screen_evidence(session):
+    version, _, screen = seed_screen(session)
+    direct = add_item(
+        session,
+        version,
+        "evidence",
+        "evidence:screen-direct",
+        {
+            "id": "evidence:screen-direct",
+            "evidence_type": "structured_json",
+            "artifact_path": "synthetic/screen.json",
+            "source_entity_type": "screen",
+            "source_entity_id": screen.canonical_id,
+        },
+    )
+    add_item(
+        session,
+        version,
+        "evidence",
+        "evidence:network-only",
+        {
+            "id": "evidence:network-only",
+            "evidence_type": "network_trace",
+            "artifact_path": "synthetic/network.json",
+            "source_entity_type": "screen",
+            "source_entity_id": screen.canonical_id,
+        },
+    )
+    package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+
+    assert package.primary_evidence_ids == [direct.canonical_id]
+    assert direct.canonical_id in package.evidence_ids
+    assert "evidence:network-only" in package.evidence_ids

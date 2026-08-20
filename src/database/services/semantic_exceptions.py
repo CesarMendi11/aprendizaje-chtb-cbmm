@@ -56,3 +56,7 @@ class SemanticVersionNotActiveError(SemanticWorkflowError):
 
 class SemanticCandidateMismatchError(SemanticWorkflowError):
     pass
+
+
+class SemanticInsufficientEvidenceError(SemanticWorkflowError):
+    pass

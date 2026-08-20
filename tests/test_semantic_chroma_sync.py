@@ -116,11 +116,25 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
             "events": [],
             "transitions": [],
             "main_content_text": "Retenciones",
-            "evidence_ids": [],
+            "controls": [
+                {
+                    "control_id": "control:buscar",
+                    "label": "Buscar",
+                    "control_type": "button",
+                    "mutative": False,
+                }
+            ],
+            "primary_evidence_ids": ["evidence:screen"],
+            "evidence_ids": ["evidence:screen"],
             "warnings": [],
         }
-        digest = canonical_json_hash(raw)
-        package = ScreenEvidencePackage.model_validate({**raw, "evidence_hash": digest})
+        provisional = ScreenEvidencePackage.model_validate(
+            {**raw, "evidence_hash": "0" * 64}
+        )
+        digest = canonical_json_hash(
+            provisional.model_dump(mode="json", exclude={"evidence_hash"})
+        )
+        package = provisional.model_copy(update={"evidence_hash": digest})
         source = {
             "semantic_type": "screen_purpose",
             "screen_id": screen.canonical_id,
@@ -137,7 +151,7 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
             semantic_type=SemanticType.SCREEN_PURPOSE,
             source_payload=source,
             evidence_payload=validated_semantic_evidence_snapshot(package),
-            evidence_ids=[],
+            evidence_ids=["evidence:screen"],
             generation_model="llama3.2:3b",
             prompt_version="screen-purpose-v9",
             prompt_hash=prompt_hash,
@@ -225,4 +239,24 @@ def test_run_embeds_and_syncs_dedicated_semantic_documents():
         assert result.summary["embedding_dimensions"] == 4
         assert len(repository.documents) == 1
         assert len(repository.embeddings) == 1
+    engine.dispose()
+
+
+def test_prepare_excludes_semantics_when_current_structure_is_ineligible():
+    engine, factory = build_factory()
+    _version_id, erp_id, knowledge_version, _screen_id, _proposal_id, package = seed(factory)
+    ineligible = package.model_copy(update={"primary_evidence_ids": []})
+    digest = canonical_json_hash(
+        ineligible.model_dump(mode="json", exclude={"evidence_hash"})
+    )
+    ineligible = ineligible.model_copy(update={"evidence_hash": digest})
+    with factory() as session:
+        service = SemanticChromaSyncService(
+            session, evidence_builder=FakeEvidenceBuilder(ineligible)
+        )
+        _version, documents, summary = service.prepare(
+            erp_id=erp_id, knowledge_version=knowledge_version
+        )
+        assert documents == []
+        assert summary["skipped_reasons"] == {"current_evidence_ineligible": 1}
     engine.dispose()

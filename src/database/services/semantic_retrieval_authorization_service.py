@@ -4,6 +4,7 @@ from src.analysis.evidence.screen_evidence_builder import (
     ScreenEvidenceBuilder,
     ScreenEvidenceError,
 )
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.database.repositories import SemanticProposalRepository
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
@@ -60,6 +61,8 @@ class SemanticRetrievalAuthorizationService:
             try:
                 package = self.evidence_builder.build(version.id, screen.id)
             except ScreenEvidenceError:
+                continue
+            if not evaluate_screen_semantic_eligibility(package).eligible:
                 continue
             if (
                 proposal.evidence_hash != package.evidence_hash

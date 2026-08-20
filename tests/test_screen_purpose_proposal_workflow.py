@@ -42,6 +42,7 @@ from src.database.services.semantic_exceptions import (
     SemanticCandidateMismatchError,
     SemanticEntityTypeError,
     SemanticIdentityCollisionError,
+    SemanticInsufficientEvidenceError,
     SemanticPayloadError,
     SemanticScreenReviewError,
     SemanticVersionMismatchError,
@@ -132,7 +133,8 @@ def evidence(version, screen, **updates):
             )
         ],
         "main_content_text": "Módulo: Cuentas por cobrar\nPantalla: Retenciones",
-        "evidence_ids": [],
+        "primary_evidence_ids": ["evidence:screen"],
+        "evidence_ids": ["evidence:screen"],
         "warnings": [],
     }
     values.update(updates)
@@ -219,7 +221,8 @@ def test_mapper_preserves_exact_functional_content_and_metadata(session):
     assert mapped.semantic_type == SemanticType.SCREEN_PURPOSE
     assert mapped.source_payload == generated.inference.model_dump(mode="json")
     assert isinstance(mapped.evidence_payload, ValidatedSemanticEvidenceSnapshot)
-    assert mapped.evidence_payload.payload["evidence_ids"] == []
+    assert mapped.evidence_payload.payload["primary_evidence_ids"] == ["evidence:screen"]
+    assert mapped.evidence_payload.payload["evidence_ids"] == ["evidence:screen"]
     assert mapped.generation_model == generated.generation_model
     assert mapped.prompt_hash == generated.prompt_hash
     assert "raw_response" not in mapped.model_dump()
@@ -500,4 +503,20 @@ def test_workflow_rejects_cross_context_package_before_generation(
     service, inference, _ = workflow(session, version, screen, package=package)
     with pytest.raises(SemanticVersionMismatchError, match=mismatch):
         service.generate_and_persist(version.id, screen.id)
+    assert inference.calls == 0
+
+
+def test_workflow_rejects_ineligible_package_before_ollama(session):
+    version, screen = seed(session)
+    package = evidence(version, screen, primary_evidence_ids=[], evidence_ids=[])
+    inference = Inference(candidate(package))
+    service = ScreenPurposeProposalWorkflow(
+        session,
+        evidence_builder=Builder(package),
+        inference_service=inference,
+    )
+
+    with pytest.raises(SemanticInsufficientEvidenceError, match="missing_primary_evidence"):
+        service.generate_and_persist(version.id, screen.id)
+
     assert inference.calls == 0

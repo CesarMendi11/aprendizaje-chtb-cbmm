@@ -80,6 +80,7 @@ class ScreenEvidencePackage(EvidenceModel):
     events: list[EventEvidence] = Field(default_factory=list)
     transitions: list[TransitionEvidence] = Field(default_factory=list)
     main_content_text: str
+    primary_evidence_ids: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     evidence_hash: str = Field(pattern=r"^[0-9a-f]{64}$")

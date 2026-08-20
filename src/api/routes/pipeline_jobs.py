@@ -6,6 +6,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
+from src.analysis.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.api.dependencies import get_admin_read_session, get_semantic_review_session
 from src.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_summary
 from src.api.schemas.pipeline_jobs import (
@@ -843,6 +848,23 @@ def create_semantic_inference_job(
             detail="La pantalla requiere revisión estructural aprobada/corregida.",
         )
 
+    try:
+        package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+    except ScreenEvidenceError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=f"La pantalla no puede preparar evidencia semántica segura: {exc}",
+        ) from exc
+    eligibility = evaluate_screen_semantic_eligibility(package)
+    if not eligibility.eligible:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "La pantalla no tiene evidencia suficiente para inferencia semántica: "
+                + ", ".join(eligibility.reasons)
+            ),
+        )
+
     job = PipelineJobService(session).create(
         kind=PipelineJobKind.SEMANTIC_INFERENCE,
         scope=PipelineJobScope.SCREEN,
@@ -860,6 +882,8 @@ def create_semantic_inference_job(
             "screen_knowledge_item_id": str(screen.id),
             "screen_id": screen.canonical_id,
             "screen_route": screen.route,
+            "evidence_hash": package.evidence_hash,
+            "semantic_eligibility": eligibility.status,
         },
     )
     session.commit()

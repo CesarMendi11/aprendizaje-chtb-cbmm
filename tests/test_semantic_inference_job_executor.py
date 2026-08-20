@@ -110,7 +110,8 @@ def package(version_id, screen_item_id):
             )
         ],
         "main_content_text": "Módulo: Cuentas por cobrar\nPantalla: Retenciones",
-        "evidence_ids": [],
+        "primary_evidence_ids": ["evidence:screen"],
+        "evidence_ids": ["evidence:screen"],
         "warnings": [],
     }
     provisional = ScreenEvidencePackage.model_validate({**values, "evidence_hash": HASH})
@@ -174,7 +175,7 @@ class Inference:
         return self.value
 
 
-def params(version_id, screen_id):
+def params(version_id, screen_id, evidence):
     return {
         "active_only": True,
         "semantic_type": "screen_purpose",
@@ -184,6 +185,8 @@ def params(version_id, screen_id):
         "screen_knowledge_item_id": str(screen_id),
         "screen_id": "screen:retenciones",
         "screen_route": "/admin/cuentasxcobrar/retenciones",
+        "evidence_hash": evidence.evidence_hash,
+        "semantic_eligibility": "eligible",
     }
 
 
@@ -203,7 +206,7 @@ def test_executor_generates_and_persists_pending_proposal_without_self_approval(
         job_id="00000000-0000-0000-0000-000000000001",
         scope="screen",
         target="/admin/cuentasxcobrar/retenciones",
-        parameters=params(version_id, screen_id),
+        parameters=params(version_id, screen_id, evidence),
         progress=lambda stage, payload: progress.append((stage, payload)),
     )
 
@@ -239,7 +242,7 @@ def test_executor_reuses_same_generation_identity_without_calling_ollama_twice()
     kwargs = {
         "scope": "screen",
         "target": "/admin/cuentasxcobrar/retenciones",
-        "parameters": params(version_id, screen_id),
+        "parameters": params(version_id, screen_id, evidence),
         "progress": lambda *_: None,
     }
     first = executor.execute(job_id="00000000-0000-0000-0000-000000000001", **kwargs)
@@ -276,7 +279,7 @@ def test_executor_rejects_grounding_failure_and_persists_no_proposal():
             job_id="00000000-0000-0000-0000-000000000003",
             scope="screen",
             target="/admin/cuentasxcobrar/retenciones",
-            parameters=params(version_id, screen_id),
+            parameters=params(version_id, screen_id, evidence),
             progress=lambda stage, payload: progress.append((stage, payload)),
         )
     assert "unsupported_view_detail_claim" in str(caught.value)
@@ -303,8 +306,40 @@ def test_executor_fails_safe_when_captured_version_is_not_active():
             job_id="00000000-0000-0000-0000-000000000004",
             scope="screen",
             target="/admin/cuentasxcobrar/retenciones",
-            parameters=params(version_id, screen_id),
+            parameters=params(version_id, screen_id, evidence),
             progress=lambda *_: None,
         )
     assert inference.calls == 0
+    engine.dispose()
+
+
+def test_executor_rejects_ineligible_package_without_calling_ollama():
+    engine, factory = build_factory()
+    version_id, screen_id = seed(factory)
+    evidence = package(version_id, screen_id).model_copy(
+        update={"primary_evidence_ids": []}
+    )
+    digest = canonical_json_hash(
+        evidence.model_dump(mode="json", exclude={"evidence_hash"})
+    )
+    evidence = evidence.model_copy(update={"evidence_hash": digest})
+    inference = Inference(candidate(evidence))
+    progress = []
+    executor = SemanticInferenceJobExecutor(
+        factory,
+        inference_service_factory=lambda: inference,
+        evidence_builder_factory=lambda _session: Builder(evidence),
+    )
+
+    with pytest.raises(SemanticInferenceJobExecutionError, match="missing_primary_evidence"):
+        executor.execute(
+            job_id="00000000-0000-0000-0000-000000000005",
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+            parameters=params(version_id, screen_id, evidence),
+            progress=lambda stage, payload: progress.append((stage, payload)),
+        )
+
+    assert inference.calls == 0
+    assert progress[-1][0] == "semantic_eligibility_rejected"
     engine.dispose()

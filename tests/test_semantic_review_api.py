@@ -150,8 +150,13 @@ def seed(factory, *, suffix="one"):
             "evidence_ids": [],
             "warnings": [],
         }
-        digest = canonical_json_hash(raw)
-        package = ScreenEvidencePackage.model_validate({**raw, "evidence_hash": digest})
+        provisional = ScreenEvidencePackage.model_validate(
+            {**raw, "evidence_hash": "0" * 64}
+        )
+        digest = canonical_json_hash(
+            provisional.model_dump(mode="json", exclude={"evidence_hash"})
+        )
+        package = provisional.model_copy(update={"evidence_hash": digest})
         source = {
             "semantic_type": "screen_purpose",
             "screen_id": screen.canonical_id,
@@ -178,7 +183,11 @@ def seed(factory, *, suffix="one"):
             generation_parameters={"temperature": 0},
         )
         semantic_id = proposal.semantic_id
-    return semantic_id, source, raw
+    return (
+        semantic_id,
+        source,
+        package.model_dump(mode="json", exclude={"evidence_hash"}),
+    )
 
 
 def action_body(**changes):

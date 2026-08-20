@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from src.analysis.evidence import ScreenEvidenceBuilder
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.analysis.generation.screen_purpose_service import ScreenPurposeInferenceService
 from src.analysis.prompts import (
     GENERATION_PARAMETERS,
@@ -23,6 +24,7 @@ from src.database.services.semantic_exceptions import (
     SemanticCandidateMismatchError,
     SemanticEntityTypeError,
     SemanticIdentityCollisionError,
+    SemanticInsufficientEvidenceError,
     SemanticScreenNotFoundError,
     SemanticScreenReviewError,
     SemanticVersionMismatchError,
@@ -223,6 +225,12 @@ class ScreenPurposeProposalWorkflow:
         if failed:
             raise SemanticVersionMismatchError(
                 "El contexto de evidencia es incompatible: " + ", ".join(failed)
+            )
+        eligibility = evaluate_screen_semantic_eligibility(package)
+        if not eligibility.eligible:
+            raise SemanticInsufficientEvidenceError(
+                "La pantalla no tiene evidencia suficiente para inferencia semántica: "
+                + ", ".join(eligibility.reasons)
             )
         return package, version, screen
 

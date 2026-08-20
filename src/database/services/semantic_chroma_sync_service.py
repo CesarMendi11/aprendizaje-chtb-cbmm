@@ -11,6 +11,7 @@ from src.analysis.evidence.screen_evidence_builder import (
     ScreenEvidenceBuilder,
     ScreenEvidenceError,
 )
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.database.enums import KnowledgeVersionStatus
 from src.database.models import KnowledgeVersionRecord, SemanticProposal
 from src.knowledge.canonical.enums import ReviewStatus
@@ -156,6 +157,9 @@ class SemanticChromaSyncService:
                 package = self.evidence_builder.build(version.id, screen.id)
             except ScreenEvidenceError:
                 skipped["current_evidence_unavailable"] += 1
+                continue
+            if not evaluate_screen_semantic_eligibility(package).eligible:
+                skipped["current_evidence_ineligible"] += 1
                 continue
             if (
                 proposal.evidence_hash != package.evidence_hash

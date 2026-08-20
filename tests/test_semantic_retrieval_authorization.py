@@ -52,7 +52,14 @@ def make_case(*, status=ReviewStatus.APPROVED, revision=1, evidence_hash="e" * 6
     )
     package = SimpleNamespace(
         evidence_hash=evidence_hash,
+        primary_evidence_ids=["evidence:screen"],
         evidence_ids=["evidence:screen"],
+        fields=[],
+        controls=[SimpleNamespace()],
+        tables=[],
+        ui_states=[],
+        events=[],
+        transitions=[],
         screen_title="Retenciones",
         screen_route="/admin/cuentasxcobrar/retenciones",
     )
@@ -119,5 +126,12 @@ def test_rejects_projection_when_postgresql_status_or_revision_changed():
 def test_rejects_projection_when_current_evidence_is_stale():
     service, version, _proposal, package, hit = make_case()
     package.evidence_hash = "f" * 64
+
+    assert service.authorize_hits([hit], version=version) == []
+
+
+def test_rejects_projection_when_current_structure_is_ineligible():
+    service, version, _proposal, package, hit = make_case()
+    package.primary_evidence_ids = []
 
     assert service.authorize_hits([hit], version=version) == []

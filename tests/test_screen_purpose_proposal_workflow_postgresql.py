@@ -136,7 +136,8 @@ def _context(session):
             )
         ],
         "main_content_text": "Pantalla: Synthetic Retenciones",
-        "evidence_ids": [],
+        "primary_evidence_ids": ["evidence:screen"],
+        "evidence_ids": ["evidence:screen"],
         "warnings": [],
     }
     provisional = ScreenEvidencePackage.model_validate({**values, "evidence_hash": HASH})
@@ -164,7 +165,7 @@ def _context(session):
         generation_parameters=GENERATION_PARAMETERS,
         generation_parameters_hash=GENERATION_PARAMETERS_HASH,
         evidence_hash=package.evidence_hash,
-        evidence_ids=[],
+        evidence_ids=["evidence:screen"],
         generated_content_hash=canonical_json_hash(inference.model_dump(mode="json")),
         structured_output_mode="json_schema",
         warnings=[],

@@ -747,22 +747,86 @@ def test_projection_sync_rejects_when_there_is_no_active_version(api):
     assert dispatcher.submitted == []
 
 
-def seed_active_screen(factory, *, review=ReviewStatus.APPROVED):
+def seed_active_screen(
+    factory, *, review=ReviewStatus.APPROVED, include_evidence=True
+):
     version_id, erp_id = seed_active_version(factory)
     with factory.begin() as session:
+        module = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="module:cxp-active",
+            entity_type="module",
+            parent_canonical_id=erp_id,
+            title="Cuentas por cobrar",
+            normalized_title="cuentas por cobrar",
+            content_hash="c" * 64,
+            source_payload={
+                "id": "module:cxp-active",
+                "erp_id": erp_id,
+                "name": "Cuentas por cobrar",
+            },
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
         screen = KnowledgeItem(
             knowledge_version_id=uuid.UUID(version_id),
             canonical_id="screen:retenciones-active",
             entity_type="screen",
+            parent_canonical_id=module.canonical_id,
             title="Retenciones",
             normalized_title="retenciones",
             route="/admin/cuentasxcobrar/retenciones",
             content_hash="b" * 64,
-            source_payload={"id": "screen:retenciones-active", "title": "Retenciones"},
+            source_payload={
+                "id": "screen:retenciones-active",
+                "erp_id": erp_id,
+                "module_id": module.canonical_id,
+                "route": "/admin/cuentasxcobrar/retenciones",
+                "title": "Retenciones",
+            },
             generated_review_status=review,
             current_review_status=review,
         )
-        session.add(screen)
+        control = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="control:buscar-active",
+            entity_type="control",
+            parent_canonical_id=screen.canonical_id,
+            title="Buscar",
+            normalized_title="buscar",
+            content_hash="d" * 64,
+            source_payload={
+                "id": "control:buscar-active",
+                "screen_id": screen.canonical_id,
+                "label": "Buscar",
+                "control_type": "button",
+                "mutative": False,
+                "safety_decision": "allow",
+            },
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        evidence = KnowledgeItem(
+            knowledge_version_id=uuid.UUID(version_id),
+            canonical_id="evidence:screen-active",
+            entity_type="evidence",
+            parent_canonical_id=screen.canonical_id,
+            title="screen evidence",
+            content_hash="e" * 64,
+            source_payload={
+                "id": "evidence:screen-active",
+                "evidence_type": "structured_json",
+                "artifact_path": "synthetic/retenciones.json",
+                "source_entity_type": "screen",
+                "source_entity_id": screen.canonical_id,
+            },
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        values = [module, screen, control]
+        if include_evidence:
+            values.append(evidence)
+        session.add_all(values)
         session.flush()
         return version_id, erp_id, str(screen.id), screen.canonical_id
 
@@ -786,7 +850,25 @@ def test_semantic_inference_job_captures_only_reviewed_screen_from_active_versio
     assert body["parameters"]["semantic_type"] == "screen_purpose"
     assert body["parameters"]["screen_knowledge_item_id"] == screen_item_id
     assert body["parameters"]["screen_id"] == screen_id
+    assert body["parameters"]["semantic_eligibility"] == "eligible"
+    assert len(body["parameters"]["evidence_hash"]) == 64
     assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_semantic_inference_job_rejects_structurally_ineligible_screen(api):
+    client, factory, dispatcher = api
+    _version_id, _erp_id, _screen_item_id, screen_id = seed_active_screen(
+        factory, include_evidence=False
+    )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/semantic-inference",
+        json={"screen_id": screen_id},
+    )
+
+    assert response.status_code == 409
+    assert "missing_primary_evidence" in response.json()["detail"]
+    assert dispatcher.submitted == []
 
 
 def test_semantic_inference_job_rejects_unreviewed_or_unknown_screen(api):

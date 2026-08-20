@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 
 from src.analysis.evidence import ScreenEvidenceBuilder
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.analysis.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
 from src.analysis.generation.errors import ScreenPurposeGenerationError
 from src.analysis.prompts import (
@@ -87,6 +88,32 @@ class SemanticInferenceJobExecutor:
             )
             builder = self.evidence_builder_factory(session)
             package = builder.build(version.id, screen.id)
+            expected_evidence_hash = str(parameters.get("evidence_hash") or "").strip()
+            if expected_evidence_hash != package.evidence_hash:
+                raise SemanticInferenceJobExecutionError(
+                    "La evidencia semántica cambió desde que el job fue encolado"
+                )
+            if str(parameters.get("semantic_eligibility") or "") != "eligible":
+                raise SemanticInferenceJobExecutionError(
+                    "El job no conserva una elegibilidad semántica certificada"
+                )
+            eligibility = evaluate_screen_semantic_eligibility(package)
+            if not eligibility.eligible:
+                progress(
+                    "semantic_eligibility_rejected",
+                    {
+                        "work_units": 2,
+                        "progress_total": 4,
+                        "semantic_eligibility": eligibility.status,
+                        "reasons": list(eligibility.reasons),
+                        "primary_evidence": eligibility.primary_evidence_count,
+                        "functional_signals": eligibility.functional_signal_count,
+                    },
+                )
+                raise SemanticInferenceJobExecutionError(
+                    "La pantalla no tiene evidencia suficiente para inferencia semántica: "
+                    + ", ".join(eligibility.reasons)
+                )
             existing = SemanticProposalRepository(session).get_by_generation_identity(
                 knowledge_version_id=version.id,
                 screen_knowledge_item_id=screen.id,
@@ -113,6 +140,9 @@ class SemanticInferenceJobExecutor:
                 "events": len(package.events),
                 "transitions": len(package.transitions),
                 "warnings": len(package.warnings),
+                "primary_evidence": eligibility.primary_evidence_count,
+                "functional_signals": eligibility.functional_signal_count,
+                "semantic_eligibility": eligibility.status,
             },
         )
 
