@@ -246,30 +246,28 @@ class ScreenEvidenceBuilder:
             self._warn(warnings, "limit_exceeded:tables")
 
         state_dtos = self._limited(
-            self._dedupe_label(
-                [
-                    UIStateEvidence(
-                        state_id=item.canonical_id,
-                        title=self._safe(
-                            payloads[item.canonical_id].get("title"),
-                            warnings,
-                            f"state:{item.canonical_id}",
-                        ),
-                        depth=self._depth(payloads[item.canonical_id].get("depth")),
-                    )
-                    for item in state_items
-                    if self._safe(
+            [
+                UIStateEvidence(
+                    state_id=item.canonical_id,
+                    title=self._safe(
                         payloads[item.canonical_id].get("title"),
                         warnings,
                         f"state:{item.canonical_id}",
-                    )
-                ],
-                "title",
-            ),
+                    ),
+                    depth=self._depth(payloads[item.canonical_id].get("depth")),
+                )
+                for item in state_items
+                if self._safe(
+                    payloads[item.canonical_id].get("title"),
+                    warnings,
+                    f"state:{item.canonical_id}",
+                )
+            ],
             MAX_UI_STATES,
             warnings,
             "ui_states",
         )
+        projected_state_ids = {state.state_id for state in state_dtos}
         event_dtos = self._limited(
             self._dedupe_label(
                 [
@@ -305,39 +303,41 @@ class ScreenEvidenceBuilder:
             warnings,
             "events",
         )
-        transition_dtos = self._limited(
-            [
+        transition_values = []
+        for item in sorted(transitions, key=lambda value: value.canonical_id):
+            payload = payloads[item.canonical_id]
+            source_state_id = self._id(payload.get("source_state_id"))
+            target_state_id = self._id(payload.get("target_state_id"))
+            if (
+                source_state_id not in projected_state_ids
+                or target_state_id not in projected_state_ids
+            ):
+                self._warn(
+                    warnings,
+                    f"excluded_projection:transition:{item.canonical_id}:state",
+                )
+                continue
+            transition_values.append(
                 TransitionEvidence(
                     transition_id=item.canonical_id,
                     category=self._safe(
-                        payloads[item.canonical_id].get("category") or "unknown",
+                        payload.get("category") or "unknown",
                         warnings,
                         f"transition:{item.canonical_id}",
                     ),
-                    source_state_id=self._valid_ref(
-                        payloads[item.canonical_id].get("source_state_id"),
-                        state_ids,
-                        warnings,
-                        item.canonical_id,
-                        "source_state",
-                    ),
-                    target_state_id=self._valid_ref(
-                        payloads[item.canonical_id].get("target_state_id"),
-                        state_ids,
-                        warnings,
-                        item.canonical_id,
-                        "target_state",
-                    ),
+                    source_state_id=source_state_id,
+                    target_state_id=target_state_id,
                     trigger_control_id=self._valid_ref(
-                        payloads[item.canonical_id].get("trigger_control_id"),
-                        {item.control_id for item in control_dtos},
+                        payload.get("trigger_control_id"),
+                        {control.control_id for control in control_dtos},
                         warnings,
                         item.canonical_id,
                         "trigger_control",
                     ),
                 )
-                for item in sorted(transitions, key=lambda value: value.canonical_id)
-            ],
+            )
+        transition_dtos = self._limited(
+            transition_values,
             MAX_TRANSITIONS,
             warnings,
             "transitions",

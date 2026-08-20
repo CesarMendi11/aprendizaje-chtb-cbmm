@@ -107,3 +107,23 @@ class ScreenEvidencePackage(EvidenceModel):
         if len({trace.evidence_id for trace in self.network_traces}) != len(self.network_traces):
             raise ValueError("network_traces contiene referencias duplicadas")
         return self
+
+    @model_validator(mode="after")
+    def validate_transition_state_references(self):
+        state_ids = {state.state_id for state in self.ui_states}
+        for transition in self.transitions:
+            if (
+                transition.source_state_id is not None
+                and transition.source_state_id not in state_ids
+            ):
+                raise ValueError(
+                    "transitions contiene source_state_id fuera de ui_states"
+                )
+            if (
+                transition.target_state_id is not None
+                and transition.target_state_id not in state_ids
+            ):
+                raise ValueError(
+                    "transitions contiene target_state_id fuera de ui_states"
+                )
+        return self

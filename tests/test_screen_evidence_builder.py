@@ -483,6 +483,121 @@ def test_unrelated_inconsistent_corrected_is_ignored_but_related_one_fails(sessi
         ScreenEvidenceBuilder(session).build(version.id, screen_a.id)
 
 
+def test_same_title_states_preserve_canonical_identity_and_transition_closure(session):
+    version, _, screen = seed_screen(session)
+    state_a = add_item(
+        session,
+        version,
+        "ui_state",
+        "state:a",
+        {
+            "id": "state:a",
+            "screen_id": screen.canonical_id,
+            "title": "Mismo estado visible",
+            "depth": 0,
+        },
+    )
+    state_b = add_item(
+        session,
+        version,
+        "ui_state",
+        "state:b",
+        {
+            "id": "state:b",
+            "screen_id": screen.canonical_id,
+            "title": "Mismo estado visible",
+            "depth": 1,
+        },
+    )
+    add_item(
+        session,
+        version,
+        "transition",
+        "transition:a-b",
+        {
+            "id": "transition:a-b",
+            "source_state_id": state_a.canonical_id,
+            "target_state_id": state_b.canonical_id,
+            "category": "change_pagination",
+        },
+    )
+    add_item(
+        session,
+        version,
+        "transition",
+        "transition:b-a",
+        {
+            "id": "transition:b-a",
+            "source_state_id": state_b.canonical_id,
+            "target_state_id": state_a.canonical_id,
+            "category": "change_pagination",
+        },
+    )
+
+    package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+    state_ids = {state.state_id for state in package.ui_states}
+
+    assert state_ids == {state_a.canonical_id, state_b.canonical_id}
+    assert len(package.transitions) == 2
+    assert all(
+        transition.source_state_id in state_ids
+        and transition.target_state_id in state_ids
+        for transition in package.transitions
+    )
+
+    with pytest.raises(ValidationError, match="fuera de ui_states"):
+        ScreenEvidencePackage.model_validate(
+            {
+                **package.model_dump(),
+                "ui_states": [package.ui_states[0]],
+            }
+        )
+
+
+def test_transition_is_excluded_when_state_is_outside_safe_projection_limit(session):
+    version, _, screen = seed_screen(session)
+    states = []
+    for index in range(21):
+        states.append(
+            add_item(
+                session,
+                version,
+                "ui_state",
+                f"state:{index:03}",
+                {
+                    "id": f"state:{index:03}",
+                    "screen_id": screen.canonical_id,
+                    "title": f"Estado {index:03}",
+                    "depth": index,
+                },
+            )
+        )
+    transition = add_item(
+        session,
+        version,
+        "transition",
+        "transition:outside-projection",
+        {
+            "id": "transition:outside-projection",
+            "source_state_id": states[0].canonical_id,
+            "target_state_id": states[-1].canonical_id,
+            "category": "change_pagination",
+        },
+    )
+
+    package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+    state_ids = {state.state_id for state in package.ui_states}
+
+    assert len(package.ui_states) == 20
+    assert states[-1].canonical_id not in state_ids
+    assert package.transitions == []
+    assert "limit_exceeded:ui_states" in package.warnings
+    assert (
+        f"excluded_projection:transition:{transition.canonical_id}:state"
+        in package.warnings
+    )
+
+
 def test_states_events_transitions_and_invalid_reference_warning(session):
     version, _, screen = seed_screen(session)
     state = add_item(
