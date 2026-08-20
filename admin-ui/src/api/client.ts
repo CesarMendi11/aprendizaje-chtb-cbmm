@@ -1,5 +1,5 @@
 import { demoContexts, demoTree } from '../data/demoSnapshot'
-import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewPackagesResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
+import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralPublicationApprovalResult, StructuralPublicationApproveRequest, StructuralPublicationReviewPackage, StructuralPublicationReviewSummary, StructuralPublicationScope, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewPackagesResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
 
 export type DataMode = 'demo' | 'live'
 export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
@@ -61,6 +61,49 @@ const validStructuralReviewPackages = (value: unknown): value is StructuralRevie
   Array.isArray(value.unscoped_changes) && value.unscoped_changes.every(validStructuralReviewChange) &&
   Array.isArray(value.packages) && value.packages.every(validStructuralReviewPackage) &&
   typeof value.total === 'number' && typeof value.limit === 'number' && typeof value.offset === 'number'
+
+const publicationScopes = new Set(['screen', 'module', 'system', 'unscoped'])
+const validStructuralPublicationReviewItem = (value: unknown): boolean =>
+  isRecord(value) && hasString(value, 'item_id') &&
+  hasString(value, 'entity_type') && hasString(value, 'canonical_id') &&
+  hasString(value, 'review_status') && reviewStatuses.has(String(value.review_status)) &&
+  typeof value.review_revision === 'number' && hasString(value, 'content_hash') &&
+  (value.title === null || typeof value.title === 'string') &&
+  (value.route === null || typeof value.route === 'string')
+
+const validStructuralPublicationReviewPackage = (
+  value: unknown,
+): value is StructuralPublicationReviewPackage =>
+  isRecord(value) && hasString(value, 'scope_type') &&
+  publicationScopes.has(String(value.scope_type)) && hasString(value, 'scope_id') &&
+  (value.title === null || typeof value.title === 'string') &&
+  (value.route === null || typeof value.route === 'string') &&
+  (value.module_id === null || typeof value.module_id === 'string') &&
+  Array.isArray(value.module_path) && value.module_path.every((item) => typeof item === 'string') &&
+  isRecord(value.status_counts) && isRecord(value.entity_counts) &&
+  typeof value.pending_count === 'number' && typeof value.publishable_count === 'number' &&
+  typeof value.rejected_count === 'number' && typeof value.review_required === 'boolean' &&
+  hasString(value, 'package_hash') && Array.isArray(value.review_items) &&
+  value.review_items.every(validStructuralPublicationReviewItem)
+
+const validStructuralPublicationReviewSummary = (
+  value: unknown,
+): value is StructuralPublicationReviewSummary =>
+  isRecord(value) && hasString(value, 'knowledge_version_id') &&
+  hasString(value, 'knowledge_version') && hasString(value, 'erp_id') &&
+  hasString(value, 'version_status') && isRecord(value.status_counts) &&
+  typeof value.publishable_count === 'number' && typeof value.pending_count === 'number' &&
+  typeof value.rejected_count === 'number' && typeof value.package_count === 'number' &&
+  Array.isArray(value.packages) && value.packages.every(validStructuralPublicationReviewPackage) &&
+  typeof value.total === 'number' && (value.limit === null || typeof value.limit === 'number') &&
+  typeof value.offset === 'number' &&
+  (value.next_offset === null || typeof value.next_offset === 'number')
+
+const validStructuralPublicationApprovalResult = (
+  value: unknown,
+): value is StructuralPublicationApprovalResult =>
+  isRecord(value) && typeof value.approved_count === 'number' &&
+  validStructuralPublicationReviewPackage(value.package)
 
 const validRemovalDecision = (value: unknown): boolean =>
   isRecord(value) && hasString(value, 'id') && hasString(value, 'entity_type') &&
@@ -300,6 +343,54 @@ export async function getStructuralReviewPackages(candidateVersionId: string): P
   if (dataMode !== 'live') throw new AdminApiError('not_found', 'Los paquetes de revisión sólo están disponibles en modo live.', 404)
   const query = new URLSearchParams({ changed_only: 'true', limit: '200', offset: '0' })
   return request(`/api/admin/knowledge-versions/${encodeURIComponent(candidateVersionId)}/review-packages?${query.toString()}`, validStructuralReviewPackages)
+}
+
+export interface StructuralPublicationReviewQuery {
+  pendingOnly?: boolean
+  scopeType?: StructuralPublicationScope
+  limit?: number
+  offset?: number
+}
+
+export async function getStructuralPublicationReview(
+  knowledgeVersionId: string,
+  queryInput: StructuralPublicationReviewQuery = {},
+): Promise<StructuralPublicationReviewSummary> {
+  if (dataMode !== 'live') {
+    throw new AdminApiError(
+      'not_found',
+      'La revisión de cobertura de publicación sólo está disponible en modo live.',
+      404,
+    )
+  }
+  const query = new URLSearchParams({
+    pending_only: String(queryInput.pendingOnly ?? false),
+    limit: String(queryInput.limit ?? 50),
+    offset: String(queryInput.offset ?? 0),
+  })
+  if (queryInput.scopeType) query.set('scope_type', queryInput.scopeType)
+  return request(
+    `/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/publication-review-packages?${query.toString()}`,
+    validStructuralPublicationReviewSummary,
+  )
+}
+
+export async function approveStructuralPublicationPackage(
+  knowledgeVersionId: string,
+  payload: StructuralPublicationApproveRequest,
+): Promise<StructuralPublicationApprovalResult> {
+  if (dataMode !== 'live') {
+    throw new AdminApiError('http', 'La revisión de cobertura de publicación sólo puede operar en modo live.')
+  }
+  return request(
+    `/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/publication-review-packages/approve-pending`,
+    validStructuralPublicationApprovalResult,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  )
 }
 
 export async function getStructuralReviewItem(itemId: string): Promise<StructuralReviewItemDetail> {

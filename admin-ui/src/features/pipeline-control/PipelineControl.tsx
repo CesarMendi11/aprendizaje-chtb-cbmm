@@ -107,7 +107,7 @@ function ServiceState({ status }: { status: string }) {
   return <span className={`projection-service-state projection-service-state--${status}`}><i aria-hidden="true" />{status}</span>
 }
 
-export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: { view?: 'all' | 'pipeline' | 'publication'; onOpenJob?: (jobId: string) => void; focusJobId?: string | null }) {
+export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, refreshToken = 0 }: { view?: 'all' | 'pipeline' | 'publication'; onOpenJob?: (jobId: string) => void; focusJobId?: string | null; refreshToken?: number }) {
   const [state, setState] = useState<PanelState>({ active: null, recent: [], system: null, loading: dataMode === 'live', launching: false, message: null })
 
   const loadRecent = useCallback(async () => {
@@ -129,7 +129,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null }: 
     }
   }, [])
 
-  useEffect(() => { void loadRecent() }, [loadRecent])
+  useEffect(() => { void loadRecent() }, [loadRecent, refreshToken])
 
   const activeId = state.active?.id ?? null
   const activeTerminal = state.active ? terminalStatuses.has(state.active.status) : true

@@ -32,7 +32,7 @@ const errorMessage = (error: unknown) =>
 
 const when = (value: string) => new Date(value).toLocaleString()
 
-export function PromotionGateConsole() {
+export function PromotionGateConsole({ onPromoted }: { onPromoted?: () => void | Promise<void> }) {
   const [state, setState] = useState<State>({
     imports: [],
     versionId: null,
@@ -99,6 +99,13 @@ export function PromotionGateConsole() {
         confirm_promotion: true,
       })
       setState((old) => ({ ...old, result, assessment: result.assessment, submitting: false }))
+      if (onPromoted) {
+        try {
+          await onPromoted()
+        } catch {
+          // La promoción ya fue confirmada; un fallo de refresco no la revierte.
+        }
+      }
     } catch (error: unknown) {
       setState((old) => ({ ...old, submitting: false, message: errorMessage(error) }))
     }

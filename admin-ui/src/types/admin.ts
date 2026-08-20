@@ -239,6 +239,66 @@ export interface StructuralReviewPackagesResponse {
   next_offset: number | null
 }
 
+export type StructuralPublicationScope = 'screen' | 'module' | 'system' | 'unscoped'
+
+export interface StructuralPublicationReviewItem {
+  item_id: string
+  entity_type: string
+  canonical_id: string
+  title: string | null
+  route: string | null
+  review_status: ReviewStatus
+  review_revision: number
+  content_hash: string
+}
+
+export interface StructuralPublicationReviewPackage {
+  scope_type: StructuralPublicationScope
+  scope_id: string
+  title: string | null
+  route: string | null
+  module_id: string | null
+  module_path: string[]
+  status_counts: Record<string, number>
+  entity_counts: Record<string, number>
+  pending_count: number
+  publishable_count: number
+  rejected_count: number
+  review_required: boolean
+  package_hash: string
+  review_items: StructuralPublicationReviewItem[]
+}
+
+export interface StructuralPublicationReviewSummary {
+  knowledge_version_id: string
+  knowledge_version: string
+  erp_id: string
+  version_status: string
+  status_counts: Record<string, number>
+  publishable_count: number
+  pending_count: number
+  rejected_count: number
+  package_count: number
+  packages: StructuralPublicationReviewPackage[]
+  total: number
+  limit: number | null
+  offset: number
+  next_offset: number | null
+}
+
+export interface StructuralPublicationApproveRequest {
+  scope_type: StructuralPublicationScope
+  scope_id: string
+  expected_package_hash: string
+  reviewer_id: string
+  reason: string
+}
+
+export interface StructuralPublicationApprovalResult {
+  approved_count: number
+  package: StructuralPublicationReviewPackage
+}
+
 export interface StructuralReviewRequest {
   reviewer_id: string
   reason?: string | null

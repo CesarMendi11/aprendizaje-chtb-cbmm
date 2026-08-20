@@ -69,7 +69,12 @@ export default function App() {
     {section === 'overview' && <OverviewPage erp={erp} />}
     {section === 'structural' && (knowledgePageProps ? <StructuralKnowledgePage {...knowledgePageProps} onOpenJob={(jobId) => { setPipelineFocusJobId(jobId); setSection('pipeline') }} /> : <KnowledgeUnavailable state={tree} retry={loadTree} />)}
     {section === 'semantic' && (knowledgePageProps ? <SemanticKnowledgePage {...knowledgePageProps} /> : <KnowledgeUnavailable state={tree} retry={loadTree} />)}
-    {section === 'publication' && <PublicationPage onOpenJob={(jobId) => { setPipelineFocusJobId(jobId); setSection('pipeline') }} />}
+    {section === 'publication' && <PublicationPage
+      activeKnowledgeVersionId={erp?.active_knowledge_version_id ?? null}
+      activeKnowledgeVersion={erp?.knowledge_version ?? null}
+      onKnowledgeChanged={loadTree}
+      onOpenJob={(jobId) => { setPipelineFocusJobId(jobId); setSection('pipeline') }}
+    />}
     {section === 'pipeline' && <PipelinePage focusJobId={pipelineFocusJobId} />}
   </AdminLayout>
 }
