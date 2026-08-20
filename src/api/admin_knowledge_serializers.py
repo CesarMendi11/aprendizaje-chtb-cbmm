@@ -7,6 +7,16 @@ from typing import Iterable
 from pydantic import ValidationError
 
 from src.analysis.evidence.network_trace import safe_network_trace
+from src.analysis.evidence.screen_evidence_builder import (
+    MAX_COLUMNS_PER_TABLE,
+    MAX_CONTROLS,
+    MAX_EVENTS,
+    MAX_FIELDS,
+    MAX_NETWORK_TRACES,
+    MAX_TABLES,
+    MAX_TRANSITIONS,
+    MAX_UI_STATES,
+)
 from src.analysis.schemas import (
     ColumnEvidence,
     ControlEvidence,
@@ -194,19 +204,97 @@ def historical_evidence(proposal: SemanticProposal | None) -> HistoricalProposal
     )
 
 
+def _dedupe_label(values, attribute: str):
+    result = []
+    seen = set()
+    for value in values:
+        label = getattr(value, attribute)
+        key = " ".join(label.casefold().split())
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        result.append(value)
+    return result
+
+
 def comparable_from_current(evidence: AdminEvidence) -> ComparableScreenStructure:
+    """Project the full admin structure into the Safe Evidence structural view.
+
+    ``AdminEvidence`` intentionally exposes the full effective neighborhood for
+    human inspection. Semantic proposals, however, snapshot the bounded and
+    label-deduplicated projection emitted by ``ScreenEvidenceBuilder``. Compare
+    like with like so duplicate controls/events or projection limits do not
+    create a false stale signal in the review console.
+    """
+    fields = tuple(
+        _dedupe_label(
+            sorted(evidence.fields, key=lambda field: field.field_id),
+            "label",
+        )[:MAX_FIELDS]
+    )
+    controls = tuple(
+        _dedupe_label(
+            sorted(evidence.controls, key=lambda control: control.control_id),
+            "label",
+        )[:MAX_CONTROLS]
+    )
+    projected_control_ids = {control.control_id for control in controls}
+
+    tables = []
+    for table in sorted(evidence.tables, key=lambda value: value.table_id)[:MAX_TABLES]:
+        columns = _dedupe_label(
+            sorted(table.columns, key=lambda column: column.column_id),
+            "label",
+        )[:MAX_COLUMNS_PER_TABLE]
+        tables.append(table.model_copy(update={"columns": columns}))
+
+    ui_states = tuple(
+        sorted(evidence.ui_states, key=lambda state: state.state_id)[:MAX_UI_STATES]
+    )
+    projected_state_ids = {state.state_id for state in ui_states}
+
+    events = tuple(
+        _dedupe_label(
+            sorted(evidence.events, key=lambda event: event.event_id),
+            "label",
+        )[:MAX_EVENTS]
+    )
+
+    transitions = []
+    for transition in sorted(
+        evidence.transitions, key=lambda value: value.transition_id
+    ):
+        if (
+            transition.source_state_id not in projected_state_ids
+            or transition.target_state_id not in projected_state_ids
+        ):
+            continue
+        trigger = transition.trigger_control_id
+        if trigger is not None and trigger not in projected_control_ids:
+            trigger = None
+        transitions.append(
+            transition.model_copy(update={"trigger_control_id": trigger})
+        )
+    transitions = tuple(transitions[:MAX_TRANSITIONS])
+
+    network_traces = tuple(
+        sorted(evidence.network_traces, key=lambda trace: trace.evidence_id)[
+            :MAX_NETWORK_TRACES
+        ]
+    )
+
     return ComparableScreenStructure(
         screen_id=evidence.screen_id,
         screen_title=evidence.screen_title,
         screen_route=evidence.screen_route,
         module=evidence.module,
-        fields=evidence.fields,
-        controls=evidence.controls,
-        tables=evidence.tables,
-        ui_states=evidence.ui_states,
-        events=evidence.events,
-        transitions=evidence.transitions,
-        network_traces=evidence.network_traces,
+        fields=fields,
+        controls=controls,
+        tables=tuple(tables),
+        ui_states=ui_states,
+        events=events,
+        transitions=transitions,
+        network_traces=network_traces,
         evidence_ids=evidence.evidence_ids,
     )
 

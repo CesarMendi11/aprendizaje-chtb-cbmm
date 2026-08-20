@@ -424,6 +424,78 @@ def test_comparable_structure_hash_is_order_independent():
     assert comparable_structure_hash(first) == comparable_structure_hash(second)
 
 
+def test_current_comparable_uses_safe_evidence_projection():
+    from src.analysis.schemas import (
+        ControlEvidence,
+        EventEvidence,
+        TransitionEvidence,
+        UIStateEvidence,
+    )
+    from src.api.admin_knowledge_serializers import comparable_from_current
+    from src.api.schemas.admin_knowledge import AdminEvidence
+
+    evidence = AdminEvidence(
+        evidence_available=True,
+        screen_id="screen:a",
+        screen_title="A",
+        screen_route="/a",
+        module=None,
+        controls=(
+            ControlEvidence(
+                control_id="control:a",
+                label="Siguiente página",
+                mutative=False,
+            ),
+            ControlEvidence(
+                control_id="control:b",
+                label="  siguiente   PÁGINA ",
+                mutative=False,
+            ),
+        ),
+        ui_states=(
+            UIStateEvidence(state_id="ui_state:a", title="A", depth=0),
+            UIStateEvidence(state_id="ui_state:b", title="A", depth=1),
+        ),
+        events=(
+            EventEvidence(
+                event_id="event:a",
+                label="Primera página",
+                category="change_pagination",
+                policy_decision="allow",
+                mutative=False,
+            ),
+            EventEvidence(
+                event_id="event:b",
+                label=" primera  PÁGINA ",
+                category="change_pagination",
+                policy_decision="allow",
+                mutative=False,
+            ),
+        ),
+        transitions=(
+            TransitionEvidence(
+                transition_id="transition:a",
+                category="change_pagination",
+                source_state_id="ui_state:a",
+                target_state_id="ui_state:b",
+                trigger_control_id="control:b",
+            ),
+        ),
+        current_structure_hash="0" * 64,
+    )
+
+    comparable = comparable_from_current(evidence)
+
+    assert [control.control_id for control in comparable.controls] == ["control:a"]
+    assert [state.state_id for state in comparable.ui_states] == [
+        "ui_state:a",
+        "ui_state:b",
+    ]
+    assert [event.event_id for event in comparable.events] == ["event:a"]
+    assert len(comparable.transitions) == 1
+    assert comparable.transitions[0].trigger_control_id is None
+
+
 def test_stale_hash_excludes_pending_evidence_from_current_comparable(admin_api):
     client, factory, _ = admin_api
     seeded = seed_tree(factory)
