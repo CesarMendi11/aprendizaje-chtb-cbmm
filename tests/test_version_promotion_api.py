@@ -17,6 +17,7 @@ from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobSta
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
 from src.database.services import CanonicalImportService, KnowledgeReviewService
 from tests.canonical_fixtures import exported_fictional_canonical
+from tests.crawl_quality_fixtures import certified_crawl_quality
 
 
 class Client:
@@ -63,6 +64,12 @@ def seed(factory, tmp_path):
             create_sync_jobs=False,
         )
         version = session.get(KnowledgeVersionRecord, uuid.UUID(imported.version_id))
+        crawl_id = uuid.uuid4()
+        quality = certified_crawl_quality(
+            run_id=crawl_id,
+            scope="full",
+            target=None,
+        )
         source = PipelineJob(
             kind=PipelineJobKind.CANONICAL_BUILD,
             status=PipelineJobStatus.SUCCEEDED,
@@ -70,15 +77,21 @@ def seed(factory, tmp_path):
             target=None,
             profile_name="synthetic",
             request_source="admin_api",
-            parameters={},
+            parameters={
+                "source_crawl_job_id": str(crawl_id),
+            },
             stage="completed",
             progress_current=4,
             progress_total=4,
-            checkpoint={},
+            checkpoint={
+                "knowledge_version": version.knowledge_version,
+            },
             result_payload={
+                "source_crawl_job_id": str(crawl_id),
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
                 "knowledge_version": version.knowledge_version,
+                "crawl_execution_quality": quality,
             },
             requested_at=datetime.now(timezone.utc),
             started_at=datetime.now(timezone.utc),
@@ -98,6 +111,7 @@ def seed(factory, tmp_path):
             parameters={
                 "source_canonical_job_id": str(source.id),
                 "activation_mode": "staging_only",
+                "expected_crawl_execution_quality": quality,
             },
             stage="completed",
             progress_current=4,
@@ -108,6 +122,7 @@ def seed(factory, tmp_path):
                 "activation_performed": False,
                 "knowledge_version": version.knowledge_version,
                 "knowledge_version_id": str(version.id),
+                "crawl_execution_quality": quality,
             },
             requested_at=datetime.now(timezone.utc),
             started_at=datetime.now(timezone.utc),
