@@ -50,6 +50,7 @@ const commonEvidence = {
   ui_states: [],
   events: [],
   transitions: [],
+  network_traces: [],
   evidence_ids: [],
 }
 
