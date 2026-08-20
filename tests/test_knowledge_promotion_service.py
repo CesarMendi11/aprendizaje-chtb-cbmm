@@ -31,6 +31,7 @@ from src.database.services import (
 )
 from src.knowledge.canonical.enums import ReviewStatus
 from tests.canonical_fixtures import exported_fictional_canonical
+from tests.crawl_quality_fixtures import certified_crawl_quality
 
 
 @pytest.fixture
@@ -53,6 +54,8 @@ def staged(session, tmp_path):
             create_sync_jobs=False,
         )
         version = session.get(KnowledgeVersionRecord, uuid.UUID(imported.version_id))
+        crawl_id = uuid.uuid4()
+        quality = certified_crawl_quality(run_id=crawl_id, scope="full", target=None)
         source = PipelineJob(
             kind=PipelineJobKind.CANONICAL_BUILD,
             status=PipelineJobStatus.SUCCEEDED,
@@ -60,15 +63,17 @@ def staged(session, tmp_path):
             target=None,
             profile_name="synthetic",
             request_source="admin_api",
-            parameters={"source_crawl_job_id": str(uuid.uuid4())},
+            parameters={"source_crawl_job_id": str(crawl_id)},
             stage="completed",
             progress_current=4,
             progress_total=4,
             checkpoint={"knowledge_version": version.knowledge_version},
             result_payload={
+                "source_crawl_job_id": str(crawl_id),
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
                 "knowledge_version": version.knowledge_version,
+                "crawl_execution_quality": quality,
             },
             requested_at=datetime.now(timezone.utc),
             started_at=datetime.now(timezone.utc),
@@ -88,6 +93,7 @@ def staged(session, tmp_path):
             parameters={
                 "source_canonical_job_id": str(source.id),
                 "activation_mode": "staging_only",
+                "expected_crawl_execution_quality": quality,
             },
             stage="completed",
             progress_current=4,
@@ -98,6 +104,7 @@ def staged(session, tmp_path):
                 "activation_performed": False,
                 "knowledge_version": version.knowledge_version,
                 "knowledge_version_id": str(version.id),
+                "crawl_execution_quality": quality,
             },
             requested_at=datetime.now(timezone.utc),
             started_at=datetime.now(timezone.utc),
@@ -285,3 +292,23 @@ def test_replacement_gate_blocks_unreviewed_new_or_modified_items(tmp_path):
         )
 
     engine.dispose()
+
+
+def test_bootstrap_gate_blocks_candidate_without_certified_crawl_quality(session, staged):
+    _approve_required(session, staged)
+    source = session.scalar(
+        select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
+    )
+    source.result_payload = {
+        key: value
+        for key, value in dict(source.result_payload or {}).items()
+        if key != "crawl_execution_quality"
+    }
+
+    assessment = KnowledgePromotionService(session).assess(staged)
+
+    assert assessment.promotable is False
+    assert any(
+        blocker.code == "crawl_quality_not_certified"
+        for blocker in assessment.blockers
+    )

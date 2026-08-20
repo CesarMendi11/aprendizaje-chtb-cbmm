@@ -26,6 +26,7 @@ from src.pipeline.canonical_import_job_executor import (
 from src.pipeline.canonical_reconciliation_job_executor import CanonicalReconciliationJobExecutor
 from src.pipeline.pipeline_job_runner import PipelineJobRunner
 from tests.canonical_fixtures import exported_fictional_canonical
+from tests.crawl_quality_fixtures import attach_crawl_quality, certified_crawl_quality
 from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_canonical_reconciliation_service import _materializable_partial_candidate
 
@@ -37,8 +38,21 @@ def _factory(tmp_path):
 
 
 def _copy_canonical(tmp_path, crawl_id: uuid.UUID):
-    target = tmp_path / "data" / "runs" / "pipeline" / str(crawl_id) / "processed" / "canonical"
-    return exported_fictional_canonical(target)
+    target = (
+        tmp_path
+        / "data"
+        / "runs"
+        / "pipeline"
+        / str(crawl_id)
+        / "processed"
+        / "canonical"
+    )
+    exported_fictional_canonical(target)
+    attach_crawl_quality(
+        target,
+        certified_crawl_quality(run_id=crawl_id, scope="full", target=None),
+    )
+    return target
 
 
 def _reconciliation_source(tmp_path):
@@ -433,6 +447,9 @@ def test_canonical_import_executor_creates_non_active_staging_without_sync_jobs(
         parameters={
             "source_canonical_job_id": str(canonical_job_id),
             "source_crawl_job_id": str(crawl_id),
+            "expected_crawl_execution_quality": certified_crawl_quality(
+                run_id=crawl_id, scope="full", target=None
+            ),
             "knowledge_path": str(canonical_dir.relative_to(tmp_path) / "knowledge.json"),
             "manifest_path": str(canonical_dir.relative_to(tmp_path) / "manifest.json"),
             "build_report_path": str(canonical_dir.relative_to(tmp_path) / "build_report.json"),
@@ -518,6 +535,9 @@ def test_canonical_import_executor_rejects_partial_snapshot(tmp_path):
             parameters={
                 "source_canonical_job_id": str(uuid.uuid4()),
                 "source_crawl_job_id": str(crawl_id),
+            "expected_crawl_execution_quality": certified_crawl_quality(
+                run_id=crawl_id, scope="full", target=None
+            ),
                 "knowledge_path": str(
                     canonical_dir.relative_to(tmp_path) / "knowledge.json"
                 ),
@@ -533,4 +553,43 @@ def test_canonical_import_executor_rejects_partial_snapshot(tmp_path):
         assert "debe fusionarse" in str(exc)
     else:
         raise AssertionError("Se esperaba rechazo de canonical parcial")
+    engine.dispose()
+
+
+def test_canonical_import_executor_rejects_legacy_artifacts_without_crawl_quality(tmp_path):
+    engine, factory = _factory(tmp_path)
+    crawl_id = uuid.uuid4()
+    canonical_dir = _copy_canonical(tmp_path, crawl_id)
+    for name in ("manifest.json", "build_report.json"):
+        path = canonical_dir / name
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload.pop("crawl_execution_quality", None)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(CanonicalImportJobExecutionError, match="calidad de crawl certificada"):
+        CanonicalImportJobExecutor(
+            factory,
+            project_root=tmp_path,
+            runs_root="data/runs/pipeline",
+        ).execute(
+            job_id=uuid.uuid4(),
+            scope=PipelineJobScope.FULL,
+            target=None,
+            parameters={
+                "source_canonical_job_id": str(uuid.uuid4()),
+                "source_crawl_job_id": str(crawl_id),
+                "expected_crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="full", target=None
+                ),
+                "knowledge_path": str(
+                    canonical_dir.relative_to(tmp_path) / "knowledge.json"
+                ),
+                "manifest_path": str(
+                    canonical_dir.relative_to(tmp_path) / "manifest.json"
+                ),
+                "build_report_path": str(
+                    canonical_dir.relative_to(tmp_path) / "build_report.json"
+                ),
+            },
+        )
     engine.dispose()

@@ -46,6 +46,11 @@ from src.database.services import (
     ScreenScopeResolver,
 )
 from src.knowledge.canonical.enums import ReviewStatus
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    crawl_result_quality_pins,
+    validate_certified_quality_source,
+)
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
 SessionDependency = Annotated[Session, Depends(get_admin_read_session)]
@@ -242,7 +247,15 @@ def create_canonical_build_job(
             detail="El crawl fuente no registró artefactos utilizables.",
         )
 
-    parameters = {"source_crawl_job_id": str(source.id)}
+    try:
+        source_crawl_result = crawl_result_quality_pins(result)
+    except CrawlExecutionQualityError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    parameters = {
+        "source_crawl_job_id": str(source.id),
+        "source_crawl_result": source_crawl_result,
+    }
     if source.scope in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN}:
         source_parameters = dict(source.parameters or {})
         required_context = {
@@ -331,6 +344,16 @@ def create_canonical_merge_job(
                 "artefactos/provenance fusionables."
             ),
         )
+    try:
+        crawl_execution_quality = validate_certified_quality_source(
+            result.get("crawl_execution_quality"),
+            source_run_id=result["source_crawl_job_id"],
+            source_scope=source.scope.value,
+            source_target=source.target,
+            check_target=True,
+        )
+    except CrawlExecutionQualityError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if (
         result.get("snapshot_mode") != "partial"
         or result.get("snapshot_scope") != source.scope.value
@@ -392,6 +415,7 @@ def create_canonical_merge_job(
         "base_knowledge_version": base.knowledge_version,
         "erp_id": base.erp_id,
         "active_only": True,
+        "expected_crawl_execution_quality": crawl_execution_quality,
         target_key: target_value,
     }
     job = PipelineJobService(session).create(
@@ -632,6 +656,16 @@ def create_canonical_import_job(
             status_code=409,
             detail="El canonical build fuente no registró artefactos importables.",
         )
+    try:
+        crawl_execution_quality = validate_certified_quality_source(
+            result.get("crawl_execution_quality"),
+            source_run_id=result["source_crawl_job_id"],
+            source_scope=source.scope.value,
+            source_target=source.target,
+            check_target=True,
+        )
+    except CrawlExecutionQualityError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if result.get("snapshot_mode") != "full":
         raise HTTPException(
             status_code=409,
@@ -648,6 +682,7 @@ def create_canonical_import_job(
         "manifest_path": str(result["manifest_path"]),
         "build_report_path": str(result["build_report_path"]),
         "expected_knowledge_version": str(result["knowledge_version"]),
+        "expected_crawl_execution_quality": crawl_execution_quality,
         "activation_mode": "staging_only",
     }
     pinned_erp_id = None

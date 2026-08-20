@@ -12,6 +12,11 @@ from src.pipeline.canonical_build_job_executor import (
     CanonicalBuildJobExecutionError,
     CanonicalBuildJobExecutor,
 )
+from tests.crawl_quality_fixtures import (
+    certified_crawl_quality,
+    source_crawl_result,
+    write_state_exploration_summary,
+)
 
 
 def write_profile(path: Path, structural_dir: Path) -> None:
@@ -52,6 +57,7 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     runs_root = tmp_path / "runs"
     structural = runs_root / str(source_id) / "processed" / "structural"
     structural.mkdir(parents=True)
+    write_state_exploration_summary(structural)
     (structural / "screen_index.json").write_text(
         json.dumps(
             {
@@ -124,6 +130,11 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         target="/admin/cuentasxcobrar/retenciones",
         parameters={
             "source_crawl_job_id": str(source_id),
+            "source_crawl_result": source_crawl_result(
+                source_id,
+                scope="screen",
+                target="/admin/cuentasxcobrar/retenciones",
+            ),
             "target_screen_id": stable_id(
                 "screen",
                 stable_id("erp", "demo"),
@@ -150,14 +161,15 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     assert result["snapshot_mode"] == "partial"
     assert result["snapshot_scope"] == "screen"
     assert result["snapshot_target"] == "/admin/cuentasxcobrar/retenciones"
-    assert result["crawl_execution_quality"] == {
-        "execution_evidence_present": True,
-        "ui_event_result_files": 1,
-        "events_evaluated": 1,
-        "state_restore_failures": 0,
-        "other_error_events": 1,
-        "gate_passed": True,
-    }
+    assert result["crawl_execution_quality"] == certified_crawl_quality(
+        run_id=source_id,
+        scope="screen",
+        target="/admin/cuentasxcobrar/retenciones",
+        execution_evidence_present=True,
+        ui_event_result_files=1,
+        events_evaluated=1,
+        other_error_events=1,
+    )
     knowledge = json.loads((canonical / "knowledge.json").read_text(encoding="utf-8"))
     network = [
         item
@@ -170,6 +182,7 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     report = json.loads((canonical / "build_report.json").read_text(encoding="utf-8"))
     assert report["crawl_execution_quality"] == result["crawl_execution_quality"]
     manifest = json.loads((canonical / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["crawl_execution_quality"] == result["crawl_execution_quality"]
     assert manifest["snapshot"] == {
         "mode": "partial",
         "scope": "screen",
@@ -192,6 +205,7 @@ def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scop
     runs_root = tmp_path / "runs"
     structural = runs_root / str(source_id) / "processed" / "structural"
     structural.mkdir(parents=True)
+    write_state_exploration_summary(structural)
     (structural / "screen_index.json").write_text(
         json.dumps({"screens": []}),
         encoding="utf-8",
@@ -219,9 +233,15 @@ def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scop
         encoding="utf-8",
     )
 
+    target = None
+    if scope == "module":
+        target = "module:test"
+    elif scope == "screen":
+        target = "/admin/test"
+
     with pytest.raises(
         CanonicalBuildJobExecutionError,
-        match="state_restore_failed",
+        match="state_restore_failures=1",
     ):
         CanonicalBuildJobExecutor(
             profile_path=tmp_path / "profile.yaml",
@@ -229,8 +249,13 @@ def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scop
         ).execute(
             job_id=uuid.uuid4(),
             scope=scope,
-            target=None,
-            parameters={"source_crawl_job_id": str(source_id)},
+            target=target,
+            parameters={
+                "source_crawl_job_id": str(source_id),
+                "source_crawl_result": source_crawl_result(
+                    source_id, scope=scope, target=target
+                ),
+            },
         )
 
     assert not (
@@ -244,6 +269,7 @@ def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
     runs_root = tmp_path / "runs"
     structural = runs_root / str(source_id) / "processed" / "structural"
     structural.mkdir(parents=True)
+    write_state_exploration_summary(structural)
     artifacts = {
         "screen_index.json": {
             "screens": [
@@ -324,6 +350,9 @@ def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
         target=target_module.id,
         parameters={
             "source_crawl_job_id": str(source_id),
+            "source_crawl_result": source_crawl_result(
+                source_id, scope="module", target=target_module.id
+            ),
             "target_module_id": target_module.id,
             "base_knowledge_version_id": str(base_version_id),
             "base_knowledge_version": "active-v10",

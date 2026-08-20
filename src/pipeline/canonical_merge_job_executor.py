@@ -14,6 +14,11 @@ from src.database.services import (
     CanonicalKnowledgeMaterializationError,
     CanonicalKnowledgeMaterializer,
 )
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 from src.knowledge.canonical import (
     CanonicalKnowledgeExporter,
     CanonicalKnowledgeRepository,
@@ -121,14 +126,32 @@ class CanonicalMergeJobExecutor:
             repository = CanonicalKnowledgeRepository(knowledge_path)
             partial = repository.knowledge
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            build_report = json.loads(build_report_path.read_text(encoding="utf-8"))
             if manifest.get("knowledge_version") != partial.knowledge_version:
                 raise ValueError("manifest.json no corresponde al canonical partial")
             if manifest.get("canonical_document_hash") != repository.document_hash:
                 raise ValueError("Hash del canonical partial no coincide")
             snapshot = CanonicalSnapshotContext.model_validate(manifest.get("snapshot"))
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            execution_quality = validate_matching_certified_quality(
+                build_report.get("crawl_execution_quality"),
+                manifest.get("crawl_execution_quality"),
+                params.get("expected_crawl_execution_quality"),
+            )
+            execution_quality = validate_certified_quality_source(
+                execution_quality,
+                source_run_id=source_crawl_job_id,
+                source_scope=normalized_scope.value,
+                source_target=clean_target,
+                check_target=True,
+            )
+        except (
+            OSError,
+            ValueError,
+            json.JSONDecodeError,
+            CrawlExecutionQualityError,
+        ) as exc:
             raise CanonicalMergeJobExecutionError(
-                "No fue posible cargar el canonical partial fuente"
+                "No fue posible cargar un canonical partial con calidad de crawl certificada"
             ) from exc
 
         expected_partial = str(params.get("expected_partial_knowledge_version") or "").strip()
@@ -223,10 +246,14 @@ class CanonicalMergeJobExecutor:
             output_dir,
             pretty=True,
             snapshot_context=CanonicalSnapshotContext.full(),
-            manifest_metadata={"merge": merge_payload},
+            manifest_metadata={
+                "merge": merge_payload,
+                "crawl_execution_quality": execution_quality,
+            },
             build_report={
                 "snapshot": CanonicalSnapshotContext.full().model_dump(mode="json"),
                 "merge": merge_payload,
+                "crawl_execution_quality": execution_quality,
                 "warnings": [item.model_dump(mode="json") for item in merged.build_warnings],
             },
         )
@@ -264,6 +291,7 @@ class CanonicalMergeJobExecutor:
                 self.project_root, output_dir / "build_report.json"
             ),
             "merge_report": report.as_dict(),
+            "crawl_execution_quality": execution_quality,
             "statistics": dict(merged.statistics),
             "target_module_id": snapshot.target_module_id,
             "target_screen_id": snapshot.target_screen_id,

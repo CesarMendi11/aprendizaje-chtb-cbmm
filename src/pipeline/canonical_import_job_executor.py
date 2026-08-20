@@ -19,6 +19,11 @@ from src.database.services import CanonicalImportService
 from src.knowledge.canonical.ids import content_hash
 from src.knowledge.canonical.repository import CanonicalKnowledgeRepository
 from src.knowledge.canonical.snapshot import CanonicalSnapshotContext
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ProgressCallback = Callable[[str, dict[str, Any]], None]
@@ -127,10 +132,27 @@ class CanonicalImportJobExecutor:
 
         try:
             manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            build_report_payload = json.loads(
+                build_report_path.read_text(encoding="utf-8")
+            )
             knowledge = CanonicalKnowledgeRepository(knowledge_path).knowledge
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            execution_quality = validate_matching_certified_quality(
+                build_report_payload.get("crawl_execution_quality"),
+                manifest_payload.get("crawl_execution_quality"),
+                params.get("expected_crawl_execution_quality"),
+            )
+            execution_quality = validate_certified_quality_source(
+                execution_quality,
+                source_run_id=source_crawl_job_id,
+            )
+        except (
+            OSError,
+            ValueError,
+            json.JSONDecodeError,
+            CrawlExecutionQualityError,
+        ) as exc:
             raise CanonicalImportJobExecutionError(
-                "No fue posible cargar el conocimiento canónico fuente"
+                "No fue posible cargar un canonical con calidad de crawl certificada"
             ) from exc
 
         snapshot = manifest_payload.get("snapshot")
@@ -272,6 +294,7 @@ class CanonicalImportJobExecutor:
                 str(base_version_id) if base_version_id is not None else None
             ),
             "base_knowledge_version": base_version_name or None,
+            "crawl_execution_quality": execution_quality,
             "knowledge_path": _relative_project_path(self.project_root, knowledge_path),
             "manifest_path": _relative_project_path(self.project_root, manifest_path),
             "build_report_path": _relative_project_path(

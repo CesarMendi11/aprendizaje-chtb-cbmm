@@ -26,6 +26,7 @@ from src.pipeline.canonical_merge_job_executor import (
     CanonicalMergeJobExecutionError,
     CanonicalMergeJobExecutor,
 )
+from tests.crawl_quality_fixtures import attach_crawl_quality, certified_crawl_quality
 
 
 def _module(module_id, name, *, parent=None, depth=0, path=None):
@@ -160,6 +161,12 @@ def _setup(tmp_path):
         partial_dir,
         snapshot_context=snapshot,
     )
+    quality = attach_crawl_quality(
+        partial_dir,
+        certified_crawl_quality(
+            run_id=crawl_id, scope="module", target="module:tracking"
+        ),
+    )
     params = {
         "source_canonical_job_id": str(uuid.uuid4()),
         "source_crawl_job_id": str(crawl_id),
@@ -171,6 +178,7 @@ def _setup(tmp_path):
         "base_knowledge_version_id": str(base_id),
         "base_knowledge_version": "base-v1",
         "erp_id": "erp:test",
+        "expected_crawl_execution_quality": quality,
     }
     return engine, factory, base_id, crawl_id, params
 
@@ -212,6 +220,9 @@ def test_merge_executor_materializes_exact_active_base_and_exports_full_candidat
     assert manifest["snapshot"]["mode"] == "full"
     assert manifest["merge"]["base_knowledge_version_id"] == str(base_id)
     assert manifest["merge"]["target_module_id"] == "module:tracking"
+    assert manifest["crawl_execution_quality"] == result["crawl_execution_quality"]
+    report = json.loads((tmp_path / result["build_report_path"]).read_text(encoding="utf-8"))
+    assert report["crawl_execution_quality"] == result["crawl_execution_quality"]
 
     with factory() as session:
         base = session.get(KnowledgeVersionRecord, base_id)
@@ -275,6 +286,9 @@ def test_import_of_merged_candidate_rechecks_pinned_base_active(tmp_path):
                 "erp_id": "erp:test",
                 "merged_from_scope": "module",
                 "merged_target_module_id": "module:tracking",
+                "expected_crawl_execution_quality": merge_result[
+                    "crawl_execution_quality"
+                ],
             },
         )
     engine.dispose()
@@ -314,6 +328,9 @@ def test_import_of_merged_candidate_creates_staging_while_exact_base_remains_act
             "erp_id": "erp:test",
             "merged_from_scope": "module",
             "merged_target_module_id": "module:tracking",
+            "expected_crawl_execution_quality": merge_result[
+                "crawl_execution_quality"
+            ],
         },
     )
 
@@ -377,6 +394,12 @@ def _setup_screen(tmp_path):
         partial_dir,
         snapshot_context=snapshot,
     )
+    quality = attach_crawl_quality(
+        partial_dir,
+        certified_crawl_quality(
+            run_id=crawl_id, scope="screen", target="/tracking"
+        ),
+    )
     params = {
         "source_canonical_job_id": str(uuid.uuid4()),
         "source_crawl_job_id": str(crawl_id),
@@ -388,6 +411,7 @@ def _setup_screen(tmp_path):
         "base_knowledge_version_id": str(base_id),
         "base_knowledge_version": "base-v1",
         "erp_id": "erp:test",
+        "expected_crawl_execution_quality": quality,
     }
     return engine, factory, base_id, crawl_id, params
 
@@ -418,6 +442,7 @@ def test_screen_merge_executor_replaces_only_pinned_screen_and_exports_full_cand
     assert manifest["merge"]["scope"] == "screen"
     assert manifest["merge"]["target"] == "/tracking"
     assert manifest["merge"]["target_screen_id"] == "screen:tracking"
+    assert manifest["crawl_execution_quality"] == result["crawl_execution_quality"]
     engine.dispose()
 
 
@@ -455,6 +480,9 @@ def test_screen_merged_candidate_imports_as_staging_with_exact_base_pin(tmp_path
             "erp_id": "erp:test",
             "merged_from_scope": "screen",
             "merged_target_screen_id": "screen:tracking",
+            "expected_crawl_execution_quality": merge_result[
+                "crawl_execution_quality"
+            ],
         },
     )
 
@@ -462,4 +490,26 @@ def test_screen_merged_candidate_imports_as_staging_with_exact_base_pin(tmp_path
     assert result["version_status"] == "imported"
     with factory() as session:
         assert session.get(KnowledgeVersionRecord, base_id).status == KnowledgeVersionStatus.ACTIVE
+    engine.dispose()
+
+
+def test_merge_executor_rejects_partial_without_versioned_crawl_quality(tmp_path):
+    engine, factory, _base_id, _crawl_id, params = _setup(tmp_path)
+    for key in ("manifest_path", "build_report_path"):
+        path = tmp_path / params[key]
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload.pop("crawl_execution_quality", None)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(CanonicalMergeJobExecutionError, match="calidad de crawl certificada"):
+        CanonicalMergeJobExecutor(
+            factory,
+            project_root=tmp_path,
+            runs_root="data/runs/pipeline",
+        ).execute(
+            job_id=uuid.uuid4(),
+            scope=PipelineJobScope.MODULE,
+            target="module:tracking",
+            parameters=params,
+        )
     engine.dispose()

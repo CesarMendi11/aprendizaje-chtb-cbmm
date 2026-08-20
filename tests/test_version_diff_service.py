@@ -27,6 +27,7 @@ from src.database.services.payloads import item_content_hash
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.ids import content_hash
 from tests.canonical_fixtures import exported_fictional_canonical
+from tests.crawl_quality_fixtures import certified_crawl_quality
 
 
 @pytest.fixture
@@ -85,6 +86,68 @@ def seed_reconciled(session, tmp_path):
         active = session.get(KnowledgeVersionRecord, uuid.UUID(active_result.version_id))
         raw = session.get(KnowledgeVersionRecord, uuid.UUID(raw_result.version_id))
         candidate = session.get(KnowledgeVersionRecord, uuid.UUID(candidate_result.version_id))
+        raw_crawl_id = uuid.uuid4()
+        raw_quality = certified_crawl_quality(
+            run_id=raw_crawl_id, scope="module", target="module:tracking"
+        )
+        raw_source = PipelineJob(
+            kind=PipelineJobKind.CANONICAL_MERGE,
+            status=PipelineJobStatus.SUCCEEDED,
+            scope=PipelineJobScope.MODULE,
+            target="module:tracking",
+            profile_name="test",
+            erp_id=raw.erp_id,
+            request_source="test",
+            parameters={},
+            stage="completed",
+            progress_current=4,
+            progress_total=4,
+            checkpoint={},
+            result_payload={
+                "source_crawl_job_id": str(raw_crawl_id),
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+                "merged_from_scope": "module",
+                "knowledge_version": raw.knowledge_version,
+                "crawl_execution_quality": raw_quality,
+            },
+            requested_at=datetime.now(timezone.utc),
+            started_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(timezone.utc),
+        )
+        session.add(raw_source)
+        session.flush()
+        raw_origin = PipelineJob(
+            kind=PipelineJobKind.CANONICAL_IMPORT,
+            status=PipelineJobStatus.SUCCEEDED,
+            scope=PipelineJobScope.FULL,
+            target=None,
+            profile_name="test",
+            erp_id=raw.erp_id,
+            knowledge_version_id=raw.id,
+            request_source="test",
+            parameters={
+                "source_canonical_job_id": str(raw_source.id),
+                "activation_mode": "staging_only",
+                "expected_crawl_execution_quality": raw_quality,
+            },
+            stage="completed",
+            progress_current=4,
+            progress_total=4,
+            checkpoint={},
+            result_payload={
+                "import_result": "imported",
+                "staging_ready": True,
+                "activation_performed": False,
+                "knowledge_version": raw.knowledge_version,
+                "knowledge_version_id": str(raw.id),
+                "crawl_execution_quality": raw_quality,
+            },
+            requested_at=datetime.now(timezone.utc),
+            started_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(timezone.utc),
+        )
+        session.add(raw_origin)
         decision_set_hash = content_hash([])
         source = PipelineJob(
             kind=PipelineJobKind.CANONICAL_RECONCILIATION,
@@ -192,6 +255,8 @@ class Client:
 
 
 def _provenance(session, version, *, full=True, import_result="imported"):
+    crawl_id = uuid.uuid4()
+    quality = certified_crawl_quality(run_id=crawl_id, scope="full", target=None)
     source = PipelineJob(
         kind=PipelineJobKind.CANONICAL_BUILD,
         status=PipelineJobStatus.SUCCEEDED,
@@ -205,9 +270,11 @@ def _provenance(session, version, *, full=True, import_result="imported"):
         progress_total=1,
         checkpoint={},
         result_payload={
+            "source_crawl_job_id": str(crawl_id),
             "snapshot_mode": "full" if full else "partial",
             "snapshot_scope": "full",
             "knowledge_version": version.knowledge_version,
+            "crawl_execution_quality": quality,
         },
         requested_at=datetime.now(timezone.utc),
         started_at=datetime.now(timezone.utc),
@@ -228,6 +295,7 @@ def _provenance(session, version, *, full=True, import_result="imported"):
             parameters={
                 "source_canonical_job_id": str(source.id),
                 "activation_mode": "staging_only",
+                "expected_crawl_execution_quality": quality,
             },
             stage="done",
             progress_current=1,
@@ -239,13 +307,13 @@ def _provenance(session, version, *, full=True, import_result="imported"):
                 "activation_performed": False,
                 "knowledge_version": version.knowledge_version,
                 "knowledge_version_id": str(version.id),
+                "crawl_execution_quality": quality,
             },
             requested_at=datetime.now(timezone.utc),
             started_at=datetime.now(timezone.utc),
             finished_at=datetime.now(timezone.utc),
         )
     )
-
 
 def _skipped_retry(session, version):
     _provenance(session, version, import_result="skipped")
@@ -571,3 +639,18 @@ def test_diff_ignores_provenance_only_refresh(session, tmp_path):
     )
     assert screen_diff.change_type == "unchanged"
     assert screen_diff.active_content_hash == screen_diff.candidate_content_hash
+
+
+def test_diff_rejects_candidate_without_certified_crawl_quality(session, tmp_path):
+    _, candidate_id, _ = seed(session, tmp_path)
+    source = session.scalar(
+        select(PipelineJob).where(PipelineJob.kind == PipelineJobKind.CANONICAL_BUILD)
+    )
+    source.result_payload = {
+        key: value
+        for key, value in dict(source.result_payload or {}).items()
+        if key != "crawl_execution_quality"
+    }
+
+    with pytest.raises(VersionDiffError, match="calidad de crawl certificada"):
+        VersionDiffService(session).compare(candidate_id)

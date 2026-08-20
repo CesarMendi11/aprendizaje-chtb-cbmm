@@ -28,6 +28,7 @@ from src.database.models import (
 )
 from src.database.services import PipelineJobService
 from src.knowledge.canonical.enums import ReviewStatus
+from tests.crawl_quality_fixtures import certified_crawl_quality, source_crawl_result
 from tests.removal_review_fixtures import resolve_all_removals
 from tests.test_removal_reconciliation_plan_service import partial_candidate
 from tests.test_version_diff_service import seed as seed_version_diff
@@ -354,7 +355,14 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
         service.start(source.id, stage="running")
         service.succeed(
             source.id,
-            result_payload={"artifact_root": f"data/runs/pipeline/{source.id}"},
+            result_payload={
+                "artifact_root": f"data/runs/pipeline/{source.id}",
+                **source_crawl_result(
+                    source.id,
+                    scope="screen",
+                    target="/admin/cuentasxcobrar/retenciones",
+                ),
+            },
         )
 
     response = client.post(
@@ -368,6 +376,11 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
     assert body["target"] == "/admin/cuentasxcobrar/retenciones"
     assert body["parameters"] == {
         "source_crawl_job_id": str(source_id),
+        "source_crawl_result": source_crawl_result(
+            source_id,
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+        ),
         "base_knowledge_version_id": version_id,
         "base_knowledge_version": "active-v1",
         "erp_id": erp_id,
@@ -417,6 +430,9 @@ def test_create_canonical_import_job_is_staging_only(api):
                 "knowledge_version": "canonical-staging-test",
                 "snapshot_mode": "full",
                 "snapshot_scope": "full",
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="full", target=None
+                ),
             },
         )
 
@@ -431,6 +447,9 @@ def test_create_canonical_import_job_is_staging_only(api):
     assert body["target"] is None
     assert body["parameters"]["activation_mode"] == "staging_only"
     assert body["parameters"]["source_canonical_job_id"] == str(source_id)
+    assert body["parameters"]["expected_crawl_execution_quality"] == (
+        certified_crawl_quality(run_id=crawl_id, scope="full", target=None)
+    )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
@@ -546,7 +565,12 @@ def test_create_canonical_build_preserves_module_base_provenance(api):
         service.start(source.id, stage="running")
         service.succeed(
             source.id,
-            result_payload={"artifact_root": f"data/runs/pipeline/{source.id}"},
+            result_payload={
+                "artifact_root": f"data/runs/pipeline/{source.id}",
+                **source_crawl_result(
+                    source.id, scope="module", target="module:tracking"
+                ),
+            },
         )
 
     response = client.post(
@@ -561,6 +585,9 @@ def test_create_canonical_build_preserves_module_base_provenance(api):
     assert body["knowledge_version_id"] == version_id
     assert body["parameters"] == {
         "source_crawl_job_id": str(source_id),
+        "source_crawl_result": source_crawl_result(
+            source_id, scope="module", target="module:tracking"
+        ),
         "target_module_id": "module:tracking",
         "base_knowledge_version_id": version_id,
         "base_knowledge_version": "active-v1",
@@ -596,6 +623,9 @@ def test_create_canonical_import_rejects_partial_snapshot(api):
                 "knowledge_version": "partial-module-test",
                 "snapshot_mode": "partial",
                 "snapshot_scope": "module",
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="module", target="module:tracking"
+                ),
             },
         )
 
@@ -818,6 +848,9 @@ def test_create_canonical_merge_pins_partial_to_exact_active_base(api):
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
                 "erp_id": erp_id,
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="module", target="module:tracking"
+                ),
             },
         )
 
@@ -835,6 +868,11 @@ def test_create_canonical_merge_pins_partial_to_exact_active_base(api):
     assert body["parameters"]["base_knowledge_version_id"] == version_id
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
     assert body["parameters"]["expected_partial_knowledge_version"] == "partial-v1"
+    assert body["parameters"]["expected_crawl_execution_quality"] == (
+        certified_crawl_quality(
+            run_id=crawl_id, scope="module", target="module:tracking"
+        )
+    )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
@@ -867,6 +905,9 @@ def test_create_canonical_merge_rejects_when_pinned_base_is_no_longer_active(api
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
                 "erp_id": erp_id,
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="module", target="module:tracking"
+                ),
             },
         )
         session.get(
@@ -921,6 +962,9 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
                 "erp_id": erp_id,
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="module", target="module:tracking"
+                ),
             },
         )
 
@@ -940,6 +984,11 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
     assert body["parameters"]["merged_from_scope"] == "module"
     assert body["parameters"]["merged_target_module_id"] == "module:tracking"
+    assert body["parameters"]["expected_crawl_execution_quality"] == (
+        certified_crawl_quality(
+            run_id=crawl_id, scope="module", target="module:tracking"
+        )
+    )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
@@ -1108,6 +1157,9 @@ def test_create_canonical_merge_accepts_screen_partial_with_exact_active_pin(api
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
                 "erp_id": erp_id,
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="screen", target=route
+                ),
             },
         )
 
@@ -1124,6 +1176,9 @@ def test_create_canonical_merge_accepts_screen_partial_with_exact_active_pin(api
     assert body["parameters"]["target_screen_id"] == screen_id
     assert body["parameters"]["base_knowledge_version_id"] == version_id
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
+    assert body["parameters"]["expected_crawl_execution_quality"] == (
+        certified_crawl_quality(run_id=crawl_id, scope="screen", target=route)
+    )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
@@ -1157,6 +1212,11 @@ def test_create_canonical_import_accepts_full_screen_merge_and_repins_base(api):
                 "base_knowledge_version_id": version_id,
                 "base_knowledge_version": "active-v1",
                 "erp_id": erp_id,
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id,
+                    scope="screen",
+                    target="/admin/cuentasxcobrar/retenciones",
+                ),
             },
         )
 
@@ -1171,4 +1231,157 @@ def test_create_canonical_import_accepts_full_screen_merge_and_repins_base(api):
     assert body["parameters"]["merged_from_scope"] == "screen"
     assert body["parameters"]["merged_target_screen_id"] == screen_id
     assert body["parameters"]["base_knowledge_version_id"] == version_id
+    assert body["parameters"]["expected_crawl_execution_quality"] == (
+        certified_crawl_quality(
+            run_id=crawl_id,
+            scope="screen",
+            target="/admin/cuentasxcobrar/retenciones",
+        )
+    )
     assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_build_rejects_legacy_crawl_without_quality_pins(api):
+    client, factory, dispatcher = api
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(kind="crawl", scope="full", profile_name="cbmm")
+        source_id = source.id
+        service.start(source.id, stage="running")
+        service.succeed(
+            source.id,
+            result_payload={
+                "artifact_root": f"data/runs/pipeline/{source.id}",
+                "run_id": str(source.id),
+                "scope": "full",
+                "target": None,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-build",
+        json={"source_crawl_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 409
+    assert "resumen requerido" in response.json()["detail"]
+    assert dispatcher.submitted == []
+
+
+def test_create_canonical_import_rejects_legacy_canonical_without_quality_contract(api):
+    client, factory, dispatcher = api
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="full",
+            target=None,
+            profile_name="cbmm",
+        )
+        source_id = source.id
+        service.start(source.id, stage="building")
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "legacy-full",
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 409
+    assert "contrato versionado" in response.json()["detail"]
+    assert dispatcher.submitted == []
+
+
+def test_create_canonical_merge_rejects_legacy_partial_without_quality_contract(api):
+    client, factory, dispatcher = api
+    version_id, erp_id = seed_active_version(factory)
+    crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="module",
+            target="module:tracking",
+            profile_name="cbmm",
+            erp_id=erp_id,
+            knowledge_version_id=uuid.UUID(version_id),
+        )
+        source_id = source.id
+        service.start(source.id, stage="building")
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "legacy-partial",
+                "snapshot_mode": "partial",
+                "snapshot_scope": "module",
+                "target_module_id": "module:tracking",
+                "base_knowledge_version_id": version_id,
+                "base_knowledge_version": "active-v1",
+                "erp_id": erp_id,
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-merge",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 409
+    assert "contrato versionado" in response.json()["detail"]
+    assert dispatcher.submitted == []
+
+
+def test_create_canonical_import_rejects_quality_bound_to_different_crawl(api):
+    client, factory, dispatcher = api
+    crawl_id = uuid.uuid4()
+    other_crawl_id = uuid.uuid4()
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(
+            kind="canonical_build",
+            scope="full",
+            target=None,
+            profile_name="cbmm",
+        )
+        source_id = source.id
+        service.start(source.id, stage="building")
+        service.succeed(
+            source.id,
+            result_payload={
+                "source_crawl_job_id": str(crawl_id),
+                "knowledge_path": "knowledge.json",
+                "manifest_path": "manifest.json",
+                "build_report_path": "build_report.json",
+                "knowledge_version": "mismatched-quality",
+                "snapshot_mode": "full",
+                "snapshot_scope": "full",
+                "crawl_execution_quality": certified_crawl_quality(
+                    run_id=other_crawl_id, scope="full", target=None
+                ),
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-import",
+        json={"source_canonical_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 409
+    assert "source_crawl_job_id" in response.json()["detail"]
+    assert dispatcher.submitted == []

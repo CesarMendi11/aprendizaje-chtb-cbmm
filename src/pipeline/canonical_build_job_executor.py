@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import json
 import os
 import uuid
 from pathlib import Path
 from typing import Any, Callable
 
 from src.config.profile_loader import ProfileLoader
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    build_crawl_execution_quality,
+)
 from src.database.enums import PipelineJobScope
 from src.knowledge.canonical import (
     ArtifactLoadError,
@@ -39,66 +42,12 @@ def _relative_project_path(value: str | Path) -> str:
         return str(path)
 
 
-def _crawl_execution_quality(review_dir: Path) -> dict[str, Any]:
-    """Summarize persisted UI-event execution failures for a crawl run.
-
-    ``state_restore_failed`` is a trust-boundary failure: the crawler could not
-    restore the source UI state and therefore did not execute that candidate.
-    Other interaction errors remain observable but do not by themselves prove
-    that structural coverage was truncated.
-    """
-
-    files = sorted(review_dir.glob("*_ui_events_*_uncertainty.json"))
-    events_evaluated = 0
-    state_restore_failures = 0
-    other_error_events = 0
-
-    for path in files:
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise CanonicalBuildJobExecutionError(
-                "No se pudo validar la calidad de ejecución UI del crawl fuente"
-            ) from exc
-        if not isinstance(payload, dict):
-            raise CanonicalBuildJobExecutionError(
-                "La evidencia de ejecución UI del crawl fuente es inválida"
-            )
-
-        results = payload.get("results", [])
-        if not isinstance(results, list):
-            raise CanonicalBuildJobExecutionError(
-                "La evidencia de ejecución UI del crawl fuente es inválida"
-            )
-
-        for result in results:
-            if not isinstance(result, dict):
-                raise CanonicalBuildJobExecutionError(
-                    "La evidencia de ejecución UI del crawl fuente es inválida"
-                )
-            events_evaluated += 1
-            error = result.get("error")
-            if error == "state_restore_failed":
-                state_restore_failures += 1
-            elif error:
-                other_error_events += 1
-
-    return {
-        "execution_evidence_present": bool(files),
-        "ui_event_result_files": len(files),
-        "events_evaluated": events_evaluated,
-        "state_restore_failures": state_restore_failures,
-        "other_error_events": other_error_events,
-        "gate_passed": state_restore_failures == 0,
-    }
-
-
 class CanonicalBuildJobExecutor:
     """Build canonical knowledge from one isolated crawler run.
 
     The executor never writes to the official ``data/processed/canonical`` directory.
-    Its output stays under the source crawl run so a short demo crawl cannot replace
-    the stable 52-screen snapshot.
+    Its output stays under the source crawl run so an isolated crawl cannot replace
+    governed knowledge without passing the downstream trust boundaries.
     """
 
     def __init__(
@@ -155,15 +104,28 @@ class CanonicalBuildJobExecutor:
                 "El crawl fuente no contiene screen_index.json final"
             )
 
-        execution_quality = _crawl_execution_quality(
-            run_root / "review" / "structural"
-        )
+        try:
+            execution_quality = build_crawl_execution_quality(
+                review_dir=run_root / "review" / "structural",
+                structural_dir=structural_dir,
+                source_crawl_result=params.get("source_crawl_result"),
+                expected_run_id=str(source_job_id),
+                expected_scope=normalized_scope.value,
+                expected_target=target,
+            )
+        except CrawlExecutionQualityError as exc:
+            raise CanonicalBuildJobExecutionError(str(exc)) from exc
         if not execution_quality["gate_passed"]:
             raise CanonicalBuildJobExecutionError(
                 "El crawl fuente no supera el gate de calidad estructural: "
-                f"{execution_quality['state_restore_failures']} evento(s) "
-                "fallaron al restaurar su estado fuente "
-                "(state_restore_failed)."
+                f"{execution_quality['blocking_failures']} fallo(s) bloqueante(s); "
+                f"state_restore_failures={execution_quality['state_restore_failures']}, "
+                f"dynamic_state_exploration_errors="
+                f"{execution_quality['dynamic_state_exploration_errors']}, "
+                f"navigation_errors={execution_quality['navigation_errors']}, "
+                f"fixed_point_stalls={execution_quality['fixed_point_stalls']}, "
+                f"pending_routes={execution_quality['route_frontier_pending']}, "
+                f"pending_states={execution_quality['state_frontier_pending']}."
             )
 
         if not self.profile_path.is_file():
@@ -274,6 +236,7 @@ class CanonicalBuildJobExecutor:
             pretty=True,
             build_report=report,
             snapshot_context=snapshot_context,
+            manifest_metadata={"crawl_execution_quality": execution_quality},
         )
 
         return {

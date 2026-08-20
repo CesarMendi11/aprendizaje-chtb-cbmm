@@ -16,6 +16,11 @@ from src.database.enums import (
 )
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
 from src.knowledge.canonical.ids import content_hash
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 
 from .payloads import structural_review_hash
 
@@ -173,6 +178,7 @@ class VersionDiffService:
         return self._validate_canonical_provenance(
             import_job,
             parameters,
+            result,
             candidate,
         )
 
@@ -199,6 +205,7 @@ class VersionDiffService:
         self,
         import_job: PipelineJob,
         parameters: dict,
+        import_result: dict,
         candidate: KnowledgeVersionRecord,
     ) -> VersionDiffCandidateOrigin:
         if import_job.scope != PipelineJobScope.FULL:
@@ -216,6 +223,23 @@ class VersionDiffService:
         }:
             raise VersionDiffError("La provenance del canonical fuente es inválida.")
         source_result = dict(source.result_payload or {})
+        try:
+            execution_quality = validate_matching_certified_quality(
+                source_result.get("crawl_execution_quality"),
+                import_result.get("crawl_execution_quality"),
+                parameters.get("expected_crawl_execution_quality"),
+            )
+            validate_certified_quality_source(
+                execution_quality,
+                source_run_id=source_result.get("source_crawl_job_id"),
+                source_scope=source.scope.value,
+                source_target=source.target,
+                check_target=True,
+            )
+        except CrawlExecutionQualityError as exc:
+            raise VersionDiffError(
+                "La provenance del candidate no conserva calidad de crawl certificada."
+            ) from exc
         if (
             source.status != PipelineJobStatus.SUCCEEDED
             or source_result.get("snapshot_mode") != "full"
@@ -279,6 +303,27 @@ class VersionDiffService:
         source_parameters = dict(source.parameters or {})
         source_result = dict(source.result_payload or {})
         raw = self.session.get(KnowledgeVersionRecord, raw_id)
+        raw_origin = None
+        if raw is not None:
+            try:
+                raw_import = self._origin_import(raw)
+                raw_parameters = dict(raw_import.parameters or {})
+                raw_result = dict(raw_import.result_payload or {})
+                if "source_canonical_job_id" not in raw_parameters:
+                    raise VersionDiffError(
+                        "El RAW candidate reconciliado no conserva provenance canonical."
+                    )
+                raw_origin = self._validate_canonical_provenance(
+                    raw_import,
+                    raw_parameters,
+                    raw_result,
+                    raw,
+                )
+            except VersionDiffError as exc:
+                raise VersionDiffError(
+                    "El RAW candidate reconciliado no conserva calidad/provenance "
+                    "canónica certificada."
+                ) from exc
         decisions = source_result.get("decisions")
         if (
             source.kind != PipelineJobKind.CANONICAL_RECONCILIATION
@@ -291,6 +336,8 @@ class VersionDiffService:
             or raw.id in {active.id, candidate.id}
             or raw.status != KnowledgeVersionStatus.IMPORTED
             or raw.erp_id != candidate.erp_id
+            or raw_origin is None
+            or source_result.get("candidate_origin") != raw_origin.value
             or source_parameters.get("candidate_version_id") != str(raw_id)
             or source_parameters.get("candidate_knowledge_version") != raw.knowledge_version
             or source_parameters.get("active_version_id") != str(active.id)

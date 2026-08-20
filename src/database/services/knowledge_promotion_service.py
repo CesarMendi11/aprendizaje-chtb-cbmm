@@ -25,6 +25,11 @@ from src.database.models import (
 )
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import is_safe_navigation_metadata
+from src.knowledge.crawl_execution_quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 
 from .canonical_materialization_service import (
     CanonicalKnowledgeMaterializationError,
@@ -392,6 +397,12 @@ class KnowledgePromotionService:
                         "El import no apunta a la KnowledgeVersion objetivo.",
                     )
                 )
+            if source_job is not None:
+                self._append_crawl_quality_blocker(
+                    import_job,
+                    source_job,
+                    blockers,
+                )
 
         if source_job is None:
             blockers.append(
@@ -427,6 +438,35 @@ class KnowledgePromotionService:
                     )
                 )
         return import_job, source_job
+
+    @staticmethod
+    def _append_crawl_quality_blocker(
+        import_job: PipelineJob,
+        source_job: PipelineJob,
+        blockers: list[PromotionBlocker],
+    ) -> None:
+        try:
+            source_result = dict(source_job.result_payload or {})
+            execution_quality = validate_matching_certified_quality(
+                source_result.get("crawl_execution_quality"),
+                dict(import_job.result_payload or {}).get("crawl_execution_quality"),
+                dict(import_job.parameters or {}).get("expected_crawl_execution_quality"),
+            )
+            validate_certified_quality_source(
+                execution_quality,
+                source_run_id=source_result.get("source_crawl_job_id"),
+                source_scope=source_job.scope.value,
+                source_target=source_job.target,
+                check_target=True,
+            )
+        except CrawlExecutionQualityError as exc:
+            blockers.append(
+                PromotionBlocker(
+                    "crawl_quality_not_certified",
+                    "La provenance del candidate no conserva calidad de crawl "
+                    f"certificada: {exc}",
+                )
+            )
 
     def _replacement_provenance(
         self,
