@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
+from src.analysis.evidence import ScreenEvidenceBuilder
 from src.analysis.schemas import ScreenEvidencePackage
 from src.api.app import create_app
 from src.config.api_settings import ApiSettings
@@ -55,7 +56,7 @@ class Client:
 
 
 @pytest.fixture
-def api(tmp_path):
+def api(tmp_path, monkeypatch):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
     settings = replace(
@@ -65,6 +66,20 @@ def api(tmp_path):
     engine = create_engine(f"sqlite+pysqlite:///{database_path}")
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
+
+    def build_persisted_snapshot(self, knowledge_version_id, screen_knowledge_item_id):
+        proposal = self.session.scalar(
+            select(SemanticProposal).where(
+                SemanticProposal.knowledge_version_id == knowledge_version_id,
+                SemanticProposal.screen_knowledge_item_id == screen_knowledge_item_id,
+            )
+        )
+        assert proposal is not None
+        return ScreenEvidencePackage.model_validate(
+            {**proposal.evidence_payload, "evidence_hash": proposal.evidence_hash}
+        )
+
+    monkeypatch.setattr(ScreenEvidenceBuilder, "build", build_persisted_snapshot)
     app = create_app(settings, semantic_review_session_factory=factory)
     yield Client(app), factory
     engine.dispose()
@@ -161,7 +176,11 @@ def seed(factory, *, suffix="one"):
                 }
             ],
             "main_content_text": "Synthetic safe text",
-            "evidence_ids": [f"evidence:network:{suffix}"],
+            "primary_evidence_ids": [f"evidence:screen:{suffix}"],
+            "evidence_ids": [
+                f"evidence:network:{suffix}",
+                f"evidence:screen:{suffix}",
+            ],
             "warnings": [],
         }
         provisional = ScreenEvidencePackage.model_validate(
@@ -515,4 +534,90 @@ def test_stale_preconditions_return_409_without_action(api, change):
     assert response.status_code == 409
     assert response.json()["current_status"] == "pending_review"
     with factory() as session:
+        assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 0
+
+
+def test_stale_current_evidence_blocks_approve_and_correct_but_allows_reject(
+    api, monkeypatch
+):
+    client, factory = api
+    approve_id, _, _ = seed(factory, suffix="stale-current-approve")
+    correct_id, correct_source, _ = seed(factory, suffix="stale-current-correct")
+    reject_id, _, _ = seed(factory, suffix="stale-current-reject")
+
+    def stale_build(self, knowledge_version_id, screen_knowledge_item_id):
+        proposal = self.session.scalar(
+            select(SemanticProposal).where(
+                SemanticProposal.knowledge_version_id == knowledge_version_id,
+                SemanticProposal.screen_knowledge_item_id == screen_knowledge_item_id,
+            )
+        )
+        assert proposal is not None
+        package = ScreenEvidencePackage.model_validate(
+            {**proposal.evidence_payload, "evidence_hash": proposal.evidence_hash}
+        )
+        return package.model_copy(update={"evidence_hash": "f" * 64})
+
+    monkeypatch.setattr(ScreenEvidenceBuilder, "build", stale_build)
+
+    approved = client.post(
+        f"/api/admin/semantic-proposals/{approve_id}/approve",
+        json=action_body(),
+    )
+    assert approved.status_code == 409
+    assert approved.json()["category"] == "stale_evidence"
+
+    corrected = {
+        **correct_source,
+        "purpose_summary": "Permite buscar registros mediante los criterios disponibles.",
+    }
+    correction = client.post(
+        f"/api/admin/semantic-proposals/{correct_id}/correct",
+        json=action_body(corrected_payload=corrected),
+    )
+    assert correction.status_code == 409
+    assert correction.json()["category"] == "stale_evidence"
+
+    rejected = client.post(
+        f"/api/admin/semantic-proposals/{reject_id}/reject",
+        json=action_body(),
+    )
+    assert rejected.status_code == 200
+    assert rejected.json()["current_review_status"] == "rejected"
+
+    with factory() as session:
+        proposals = {
+            proposal.semantic_id: proposal
+            for proposal in session.scalars(
+                select(SemanticProposal).where(
+                    SemanticProposal.semantic_id.in_([approve_id, correct_id, reject_id])
+                )
+            )
+        }
+        assert proposals[approve_id].current_review_status == ReviewStatus.PENDING_REVIEW
+        assert proposals[correct_id].current_review_status == ReviewStatus.PENDING_REVIEW
+        assert proposals[reject_id].current_review_status == ReviewStatus.REJECTED
+        assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 1
+
+
+def test_inactive_knowledge_version_blocks_publishable_review(api):
+    client, factory = api
+    semantic_id, _, _ = seed(factory, suffix="inactive-review")
+    with factory.begin() as session:
+        proposal = session.scalar(
+            select(SemanticProposal).where(SemanticProposal.semantic_id == semantic_id)
+        )
+        proposal.knowledge_version.status = KnowledgeVersionStatus.ARCHIVED
+
+    response = client.post(
+        f"/api/admin/semantic-proposals/{semantic_id}/approve",
+        json=action_body(),
+    )
+    assert response.status_code == 409
+    assert response.json()["category"] == "stale_evidence"
+    with factory() as session:
+        proposal = session.scalar(
+            select(SemanticProposal).where(SemanticProposal.semantic_id == semantic_id)
+        )
+        assert proposal.current_review_status == ReviewStatus.PENDING_REVIEW
         assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 0

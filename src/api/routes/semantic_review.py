@@ -11,6 +11,11 @@ from pydantic import ValidationError
 from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.orm import Session
 
+from src.analysis.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
+from src.analysis.eligibility import evaluate_screen_semantic_eligibility
 from src.analysis.generation.errors import ScreenPurposeGenerationError
 from src.analysis.validators.screen_purpose_grounding import validate_capability_grounding
 from src.analysis.validators.screen_purpose_validator import allowed_references
@@ -27,9 +32,9 @@ from src.api.schemas.semantic_review import (
 from src.api.semantic_review_serializers import (
     proposal_detail,
     proposal_summary,
-    validated_evidence_package,
 )
-from src.database.enums import SemanticType
+from src.database.enums import KnowledgeVersionStatus, SemanticType
+from src.database.models import KnowledgeVersionRecord
 from src.database.repositories import SemanticProposalRepository
 from src.database.services import SemanticEffectivePayloadService, SemanticReviewService
 from src.database.services.semantic_exceptions import (
@@ -91,6 +96,55 @@ async def admin_validation_error_handler(
         detail="La solicitud no cumple el contrato administrativo.",
     )
     return JSONResponse(status_code=422, content=payload.model_dump(mode="json"))
+
+
+def _current_evidence_for_review(session: Session, proposal):
+    version = session.get(KnowledgeVersionRecord, proposal.knowledge_version_id)
+    if version is None or version.status != KnowledgeVersionStatus.ACTIVE:
+        raise AdminSemanticApiError(
+            409,
+            "SemanticStaleEvidenceError",
+            "stale_evidence",
+            "La evidencia actual ya no coincide con la propuesta; regenere antes de revisar.",
+            semantic_id=proposal.semantic_id,
+            current_status=proposal.current_review_status,
+        )
+    try:
+        package = ScreenEvidenceBuilder(session).build(
+            version.id, proposal.screen_knowledge_item_id
+        )
+    except ScreenEvidenceError as exc:
+        raise AdminSemanticApiError(
+            409,
+            "SemanticStaleEvidenceError",
+            "stale_evidence",
+            "La evidencia actual ya no está disponible de forma segura; regenere antes de revisar.",
+            semantic_id=proposal.semantic_id,
+            current_status=proposal.current_review_status,
+        ) from exc
+    eligibility = evaluate_screen_semantic_eligibility(package)
+    if not eligibility.eligible:
+        raise AdminSemanticApiError(
+            409,
+            "SemanticStaleEvidenceError",
+            "stale_evidence",
+            "La evidencia actual ya no es elegible para revisión semántica; regenere antes de revisar.",
+            semantic_id=proposal.semantic_id,
+            current_status=proposal.current_review_status,
+        )
+    if (
+        proposal.evidence_hash != package.evidence_hash
+        or list(proposal.evidence_ids) != list(package.evidence_ids)
+    ):
+        raise AdminSemanticApiError(
+            409,
+            "SemanticStaleEvidenceError",
+            "stale_evidence",
+            "La evidencia actual ya no coincide con la propuesta; regenere antes de revisar.",
+            semantic_id=proposal.semantic_id,
+            current_status=proposal.current_review_status,
+        )
+    return package
 
 
 def _proposal(session: Session, semantic_id: str):
@@ -205,6 +259,11 @@ def _review(
         )
     service = SemanticReviewService(session)
     try:
+        current_package = (
+            _current_evidence_for_review(session, proposal)
+            if action in {"approve", "correct"}
+            else None
+        )
         kwargs = {
             "expected_revision": body.expected_revision,
             "reviewer_subject": body.reviewer_id,
@@ -215,7 +274,8 @@ def _review(
             assert isinstance(body, CorrectionRequest)
             if body.corrected_payload.semantic_type != str(proposal.semantic_type):
                 raise SemanticPayloadError("semantic_type no puede cambiar")
-            package = validated_evidence_package(proposal)
+            assert current_package is not None
+            package = current_package
             if body.corrected_payload.screen_id != package.screen_id:
                 raise SemanticPayloadError("screen_id no puede cambiar")
             unknown_refs = {
