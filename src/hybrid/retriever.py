@@ -6,7 +6,10 @@ from collections import OrderedDict
 from sqlalchemy import select
 
 from src.database.models import KnowledgeItem
-from src.database.services import ChromaSyncService, SemanticRetrievalAuthorizationService
+from src.database.services import ChromaSyncService
+from src.database.services.semantic_retrieval_authorization_service import (
+    SemanticRetrievalAuthorizationService,
+)
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 

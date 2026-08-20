@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from src.analysis.evidence import ScreenEvidenceBuilder
-from src.analysis.evidence.screen_evidence_builder import ScreenEvidenceError
+from src.analysis.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
 from src.database.repositories import SemanticProposalRepository
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text

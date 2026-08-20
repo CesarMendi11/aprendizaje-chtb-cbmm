@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.database.enums import KnowledgeVersionStatus, PipelineJobScope
 from src.database.models import KnowledgeVersionRecord
-from src.database.services import SemanticChromaSyncService
+from src.database.services.semantic_chroma_sync_service import SemanticChromaSyncService
 from src.vectorstore import OllamaEmbeddingClient, SemanticChromaRepository
 
 

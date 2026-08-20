@@ -59,13 +59,8 @@ from .screen_scope_resolver import (
     ScreenScopeResolutionError,
     ScreenScopeResolver,
 )
-from .semantic_chroma_sync_service import (
-    SemanticChromaSyncService,
-    SemanticSafeDocumentBuilder,
-)
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_proposal_service import SemanticProposalService
-from .semantic_retrieval_authorization_service import SemanticRetrievalAuthorizationService
 from .semantic_review_service import SemanticReviewService
 from .structural_publication_review_service import (
     StructuralPublicationApprovalResult,
@@ -130,8 +125,6 @@ __all__ = [
     "ScreenCrawlTarget",
     "ScreenScopeResolutionError",
     "ScreenScopeResolver",
-    "SemanticChromaSyncService",
-    "SemanticSafeDocumentBuilder",
     "SemanticEffectivePayloadService",
     "SemanticProposalService",
     "SemanticReviewService",
@@ -144,7 +137,6 @@ __all__ = [
     "RemovalReconciliationReviewService",
     "RemovalReviewDecisionState",
     "RemovalReviewSetState",
-    "SemanticRetrievalAuthorizationService",
     "StructuralPublicationApprovalResult",
     "StructuralPublicationReviewConflictError",
     "StructuralPublicationReviewError",

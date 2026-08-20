@@ -9,7 +9,7 @@ from src.analysis.schemas import ScreenEvidencePackage
 from src.database.base import Base
 from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
 from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
-from src.database.services import SemanticChromaSyncService
+from src.database.services.semantic_chroma_sync_service import SemanticChromaSyncService
 from src.database.services.semantic_payloads import (
     canonical_json_hash,
     validated_semantic_evidence_snapshot,

@@ -7,8 +7,10 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from src.analysis.evidence import ScreenEvidenceBuilder
-from src.analysis.evidence.screen_evidence_builder import ScreenEvidenceError
+from src.analysis.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
 from src.database.enums import KnowledgeVersionStatus
 from src.database.models import KnowledgeVersionRecord, SemanticProposal
 from src.knowledge.canonical.enums import ReviewStatus
