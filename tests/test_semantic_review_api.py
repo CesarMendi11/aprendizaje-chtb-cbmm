@@ -116,7 +116,7 @@ def seed(factory, *, suffix="one"):
         session.add(screen)
         session.flush()
         raw = {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "erp_id": erp.id,
             "knowledge_version_id": str(version.id),
             "knowledge_version": suffix,
@@ -146,8 +146,22 @@ def seed(factory, *, suffix="one"):
             "ui_states": [],
             "events": [],
             "transitions": [],
+            "network_traces": [
+                {
+                    "evidence_id": f"evidence:network:{suffix}",
+                    "methods": ["GET"],
+                    "endpoint_paths": [f"/api/synthetic/{suffix}"],
+                    "resource_types": ["fetch"],
+                    "origin_kinds": ["same_origin"],
+                    "status_codes": [200],
+                    "query_keys": ["page"],
+                    "observation_count": 2,
+                    "endpoint_count": 1,
+                    "read_only": True,
+                }
+            ],
             "main_content_text": "Synthetic safe text",
-            "evidence_ids": [],
+            "evidence_ids": [f"evidence:network:{suffix}"],
             "warnings": [],
         }
         provisional = ScreenEvidencePackage.model_validate(
@@ -333,6 +347,8 @@ def test_pagination_filters_detail_and_sanitized_evidence(api):
     assert detail["source_payload"] == source
     assert detail["review_history"] == []
     assert detail["evidence"]["evidence_available"] is True
+    assert detail["evidence"]["network_traces"][0]["methods"] == ["GET"]
+    assert detail["evidence"]["network_traces"][0]["read_only"] is True
     serialized = str(detail).casefold()
     assert all(word not in serialized for word in ("password", "cookie", "raw_response", "html"))
     assert client.get("/api/admin/semantic-proposals/missing").status_code == 404

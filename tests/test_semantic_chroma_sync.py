@@ -101,7 +101,7 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
         session.flush()
 
         raw = {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "erp_id": erp.id,
             "knowledge_version_id": str(version.id),
             "knowledge_version": version.knowledge_version,

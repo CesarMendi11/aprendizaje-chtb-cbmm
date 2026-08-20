@@ -117,7 +117,7 @@ def _proposal(session, version, screen, status=ReviewStatus.PENDING_REVIEW, *, i
         "uncertainties": [],
     }
     evidence = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "erp_id": "erp:tree",
         "knowledge_version_id": str(version.id),
         "knowledge_version": version.knowledge_version,
@@ -1128,3 +1128,55 @@ def test_review_context_does_not_load_unrelated_version_items(admin_api):
     assert "unrelated" not in response.text.casefold()
     assert len(statements) <= 15
     assert not any("ORDER BY knowledge_items.entity_type" in statement for statement in statements)
+
+
+def test_review_context_surfaces_safe_network_evidence(admin_api):
+    client, factory, _ = admin_api
+    seeded = seed_tree(factory)
+    with factory.begin() as session:
+        version = session.get(KnowledgeVersionRecord, uuid.UUID(seeded["version_id"]))
+        screen = session.scalar(
+            select(KnowledgeItem).where(KnowledgeItem.canonical_id == seeded["second"])
+        )
+        _add_item(
+            session,
+            version,
+            {
+                **_evidence("evidence:network", "screen", screen.canonical_id),
+                "evidence_type": "network_trace",
+                "metadata": {
+                    "observation_count": 2,
+                    "endpoint_count": 1,
+                    "endpoint_paths": "/api/alpha",
+                    "methods": "GET",
+                    "resource_types": "fetch",
+                    "origin_kinds": "same_origin",
+                    "query_keys": "page",
+                    "status_codes": "200",
+                    "headers_captured": False,
+                    "bodies_captured": False,
+                    "query_values_captured": False,
+                },
+            },
+            "evidence",
+        )
+
+    response = client.get(f"/api/admin/screens/{seeded['second']}/review-context")
+    assert response.status_code == 200, response.text
+    evidence = response.json()["structural_evidence"]
+
+    assert evidence["network_traces"] == [
+        {
+            "evidence_id": "evidence:network",
+            "methods": ["GET"],
+            "endpoint_paths": ["/api/alpha"],
+            "resource_types": ["fetch"],
+            "origin_kinds": ["same_origin"],
+            "status_codes": [200],
+            "query_keys": ["page"],
+            "observation_count": 2,
+            "endpoint_count": 1,
+            "read_only": True,
+        }
+    ]
+    assert "evidence:network" in evidence["evidence_ids"]

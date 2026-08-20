@@ -62,6 +62,9 @@ def review_evidence(proposal: SemanticProposal) -> ScreenEvidenceReviewResponse:
         tables=tuple(item.model_dump(mode="json") for item in package.tables),
         events=tuple(item.model_dump(mode="json") for item in package.events),
         transitions=tuple(item.model_dump(mode="json") for item in package.transitions),
+        network_traces=tuple(
+            item.model_dump(mode="json") for item in package.network_traces
+        ),
         evidence_ids=tuple(package.evidence_ids),
         warnings=tuple(package.warnings),
     )

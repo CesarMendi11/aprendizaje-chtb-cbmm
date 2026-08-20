@@ -151,8 +151,16 @@ def build_reference_index(package: ScreenEvidencePackage) -> dict[str, dict[str,
             "target_state_id": transition.target_state_id,
             "trigger_control_id": transition.trigger_control_id,
         }
+    for trace in package.network_traces:
+        index[trace.evidence_id] = {
+            "type": "network_evidence",
+            "label": "evidencia de red observacional",
+            "methods": trace.methods,
+            "endpoint_paths": trace.endpoint_paths,
+            "read_only": trace.read_only,
+        }
     for evidence_id in package.evidence_ids:
-        index[evidence_id] = {"type": "evidence", "label": ""}
+        index.setdefault(evidence_id, {"type": "evidence", "label": ""})
     return index
 
 
@@ -242,6 +250,7 @@ def validate_capability_grounding(
             _diagnostic(error, location, category, claim.statement)
 
         if "view" in actions:
+            _validate_network_view_support(claim.statement, refs, location)
             _validate_view_scope(claim.statement, refs, location)
         for action in actions:
             level = (
@@ -299,6 +308,30 @@ def _validate_epistemic_negative(value, location):
         )
 
 
+def _validate_network_view_support(statement, refs, location):
+    """A network trace may supplement, but never independently prove, view."""
+    if not any(ref["type"] == "network_evidence" for ref in refs):
+        return
+    structural_types = {
+        "screen",
+        "field",
+        "control",
+        "table",
+        "column",
+        "state",
+        "event",
+        "transition",
+    }
+    if any(ref["type"] in structural_types for ref in refs):
+        return
+    _diagnostic(
+        InferenceGroundingError,
+        location,
+        "network_evidence_requires_structural_view_reference",
+        statement,
+    )
+
+
 def _validate_view_scope(statement, refs, location):
     """Reject detail semantics unless cited evidence explicitly demonstrates detail."""
     statement_tokens = set(normalize_text(statement).split())
@@ -335,6 +368,11 @@ def _supported_actions(refs, tokens):
     if tokens & ACTION_WORDS["view"]:
         supported.add("view")
     if any(ref["type"] in {"screen", "table", "field", "column"} for ref in refs):
+        supported.add("view")
+    if any(
+        ref["type"] == "network_evidence" and ref.get("read_only")
+        for ref in refs
+    ):
         supported.add("view")
     for action in MUTATIVE_ACTIONS:
         if tokens & ACTION_WORDS[action]:

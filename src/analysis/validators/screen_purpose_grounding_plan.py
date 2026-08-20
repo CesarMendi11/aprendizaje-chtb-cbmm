@@ -122,6 +122,12 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
         view_refs.update(column.column_id for column in table.columns)
     if search_refs:
         view_refs.update(search_refs)
+    # Network evidence is supplementary only: the view action is already
+    # structurally supported above. Only traces whose observed methods are
+    # entirely read-only may be cited for that existing action.
+    view_refs.update(
+        trace.evidence_id for trace in package.network_traces if trace.read_only
+    )
     hints["view"] = _hint("view", "direct", view_refs)
 
     for action in ("create", "edit", "delete", "process"):

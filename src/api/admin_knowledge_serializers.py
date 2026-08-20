@@ -6,6 +6,7 @@ from typing import Iterable
 
 from pydantic import ValidationError
 
+from src.analysis.evidence.network_trace import safe_network_trace
 from src.analysis.schemas import (
     ColumnEvidence,
     ControlEvidence,
@@ -186,6 +187,7 @@ def historical_evidence(proposal: SemanticProposal | None) -> HistoricalProposal
         ui_states=tuple(package.ui_states),
         events=tuple(package.events),
         transitions=tuple(package.transitions),
+        network_traces=tuple(package.network_traces),
         evidence_ids=tuple(package.evidence_ids),
         warnings=tuple(package.warnings),
         evidence_hash=proposal.evidence_hash,
@@ -204,6 +206,7 @@ def comparable_from_current(evidence: AdminEvidence) -> ComparableScreenStructur
         ui_states=evidence.ui_states,
         events=evidence.events,
         transitions=evidence.transitions,
+        network_traces=evidence.network_traces,
         evidence_ids=evidence.evidence_ids,
     )
 
@@ -224,6 +227,7 @@ def comparable_from_historical(
         ui_states=evidence.ui_states,
         events=evidence.events,
         transitions=evidence.transitions,
+        network_traces=evidence.network_traces,
         evidence_ids=evidence.evidence_ids,
     )
 
@@ -263,6 +267,9 @@ def comparable_structure_hash(value: ComparableScreenStructure) -> str:
             "events": tuple(sorted(value.events, key=lambda event: event.event_id)),
             "transitions": tuple(
                 sorted(value.transitions, key=lambda transition: transition.transition_id)
+            ),
+            "network_traces": tuple(
+                sorted(value.network_traces, key=lambda trace: trace.evidence_id)
             ),
             "evidence_ids": tuple(sorted(value.evidence_ids)),
         }
@@ -316,6 +323,32 @@ def current_structure(
             )
         except (ValidationError, TypeError, ValueError):
             invalid(evidence_item)
+
+    network_traces = []
+    for evidence_item, evidence_payload in pairs:
+        if (
+            evidence_item.entity_type != "evidence"
+            or evidence_item.current_review_status
+            not in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
+        ):
+            continue
+        canonical = validated_evidence.get(evidence_item.canonical_id)
+        if canonical is None:
+            continue
+        if (
+            str(canonical.evidence_type) != "network_trace"
+            or canonical.source_entity_type != "screen"
+            or canonical.source_entity_id != screen.screen_id
+        ):
+            continue
+        trace = safe_network_trace(evidence_item.canonical_id, evidence_payload)
+        if trace is None:
+            warnings.append(
+                f"Network Evidence omitida por contrato seguro: {evidence_item.canonical_id}."
+            )
+            continue
+        network_traces.append(trace)
+    network_traces.sort(key=lambda trace: trace.evidence_id)
 
     tables = []
     selected_columns = []
@@ -480,6 +513,7 @@ def current_structure(
         ui_states=states,
         events=events,
         transitions=tuple(transitions),
+        network_traces=tuple(network_traces),
         evidence_ids=evidence_ids,
         warnings=tuple(warnings),
         current_structure_hash="0" * 64,

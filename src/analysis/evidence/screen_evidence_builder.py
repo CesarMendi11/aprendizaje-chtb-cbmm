@@ -24,6 +24,8 @@ from src.database.services.semantic_payloads import canonical_json_hash
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
+from .network_trace import safe_network_trace
+
 MAX_FIELDS = 50
 MAX_CONTROLS = 50
 MAX_TABLES = 10
@@ -31,6 +33,7 @@ MAX_COLUMNS_PER_TABLE = 50
 MAX_UI_STATES = 20
 MAX_EVENTS = 30
 MAX_TRANSITIONS = 30
+MAX_NETWORK_TRACES = 20
 MAX_EVIDENCE_IDS = 100
 MAX_WARNINGS = 50
 MAX_MAIN_CONTENT_CHARS = 8_000
@@ -355,6 +358,7 @@ class ScreenEvidenceBuilder:
         primary_evidence_ids = self._primary_evidence_ids(
             items, screen.canonical_id, warnings
         )
+        network_traces = self._network_traces(items, screen.canonical_id, warnings)
         evidence_ids = self._evidence_ids(selected, payloads, items, selected_ids, warnings)
         main_text = self._main_text(
             module_name,
@@ -367,7 +371,7 @@ class ScreenEvidenceBuilder:
             warnings,
         )
         raw = {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "erp_id": version.erp_id,
             "knowledge_version_id": version.id,
             "knowledge_version": version.knowledge_version,
@@ -381,6 +385,7 @@ class ScreenEvidenceBuilder:
             "ui_states": state_dtos,
             "events": event_dtos,
             "transitions": transition_dtos,
+            "network_traces": network_traces,
             "main_content_text": main_text,
             "primary_evidence_ids": primary_evidence_ids,
             "evidence_ids": evidence_ids,
@@ -589,6 +594,30 @@ class ScreenEvidenceBuilder:
         if len(ordered) > MAX_EVIDENCE_IDS:
             self._warn(warnings, "limit_exceeded:primary_evidence_ids")
         return ordered[:MAX_EVIDENCE_IDS]
+
+    def _network_traces(self, items, screen_id, warnings):
+        evidence = self._relation_candidates(
+            items, "evidence", "source_entity_id", {screen_id}, warnings
+        )
+        traces = []
+        for item, payload in evidence:
+            if str(payload.get("source_entity_type") or "") != "screen":
+                self._warn(
+                    warnings,
+                    f"invalid_relation:{item.canonical_id}:source_entity_type",
+                )
+                continue
+            if str(payload.get("evidence_type") or "") != "network_trace":
+                continue
+            trace = safe_network_trace(item.canonical_id, payload)
+            if trace is None:
+                self._warn(warnings, f"excluded_unsafe:network_trace:{item.canonical_id}")
+                continue
+            traces.append(trace)
+        ordered = sorted(traces, key=lambda value: value.evidence_id)
+        if len(ordered) > MAX_NETWORK_TRACES:
+            self._warn(warnings, "limit_exceeded:network_traces")
+        return ordered[:MAX_NETWORK_TRACES]
 
     def _evidence_ids(self, selected, payloads, items, selected_ids, warnings):
         evidence = self._relation_candidates(

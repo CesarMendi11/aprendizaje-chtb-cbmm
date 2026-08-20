@@ -9,6 +9,7 @@ from src.analysis.schemas import (
     EventEvidence,
     FieldEvidence,
     ModuleEvidence,
+    NetworkTraceEvidence,
     ScreenPurposeInference,
     TableEvidence,
     TransitionEvidence,
@@ -126,6 +127,7 @@ class AdminEvidence(StrictResponseModel):
     ui_states: tuple[UIStateEvidence, ...] = ()
     events: tuple[EventEvidence, ...] = ()
     transitions: tuple[TransitionEvidence, ...] = ()
+    network_traces: tuple[NetworkTraceEvidence, ...] = ()
     evidence_ids: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
     current_structure_hash: str
@@ -142,6 +144,7 @@ class ComparableScreenStructure(StrictResponseModel):
     ui_states: tuple[UIStateEvidence, ...] = ()
     events: tuple[EventEvidence, ...] = ()
     transitions: tuple[TransitionEvidence, ...] = ()
+    network_traces: tuple[NetworkTraceEvidence, ...] = ()
     evidence_ids: tuple[str, ...] = ()
 
 
@@ -177,6 +180,7 @@ class HistoricalProposalEvidence(StrictResponseModel):
     ui_states: tuple[UIStateEvidence, ...] = ()
     events: tuple[EventEvidence, ...] = ()
     transitions: tuple[TransitionEvidence, ...] = ()
+    network_traces: tuple[NetworkTraceEvidence, ...] = ()
     evidence_ids: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
     evidence_hash: str

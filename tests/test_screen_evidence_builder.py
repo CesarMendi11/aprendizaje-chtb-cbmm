@@ -652,10 +652,70 @@ def test_primary_evidence_requires_direct_non_network_screen_evidence(session):
             "artifact_path": "synthetic/network.json",
             "source_entity_type": "screen",
             "source_entity_id": screen.canonical_id,
+            "metadata": {
+                "observation_count": 3,
+                "endpoint_count": 2,
+                "endpoint_paths": "/api/catalogos | /api/retenciones/{id}",
+                "methods": "GET,HEAD",
+                "resource_types": "fetch,xhr",
+                "origin_kinds": "same_origin",
+                "query_keys": "estado,fecha",
+                "status_codes": "200,304",
+                "headers_captured": False,
+                "bodies_captured": False,
+                "query_values_captured": False,
+            },
         },
     )
     package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
 
+    assert package.schema_version == "1.1"
     assert package.primary_evidence_ids == [direct.canonical_id]
     assert direct.canonical_id in package.evidence_ids
     assert "evidence:network-only" in package.evidence_ids
+    assert len(package.network_traces) == 1
+    trace = package.network_traces[0]
+    assert trace.evidence_id == "evidence:network-only"
+    assert trace.methods == ("GET", "HEAD")
+    assert trace.endpoint_paths == ("/api/catalogos", "/api/retenciones/{id}")
+    assert trace.origin_kinds == ("same_origin",)
+    assert trace.read_only is True
+
+
+def test_unsafe_network_trace_is_excluded_from_semantic_projection(session):
+    version, _, screen = seed_screen(session)
+    add_item(
+        session,
+        version,
+        "evidence",
+        "evidence:network-unsafe",
+        {
+            "id": "evidence:network-unsafe",
+            "evidence_type": "network_trace",
+            "artifact_path": "synthetic/network.json",
+            "source_entity_type": "screen",
+            "source_entity_id": screen.canonical_id,
+            "metadata": {
+                "observation_count": 1,
+                "endpoint_count": 1,
+                "endpoint_paths": "/api/retenciones",
+                "methods": "GET",
+                "resource_types": "fetch",
+                "origin_kinds": "same_origin",
+                "query_keys": "",
+                "status_codes": "200",
+                "headers_captured": True,
+                "bodies_captured": False,
+                "query_values_captured": False,
+            },
+        },
+    )
+
+    package = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+
+    assert package.network_traces == []
+    assert "evidence:network-unsafe" in package.evidence_ids
+    assert (
+        "excluded_unsafe:network_trace:evidence:network-unsafe"
+        in package.warnings
+    )

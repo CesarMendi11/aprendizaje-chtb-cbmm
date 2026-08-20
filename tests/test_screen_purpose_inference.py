@@ -33,6 +33,7 @@ from src.analysis.schemas import (
     EventEvidence,
     FieldEvidence,
     ModuleEvidence,
+    NetworkTraceEvidence,
     ScreenEvidencePackage,
     ScreenPurposeGroundingPlan,
     ScreenPurposeInference,
@@ -67,6 +68,27 @@ def package(**updates):
     values.update(updates)
     return ScreenEvidencePackage.model_validate(values)
 
+
+
+
+def network_trace(
+    *,
+    evidence_id="evidence:network",
+    methods=("GET",),
+    read_only=True,
+):
+    return NetworkTraceEvidence(
+        evidence_id=evidence_id,
+        methods=methods,
+        endpoint_paths=("/api/retenciones/{id}",),
+        resource_types=("fetch",),
+        origin_kinds=("same_origin",),
+        status_codes=(200,),
+        query_keys=("estado",),
+        observation_count=2,
+        endpoint_count=1,
+        read_only=read_only,
+    )
 
 def valid_output(**updates):
     values = {
@@ -242,7 +264,7 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v9"
+    assert PROMPT_VERSION == "screen-purpose-v10"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
@@ -514,6 +536,112 @@ def test_grounding_plan_derives_search_navigation_view_and_prudent_create():
     )
     assert hints["create"].support_level == "prudent_only"
     assert hints["create"].narrative_rule == "prudent_only"
+
+
+def test_read_only_network_evidence_supplements_existing_view_only():
+    trace = network_trace()
+    evidence = grounding_package(
+        network_traces=[trace],
+        evidence_ids=[trace.evidence_id],
+    )
+    hints = hints_by_action(evidence)
+
+    assert trace.evidence_id in hints["view"].evidence_refs
+    assert trace.evidence_id not in hints["search"].evidence_refs
+    assert "edit" not in hints
+    assert "delete" not in hints
+    assert "process" not in hints
+
+
+def test_mutative_network_methods_never_create_or_supplement_actions():
+    trace = network_trace(methods=("DELETE",), read_only=False)
+    evidence = grounding_package(
+        network_traces=[trace],
+        evidence_ids=[trace.evidence_id],
+    )
+    hints = hints_by_action(evidence)
+
+    assert trace.evidence_id not in hints["view"].evidence_refs
+    assert "delete" not in hints
+    assert "edit" not in hints
+    assert "process" not in hints
+
+
+def test_prompt_exposes_only_read_only_network_traces():
+    read_trace = network_trace(evidence_id="evidence:network-read")
+    write_trace = network_trace(
+        evidence_id="evidence:network-write",
+        methods=("POST",),
+        read_only=False,
+    )
+    evidence = grounding_package(
+        network_traces=[read_trace, write_trace],
+        evidence_ids=[read_trace.evidence_id, write_trace.evidence_id],
+    )
+
+    projection = ScreenPurposePromptEvidence.from_package(evidence)
+    assert [trace.evidence_id for trace in projection.network_traces] == [
+        read_trace.evidence_id
+    ]
+    prompt = build_user_prompt(evidence)
+    assert read_trace.evidence_id in prompt
+    assert write_trace.evidence_id not in prompt
+    assert '"methods":["POST"]' not in prompt
+
+
+def test_network_evidence_cannot_independently_ground_view_claim():
+    trace = network_trace()
+    evidence = package(
+        controls=[],
+        fields=[FieldEvidence(field_id="field:ruc", label="RUC", required=False, readonly=False)],
+        network_traces=[trace],
+        evidence_ids=[trace.evidence_id],
+    )
+    inference = ScreenPurposeInference.model_validate(
+        {
+            "semantic_type": "screen_purpose",
+            "screen_id": evidence.screen_id,
+            "purpose_summary": "Permite visualizar retenciones disponibles.",
+            "supported_capabilities": [
+                {
+                    "statement": "Permite visualizar información disponible en la pantalla.",
+                    "evidence_refs": [trace.evidence_id],
+                }
+            ],
+            "limitations": [],
+            "uncertainties": [],
+        }
+    )
+
+    with pytest.raises(InferenceGroundingError) as captured:
+        validate_capability_grounding(inference, evidence)
+    assert captured.value.category == "network_evidence_requires_structural_view_reference"
+
+
+def test_network_evidence_may_accompany_structural_view_reference():
+    trace = network_trace()
+    evidence = package(
+        network_traces=[trace],
+        evidence_ids=[trace.evidence_id],
+    )
+    inference = ScreenPurposeInference.model_validate(
+        {
+            "semantic_type": "screen_purpose",
+            "screen_id": evidence.screen_id,
+            "purpose_summary": "Permite visualizar retenciones disponibles.",
+            "supported_capabilities": [
+                {
+                    "statement": "Permite visualizar información disponible en la pantalla.",
+                    "evidence_refs": [evidence.screen_id, trace.evidence_id],
+                }
+            ],
+            "limitations": [],
+            "uncertainties": [],
+        }
+    )
+
+    support = validate_capability_grounding(inference, evidence)
+    assert support["view"].name == "DIRECT"
 
 
 def test_grounding_plan_mutative_policy_changes_support_and_deny_forbids():

@@ -62,6 +62,7 @@ class ScreenEvidenceReviewResponse(StrictResponseModel):
     tables: tuple[dict[str, Any], ...] = ()
     events: tuple[dict[str, Any], ...] = ()
     transitions: tuple[dict[str, Any], ...] = ()
+    network_traces: tuple[dict[str, Any], ...] = ()
     evidence_ids: tuple[str, ...] = ()
     warnings: tuple[str, ...] = ()
     evidence_hash: str

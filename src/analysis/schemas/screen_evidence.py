@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EvidenceModel(BaseModel):
@@ -64,8 +64,21 @@ class TransitionEvidence(EvidenceModel):
     trigger_control_id: str | None = None
 
 
+class NetworkTraceEvidence(EvidenceModel):
+    evidence_id: str
+    methods: tuple[str, ...] = ()
+    endpoint_paths: tuple[str, ...] = ()
+    resource_types: tuple[str, ...] = ()
+    origin_kinds: tuple[str, ...] = ()
+    status_codes: tuple[int, ...] = ()
+    query_keys: tuple[str, ...] = ()
+    observation_count: int = Field(ge=1)
+    endpoint_count: int = Field(ge=1)
+    read_only: bool
+
+
 class ScreenEvidencePackage(EvidenceModel):
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.1"] = "1.1"
     erp_id: str
     knowledge_version_id: uuid.UUID
     knowledge_version: str
@@ -79,8 +92,18 @@ class ScreenEvidencePackage(EvidenceModel):
     ui_states: list[UIStateEvidence] = Field(default_factory=list)
     events: list[EventEvidence] = Field(default_factory=list)
     transitions: list[TransitionEvidence] = Field(default_factory=list)
+    network_traces: list[NetworkTraceEvidence] = Field(default_factory=list)
     main_content_text: str
     primary_evidence_ids: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     evidence_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+    @model_validator(mode="after")
+    def validate_network_trace_references(self):
+        evidence_ids = set(self.evidence_ids)
+        if any(trace.evidence_id not in evidence_ids for trace in self.network_traces):
+            raise ValueError("network_traces contiene una referencia fuera de evidence_ids")
+        if len({trace.evidence_id for trace in self.network_traces}) != len(self.network_traces):
+            raise ValueError("network_traces contiene referencias duplicadas")
+        return self

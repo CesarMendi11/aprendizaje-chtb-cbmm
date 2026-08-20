@@ -7,6 +7,7 @@ from .screen_evidence import (
     EventEvidence,
     FieldEvidence,
     ModuleEvidence,
+    NetworkTraceEvidence,
     TableEvidence,
     TransitionEvidence,
     UIStateEvidence,
@@ -28,6 +29,7 @@ class ScreenPurposePromptEvidence(InferenceModel):
     ui_states: list[UIStateEvidence]
     events: list[EventEvidence]
     transitions: list[TransitionEvidence]
+    network_traces: list[NetworkTraceEvidence]
     main_content_text: str
     evidence_ids: list[str]
     grounding_plan: ScreenPurposeGroundingPlan
@@ -36,6 +38,10 @@ class ScreenPurposePromptEvidence(InferenceModel):
     def from_package(cls, package):
         from src.analysis.validators.screen_purpose_grounding_plan import build_grounding_plan
 
+        read_only_traces = [trace for trace in package.network_traces if trace.read_only]
+        excluded_network_ids = {
+            trace.evidence_id for trace in package.network_traces if not trace.read_only
+        }
         return cls(
             screen_id=package.screen_id,
             screen_title=package.screen_title,
@@ -47,7 +53,12 @@ class ScreenPurposePromptEvidence(InferenceModel):
             ui_states=package.ui_states,
             events=package.events,
             transitions=package.transitions,
+            network_traces=read_only_traces,
             main_content_text=package.main_content_text,
-            evidence_ids=package.evidence_ids,
+            evidence_ids=[
+                evidence_id
+                for evidence_id in package.evidence_ids
+                if evidence_id not in excluded_network_ids
+            ],
             grounding_plan=build_grounding_plan(package),
         )
