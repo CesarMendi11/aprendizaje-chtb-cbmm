@@ -11,6 +11,11 @@ def test_ollama_settings_normalize_trailing_slash():
     assert settings.url == "http://127.0.0.1:11434"
 
 
+def test_ollama_settings_reject_non_positive_embedding_batch_size():
+    with pytest.raises(OllamaConfigurationError, match="BATCH_SIZE"):
+        OllamaEmbeddingSettings(batch_size=0)
+
+
 @pytest.mark.parametrize(
     "url",
     [

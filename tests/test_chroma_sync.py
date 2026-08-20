@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import chromadb
 import httpx
 import pytest
@@ -172,6 +174,38 @@ def test_ollama_batch_dimensions_and_clear_errors():
             OllamaEmbeddingClient(
                 OllamaEmbeddingSettings(url="http://ollama.test"), client=client
             ).embed("hola")
+
+
+def test_ollama_embedding_batches_preserve_order():
+    calls = []
+
+    def handler(request):
+        request.read()
+        payload = json.loads(request.content)
+        values = payload["input"]
+        calls.append(values)
+        return httpx.Response(
+            200,
+            json={
+                "embeddings": [
+                    [float(value.rsplit("-", 1)[1]), 1.0]
+                    for value in values
+                ]
+            },
+        )
+
+    transport = httpx.MockTransport(handler)
+    settings = OllamaEmbeddingSettings(
+        url="http://ollama.test",
+        batch_size=2,
+    )
+    with httpx.Client(transport=transport, base_url="http://ollama.test") as client:
+        embeddings = OllamaEmbeddingClient(settings, client=client)
+        vectors = embeddings.embed([f"texto-{index}" for index in range(5)])
+
+    assert calls == [["texto-0", "texto-1"], ["texto-2", "texto-3"], ["texto-4"]]
+    assert vectors == [[0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [3.0, 1.0], [4.0, 1.0]]
+    assert embeddings.dimensions == 2
 
 
 def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path):

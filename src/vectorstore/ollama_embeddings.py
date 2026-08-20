@@ -25,21 +25,49 @@ class OllamaEmbeddingClient:
         values = [inputs] if isinstance(inputs, str) else list(inputs)
         if not values or any(not isinstance(value, str) or not value.strip() for value in values):
             raise ValueError("Ollama requiere uno o más textos no vacíos")
+
+        if self.client is not None:
+            return self._embed_batches(values, client=self.client)
+
+        with httpx.Client(
+            base_url=self.settings.url,
+            timeout=self.settings.timeout,
+        ) as client:
+            return self._embed_batches(values, client=client)
+
+    def _embed_batches(self, values: list[str], *, client) -> list[list[float]]:
+        vectors: list[list[float]] = []
+        batch_size = self.settings.batch_size
+        total_batches = (len(values) + batch_size - 1) // batch_size
+        for batch_number, start in enumerate(range(0, len(values), batch_size), start=1):
+            batch = values[start : start + batch_size]
+            vectors.extend(
+                self._embed_batch(
+                    batch,
+                    client=client,
+                    batch_number=batch_number,
+                    total_batches=total_batches,
+                )
+            )
+        return vectors
+
+    def _embed_batch(
+        self,
+        values: list[str],
+        *,
+        client,
+        batch_number: int,
+        total_batches: int,
+    ) -> list[list[float]]:
         payload = {"model": self.model, "input": values}
         try:
-            if self.client is not None:
-                response = self.client.post("/api/embed", json=payload)
-            else:
-                response = httpx.post(
-                    f"{self.settings.url}/api/embed",
-                    json=payload,
-                    timeout=self.settings.timeout,
-                )
+            response = client.post("/api/embed", json=payload)
             response.raise_for_status()
             data: Any = response.json()
         except (httpx.HTTPError, ValueError, TypeError) as exc:
             raise OllamaEmbeddingError(
-                f"No se pudieron obtener embeddings de Ollama ({self.settings.url})"
+                "No se pudieron obtener embeddings de Ollama "
+                f"(lote {batch_number}/{total_batches})"
             ) from exc
         vectors = data.get("embeddings") if isinstance(data, dict) else None
         if not isinstance(vectors, list) or len(vectors) != len(values) or not vectors:
