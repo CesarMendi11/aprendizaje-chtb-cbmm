@@ -163,14 +163,17 @@ class StructuralPublicationReviewService:
         if not pending:
             raise StructuralPublicationReviewError("El paquete no contiene elementos pendientes.")
         service = KnowledgeReviewService(self.session)
-        for item in sorted(pending, key=self._item_sort_key):
-            service.approve(
-                item.id,
-                reviewer=reviewer,
-                notes=reason,
-                expected_revision=item.review_revision,
-                source=ReviewSource.API,
-            )
+        try:
+            for item in sorted(pending, key=self._item_sort_key):
+                service.approve(
+                    item.id,
+                    reviewer=reviewer,
+                    notes=reason,
+                    expected_revision=item.review_revision,
+                    source=ReviewSource.API,
+                )
+        except ValueError as exc:
+            raise StructuralPublicationReviewConflictError(str(exc)) from exc
         refreshed = self._package(key, selected, items)
         return StructuralPublicationApprovalResult(len(pending), refreshed)
 

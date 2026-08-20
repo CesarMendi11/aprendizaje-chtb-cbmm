@@ -126,6 +126,18 @@ def test_empty_execution_rejected_unless_allow_empty(graph_session):
     assert result.status == "succeeded" and repo.bootstrap_calls == 1
 
 
+def test_running_job_is_rejected_before_projection_plan_is_prepared(graph_session):
+    with graph_session.begin():
+        job = graph_session.scalar(
+            select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J)
+        )
+        job.status = SyncStatus.RUNNING
+    service = Neo4jSyncService(graph_session, repository=FakeGraphRepository())
+    service.prepare = lambda **_kwargs: pytest.fail("prepare no debe ejecutarse")
+    with pytest.raises(ValueError, match="ya está en ejecución"):
+        service.run()
+
+
 def test_sync_job_transitions_idempotence_and_chromadb_is_untouched(graph_session):
     _approve_and_correct(graph_session)
     repo = FakeGraphRepository()

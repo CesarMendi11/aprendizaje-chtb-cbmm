@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 import src.database.models  # noqa: F401
 from src.config.ollama_settings import OllamaEmbeddingSettings
 from src.database.base import Base
-from src.database.enums import SyncTarget
+from src.database.enums import SyncStatus, SyncTarget
 from src.database.models import KnowledgeItem, SyncJob
 from src.database.services import (
     CanonicalImportService,
@@ -218,3 +218,21 @@ def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path)
     assert result.summary["embedding_dimensions"] == 3
     assert jobs_after[SyncTarget.CHROMADB] == jobs_before[SyncTarget.CHROMADB] + 1
     assert jobs_after[SyncTarget.NEO4J] == jobs_before[SyncTarget.NEO4J]
+
+
+def test_running_job_is_rejected_before_documents_are_prepared(chroma_session, tmp_path):
+    with chroma_session.begin():
+        job = chroma_session.scalar(
+            select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB)
+        )
+        job.status = SyncStatus.RUNNING
+    service = ChromaSyncService(
+        chroma_session,
+        repository=ChromaRepository(
+            client=chromadb.PersistentClient(path=str(tmp_path / "running"))
+        ),
+        embeddings=FakeEmbeddings(),
+    )
+    service.prepare = lambda **_kwargs: pytest.fail("prepare no debe ejecutarse")
+    with pytest.raises(ValueError, match="ya está en ejecución"):
+        service.run()

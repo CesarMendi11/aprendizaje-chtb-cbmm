@@ -185,9 +185,7 @@ class ChromaSyncService:
         return version, documents, self._summary(version, items, documents, reasons)
 
     def run(self, *, erp_id=None, knowledge_version=None):
-        version, documents, summary = self.prepare(
-            erp_id=erp_id, knowledge_version=knowledge_version
-        )
+        version = self._version(erp_id, knowledge_version)
         lineage = ProjectionReplacementService(self.session).resolve(version.id)
         if not self.repository or not self.embeddings:
             raise ValueError("ChromaDB y cliente de embeddings deben estar configurados")
@@ -196,6 +194,9 @@ class ChromaSyncService:
             raise LookupError("No existe SyncJob target=chromadb para la versión")
         if job.status == SyncStatus.RUNNING:
             raise ValueError("El SyncJob ChromaDB ya está en ejecución")
+        version, documents, summary = self.prepare(
+            erp_id=version.erp_id, knowledge_version=version.knowledge_version
+        )
         job.status, job.started_at, job.finished_at = SyncStatus.RUNNING, utcnow(), None
         job.attempt_count += 1
         job.error_summary = None

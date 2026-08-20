@@ -5,11 +5,18 @@ import uuid
 from typing import Any
 
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.database.enums import ReviewActionType, ReviewSource
-from src.database.models import KnowledgeItem, ReviewAction
+from src.database.enums import (
+    KnowledgeVersionStatus,
+    ReviewActionType,
+    ReviewSource,
+    SyncStatus,
+)
+from src.database.models import KnowledgeItem, ReviewAction, SyncJob
 from src.database.repositories import KnowledgeRepository, ReviewRepository
+from src.database.types import utcnow
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.models import (
     Control,
@@ -52,6 +59,7 @@ TRANSITIONS = {
     ReviewStatus.REJECTED: {ReviewStatus.PENDING_REVIEW},
     ReviewStatus.CORRECTED: {ReviewStatus.APPROVED, ReviewStatus.REJECTED},
 }
+PUBLISHABLE = {ReviewStatus.APPROVED, ReviewStatus.CORRECTED}
 
 
 class KnowledgeReviewService:
@@ -146,6 +154,8 @@ class KnowledgeReviewService:
         previous = item.current_review_status
         if not allow_any and status not in TRANSITIONS.get(previous, set()):
             raise ValueError(f"Transición no permitida: {previous} -> {status}")
+        if previous in PUBLISHABLE or status in PUBLISHABLE:
+            self._invalidate_structural_projection_jobs(item)
         self.session.add(
             ReviewAction(
                 knowledge_item_id=item.id,
@@ -163,4 +173,30 @@ class KnowledgeReviewService:
         item.review_revision += 1
         self.session.flush()
         return item
+
+    def _invalidate_structural_projection_jobs(self, item: KnowledgeItem) -> None:
+        version = item.knowledge_version
+        if version.status != KnowledgeVersionStatus.ACTIVE:
+            return
+        jobs = list(
+            self.session.scalars(
+                select(SyncJob)
+                .where(SyncJob.knowledge_version_id == item.knowledge_version_id)
+                .order_by(SyncJob.target)
+                .with_for_update()
+            )
+        )
+        if any(job.status == SyncStatus.RUNNING for job in jobs):
+            raise ValueError(
+                "Conflicto de revisión concurrente: no se puede modificar conocimiento "
+                "publicable mientras una proyección estructural está en ejecución"
+            )
+        requested_at = utcnow()
+        for job in jobs:
+            job.status = SyncStatus.PENDING
+            job.requested_at = requested_at
+            job.started_at = None
+            job.finished_at = None
+            job.checkpoint = None
+            job.error_summary = None
 

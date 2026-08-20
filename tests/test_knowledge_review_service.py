@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from src.database.base import Base
 import src.database.models  # noqa: F401
-from src.database.models import KnowledgeItem, ReviewAction
+from src.database.enums import SyncStatus, SyncTarget
+from src.database.models import KnowledgeItem, SyncJob
 from src.database.services import (
     CanonicalImportService, EffectiveKnowledgeService, KnowledgeReviewService
 )
@@ -148,6 +149,55 @@ def test_only_approved_or_corrected_are_projected(reviewed):
         version_id=item.knowledge_version_id
     )
     assert [entry["canonical_id"] for entry in projection] == [item.canonical_id]
+
+
+def test_active_projection_jobs_are_invalidated_when_review_changes_projection(reviewed):
+    session, item = reviewed
+    with session.begin():
+        jobs = list(session.scalars(select(SyncJob)))
+        for job in jobs:
+            job.status = SyncStatus.SUCCEEDED
+            job.attempt_count = 3
+            job.checkpoint = {"projection": "old"}
+            job.error_summary = "old error"
+
+    with session.begin():
+        KnowledgeReviewService(session).approve(item.id)
+
+    jobs = list(session.scalars(select(SyncJob).order_by(SyncJob.target)))
+    assert {job.target for job in jobs} == {SyncTarget.NEO4J, SyncTarget.CHROMADB}
+    assert all(job.status == SyncStatus.PENDING for job in jobs)
+    assert all(job.attempt_count == 3 for job in jobs)
+    assert all(job.started_at is None and job.finished_at is None for job in jobs)
+    assert all(job.checkpoint is None and job.error_summary is None for job in jobs)
+
+
+def test_non_publishable_review_change_does_not_invalidate_projection_jobs(reviewed):
+    session, item = reviewed
+    with session.begin():
+        for job in session.scalars(select(SyncJob)):
+            job.status = SyncStatus.SUCCEEDED
+
+    with session.begin():
+        KnowledgeReviewService(session).reject(item.id, notes="No publicar")
+
+    jobs = list(session.scalars(select(SyncJob)))
+    assert jobs and all(job.status == SyncStatus.SUCCEEDED for job in jobs)
+
+
+def test_running_projection_blocks_projection_affecting_review(reviewed):
+    session, item = reviewed
+    with session.begin():
+        job = session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J))
+        job.status = SyncStatus.RUNNING
+
+    with pytest.raises(ValueError, match="concurrente"):
+        with session.begin():
+            KnowledgeReviewService(session).approve(item.id)
+
+    session.rollback()
+    session.refresh(item)
+    assert item.current_review_status == ReviewStatus.PENDING_REVIEW
 
 
 def test_module_parent_relation_cannot_be_changed_by_human_correction(reviewed):

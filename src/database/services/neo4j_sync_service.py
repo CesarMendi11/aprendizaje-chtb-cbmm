@@ -57,9 +57,6 @@ class Neo4jSyncService:
     ):
         version = self._version(erp_id, knowledge_version)
         lineage = ProjectionReplacementService(self.session).resolve(version.id)
-        plan = self.prepare(erp_id=version.erp_id, knowledge_version=version.knowledge_version)
-        if not plan.eligible_items and not allow_empty:
-            raise ValueError("No existen elementos approved/corrected; use --allow-empty")
         job = self.jobs.get(version.id, SyncTarget.NEO4J, for_update=True)
         if not job:
             raise LookupError("No existe SyncJob target=neo4j para la versión")
@@ -67,6 +64,9 @@ class Neo4jSyncService:
             raise ValueError("El SyncJob Neo4j ya está en ejecución")
         if not self.repository:
             raise ValueError("Repositorio Neo4j no configurado")
+        plan = self.prepare(erp_id=version.erp_id, knowledge_version=version.knowledge_version)
+        if not plan.eligible_items and not allow_empty:
+            raise ValueError("No existen elementos approved/corrected; use --allow-empty")
         job.status = SyncStatus.RUNNING
         job.attempt_count += 1
         job.started_at = utcnow()

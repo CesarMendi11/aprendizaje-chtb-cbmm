@@ -12,13 +12,20 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.api.app import create_app
 from src.config.api_settings import ApiSettings
 from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, ReviewSource
+from src.database.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    ReviewSource,
+    SyncStatus,
+    SyncTarget,
+)
 from src.database.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
     KnowledgeVersionRecord,
     ReviewAction,
+    SyncJob,
 )
 from src.database.services.structural_publication_review_service import (
     StructuralPublicationReviewConflictError,
@@ -97,6 +104,16 @@ def seed(session, *, status=KnowledgeVersionStatus.ACTIVE):
     )
     session.add(version)
     session.flush()
+    session.add_all(
+        [
+            SyncJob(
+                knowledge_version_id=version.id,
+                target=target,
+                status=SyncStatus.SUCCEEDED,
+            )
+            for target in SyncTarget
+        ]
+    )
 
     system = _add_item(
         session,
@@ -269,6 +286,8 @@ def test_approve_pending_is_package_hashed_atomic_and_audited(session):
     assert len(actions) == 6
     assert {str(action.source) for action in actions} == {str(ReviewSource.API)}
     assert {action.reviewer_subject for action in actions} == {"reviewer:e2e"}
+    sync_jobs = list(session.scalars(select(SyncJob)))
+    assert sync_jobs and all(job.status == SyncStatus.PENDING for job in sync_jobs)
 
     with pytest.raises(StructuralPublicationReviewConflictError, match="cambió"):
         service.approve_pending(
@@ -286,6 +305,33 @@ def test_only_active_versions_can_use_publication_review(session):
         seeded = seed(session, status=KnowledgeVersionStatus.IMPORTED)
     with pytest.raises(StructuralPublicationReviewError, match="ACTIVE"):
         StructuralPublicationReviewService(session).build(seeded["version"].id)
+
+
+def test_running_projection_blocks_publication_package_review(session):
+    with session.begin():
+        seeded = seed(session)
+        job = session.scalar(
+            select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J)
+        )
+        job.status = SyncStatus.RUNNING
+    service = StructuralPublicationReviewService(session)
+    package = next(
+        item
+        for item in service.build(seeded["version"].id).packages
+        if item.scope_id == "screen:a"
+    )
+    session.rollback()
+
+    with pytest.raises(StructuralPublicationReviewConflictError, match="concurrente"):
+        with session.begin():
+            service.approve_pending(
+                seeded["version"].id,
+                scope_type="screen",
+                scope_id="screen:a",
+                expected_package_hash=package.package_hash,
+                reviewer="reviewer:e2e",
+                reason="No competir con una proyección en curso.",
+            )
 
 
 class Client:
