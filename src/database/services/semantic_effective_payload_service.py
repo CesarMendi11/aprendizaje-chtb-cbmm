@@ -4,6 +4,7 @@ import copy
 
 from sqlalchemy.orm import Session
 
+from src.database.enums import SemanticLifecycleOrigin
 from src.database.models import SemanticProposal
 from src.database.repositories import (
     SemanticProposalRepository,
@@ -15,7 +16,7 @@ from .semantic_exceptions import (
     SemanticHistoryIntegrityError,
     SemanticProposalNotFoundError,
 )
-from .semantic_payloads import semantic_review_action_payload
+from .semantic_payloads import canonical_json_hash, semantic_review_action_payload
 
 
 class SemanticEffectivePayloadService:
@@ -27,11 +28,22 @@ class SemanticEffectivePayloadService:
         proposal = self._get(proposal_id)
         if proposal.current_review_status == ReviewStatus.CORRECTED:
             correction = self.actions.latest_correction_after_last_reset(proposal.id)
-            if correction is None or correction.corrected_payload is None:
-                raise SemanticHistoryIntegrityError(
-                    "La propuesta corrected no tiene una corrección efectiva consistente"
-                )
-            return copy.deepcopy(correction.corrected_payload)
+            if correction is not None and correction.corrected_payload is not None:
+                return copy.deepcopy(correction.corrected_payload)
+            if proposal.lifecycle_origin == SemanticLifecycleOrigin.CARRIED_FORWARD:
+                payload = copy.deepcopy(proposal.source_payload)
+                if (
+                    proposal.source_effective_content_hash is None
+                    or canonical_json_hash(payload)
+                    != proposal.source_effective_content_hash
+                ):
+                    raise SemanticHistoryIntegrityError(
+                        "El carry-forward corrected no coincide con el payload efectivo source"
+                    )
+                return payload
+            raise SemanticHistoryIntegrityError(
+                "La propuesta corrected no tiene una corrección efectiva consistente"
+            )
         return copy.deepcopy(proposal.source_payload)
 
     def publishable_payload(self, proposal_id) -> dict | None:

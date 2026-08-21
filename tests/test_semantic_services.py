@@ -10,7 +10,12 @@ from sqlalchemy.orm import Session
 
 import src.database.models  # noqa: F401
 from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from src.database.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticLifecycleOrigin,
+    SemanticType,
+)
 from src.database.models import (
     ERPSystemRecord,
     ImportRun,
@@ -31,6 +36,7 @@ from src.database.services import (
 from src.database.services.semantic_exceptions import (
     SemanticEntityTypeError,
     SemanticIdentityCollisionError,
+    SemanticLifecycleIntegrityError,
     SemanticPayloadError,
     SemanticProposalNotFoundError,
     SemanticRevisionConflictError,
@@ -435,3 +441,267 @@ def test_repositories_filter_and_order_history_stably(session):
     history = SemanticReviewActionRepository(session)
     assert history.latest_for_proposal(first.id).id == history.list_for_proposal(first.id)[0].id
     assert history.latest_reset(first.id) is None
+
+
+
+def seed_semantic_lineage_pair(session):
+    suffix = uuid.uuid4().hex[:20]
+    erp = ERPSystemRecord(
+        id=f"erp:lineage:{suffix}",
+        slug=f"erp-lineage-{suffix}",
+        name="Synthetic Lineage ERP",
+        profile_name="test",
+        safe_metadata={},
+    )
+    canonical_screen_id = f"screen:lineage:{suffix}"
+
+    def version_and_screen(name, status):
+        run = ImportRun(
+            erp=erp,
+            source_knowledge_path=f"synthetic/{name}.json",
+            source_manifest_path=f"synthetic/{name}.manifest.json",
+            requested_knowledge_version=name,
+            status=ImportStatus.SUCCEEDED,
+            source_hashes={},
+        )
+        version = KnowledgeVersionRecord(
+            erp=erp,
+            import_run=run,
+            schema_version="1.0.0",
+            knowledge_version=name,
+            canonical_hash=HASH_A,
+            generated_at=datetime.now(timezone.utc),
+            entity_counts={},
+            source_artifact_hashes={},
+            build_warnings=[],
+            status=status,
+        )
+        screen = KnowledgeItem(
+            knowledge_version=version,
+            canonical_id=canonical_screen_id,
+            entity_type="screen",
+            title="Lineage Screen",
+            normalized_title="lineage screen",
+            route="/synthetic/lineage",
+            content_hash=HASH_A,
+            source_payload={"id": canonical_screen_id},
+            generated_review_status=ReviewStatus.APPROVED,
+            current_review_status=ReviewStatus.APPROVED,
+        )
+        session.add(screen)
+        session.flush()
+        return version, screen
+
+    source_version, source_screen = version_and_screen(
+        f"source-{suffix}", KnowledgeVersionStatus.ARCHIVED
+    )
+    target_version, target_screen = version_and_screen(
+        f"target-{suffix}", KnowledgeVersionStatus.ACTIVE
+    )
+    return source_version, source_screen, target_version, target_screen
+
+
+def derived_evidence(screen, marker):
+    return {
+        "screen_id": screen.canonical_id,
+        "screen_title": "Lineage Screen",
+        "marker": marker,
+    }
+
+
+def publish_lineage_source(session, version, screen, *, corrected=False):
+    proposal = create_proposal(
+        session,
+        version,
+        screen,
+        evidence_payload=derived_evidence(screen, "source"),
+        evidence_ids=["evidence:lineage"],
+    )
+    review = SemanticReviewService(session)
+    if corrected:
+        payload = {
+            "purpose_summary": "Descripción humana heredable.",
+            "supported_capabilities": [],
+            "limitations": [],
+            "uncertainties": [],
+        }
+        review.correct(
+            proposal.id,
+            payload,
+            expected_revision=0,
+            reviewer_subject="user:lineage",
+            source="review_panel",
+            review_notes="Corrección source",
+        )
+        return proposal, payload
+    review.approve(
+        proposal.id,
+        expected_revision=0,
+        reviewer_subject="user:lineage",
+        source="review_panel",
+        review_notes="Aprobación source",
+    )
+    return proposal, dict(proposal.source_payload)
+
+
+def test_carried_forward_preserves_corrected_effective_truth_without_fake_review_action(session):
+    source_version, source_screen, target_version, target_screen = seed_semantic_lineage_pair(
+        session
+    )
+    source, corrected = publish_lineage_source(
+        session, source_version, source_screen, corrected=True
+    )
+    service = SemanticProposalService(session)
+    carried = service.create_carried_forward_proposal(
+        source_semantic_proposal_id=source.id,
+        knowledge_version_id=target_version.id,
+        screen_knowledge_item_id=target_screen.id,
+        semantic_type=SemanticType.SCREEN_PURPOSE,
+        evidence_payload=derived_evidence(target_screen, "target"),
+        evidence_ids=["evidence:lineage"],
+        generation_model=source.generation_model,
+        prompt_version=source.prompt_version,
+        prompt_hash=source.prompt_hash,
+        generation_parameters=dict(source.generation_parameters),
+    )
+
+    assert carried.lifecycle_origin == SemanticLifecycleOrigin.CARRIED_FORWARD
+    assert carried.source_semantic_proposal_id == source.id
+    assert carried.source_knowledge_version_id == source_version.id
+    assert carried.source_review_status == ReviewStatus.CORRECTED
+    assert carried.source_review_revision == 1
+    assert carried.source_effective_content_hash == canonical_json_hash(corrected)
+    assert carried.source_payload == corrected
+    assert carried.current_review_status == ReviewStatus.CORRECTED
+    assert carried.review_revision == 0
+    assert session.scalar(
+        select(func.count())
+        .select_from(SemanticReviewAction)
+        .where(SemanticReviewAction.semantic_proposal_id == carried.id)
+    ) == 0
+
+    effective = SemanticEffectivePayloadService(session)
+    assert effective.effective_payload(carried.id) == corrected
+    assert effective.publishable_payload(carried.id) == corrected
+
+
+def test_carried_forward_approved_source_remains_publishable_without_local_review(session):
+    source_version, source_screen, target_version, target_screen = seed_semantic_lineage_pair(
+        session
+    )
+    source, effective = publish_lineage_source(
+        session, source_version, source_screen, corrected=False
+    )
+    carried = SemanticProposalService(session).create_carried_forward_proposal(
+        source_semantic_proposal_id=source.id,
+        knowledge_version_id=target_version.id,
+        screen_knowledge_item_id=target_screen.id,
+        semantic_type=SemanticType.SCREEN_PURPOSE,
+        evidence_payload=derived_evidence(target_screen, "target"),
+        evidence_ids=["evidence:lineage"],
+        generation_model=source.generation_model,
+        prompt_version=source.prompt_version,
+        prompt_hash=source.prompt_hash,
+        generation_parameters=dict(source.generation_parameters),
+    )
+    assert carried.current_review_status == ReviewStatus.APPROVED
+    assert carried.review_revision == 0
+    assert carried.source_review_status == ReviewStatus.APPROVED
+    assert SemanticEffectivePayloadService(session).publishable_payload(carried.id) == effective
+
+
+def test_reinferred_proposal_is_pending_and_captures_source_provenance(session):
+    source_version, source_screen, target_version, target_screen = seed_semantic_lineage_pair(
+        session
+    )
+    source, effective = publish_lineage_source(
+        session, source_version, source_screen, corrected=True
+    )
+    candidate = {
+        "purpose_summary": "Nueva inferencia basada en evidencia target.",
+        "supported_capabilities": [],
+        "limitations": [],
+        "uncertainties": [],
+    }
+    proposal = SemanticProposalService(session).create_reinferred_pending_proposal(
+        source_semantic_proposal_id=source.id,
+        knowledge_version_id=target_version.id,
+        screen_knowledge_item_id=target_screen.id,
+        semantic_type=SemanticType.SCREEN_PURPOSE,
+        source_payload=candidate,
+        evidence_payload=derived_evidence(target_screen, "changed-target"),
+        evidence_ids=["evidence:lineage", "evidence:new"],
+        generation_model=source.generation_model,
+        prompt_version=source.prompt_version,
+        prompt_hash=source.prompt_hash,
+        generation_parameters=dict(source.generation_parameters),
+    )
+    assert proposal.lifecycle_origin == SemanticLifecycleOrigin.REINFERRED
+    assert proposal.current_review_status == ReviewStatus.PENDING_REVIEW
+    assert proposal.review_revision == 0
+    assert proposal.source_payload == candidate
+    assert proposal.source_semantic_proposal_id == source.id
+    assert proposal.source_knowledge_version_id == source_version.id
+    assert proposal.source_review_status == ReviewStatus.CORRECTED
+    assert proposal.source_review_revision == 1
+    assert proposal.source_effective_content_hash == canonical_json_hash(effective)
+    assert SemanticEffectivePayloadService(session).publishable_payload(proposal.id) is None
+    assert session.scalar(
+        select(func.count())
+        .select_from(SemanticReviewAction)
+        .where(SemanticReviewAction.semantic_proposal_id == proposal.id)
+    ) == 0
+
+
+def test_derived_proposal_lineage_is_derived_from_source_not_caller_claims(session):
+    source_version, source_screen, target_version, target_screen = seed_semantic_lineage_pair(
+        session
+    )
+    source, _ = publish_lineage_source(session, source_version, source_screen)
+    service = SemanticProposalService(session)
+
+    source.current_review_status = ReviewStatus.REJECTED
+    session.flush()
+    with pytest.raises(SemanticLifecycleIntegrityError, match="source no es publicable"):
+        service.create_reinferred_pending_proposal(
+            source_semantic_proposal_id=source.id,
+            knowledge_version_id=target_version.id,
+            screen_knowledge_item_id=target_screen.id,
+            semantic_type=SemanticType.SCREEN_PURPOSE,
+            source_payload={"purpose_summary": "No debe persistirse."},
+            evidence_payload=derived_evidence(target_screen, "target"),
+            evidence_ids=["evidence:lineage"],
+            generation_model="synthetic-model",
+            prompt_version="screen-purpose-v1",
+            prompt_hash=HASH_B,
+            generation_parameters={"temperature": 0, "stream": False},
+        )
+
+
+def test_generation_identity_rejects_origin_collision_and_derived_retry_is_idempotent(session):
+    source_version, source_screen, target_version, target_screen = seed_semantic_lineage_pair(
+        session
+    )
+    source, _ = publish_lineage_source(session, source_version, source_screen)
+    service = SemanticProposalService(session)
+    kwargs = {
+        "source_semantic_proposal_id": source.id,
+        "knowledge_version_id": target_version.id,
+        "screen_knowledge_item_id": target_screen.id,
+        "semantic_type": SemanticType.SCREEN_PURPOSE,
+        "source_payload": {"purpose_summary": "Reinferencia estable."},
+        "evidence_payload": derived_evidence(target_screen, "target"),
+        "evidence_ids": ["evidence:lineage"],
+        "generation_model": "synthetic-model",
+        "prompt_version": "screen-purpose-v1",
+        "prompt_hash": HASH_B,
+        "generation_parameters": {"temperature": 0, "stream": False},
+    }
+    first = service.create_reinferred_pending_proposal(**kwargs)
+    second = service.create_reinferred_pending_proposal(**kwargs)
+    assert first.id == second.id
+
+    generated_kwargs = dict(kwargs)
+    generated_kwargs.pop("source_semantic_proposal_id")
+    with pytest.raises(SemanticIdentityCollisionError, match="lifecycle_origin"):
+        service.create_pending_proposal(**generated_kwargs)

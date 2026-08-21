@@ -46,6 +46,10 @@ class SemanticHistoryIntegrityError(SemanticDomainError):
     pass
 
 
+class SemanticLifecycleIntegrityError(SemanticDomainError):
+    pass
+
+
 class SemanticWorkflowError(SemanticDomainError):
     pass
 
