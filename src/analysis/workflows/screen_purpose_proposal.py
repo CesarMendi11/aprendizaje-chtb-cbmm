@@ -150,7 +150,14 @@ class ScreenPurposeProposalWorkflow:
         package, _, _ = self._context(knowledge_version_id, screen_knowledge_item_id)
         return self.inference_service.generate(package)
 
-    def persist_candidate(self, knowledge_version_id, screen_knowledge_item_id, candidate):
+    def persist_candidate(
+        self,
+        knowledge_version_id,
+        screen_knowledge_item_id,
+        candidate,
+        *,
+        source_semantic_proposal_id=None,
+    ):
         package, version, screen = self._context(knowledge_version_id, screen_knowledge_item_id)
         mapped = map_candidate_to_pending_proposal(
             package=package,
@@ -160,7 +167,14 @@ class ScreenPurposeProposalWorkflow:
             expected_model=self.inference_service.client.settings.model,
         )
         existing = self._existing(mapped, package.evidence_hash)
-        proposal = self.proposal_service.create_pending_proposal(**self._proposal_kwargs(mapped))
+        proposal_kwargs = self._proposal_kwargs(mapped)
+        if source_semantic_proposal_id is None:
+            proposal = self.proposal_service.create_pending_proposal(**proposal_kwargs)
+        else:
+            proposal = self.proposal_service.create_reinferred_pending_proposal(
+                source_semantic_proposal_id=source_semantic_proposal_id,
+                **proposal_kwargs,
+            )
         return self._result(
             proposal,
             screen,
