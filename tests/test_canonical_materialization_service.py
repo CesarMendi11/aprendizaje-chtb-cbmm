@@ -105,7 +105,69 @@ def test_materializes_full_generated_canonical_from_postgresql(tmp_path):
     assert [item.model_dump(mode="json") for item in materialized.screens] == [
         item.model_dump(mode="json") for item in source.screens
     ]
+    assert materialized.source_profile == "test"
     assert materialized.source_artifacts == ["screen_index.json"]
     assert materialized.statistics["modules"] == 1
     assert materialized.statistics["screens"] == 1
     engine.dispose()
+
+
+def test_materialization_recovers_exact_profile_path_from_persisted_fingerprint(tmp_path):
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+
+    source = _knowledge().model_copy(
+        update={
+            "source_profile": "configs/test.yaml",
+            "source_artifacts": [
+                "profile:configs/test.yaml",
+                "screen_index.json",
+            ],
+            "source_artifact_hashes": {
+                "profile:configs/test.yaml": "a" * 64,
+                "screen_index.json": "hash-screen-index",
+            },
+        }
+    )
+    bundle = tmp_path / "profile-provenance"
+    CanonicalKnowledgeExporter().export(
+        source,
+        bundle,
+        snapshot_context=CanonicalSnapshotContext.full(),
+    )
+    with factory.begin() as session:
+        imported = CanonicalImportService(session).import_canonical(
+            bundle / "knowledge.json",
+            bundle / "manifest.json",
+            bundle / "build_report.json",
+            activate=True,
+            create_sync_jobs=False,
+        )
+        version_id = imported.version_id
+
+    with factory() as session:
+        materialized = CanonicalKnowledgeMaterializer(session).materialize(
+            version_id,
+            require_active=True,
+        )
+
+    assert materialized.source_profile == "configs/test.yaml"
+    assert (
+        materialized.source_artifact_hashes["profile:configs/test.yaml"]
+        == "a" * 64
+    )
+    engine.dispose()
+
+
+def test_materializer_recovers_base_profile_from_merged_provenance():
+    hashes = {
+        "base:base:profile:configs/base.yaml": "a" * 64,
+        "base:partial:profile:configs/older-partial.yaml": "b" * 64,
+        "partial:profile:configs/new-partial.yaml": "c" * 64,
+    }
+
+    assert (
+        CanonicalKnowledgeMaterializer._source_profile(hashes)
+        == "configs/base.yaml"
+    )

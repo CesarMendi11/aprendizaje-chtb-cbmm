@@ -154,6 +154,8 @@ def test_crawl_result_exposes_network_evidence_artifact(tmp_path: Path):
         run_root,
         PipelineJobScope.SCREEN,
         "/app/products",
+        profile_path="configs/test.yaml",
+        profile_sha256="a" * 64,
     )
 
     assert result["network_evidence"] == 4

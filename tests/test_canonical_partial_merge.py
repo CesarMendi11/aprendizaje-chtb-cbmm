@@ -569,3 +569,44 @@ def test_partial_route_fallback_can_refresh_previous_route_fallback():
     tracking = next(item for item in merged.screens if item.id == "screen:tracking")
     assert tracking.title == "Tracking"
     assert tracking.title_source == "route_fallback"
+
+
+def test_merge_preserves_distinct_base_and_partial_profile_fingerprints():
+    base = _knowledge(version="base-v1").model_copy(
+        update={
+            "source_profile": "configs/base.yaml",
+            "source_artifacts": [
+                "profile:configs/base.yaml",
+                "screen_index.json",
+            ],
+            "source_artifact_hashes": {
+                "profile:configs/base.yaml": "a" * 64,
+                "screen_index.json": "hash-base-v1",
+            },
+        }
+    )
+    partial = _knowledge(version="partial-v1", partial=True).model_copy(
+        update={
+            "source_profile": "configs/partial.yaml",
+            "source_artifacts": [
+                "profile:configs/partial.yaml",
+                "screen_index.json",
+            ],
+            "source_artifact_hashes": {
+                "profile:configs/partial.yaml": "b" * 64,
+                "screen_index.json": "hash-partial-v1",
+            },
+        }
+    )
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _snapshot())
+
+    assert merged.source_profile == "configs/base.yaml"
+    assert (
+        merged.source_artifact_hashes["base:profile:configs/base.yaml"]
+        == "a" * 64
+    )
+    assert (
+        merged.source_artifact_hashes["partial:profile:configs/partial.yaml"]
+        == "b" * 64
+    )

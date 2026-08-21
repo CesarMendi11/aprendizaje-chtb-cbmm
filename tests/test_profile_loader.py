@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 from src.config.profile_loader import ProfileLoader
@@ -303,3 +304,38 @@ def test_profile_loader_accepts_screen_availability_configuration():
     assert availability["unavailable_status"] == "not_found"
     assert availability["min_pattern_matches"] == 2
     assert len(availability["unavailable_text_patterns"]) == 2
+
+
+def test_profile_loader_hashes_the_exact_bytes_it_parses(tmp_path):
+    profile_path = tmp_path / "profile.yaml"
+    raw = b"""erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+# provenance must include this exact comment and trailing newline
+"""
+    profile_path.write_bytes(raw)
+
+    loaded = ProfileLoader(profile_path).load_with_provenance()
+
+    assert loaded.profile["erp"]["code"] == "test"
+    assert loaded.sha256 == hashlib.sha256(raw).hexdigest()

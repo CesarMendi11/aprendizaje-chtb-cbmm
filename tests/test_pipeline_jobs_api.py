@@ -34,6 +34,14 @@ from tests.test_removal_reconciliation_plan_service import partial_candidate
 from tests.test_version_diff_service import seed as seed_version_diff
 
 
+def pinned_source_crawl_result(run_id, *, scope, target):
+    return {
+        **source_crawl_result(run_id, scope=scope, target=target),
+        "profile_path": "configs/cbmm.yaml",
+        "profile_sha256": "a" * 64,
+    }
+
+
 class Client:
     def __init__(self, app):
         self.app = app
@@ -357,7 +365,7 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
             source.id,
             result_payload={
                 "artifact_root": f"data/runs/pipeline/{source.id}",
-                **source_crawl_result(
+                **pinned_source_crawl_result(
                     source.id,
                     scope="screen",
                     target="/admin/cuentasxcobrar/retenciones",
@@ -376,7 +384,7 @@ def test_create_canonical_build_job_requires_succeeded_crawl(api):
     assert body["target"] == "/admin/cuentasxcobrar/retenciones"
     assert body["parameters"] == {
         "source_crawl_job_id": str(source_id),
-        "source_crawl_result": source_crawl_result(
+        "source_crawl_result": pinned_source_crawl_result(
             source_id,
             scope="screen",
             target="/admin/cuentasxcobrar/retenciones",
@@ -567,7 +575,7 @@ def test_create_canonical_build_preserves_module_base_provenance(api):
             source.id,
             result_payload={
                 "artifact_root": f"data/runs/pipeline/{source.id}",
-                **source_crawl_result(
+                **pinned_source_crawl_result(
                     source.id, scope="module", target="module:tracking"
                 ),
             },
@@ -585,7 +593,7 @@ def test_create_canonical_build_preserves_module_base_provenance(api):
     assert body["knowledge_version_id"] == version_id
     assert body["parameters"] == {
         "source_crawl_job_id": str(source_id),
-        "source_crawl_result": source_crawl_result(
+        "source_crawl_result": pinned_source_crawl_result(
             source_id, scope="module", target="module:tracking"
         ),
         "target_module_id": "module:tracking",
@@ -1321,6 +1329,31 @@ def test_create_canonical_import_accepts_full_screen_merge_and_repins_base(api):
         )
     )
     assert str(dispatcher.submitted[-1]) == body["id"]
+
+
+def test_create_canonical_build_rejects_crawl_without_profile_provenance(api):
+    client, factory, dispatcher = api
+    with factory.begin() as session:
+        service = PipelineJobService(session)
+        source = service.create(kind="crawl", scope="full", profile_name="cbmm")
+        source_id = source.id
+        service.start(source.id, stage="running")
+        service.succeed(
+            source.id,
+            result_payload={
+                "artifact_root": f"data/runs/pipeline/{source.id}",
+                **source_crawl_result(source.id, scope="full", target=None),
+            },
+        )
+
+    response = client.post(
+        "/api/admin/pipeline-jobs/canonical-build",
+        json={"source_crawl_job_id": str(source_id)},
+    )
+
+    assert response.status_code == 409
+    assert "profile_path/profile_sha256" in response.json()["detail"]
+    assert dispatcher.submitted == []
 
 
 def test_create_canonical_build_rejects_legacy_crawl_without_quality_pins(api):

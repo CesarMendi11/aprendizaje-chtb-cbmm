@@ -47,6 +47,26 @@ class CanonicalKnowledgeMaterializer:
     def __init__(self, session: Session):
         self.session = session
 
+    @staticmethod
+    def _source_profile(source_hashes: dict[str, object]) -> str | None:
+        direct = [
+            key.removeprefix("profile:")
+            for key in sorted(source_hashes)
+            if key.startswith("profile:") and key.removeprefix("profile:").strip()
+        ]
+        if direct:
+            return direct[0]
+
+        for key in sorted(source_hashes):
+            candidate = key
+            while candidate.startswith("base:"):
+                candidate = candidate.removeprefix("base:")
+            if candidate.startswith("profile:"):
+                value = candidate.removeprefix("profile:").strip()
+                if value:
+                    return value
+        return None
+
     def materialize(
         self,
         knowledge_version_id: uuid.UUID | str,
@@ -116,6 +136,10 @@ class CanonicalKnowledgeMaterializer:
         statistics = {name: len(values) for name, values in collections.items()}
         source_hashes = dict(version.source_artifact_hashes or {})
         erp_payload = copy.deepcopy(erp_item.source_payload)
+        source_profile = self._source_profile(source_hashes) or str(
+            erp_payload.get("profile_name")
+            or getattr(version.erp, "profile_name", "")
+        )
 
         try:
             knowledge = CanonicalKnowledgeBase.model_validate(
@@ -124,10 +148,7 @@ class CanonicalKnowledgeMaterializer:
                     "knowledge_version": version.knowledge_version,
                     "generated_at": version.generated_at,
                     "generator_version": self.GENERATOR_VERSION,
-                    "source_profile": str(
-                        erp_payload.get("profile_name")
-                        or getattr(version.erp, "profile_name", "")
-                    ),
+                    "source_profile": source_profile,
                     "source_artifacts": sorted(source_hashes),
                     "source_artifact_hashes": source_hashes,
                     "erp_system": erp_payload,

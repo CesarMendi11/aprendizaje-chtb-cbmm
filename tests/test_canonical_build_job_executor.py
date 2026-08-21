@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import uuid
 from pathlib import Path
@@ -50,6 +51,14 @@ output:
         + "\n",
         encoding="utf-8",
     )
+
+
+def pinned_source_crawl_result(profile_path: Path, source_id, *, scope, target):
+    return {
+        **source_crawl_result(source_id, scope=scope, target=target),
+        "profile_path": str(profile_path),
+        "profile_sha256": hashlib.sha256(profile_path.read_bytes()).hexdigest(),
+    }
 
 
 def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
@@ -130,7 +139,8 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         target="/admin/cuentasxcobrar/retenciones",
         parameters={
             "source_crawl_job_id": str(source_id),
-            "source_crawl_result": source_crawl_result(
+            "source_crawl_result": pinned_source_crawl_result(
+                profile,
                 source_id,
                 scope="screen",
                 target="/admin/cuentasxcobrar/retenciones",
@@ -182,6 +192,12 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
     report = json.loads((canonical / "build_report.json").read_text(encoding="utf-8"))
     assert report["crawl_execution_quality"] == result["crawl_execution_quality"]
     manifest = json.loads((canonical / "manifest.json").read_text(encoding="utf-8"))
+    profile_ref = f"profile:{profile}"
+    assert result["profile_path"] == str(profile)
+    assert result["profile_sha256"] == hashlib.sha256(profile.read_bytes()).hexdigest()
+    assert knowledge["source_profile"] == str(profile)
+    assert knowledge["source_artifact_hashes"][profile_ref] == result["profile_sha256"]
+    assert manifest["source_artifact_hashes"][profile_ref] == result["profile_sha256"]
     assert manifest["crawl_execution_quality"] == result["crawl_execution_quality"]
     assert manifest["snapshot"] == {
         "mode": "partial",
@@ -252,9 +268,11 @@ def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scop
             target=target,
             parameters={
                 "source_crawl_job_id": str(source_id),
-                "source_crawl_result": source_crawl_result(
-                    source_id, scope=scope, target=target
-                ),
+                "source_crawl_result": {
+                    **source_crawl_result(source_id, scope=scope, target=target),
+                    "profile_path": str(tmp_path / "profile.yaml"),
+                    "profile_sha256": "a" * 64,
+                },
             },
         )
 
@@ -350,8 +368,11 @@ def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
         target=target_module.id,
         parameters={
             "source_crawl_job_id": str(source_id),
-            "source_crawl_result": source_crawl_result(
-                source_id, scope="module", target=target_module.id
+            "source_crawl_result": pinned_source_crawl_result(
+                profile,
+                source_id,
+                scope="module",
+                target=target_module.id,
             ),
             "target_module_id": target_module.id,
             "base_knowledge_version_id": str(base_version_id),
@@ -377,3 +398,41 @@ def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):
     assert manifest["snapshot"]["base_knowledge_version_id"] == str(base_version_id)
     assert manifest["snapshot"]["base_knowledge_version"] == "active-v10"
     assert manifest["snapshot"]["erp_id"] == preview.erp_system.id
+
+
+def test_canonical_build_rejects_missing_profile_provenance(tmp_path):
+    executor = CanonicalBuildJobExecutor(
+        profile_path=tmp_path / "profile.yaml",
+        runs_root=tmp_path / "runs",
+    )
+
+    with pytest.raises(
+        CanonicalBuildJobExecutionError,
+        match="profile_path/profile_sha256",
+    ):
+        executor.execute(
+            job_id=uuid.uuid4(),
+            scope="full",
+            target=None,
+            parameters={
+                "source_crawl_job_id": str(uuid.uuid4()),
+                "source_crawl_result": {},
+            },
+        )
+
+
+def test_canonical_build_rejects_profile_hash_mismatch_before_consuming_profile(tmp_path):
+    profile = tmp_path / "profile.yaml"
+    structural = tmp_path / "structural"
+    structural.mkdir()
+    write_profile(profile, structural)
+    executor = CanonicalBuildJobExecutor(
+        profile_path=profile,
+        runs_root=tmp_path / "runs",
+    )
+
+    with pytest.raises(
+        CanonicalBuildJobExecutionError,
+        match="cambió desde el crawl fuente",
+    ):
+        executor._load_pinned_profile(str(profile), "0" * 64)

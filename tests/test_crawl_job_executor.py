@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -105,3 +106,39 @@ def test_module_scope_requires_pinned_boundary_and_matching_target(tmp_path):
             'module:other',
             parameters,
         )
+
+
+def test_crawl_result_publishes_profile_provenance(tmp_path):
+    from src.pipeline.crawl_job_executor import CrawlJobExecutor
+
+    structural = tmp_path / "processed" / "structural"
+    structural.mkdir(parents=True)
+    summary = SimpleNamespace(
+        visited_count=1,
+        pending_count=0,
+        functional_screen_count=1,
+        unavailable_count=0,
+        nodes_count=2,
+        edges_count=1,
+        states_count=1,
+        state_transitions_count=0,
+        state_frontier_explored_count=1,
+        state_frontier_pending_count=0,
+        routes_graph_path=structural / "routes_graph.json",
+        screen_index_path=structural / "screen_index.json",
+        state_flow_graph_path=structural / "state_flow_graph.json",
+        network_evidence_count=0,
+        network_evidence_path=None,
+    )
+
+    result = CrawlJobExecutor._result(
+        summary,
+        tmp_path,
+        PipelineJobScope.FULL,
+        None,
+        profile_path="configs/test.yaml",
+        profile_sha256="a" * 64,
+    )
+
+    assert result["profile_path"] == "configs/test.yaml"
+    assert result["profile_sha256"] == "a" * 64

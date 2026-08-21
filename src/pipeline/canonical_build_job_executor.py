@@ -84,6 +84,10 @@ class CanonicalBuildJobExecutor:
                 "canonical_build requiere source_crawl_job_id válido"
             ) from exc
 
+        expected_profile_path, expected_profile_sha256 = self._source_profile_pin(
+            params
+        )
+
         emit = progress or (lambda _stage, _payload: None)
         run_root = self.runs_root / str(source_job_id)
         structural_dir = run_root / "processed" / "structural"
@@ -128,12 +132,10 @@ class CanonicalBuildJobExecutor:
                 f"pending_states={execution_quality['state_frontier_pending']}."
             )
 
-        if not self.profile_path.is_file():
-            raise CanonicalBuildJobExecutionError("Perfil de crawler no encontrado")
-
-        # Validate the profile before the canonical builder consumes it so failures
-        # are reported as a controlled pipeline error instead of a partial export.
-        ProfileLoader(self.profile_path).load()
+        actual_profile_path, loaded_profile = self._load_pinned_profile(
+            expected_profile_path,
+            expected_profile_sha256,
+        )
 
         emit(
             "building_canonical",
@@ -154,6 +156,8 @@ class CanonicalBuildJobExecutor:
             knowledge = builder.build_from_paths(
                 self.profile_path,
                 structural_dir=structural_dir,
+                profile=loaded_profile.profile,
+                profile_sha256=loaded_profile.sha256,
             )
         except (ArtifactLoadError, OSError, ValueError) as exc:
             raise CanonicalBuildJobExecutionError(str(exc)) from exc
@@ -241,6 +245,8 @@ class CanonicalBuildJobExecutor:
 
         return {
             "source_crawl_job_id": str(source_job_id),
+            "profile_path": actual_profile_path,
+            "profile_sha256": loaded_profile.sha256,
             "scope": normalized_scope.value,
             "target": target,
             "artifact_root": _relative_project_path(run_root),
@@ -263,6 +269,43 @@ class CanonicalBuildJobExecutor:
             "base_knowledge_version": snapshot_context.base_knowledge_version,
             "crawl_execution_quality": execution_quality,
         }
+
+    @staticmethod
+    def _source_profile_pin(parameters: dict[str, Any]) -> tuple[str, str]:
+        source_crawl_result = parameters.get("source_crawl_result")
+        if not isinstance(source_crawl_result, dict):
+            raise CanonicalBuildJobExecutionError(
+                "El crawl fuente no conserva provenance de perfil utilizable"
+            )
+        profile_path = str(source_crawl_result.get("profile_path") or "").strip()
+        profile_sha256 = str(
+            source_crawl_result.get("profile_sha256") or ""
+        ).strip().lower()
+        if not profile_path or len(profile_sha256) != 64 or any(
+            char not in "0123456789abcdef" for char in profile_sha256
+        ):
+            raise CanonicalBuildJobExecutionError(
+                "El crawl fuente no conserva profile_path/profile_sha256 fijados"
+            )
+        return profile_path, profile_sha256
+
+    def _load_pinned_profile(self, expected_path: str, expected_sha256: str):
+        if not self.profile_path.is_file():
+            raise CanonicalBuildJobExecutionError("Perfil de crawler no encontrado")
+        actual_path = _relative_project_path(self.profile_path)
+        if actual_path != expected_path:
+            raise CanonicalBuildJobExecutionError(
+                "El perfil configurado no coincide con profile_path fijado por el crawl"
+            )
+
+        # Parse, validate and fingerprint the same bytes once. The canonical builder
+        # receives this exact loaded profile so provenance cannot race a second read.
+        loaded = ProfileLoader(self.profile_path).load_with_provenance()
+        if loaded.sha256 != expected_sha256:
+            raise CanonicalBuildJobExecutionError(
+                "El perfil configurado cambió desde el crawl fuente (profile_sha256)"
+            )
+        return actual_path, loaded
 
     @staticmethod
     def _snapshot_context(

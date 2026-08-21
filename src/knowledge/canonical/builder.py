@@ -22,7 +22,7 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.2"
+GENERATOR_VERSION = "4.0.3"
 ARTIFACT_NAMES = (
     "screen_index.json", "routes_graph.json", "state_registry.json",
     "state_flow_graph.json", "event_policy_audit.json", "ui_event_execution_audit.json",
@@ -40,15 +40,52 @@ class CanonicalKnowledgeBuilder:
         self.omitted: dict[str, int] = {}
         self.sensitive_exclusions = 0
 
-    def build_from_paths(self, profile_path: Path | str, structural_dir: Path | str | None = None):
+    def build_from_paths(
+        self,
+        profile_path: Path | str,
+        structural_dir: Path | str | None = None,
+        *,
+        profile: dict[str, Any] | None = None,
+        profile_sha256: str | None = None,
+    ):
         profile_path = self._resolve(profile_path)
-        profile = self._load_yaml(profile_path)
+        if profile is None:
+            profile, loaded_profile_sha256 = self._load_yaml(profile_path)
+        else:
+            if not profile_sha256:
+                raise ArtifactLoadError(
+                    "profile_sha256 es obligatorio cuando el perfil ya fue cargado"
+                )
+            loaded_profile_sha256 = profile_sha256
         output = profile.get("output", {})
-        source_dir = self._resolve(structural_dir or output.get("processed_structural_dir", "data/processed/structural"))
-        artifacts = {name: self._load_json(source_dir / name, required=name == "screen_index.json") for name in ARTIFACT_NAMES}
-        return self.build(profile, artifacts, source_profile=self._relative(profile_path), artifact_dir=source_dir)
+        source_dir = self._resolve(
+            structural_dir
+            or output.get("processed_structural_dir", "data/processed/structural")
+        )
+        artifacts = {
+            name: self._load_json(
+                source_dir / name,
+                required=name == "screen_index.json",
+            )
+            for name in ARTIFACT_NAMES
+        }
+        return self.build(
+            profile,
+            artifacts,
+            source_profile=self._relative(profile_path),
+            artifact_dir=source_dir,
+            profile_sha256=loaded_profile_sha256,
+        )
 
-    def build(self, profile: dict[str, Any], artifacts: dict[str, Any], *, source_profile="fixture", artifact_dir: Path | None = None):
+    def build(
+        self,
+        profile: dict[str, Any],
+        artifacts: dict[str, Any],
+        *,
+        source_profile="fixture",
+        artifact_dir: Path | None = None,
+        profile_sha256: str | None = None,
+    ):
         self.warnings = []
         self.omitted = {}
         self.sensitive_exclusions = 0
@@ -59,6 +96,10 @@ class CanonicalKnowledgeBuilder:
         hashes = self._artifact_hashes(artifacts, artifact_dir)
         artifact_base = self._relative(artifact_dir) if artifact_dir else "data/processed/structural"
         source_refs = [name for name, payload in artifacts.items() if payload is not None]
+        if profile_sha256:
+            profile_ref = f"profile:{source_profile}"
+            hashes = {profile_ref: profile_sha256, **hashes}
+            source_refs = [profile_ref, *source_refs]
         evidence: list[Evidence] = []
 
         screen_payloads = self._list(artifacts.get("screen_index.json"), "screens")
@@ -724,10 +765,14 @@ class CanonicalKnowledgeBuilder:
     @staticmethod
     def _load_yaml(path):
         import yaml
-        try: payload=yaml.safe_load(path.read_text(encoding="utf-8"))
-        except Exception as exc: raise ArtifactLoadError(f"Perfil inválido: {path}") from exc
-        if not isinstance(payload, dict): raise ArtifactLoadError("El perfil no es un objeto")
-        return payload
+        try:
+            raw = path.read_bytes()
+            payload = yaml.safe_load(raw.decode("utf-8"))
+        except Exception as exc:
+            raise ArtifactLoadError(f"Perfil inválido: {path}") from exc
+        if not isinstance(payload, dict):
+            raise ArtifactLoadError("El perfil no es un objeto")
+        return payload, hashlib.sha256(raw).hexdigest()
     def _artifact_hashes(self, artifacts, artifact_dir):
         result={}
         for name, payload in artifacts.items():

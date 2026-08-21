@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -7,6 +9,12 @@ import yaml
 from dotenv import load_dotenv
 
 from src.models.ui_event import UIEventType
+
+
+@dataclass(frozen=True)
+class LoadedProfile:
+    profile: dict[str, Any]
+    sha256: str
 
 
 class ProfileLoader:
@@ -23,19 +31,28 @@ class ProfileLoader:
         self.profile_path = Path(profile_path)
 
     def load(self) -> dict[str, Any]:
+        return self.load_with_provenance().profile
+
+    def load_with_provenance(self) -> LoadedProfile:
         if not self.profile_path.exists():
             raise FileNotFoundError(f"No existe el perfil YAML: {self.profile_path}")
 
         load_dotenv()
 
-        with self.profile_path.open("r", encoding="utf-8") as file:
-            profile = yaml.safe_load(file)
+        raw = self.profile_path.read_bytes()
+        try:
+            profile = yaml.safe_load(raw.decode("utf-8"))
+        except (UnicodeError, yaml.YAMLError) as exc:
+            raise ValueError(f"Perfil YAML inválido: {self.profile_path}") from exc
 
         if not isinstance(profile, dict):
             raise ValueError("El YAML debe contener un objeto principal.")
 
         self._validate(profile)
-        return profile
+        return LoadedProfile(
+            profile=profile,
+            sha256=hashlib.sha256(raw).hexdigest(),
+        )
 
     def _validate(self, profile: dict[str, Any]) -> None:
         required_sections = [

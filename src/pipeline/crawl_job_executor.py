@@ -101,7 +101,9 @@ class CrawlJobExecutor:
         emit = progress or (lambda _stage, _payload: None)
         emit("loading_profile", {"scope": normalized_scope.value, "target": target})
 
-        profile = ProfileLoader(self.profile_path).load()
+        loaded_profile = ProfileLoader(self.profile_path).load_with_provenance()
+        profile = loaded_profile.profile
+        source_profile = _relative_project_path(self.profile_path)
         target_value = self._validate_target(profile, normalized_scope, target)
         params = dict(parameters or {})
         module_boundary = self._module_boundary(
@@ -172,6 +174,8 @@ class CrawlJobExecutor:
                     run_root,
                     normalized_scope,
                     target_value,
+                    profile_path=source_profile,
+                    profile_sha256=loaded_profile.sha256,
                 )
             finally:
                 try:
@@ -239,12 +243,17 @@ class CrawlJobExecutor:
         run_root: Path,
         scope: PipelineJobScope,
         target: str | None,
+        *,
+        profile_path: str,
+        profile_sha256: str,
     ) -> dict[str, Any]:
         return {
             "run_id": run_root.name,
             "scope": scope.value,
             "target": target,
             "artifact_root": _relative_project_path(run_root),
+            "profile_path": profile_path,
+            "profile_sha256": profile_sha256,
             "visited_routes": summary.visited_count,
             "pending_routes": summary.pending_count,
             "functional_screens": summary.functional_screen_count,

@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 import pytest
@@ -29,7 +30,7 @@ def test_home_screen_without_module_is_not_reported_as_route_without_module():
     kb = build()
     home = next(item for item in kb.screens if item.route == "/app/home")
 
-    assert kb.generator_version == "4.0.2"
+    assert kb.generator_version == "4.0.3"
     assert home.module_id is None
     assert not any(
         warning.code == "route_without_module" and warning.entity_id == home.id
@@ -910,3 +911,59 @@ def test_missing_menu_selector_is_not_persisted_as_replay_locator():
     module = next(item for item in kb.modules if item.name == "Module A")
 
     assert module.metadata == {}
+
+
+def test_build_from_paths_records_profile_hash_without_changing_functional_version(tmp_path):
+    profile_path = tmp_path / "profile.yaml"
+    profile_bytes = (
+        "erp:\n"
+        "  name: Test ERP\n"
+        "  code: test\n"
+        "  base_url: http://erp.test\n"
+        "navigation:\n"
+        "  home_url: /admin/home\n"
+        "output:\n"
+        "  processed_structural_dir: structural\n"
+    ).encode("utf-8")
+    profile_path.write_bytes(profile_bytes)
+    structural = tmp_path / "structural"
+    structural.mkdir()
+    screen_index = {
+        "screens": [
+            {
+                "route": "/admin/home",
+                "functional_title": "Dashboard",
+            }
+        ]
+    }
+    (structural / "screen_index.json").write_text(
+        json.dumps(screen_index),
+        encoding="utf-8",
+    )
+
+    from_paths = CanonicalKnowledgeBuilder(tmp_path).build_from_paths(
+        "profile.yaml",
+        "structural",
+    )
+    direct = CanonicalKnowledgeBuilder(tmp_path).build(
+        {
+            "erp": {
+                "name": "Test ERP",
+                "code": "test",
+                "base_url": "http://erp.test",
+            },
+            "navigation": {"home_url": "/admin/home"},
+            "output": {"processed_structural_dir": "structural"},
+        },
+        {"screen_index.json": screen_index},
+        source_profile="profile.yaml",
+    )
+
+    profile_ref = "profile:profile.yaml"
+    assert from_paths.source_profile == "profile.yaml"
+    assert from_paths.source_artifacts[0] == profile_ref
+    assert (
+        from_paths.source_artifact_hashes[profile_ref]
+        == hashlib.sha256(profile_bytes).hexdigest()
+    )
+    assert from_paths.knowledge_version == direct.knowledge_version

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from typing import Annotated
 
@@ -256,6 +257,22 @@ def create_canonical_build_job(
         source_crawl_result = crawl_result_quality_pins(result)
     except CrawlExecutionQualityError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    profile_path = str(result.get("profile_path") or "").strip()
+    profile_sha256 = str(result.get("profile_sha256") or "").strip().lower()
+    if not profile_path or re.fullmatch(r"[0-9a-f]{64}", profile_sha256) is None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "El crawl fuente no conserva profile_path/profile_sha256 "
+                "fijados; no puede alimentar un canonical nuevo."
+            ),
+        )
+    source_crawl_result = {
+        **source_crawl_result,
+        "profile_path": profile_path,
+        "profile_sha256": profile_sha256,
+    }
 
     parameters = {
         "source_crawl_job_id": str(source.id),
