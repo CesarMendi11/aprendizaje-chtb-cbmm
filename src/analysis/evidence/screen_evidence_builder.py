@@ -107,12 +107,29 @@ class ScreenEvidenceBuilder:
         screen_payload = self._effective(screen)
         payloads = {screen.canonical_id: screen_payload}
         module_id = self._id(screen_payload.get("module_id"))
-        module_item = eligible.get(module_id)
-        if not module_id or not module_item or module_item.entity_type != "module":
-            raise StructuralRelationError("La pantalla no tiene un módulo aprobado válido")
-        module_payload = self._effective(module_item)
-        payloads[module_id] = module_payload
-        module_name = self._safe(module_payload.get("name"), warnings, "module.name", required=True)
+        module_item = None
+        module_name = None
+        module_evidence = None
+        if module_id:
+            module_item = eligible.get(module_id)
+            if not module_item or module_item.entity_type != "module":
+                raise StructuralRelationError("La pantalla no tiene un módulo aprobado válido")
+            module_payload = self._effective(module_item)
+            payloads[module_id] = module_payload
+            module_name = self._safe(
+                module_payload.get("name"), warnings, "module.name", required=True
+            )
+            module_evidence = ModuleEvidence(module_id=module_id, name=module_name)
+        else:
+            if screen.parent_canonical_id != version.erp_id:
+                raise StructuralRelationError(
+                    "La pantalla sin módulo no está anclada al ERP"
+                )
+            effective_erp_id = self._id(screen_payload.get("erp_id"))
+            if effective_erp_id != version.erp_id:
+                raise StructuralRelationError(
+                    "La pantalla sin módulo no pertenece al ERP de la versión"
+                )
         title = self._safe(screen_payload.get("title"), warnings, "screen.title", required=True)
         route = self._route(screen_payload.get("route") or screen.route)
         fields = self._relation_candidates(
@@ -345,7 +362,7 @@ class ScreenEvidenceBuilder:
 
         selected = [
             screen,
-            module_item,
+            *([module_item] if module_item is not None else []),
             *field_items,
             *control_items,
             *table_items,
@@ -378,7 +395,7 @@ class ScreenEvidenceBuilder:
             "screen_id": screen.canonical_id,
             "screen_title": title,
             "screen_route": route,
-            "module": ModuleEvidence(module_id=module_id, name=module_name),
+            "module": module_evidence,
             "fields": field_dtos,
             "controls": control_dtos,
             "tables": table_dtos,
@@ -656,7 +673,12 @@ class ScreenEvidenceBuilder:
         return result
 
     def _main_text(self, module, screen, fields, controls, tables, states, events, warnings):
-        lines = [f"Módulo: {module}", f"Pantalla: {screen}"]
+        lines = (
+            [f"Módulo: {module}"]
+            if module is not None
+            else ["Contexto estructural: pantalla raíz del ERP"]
+        )
+        lines.append(f"Pantalla: {screen}")
         groups = (
             ("Campos", [x.label for x in fields]),
             ("Controles", [x.label for x in controls]),

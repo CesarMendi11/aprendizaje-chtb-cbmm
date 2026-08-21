@@ -15,7 +15,9 @@ from src.analysis.schemas import ScreenEvidencePackage, ScreenPurposeInference
 
 
 def allowed_references(package: ScreenEvidencePackage) -> set[str]:
-    values = {package.screen_id, package.module.module_id, *package.evidence_ids}
+    values = {package.screen_id, *package.evidence_ids}
+    if package.module is not None:
+        values.add(package.module.module_id)
     values.update(field.field_id for field in package.fields)
     values.update(control.control_id for control in package.controls)
     values.update(table.table_id for table in package.tables)

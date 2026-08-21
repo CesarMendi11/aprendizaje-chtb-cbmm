@@ -85,7 +85,7 @@ class ScreenEvidencePackage(EvidenceModel):
     screen_id: str
     screen_title: str
     screen_route: str
-    module: ModuleEvidence
+    module: ModuleEvidence | None
     fields: list[FieldEvidence] = Field(default_factory=list)
     controls: list[ControlEvidence] = Field(default_factory=list)
     tables: list[TableEvidence] = Field(default_factory=list)

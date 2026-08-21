@@ -87,7 +87,7 @@ def api(tmp_path, monkeypatch):
     assert not database_path.exists()
 
 
-def seed(factory, *, suffix="one"):
+def seed(factory, *, suffix="one", include_module=True):
     with factory.begin() as session:
         erp = ERPSystemRecord(
             id=f"erp:{suffix}",
@@ -138,7 +138,11 @@ def seed(factory, *, suffix="one"):
             "screen_id": screen.canonical_id,
             "screen_title": screen.title,
             "screen_route": screen.route,
-            "module": {"module_id": f"module:{suffix}", "name": "Synthetic"},
+            "module": (
+                {"module_id": f"module:{suffix}", "name": "Synthetic"}
+                if include_module
+                else None
+            ),
             "fields": [
                 {
                     "field_id": f"field:{suffix}",
@@ -374,6 +378,19 @@ def test_pagination_filters_detail_and_sanitized_evidence(api):
     serialized = str(detail).casefold()
     assert all(word not in serialized for word in ("password", "cookie", "raw_response", "html"))
     assert client.get("/api/admin/semantic-proposals/missing").status_code == 404
+
+
+def test_root_screen_persisted_evidence_serializes_module_as_null(api):
+    client, factory = api
+    semantic_id, _source, _ = seed(
+        factory, suffix="root-module-null", include_module=False
+    )
+
+    detail = client.get(f"/api/admin/semantic-proposals/{semantic_id}")
+
+    assert detail.status_code == 200
+    assert detail.json()["evidence"]["evidence_available"] is True
+    assert detail.json()["evidence"]["module"] is None
 
 
 def test_effective_contract_for_every_review_status(api):

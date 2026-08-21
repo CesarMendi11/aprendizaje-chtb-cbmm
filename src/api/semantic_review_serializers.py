@@ -70,7 +70,11 @@ def review_evidence(proposal: SemanticProposal) -> ScreenEvidenceReviewResponse:
         screen_id=package.screen_id,
         screen_title=package.screen_title,
         screen_route=package.screen_route,
-        module=package.module.model_dump(mode="json"),
+        module=(
+            package.module.model_dump(mode="json")
+            if package.module is not None
+            else None
+        ),
         fields=tuple(item.model_dump(mode="json") for item in package.fields),
         controls=tuple(item.model_dump(mode="json") for item in package.controls),
         tables=tuple(item.model_dump(mode="json") for item in package.tables),

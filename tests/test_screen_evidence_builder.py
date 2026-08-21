@@ -15,6 +15,7 @@ from src.analysis.evidence.screen_evidence_builder import (
     EvidenceScreenReviewError,
     EvidenceVersionMismatchError,
     ScreenEvidenceBuilder,
+    StructuralRelationError,
     UnsafeScreenRouteError,
 )
 from src.analysis.schemas import ScreenEvidencePackage
@@ -160,6 +161,108 @@ def test_minimum_package_route_hash_schema_and_read_only(session):
     assert (set(session.new), set(session.dirty), set(session.deleted)) == before
     with pytest.raises(ValidationError):
         ScreenEvidencePackage.model_validate({**first.model_dump(), "unexpected": True})
+    without_module = first.model_dump()
+    without_module.pop("module")
+    with pytest.raises(ValidationError):
+        ScreenEvidencePackage.model_validate(without_module)
+
+
+def test_erp_root_screen_without_module_builds_safe_evidence(session):
+    version = seed_version(session, suffix="root-screen")
+    screen = add_item(
+        session,
+        version,
+        "screen",
+        "screen:dashboard",
+        {
+            "id": "screen:dashboard",
+            "erp_id": version.erp_id,
+            "module_id": None,
+            "title": "Dashboard",
+            "route": "/admin/home",
+        },
+    )
+    screen.parent_canonical_id = version.erp_id
+    control = add_item(
+        session,
+        version,
+        "control",
+        "control:dashboard",
+        {
+            "id": "control:dashboard",
+            "screen_id": screen.canonical_id,
+            "label": "Actualizar",
+            "control_type": "button",
+            "mutative": False,
+        },
+    )
+    direct = add_item(
+        session,
+        version,
+        "evidence",
+        "evidence:dashboard",
+        {
+            "id": "evidence:dashboard",
+            "evidence_type": "structured_json",
+            "artifact_path": "synthetic/dashboard.json",
+            "source_entity_type": "screen",
+            "source_entity_id": screen.canonical_id,
+        },
+    )
+    session.flush()
+
+    first = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+    second = ScreenEvidenceBuilder(session).build(version.id, screen.id)
+
+    assert first.module is None
+    assert first.screen_id == screen.canonical_id
+    assert first.controls[0].control_id == control.canonical_id
+    assert first.primary_evidence_ids == [direct.canonical_id]
+    assert first.main_content_text.startswith(
+        "Contexto estructural: pantalla raíz del ERP\nPantalla: Dashboard"
+    )
+    assert first.evidence_hash == second.evidence_hash
+
+
+def test_moduleless_screen_must_be_explicitly_anchored_to_version_erp(session):
+    version = seed_version(session, suffix="unanchored-root")
+    screen = add_item(
+        session,
+        version,
+        "screen",
+        "screen:unanchored",
+        {
+            "id": "screen:unanchored",
+            "erp_id": version.erp_id,
+            "module_id": None,
+            "title": "Unanchored",
+            "route": "/unanchored",
+        },
+    )
+
+    assert screen.parent_canonical_id is None
+    with pytest.raises(StructuralRelationError, match="no está anclada al ERP"):
+        ScreenEvidenceBuilder(session).build(version.id, screen.id)
+
+
+def test_declared_module_must_still_exist_and_be_approved(session):
+    version = seed_version(session, suffix="missing-module")
+    screen = add_item(
+        session,
+        version,
+        "screen",
+        "screen:broken-module",
+        {
+            "id": "screen:broken-module",
+            "erp_id": version.erp_id,
+            "module_id": "module:missing",
+            "title": "Broken module",
+            "route": "/broken-module",
+        },
+    )
+
+    with pytest.raises(StructuralRelationError, match="módulo aprobado válido"):
+        ScreenEvidenceBuilder(session).build(version.id, screen.id)
 
 
 def test_structural_elements_are_related_safe_deduplicated_and_ordered(session):

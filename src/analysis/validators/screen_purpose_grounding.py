@@ -107,8 +107,12 @@ class ActionSupport(IntEnum):
 def build_reference_index(package: ScreenEvidencePackage) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {
         package.screen_id: {"type": "screen", "label": package.screen_title},
-        package.module.module_id: {"type": "module", "label": package.module.name},
     }
+    if package.module is not None:
+        index[package.module.module_id] = {
+            "type": "module",
+            "label": package.module.name,
+        }
     for field in package.fields:
         index[field.field_id] = {
             "type": "field",
@@ -459,7 +463,9 @@ def _validate_purpose(summary, capability_support, package, forbidden_actions):
                 "purpose_mutative_wording_not_prudent",
                 summary,
             )
-    object_tokens = _tokens(package.screen_title) | _tokens(package.module.name)
+    object_tokens = _tokens(package.screen_title)
+    if package.module is not None:
+        object_tokens |= _tokens(package.module.name)
     object_tokens |= set().union(*(_tokens(table.name) for table in package.tables), set())
     object_tokens |= set().union(*(_tokens(field.label) for field in package.fields), set())
     object_tokens |= set().union(*(_tokens(control.label) for control in package.controls), set())

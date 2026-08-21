@@ -22,7 +22,7 @@ class ScreenPurposePromptEvidence(InferenceModel):
     screen_id: str
     screen_title: str
     screen_route: str
-    module: ModuleEvidence
+    module: ModuleEvidence | None
     fields: list[FieldEvidence]
     controls: list[ControlEvidence]
     tables: list[TableEvidence]

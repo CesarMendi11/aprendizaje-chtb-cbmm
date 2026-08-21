@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -43,6 +46,47 @@ from src.analysis.schemas import (
 )
 from src.analysis.validators import build_grounding_plan, validate_capability_grounding
 from src.database.services.semantic_payloads import canonical_json_hash
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import src.analysis.validators",
+        "import src.analysis.validators.screen_purpose_grounding_plan",
+        (
+            "from src.analysis.generation import ScreenPurposeInferenceService; "
+            "assert ScreenPurposeInferenceService.__name__ == 'ScreenPurposeInferenceService'"
+        ),
+        (
+            "from src.analysis.schemas import ScreenEvidencePackage; "
+            "from src.analysis.schemas.screen_purpose_prompt_evidence "
+            "import ScreenPurposePromptEvidence; "
+            "package = ScreenEvidencePackage.model_validate({"
+            "'erp_id': 'erp:test', "
+            "'knowledge_version_id': '00000000-0000-0000-0000-000000000001', "
+            "'knowledge_version': 'test-v1', "
+            "'screen_id': 'screen:root', "
+            "'screen_title': 'Dashboard', "
+            "'screen_route': '/admin/home', "
+            "'module': None, "
+            "'main_content_text': 'Contexto estructural: pantalla raíz del ERP\\nPantalla: Dashboard', "
+            "'evidence_hash': 'a' * 64"
+            "}); "
+            "projection = ScreenPurposePromptEvidence.from_package(package); "
+            "assert projection.module is None"
+        ),
+    ],
+)
+def test_analysis_import_contract_is_order_independent_in_clean_process(code):
+    project_root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def package(**updates):
@@ -174,12 +218,38 @@ def test_prompt_projection_excludes_audit_fields_but_candidate_keeps_traceabilit
     assert candidate.evidence_hash == evidence.evidence_hash
 
 
+def test_erp_root_prompt_projection_accepts_module_none_without_weakening_grounding():
+    evidence = package(
+        module=None,
+        screen_title="Dashboard",
+        screen_route="/admin/home",
+        main_content_text=(
+            "Contexto estructural: pantalla raíz del ERP\nPantalla: Dashboard"
+        ),
+    )
+    client = FakeClient(json.dumps(valid_output()))
+
+    candidate = ScreenPurposeInferenceService(client).generate(evidence)
+    projection = ScreenPurposePromptEvidence.from_package(evidence)
+    prompt = client.calls[0][0]
+
+    assert projection.module is None
+    assert '"module":null' in prompt
+    assert "Contexto estructural: pantalla raíz del ERP" in prompt
+    assert candidate.inference.screen_id == evidence.screen_id
+    assert candidate.prompt_version == PROMPT_VERSION
+
+
 def test_prompt_projection_is_strict_frozen_and_does_not_mutate_package():
     evidence = package()
     original = evidence.model_dump()
     projection = ScreenPurposePromptEvidence.from_package(evidence)
     with pytest.raises(ValidationError):
         ScreenPurposePromptEvidence.model_validate({**projection.model_dump(), "extra": True})
+    without_module = projection.model_dump()
+    without_module.pop("module")
+    with pytest.raises(ValidationError):
+        ScreenPurposePromptEvidence.model_validate(without_module)
     with pytest.raises(ValidationError):
         projection.screen_title = "changed"
     assert evidence.model_dump() == original
