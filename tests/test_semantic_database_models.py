@@ -11,7 +11,11 @@ from sqlalchemy.orm import Session
 
 import src.database.models  # noqa: F401
 from src.database.base import Base
-from src.database.enums import ReviewActionType, SemanticType
+from src.database.enums import (
+    ReviewActionType,
+    SemanticLifecycleOrigin,
+    SemanticType,
+)
 from src.database.models import (
     KnowledgeItem,
     KnowledgeVersionRecord,
@@ -88,18 +92,36 @@ def test_semantic_tables_columns_foreign_keys_constraints_and_indexes():
         "prompt_hash",
         "generation_parameters",
         "generation_parameters_hash",
+        "lifecycle_origin",
+        "source_semantic_proposal_id",
+        "source_knowledge_version_id",
+        "source_review_status",
+        "source_review_revision",
+        "source_effective_content_hash",
         "current_review_status",
         "review_revision",
         "created_at",
         "updated_at",
     }
     assert required <= set(proposals.c.keys())
-    assert all(not proposals.c[name].nullable for name in required)
+    required_nonnullable = required - {
+        "source_semantic_proposal_id",
+        "source_knowledge_version_id",
+        "source_review_status",
+        "source_review_revision",
+        "source_effective_content_hash",
+    }
+    assert all(not proposals.c[name].nullable for name in required_nonnullable)
+    assert all(
+        proposals.c[name].nullable
+        for name in required - required_nonnullable
+    )
     assert actions.c.corrected_payload.nullable
     assert not actions.c.reviewer_subject.nullable
     assert {fk.target_fullname for fk in proposals.foreign_keys} == {
         "knowledge_versions.id",
         "knowledge_items.id",
+        "semantic_proposals.id",
     }
     assert {fk.ondelete for fk in proposals.foreign_keys} == {"RESTRICT"}
     assert {fk.target_fullname for fk in actions.foreign_keys} == {"semantic_proposals.id"}
@@ -113,12 +135,21 @@ def test_semantic_tables_columns_foreign_keys_constraints_and_indexes():
         "ck_semantic_proposals_prompt_hash_length",
         "ck_semantic_proposals_generation_parameters_hash_length",
         "ck_semantic_proposals_review_status_supported",
+        "ck_semantic_proposals_lifecycle_origin_supported",
+        "ck_semantic_proposals_source_review_status_supported",
+        "ck_semantic_proposals_source_review_revision_nonnegative",
+        "ck_semantic_proposals_source_effective_hash_length",
+        "ck_semantic_proposals_lifecycle_lineage_complete",
+        "ck_semantic_proposals_source_version_distinct",
+        "ck_semantic_proposals_source_proposal_distinct",
     } <= constraint_names
     assert {index.name for index in proposals.indexes} == {
         "ix_semantic_proposals_version_status",
         "ix_semantic_proposals_screen_type",
         "ix_semantic_proposals_version_type_status",
         "ix_semantic_proposals_evidence_hash",
+        "ix_semantic_proposals_source_proposal",
+        "ix_semantic_proposals_source_version",
     }
 
 
@@ -129,6 +160,12 @@ def test_defaults_semantic_type_and_relationships(session):
     assert item.current_review_status == ReviewStatus.PENDING_REVIEW
     assert item.review_revision == 0
     assert item.semantic_type == SemanticType.SCREEN_PURPOSE
+    assert item.lifecycle_origin == SemanticLifecycleOrigin.GENERATED
+    assert item.source_semantic_proposal_id is None
+    assert item.source_knowledge_version_id is None
+    assert item.source_review_status is None
+    assert item.source_review_revision is None
+    assert item.source_effective_content_hash is None
     review = action(item.id)
     item.review_actions.append(review)
     assert review.semantic_proposal is item
@@ -198,6 +235,12 @@ def test_semantic_id_and_generation_identity_are_unique(session):
         "prompt_hash",
         "generation_parameters",
         "generation_parameters_hash",
+        "lifecycle_origin",
+        "source_semantic_proposal_id",
+        "source_knowledge_version_id",
+        "source_review_status",
+        "source_review_revision",
+        "source_effective_content_hash",
         "created_at",
     ],
 )
@@ -213,6 +256,12 @@ def test_proposal_identity_evidence_and_generation_metadata_are_immutable(sessio
         "evidence_payload": {"changed": True},
         "evidence_ids": ["changed"],
         "generation_parameters": {"temperature": 1},
+        "lifecycle_origin": SemanticLifecycleOrigin.CARRIED_FORWARD,
+        "source_semantic_proposal_id": uuid.uuid4(),
+        "source_knowledge_version_id": uuid.uuid4(),
+        "source_review_status": ReviewStatus.APPROVED,
+        "source_review_revision": 1,
+        "source_effective_content_hash": "e" * 64,
         "created_at": item.created_at.replace(year=item.created_at.year - 1),
     }.get(field, "e" * 64 if "hash" in field else f"changed:{field}")
     setattr(item, field, replacement)
@@ -327,4 +376,68 @@ def test_sqlite_metadata_contains_expected_foreign_key_targets():
     Base.metadata.create_all(engine)
     inspector = inspect(engine)
     targets = {fk["referred_table"] for fk in inspector.get_foreign_keys("semantic_proposals")}
-    assert targets == {"knowledge_versions", "knowledge_items"}
+    assert targets == {"knowledge_versions", "knowledge_items", "semantic_proposals"}
+
+
+def test_lifecycle_lineage_constraints_require_complete_cross_version_provenance(session):
+    generated = proposal(
+        source_semantic_proposal_id=uuid.uuid4(),
+        source_knowledge_version_id=uuid.uuid4(),
+    )
+    session.add(generated)
+    with pytest.raises(IntegrityError):
+        session.flush()
+    session.rollback()
+
+    incomplete = proposal(
+        lifecycle_origin=SemanticLifecycleOrigin.CARRIED_FORWARD,
+        source_semantic_proposal_id=uuid.uuid4(),
+        source_knowledge_version_id=uuid.uuid4(),
+    )
+    session.add(incomplete)
+    with pytest.raises(IntegrityError):
+        session.flush()
+    session.rollback()
+
+    target_version_id = uuid.uuid4()
+    valid = proposal(
+        knowledge_version_id=target_version_id,
+        lifecycle_origin=SemanticLifecycleOrigin.REINFERRED,
+        source_semantic_proposal_id=uuid.uuid4(),
+        source_knowledge_version_id=uuid.uuid4(),
+        source_review_status=ReviewStatus.CORRECTED,
+        source_review_revision=2,
+        source_effective_content_hash="f" * 64,
+    )
+    session.add(valid)
+    session.flush()
+    assert valid.lifecycle_origin == SemanticLifecycleOrigin.REINFERRED
+
+
+def test_lifecycle_lineage_constraints_reject_same_target_version_and_bad_hash(session):
+    target_version_id = uuid.uuid4()
+    same_version = proposal(
+        knowledge_version_id=target_version_id,
+        lifecycle_origin=SemanticLifecycleOrigin.CARRIED_FORWARD,
+        source_semantic_proposal_id=uuid.uuid4(),
+        source_knowledge_version_id=target_version_id,
+        source_review_status=ReviewStatus.APPROVED,
+        source_review_revision=1,
+        source_effective_content_hash="f" * 64,
+    )
+    session.add(same_version)
+    with pytest.raises(IntegrityError):
+        session.flush()
+    session.rollback()
+
+    bad_hash = proposal(
+        lifecycle_origin=SemanticLifecycleOrigin.CARRIED_FORWARD,
+        source_semantic_proposal_id=uuid.uuid4(),
+        source_knowledge_version_id=uuid.uuid4(),
+        source_review_status=ReviewStatus.APPROVED,
+        source_review_revision=1,
+        source_effective_content_hash="short",
+    )
+    session.add(bad_hash)
+    with pytest.raises(IntegrityError):
+        session.flush()

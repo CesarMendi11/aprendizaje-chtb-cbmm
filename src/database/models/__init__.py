@@ -32,6 +32,7 @@ from ..enums import (
     RemovalReviewActionType,
     ReviewActionType,
     ReviewSource,
+    SemanticLifecycleOrigin,
     SemanticType,
     SyncStatus,
     SyncTarget,
@@ -105,7 +106,8 @@ class KnowledgeVersionRecord(TimestampMixin, Base):
     import_run: Mapped[ImportRun] = relationship(back_populates="knowledge_version")
     items: Mapped[list["KnowledgeItem"]] = relationship(back_populates="knowledge_version")
     semantic_proposals: Mapped[list["SemanticProposal"]] = relationship(
-        back_populates="knowledge_version"
+        back_populates="knowledge_version",
+        foreign_keys="SemanticProposal.knowledge_version_id",
     )
     sync_jobs: Mapped[list["SyncJob"]] = relationship(back_populates="knowledge_version")
     promotions: Mapped[list["KnowledgeVersionPromotion"]] = relationship(
@@ -370,6 +372,41 @@ class SemanticProposal(TimestampMixin, Base):
             "current_review_status IN ('pending_review', 'approved', 'rejected', 'corrected')",
             name="review_status_supported",
         ),
+        CheckConstraint(
+            "lifecycle_origin IN ('generated', 'carried_forward', 'reinferred')",
+            name="lifecycle_origin_supported",
+        ),
+        CheckConstraint(
+            "source_review_status IS NULL OR source_review_status IN ('approved', 'corrected')",
+            name="source_review_status_supported",
+        ),
+        CheckConstraint(
+            "source_review_revision IS NULL OR source_review_revision >= 0",
+            name="source_review_revision_nonnegative",
+        ),
+        CheckConstraint(
+            "source_effective_content_hash IS NULL OR length(source_effective_content_hash) = 64",
+            name="source_effective_hash_length",
+        ),
+        CheckConstraint(
+            "(lifecycle_origin = 'generated' AND "
+            "source_semantic_proposal_id IS NULL AND source_knowledge_version_id IS NULL AND "
+            "source_review_status IS NULL AND source_review_revision IS NULL AND "
+            "source_effective_content_hash IS NULL) OR "
+            "(lifecycle_origin IN ('carried_forward', 'reinferred') AND "
+            "source_semantic_proposal_id IS NOT NULL AND source_knowledge_version_id IS NOT NULL AND "
+            "source_review_status IS NOT NULL AND source_review_revision IS NOT NULL AND "
+            "source_effective_content_hash IS NOT NULL)",
+            name="lifecycle_lineage_complete",
+        ),
+        CheckConstraint(
+            "source_knowledge_version_id IS NULL OR source_knowledge_version_id <> knowledge_version_id",
+            name="source_version_distinct",
+        ),
+        CheckConstraint(
+            "source_semantic_proposal_id IS NULL OR source_semantic_proposal_id <> id",
+            name="source_proposal_distinct",
+        ),
         Index(
             "ix_semantic_proposals_version_status",
             "knowledge_version_id",
@@ -387,6 +424,8 @@ class SemanticProposal(TimestampMixin, Base):
             "current_review_status",
         ),
         Index("ix_semantic_proposals_evidence_hash", "evidence_hash"),
+        Index("ix_semantic_proposals_source_proposal", "source_semantic_proposal_id"),
+        Index("ix_semantic_proposals_source_version", "source_knowledge_version_id"),
     )
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=new_uuid)
     semantic_id: Mapped[str] = mapped_column(String(240), nullable=False)
@@ -409,6 +448,20 @@ class SemanticProposal(TimestampMixin, Base):
         JSONType, default=dict, nullable=False
     )
     generation_parameters_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    lifecycle_origin: Mapped[SemanticLifecycleOrigin] = mapped_column(
+        StringEnum(SemanticLifecycleOrigin),
+        default=SemanticLifecycleOrigin.GENERATED,
+        nullable=False,
+    )
+    source_semantic_proposal_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("semantic_proposals.id", ondelete="RESTRICT")
+    )
+    source_knowledge_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT")
+    )
+    source_review_status: Mapped[ReviewStatus | None] = mapped_column(StringEnum(ReviewStatus))
+    source_review_revision: Mapped[int | None] = mapped_column(Integer)
+    source_effective_content_hash: Mapped[str | None] = mapped_column(String(64))
     current_review_status: Mapped[ReviewStatus] = mapped_column(
         StringEnum(ReviewStatus), default=ReviewStatus.PENDING_REVIEW, nullable=False
     )
@@ -417,7 +470,8 @@ class SemanticProposal(TimestampMixin, Base):
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
     knowledge_version: Mapped[KnowledgeVersionRecord] = relationship(
-        back_populates="semantic_proposals"
+        back_populates="semantic_proposals",
+        foreign_keys=[knowledge_version_id],
     )
     screen_knowledge_item: Mapped[KnowledgeItem] = relationship(back_populates="semantic_proposals")
     review_actions: Mapped[list["SemanticReviewAction"]] = relationship(

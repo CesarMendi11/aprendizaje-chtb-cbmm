@@ -45,6 +45,12 @@ class SemanticType(StrEnum):
     SCREEN_PURPOSE = "screen_purpose"
 
 
+class SemanticLifecycleOrigin(StrEnum):
+    GENERATED = "generated"
+    CARRIED_FORWARD = "carried_forward"
+    REINFERRED = "reinferred"
+
+
 class PipelineJobKind(StrEnum):
     CRAWL = "crawl"
     CANONICAL_BUILD = "canonical_build"
