@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from src.database.models import KnowledgeVersionRecord
 from src.database.repositories import ERPRepository, KnowledgeRepository, SyncJobRepository
 from src.database.types import utcnow
 from src.graph.projection_service import GraphProjectionService
@@ -55,7 +57,11 @@ class Neo4jSyncService:
         replace_version=False,
         allow_empty=False,
     ):
-        version = self._version(erp_id, knowledge_version)
+        version = self._version(erp_id, knowledge_version, for_update=True)
+        if version.status != KnowledgeVersionStatus.ACTIVE:
+            raise ValueError(
+                "La versión dejó de ser ACTIVE; la proyección Neo4j se canceló de forma segura"
+            )
         lineage = ProjectionReplacementService(self.session).resolve(version.id)
         job = self.jobs.get(version.id, SyncTarget.NEO4J, for_update=True)
         if not job:
@@ -118,21 +124,30 @@ class Neo4jSyncService:
                 {**self._final_summary(plan, job), "error": job.error_summary},
             )
 
-    def _version(self, erp_id, knowledge_version):
+    def _version(self, erp_id, knowledge_version, *, for_update=False):
+        query = select(KnowledgeVersionRecord)
         if erp_id and knowledge_version:
-            version = self.knowledge.get_version(erp_id, knowledge_version)
+            query = query.where(
+                KnowledgeVersionRecord.erp_id == erp_id,
+                KnowledgeVersionRecord.knowledge_version == knowledge_version,
+            )
         elif erp_id:
-            version = self.knowledge.get_active_version(erp_id)
+            query = query.where(
+                KnowledgeVersionRecord.erp_id == erp_id,
+                KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE,
+            )
         else:
-            versions = [
-                item
-                for item in self.knowledge.list_versions()
-                if item.status == KnowledgeVersionStatus.ACTIVE
-                and (knowledge_version is None or item.knowledge_version == knowledge_version)
-            ]
-            if len(versions) != 1:
-                raise ValueError("Indique --erp-id cuando no exista una única versión activa")
-            version = versions[0]
+            query = query.where(KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE)
+            if knowledge_version is not None:
+                query = query.where(
+                    KnowledgeVersionRecord.knowledge_version == knowledge_version
+                )
+        if for_update:
+            query = query.with_for_update()
+        versions = list(self.session.scalars(query))
+        if not erp_id and len(versions) != 1:
+            raise ValueError("Indique --erp-id cuando no exista una única versión activa")
+        version = versions[0] if len(versions) == 1 else None
         if not version:
             raise LookupError("Versión de conocimiento no encontrada")
         return version

@@ -136,6 +136,8 @@ class KnowledgePromotionService:
         active = self._active_version(version.erp_id, for_update=for_update)
         bootstrap = active is None
         promotion_mode = "bootstrap" if bootstrap else "replacement"
+        if active is not None:
+            blockers.extend(self._active_projection_sync_blockers(active.id))
 
         import_job: PipelineJob | None = None
         source_job: PipelineJob | None = None
@@ -279,7 +281,15 @@ class KnowledgePromotionService:
 
         if previous_active is not None:
             previous_active.status = KnowledgeVersionStatus.ARCHIVED
+            # PostgreSQL enforces one ACTIVE KnowledgeVersion per ERP with an
+            # immediate partial unique index. Flush the archive transition
+            # before activating the replacement so correctness never depends
+            # on SQLAlchemy's UPDATE ordering. The whole operation remains in
+            # the caller transaction, so a later failure rolls both steps back.
+            self.session.flush()
+
         version.status = KnowledgeVersionStatus.ACTIVE
+        self.session.flush()
 
         sync_jobs: dict[str, str] = {}
         for target in SyncTarget:
@@ -733,6 +743,48 @@ class KnowledgePromotionService:
         }:
             return import_job, None
         return import_job, source_job
+
+    def _active_projection_sync_blockers(
+        self, active_version_id: uuid.UUID
+    ) -> list[PromotionBlocker]:
+        running_targets = {
+            str(job.target)
+            for job in self.session.scalars(
+                select(SyncJob).where(
+                    SyncJob.knowledge_version_id == active_version_id,
+                    SyncJob.status == SyncStatus.RUNNING,
+                )
+            )
+        }
+        pipeline_target_by_kind = {
+            PipelineJobKind.NEO4J_SYNC: SyncTarget.NEO4J.value,
+            PipelineJobKind.CHROMA_SYNC: SyncTarget.CHROMADB.value,
+        }
+        running_pipeline_jobs = list(
+            self.session.scalars(
+                select(PipelineJob).where(
+                    PipelineJob.knowledge_version_id == active_version_id,
+                    PipelineJob.kind.in_(tuple(pipeline_target_by_kind)),
+                    PipelineJob.status == PipelineJobStatus.RUNNING,
+                )
+            )
+        )
+        running_targets.update(
+            pipeline_target_by_kind[job.kind]
+            for job in running_pipeline_jobs
+            if job.kind in pipeline_target_by_kind
+        )
+        if not running_targets:
+            return []
+        targets = ", ".join(sorted(running_targets))
+        return [
+            PromotionBlocker(
+                "active_projection_sync_running",
+                "La ACTIVE actual mantiene una proyección estructural en ejecución "
+                f"({targets}); espere a que termine antes de promover un replacement.",
+                count=len(running_targets),
+            )
+        ]
 
     def _origin_import(self, version: KnowledgeVersionRecord) -> PipelineJob | None:
         jobs = list(

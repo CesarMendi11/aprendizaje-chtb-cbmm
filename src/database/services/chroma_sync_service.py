@@ -4,9 +4,11 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from src.database.models import KnowledgeVersionRecord
 from src.database.repositories import ERPRepository, KnowledgeRepository, SyncJobRepository
 from src.database.types import utcnow
 from src.knowledge.canonical.privacy import sanitize_text
@@ -185,7 +187,11 @@ class ChromaSyncService:
         return version, documents, self._summary(version, items, documents, reasons)
 
     def run(self, *, erp_id=None, knowledge_version=None):
-        version = self._version(erp_id, knowledge_version)
+        version = self._version(erp_id, knowledge_version, for_update=True)
+        if version.status != KnowledgeVersionStatus.ACTIVE:
+            raise ValueError(
+                "La versión dejó de ser ACTIVE; la proyección ChromaDB se canceló de forma segura"
+            )
         lineage = ProjectionReplacementService(self.session).resolve(version.id)
         if not self.repository or not self.embeddings:
             raise ValueError("ChromaDB y cliente de embeddings deben estar configurados")
@@ -261,21 +267,30 @@ class ChromaSyncService:
             summary.update({"sync_job": self._job(job), "error": job.error_summary})
             return ChromaSyncResult("failed", summary)
 
-    def _version(self, erp_id, knowledge_version):
+    def _version(self, erp_id, knowledge_version, *, for_update=False):
+        query = select(KnowledgeVersionRecord)
         if erp_id and knowledge_version:
-            version = self.knowledge.get_version(erp_id, knowledge_version)
+            query = query.where(
+                KnowledgeVersionRecord.erp_id == erp_id,
+                KnowledgeVersionRecord.knowledge_version == knowledge_version,
+            )
         elif erp_id:
-            version = self.knowledge.get_active_version(erp_id)
+            query = query.where(
+                KnowledgeVersionRecord.erp_id == erp_id,
+                KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE,
+            )
         else:
-            candidates = [
-                v
-                for v in self.knowledge.list_versions()
-                if v.status == KnowledgeVersionStatus.ACTIVE
-                and (knowledge_version is None or v.knowledge_version == knowledge_version)
-            ]
-            if len(candidates) != 1:
-                raise ValueError("Indique --erp-id cuando no exista una única versión activa")
-            version = candidates[0]
+            query = query.where(KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE)
+            if knowledge_version is not None:
+                query = query.where(
+                    KnowledgeVersionRecord.knowledge_version == knowledge_version
+                )
+        if for_update:
+            query = query.with_for_update()
+        candidates = list(self.session.scalars(query))
+        if not erp_id and len(candidates) != 1:
+            raise ValueError("Indique --erp-id cuando no exista una única versión activa")
+        version = candidates[0] if len(candidates) == 1 else None
         if not version:
             raise LookupError("Versión de conocimiento no encontrada")
         return version

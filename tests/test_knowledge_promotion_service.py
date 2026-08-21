@@ -15,6 +15,7 @@ from src.database.enums import (
     PipelineJobScope,
     PipelineJobStatus,
     SyncStatus,
+    SyncTarget,
 )
 from src.database.models import (
     KnowledgeItem,
@@ -266,6 +267,144 @@ def test_replacement_gate_uses_reconciled_diff_and_archives_previous_active(tmp_
         )
         assert len(jobs) == 2
         assert {job.status for job in jobs} == {SyncStatus.PENDING}
+
+    engine.dispose()
+
+
+def test_replacement_promotion_flushes_archive_before_activation(tmp_path, monkeypatch):
+    from tests.test_version_diff_service import seed_reconciled
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine, expire_on_commit=False) as session:
+        active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+        assessment = KnowledgePromotionService(session).assess(candidate_id)
+        assert assessment.promotable is True
+        session.rollback()
+
+        observed_statuses: list[tuple[KnowledgeVersionStatus, KnowledgeVersionStatus]] = []
+
+        with session.begin():
+            active = session.get(KnowledgeVersionRecord, active_id)
+            candidate = session.get(KnowledgeVersionRecord, candidate_id)
+            assert active is not None
+            assert candidate is not None
+
+            original_flush = session.flush
+
+            def tracking_flush(*args, **kwargs):
+                observed_statuses.append((active.status, candidate.status))
+                return original_flush(*args, **kwargs)
+
+            monkeypatch.setattr(session, "flush", tracking_flush)
+
+            KnowledgePromotionService(session).promote_replacement(
+                candidate_id,
+                reviewer="reviewer:test",
+                reason="Candidate reconciliado y revisado.",
+                expected_knowledge_version=assessment.knowledge_version,
+            )
+
+        archived_imported = (
+            KnowledgeVersionStatus.ARCHIVED,
+            KnowledgeVersionStatus.IMPORTED,
+        )
+        archived_active = (
+            KnowledgeVersionStatus.ARCHIVED,
+            KnowledgeVersionStatus.ACTIVE,
+        )
+
+        assert archived_imported in observed_statuses
+        assert archived_active in observed_statuses
+        assert observed_statuses.index(archived_imported) < observed_statuses.index(archived_active)
+
+    engine.dispose()
+
+
+@pytest.mark.parametrize("target", [SyncTarget.NEO4J, SyncTarget.CHROMADB])
+def test_replacement_gate_blocks_running_projection_of_current_active(tmp_path, target):
+    from tests.test_version_diff_service import seed_reconciled
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine, expire_on_commit=False) as session:
+        active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+        with session.begin():
+            job = session.scalar(
+                select(SyncJob).where(
+                    SyncJob.knowledge_version_id == active_id,
+                    SyncJob.target == target,
+                )
+            )
+            assert job is not None
+            job.status = SyncStatus.RUNNING
+
+        assessment = KnowledgePromotionService(session).assess(candidate_id)
+
+        assert assessment.promotable is False
+        blocker = next(
+            item
+            for item in assessment.blockers
+            if item.code == "active_projection_sync_running"
+        )
+        assert blocker.count == 1
+        assert target.value in blocker.message
+
+    engine.dispose()
+
+
+@pytest.mark.parametrize(
+    ("kind", "target"),
+    [
+        (PipelineJobKind.NEO4J_SYNC, SyncTarget.NEO4J),
+        (PipelineJobKind.CHROMA_SYNC, SyncTarget.CHROMADB),
+    ],
+)
+def test_replacement_gate_blocks_running_projection_pipeline_job(
+    tmp_path, kind, target
+):
+    from tests.test_version_diff_service import seed_reconciled
+
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine, expire_on_commit=False) as session:
+        active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
+        active = session.get(KnowledgeVersionRecord, active_id)
+        assert active is not None
+        active_knowledge_version = active.knowledge_version
+        active_erp_id = active.erp_id
+        session.rollback()
+        with session.begin():
+            session.add(
+                PipelineJob(
+                    kind=kind,
+                    status=PipelineJobStatus.RUNNING,
+                    scope=PipelineJobScope.VERSION,
+                    target=active_knowledge_version,
+                    profile_name="test",
+                    erp_id=active_erp_id,
+                    knowledge_version_id=active_id,
+                    request_source="test",
+                    parameters={},
+                    stage="syncing",
+                    progress_current=1,
+                    progress_total=4,
+                    checkpoint={},
+                    requested_at=datetime.now(timezone.utc),
+                    started_at=datetime.now(timezone.utc),
+                )
+            )
+
+        assessment = KnowledgePromotionService(session).assess(candidate_id)
+
+        assert assessment.promotable is False
+        blocker = next(
+            item
+            for item in assessment.blockers
+            if item.code == "active_projection_sync_running"
+        )
+        assert blocker.count == 1
+        assert target.value in blocker.message
 
     engine.dispose()
 

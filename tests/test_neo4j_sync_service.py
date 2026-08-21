@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 import src.database.models  # noqa: F401
 from src.database.base import Base
-from src.database.enums import SyncStatus, SyncTarget
-from src.database.models import KnowledgeItem, SyncJob
+from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from src.database.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
 from src.database.services import CanonicalImportService, KnowledgeReviewService, Neo4jSyncService
 from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
 from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
@@ -124,6 +124,40 @@ def test_empty_execution_rejected_unless_allow_empty(graph_session):
     graph_session.rollback()
     result = Neo4jSyncService(graph_session, repository=repo).run(allow_empty=True)
     assert result.status == "succeeded" and repo.bootstrap_calls == 1
+
+
+def test_run_requests_version_lock_before_external_projection(graph_session, monkeypatch):
+    _approve_and_correct(graph_session)
+    service = Neo4jSyncService(graph_session, repository=FakeGraphRepository())
+    original = Neo4jSyncService._version
+    lock_requests = []
+
+    def observed(self, erp_id, knowledge_version, *, for_update=False):
+        lock_requests.append(for_update)
+        return original(self, erp_id, knowledge_version, for_update=for_update)
+
+    monkeypatch.setattr(Neo4jSyncService, "_version", observed)
+    graph_session.rollback()
+    result = service.run()
+
+    assert result.status == "succeeded"
+    assert lock_requests[0] is True
+
+
+def test_run_refuses_explicit_archived_version(graph_session):
+    version = graph_session.scalar(select(KnowledgeVersionRecord))
+    assert version is not None
+    erp_id = version.erp_id
+    knowledge_version = version.knowledge_version
+    graph_session.rollback()
+    with graph_session.begin():
+        version = graph_session.scalar(select(KnowledgeVersionRecord))
+        version.status = KnowledgeVersionStatus.ARCHIVED
+
+    with pytest.raises(ValueError, match="dejó de ser ACTIVE"):
+        Neo4jSyncService(
+            graph_session, repository=FakeGraphRepository()
+        ).run(erp_id=erp_id, knowledge_version=knowledge_version, allow_empty=True)
 
 
 def test_running_job_is_rejected_before_projection_plan_is_prepared(graph_session):

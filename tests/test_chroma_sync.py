@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 import src.database.models  # noqa: F401
 from src.config.ollama_settings import OllamaEmbeddingSettings
 from src.database.base import Base
-from src.database.enums import SyncStatus, SyncTarget
-from src.database.models import KnowledgeItem, SyncJob
+from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from src.database.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
 from src.database.services import (
     CanonicalImportService,
     ChromaSyncService,
@@ -218,6 +218,50 @@ def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path)
     assert result.summary["embedding_dimensions"] == 3
     assert jobs_after[SyncTarget.CHROMADB] == jobs_before[SyncTarget.CHROMADB] + 1
     assert jobs_after[SyncTarget.NEO4J] == jobs_before[SyncTarget.NEO4J]
+
+
+def test_run_requests_version_lock_before_embedding_and_sync(
+    chroma_session, tmp_path, monkeypatch
+):
+    _approve_correct_reject(chroma_session)
+    repository = ChromaRepository(
+        client=chromadb.PersistentClient(path=str(tmp_path / "locked-run"))
+    )
+    service = ChromaSyncService(
+        chroma_session, repository=repository, embeddings=FakeEmbeddings()
+    )
+    original = ChromaSyncService._version
+    lock_requests = []
+
+    def observed(self, erp_id, knowledge_version, *, for_update=False):
+        lock_requests.append(for_update)
+        return original(self, erp_id, knowledge_version, for_update=for_update)
+
+    monkeypatch.setattr(ChromaSyncService, "_version", observed)
+    chroma_session.rollback()
+    result = service.run()
+
+    assert result.status == "succeeded"
+    assert lock_requests[0] is True
+
+
+def test_run_refuses_explicit_archived_version(chroma_session, tmp_path):
+    version = chroma_session.scalar(select(KnowledgeVersionRecord))
+    assert version is not None
+    erp_id = version.erp_id
+    knowledge_version = version.knowledge_version
+    chroma_session.rollback()
+    with chroma_session.begin():
+        version = chroma_session.scalar(select(KnowledgeVersionRecord))
+        version.status = KnowledgeVersionStatus.ARCHIVED
+
+    repository = ChromaRepository(
+        client=chromadb.PersistentClient(path=str(tmp_path / "archived-run"))
+    )
+    with pytest.raises(ValueError, match="dejó de ser ACTIVE"):
+        ChromaSyncService(
+            chroma_session, repository=repository, embeddings=FakeEmbeddings()
+        ).run(erp_id=erp_id, knowledge_version=knowledge_version)
 
 
 def test_running_job_is_rejected_before_documents_are_prepared(chroma_session, tmp_path):
