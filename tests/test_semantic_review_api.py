@@ -362,6 +362,9 @@ def test_pagination_filters_detail_and_sanitized_evidence(api):
         "&erp_id=erp:first&limit=1&offset=0"
     ).json()
     assert page["total"] == 1 and len(page["items"]) == 1
+    assert page["items"][0]["lifecycle_origin"] == "generated"
+    assert page["items"][0]["source_semantic_proposal_id"] is None
+    assert page["items"][0]["source_knowledge_version_id"] is None
     detail = client.get(f"/api/admin/semantic-proposals/{first}").json()
     assert detail["source_payload"] == source
     assert detail["review_history"] == []

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
@@ -13,7 +14,12 @@ from src.api.admin_knowledge_serializers import semantic_projection
 from src.api.app import create_app
 from src.config.api_settings import ApiSettings
 from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from src.database.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticLifecycleOrigin,
+    SemanticType,
+)
 from src.database.models import (
     ERPSystemRecord,
     ImportRun,
@@ -23,6 +29,7 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
+from src.database.services.semantic_payloads import canonical_json_hash
 from src.knowledge.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
@@ -358,6 +365,9 @@ def test_screen_list_pagination_and_review_context(admin_api):
     body = context.json()
     assert body["erp"]["erp_id"] == "erp:tree"
     assert body["module"]["module_id"] == "module:a"
+    assert body["active_proposal"]["summary"]["lifecycle_origin"] == "generated"
+    assert body["active_proposal"]["summary"]["source_semantic_proposal_id"] is None
+    assert body["active_proposal"]["summary"]["source_knowledge_version_id"] is None
     assert body["semantic_state"] == "approved"
     assert body["structural_evidence"]["evidence_available"] is True
     assert body["traceability"]["review_action_count"] == 1
@@ -721,6 +731,36 @@ def test_no_proposal_mixed_and_unavailable_states(admin_api):
         first[1].current_review_status = ReviewStatus.REJECTED
         assert semantic_projection(((first[0], 0), (first[1], 0))).state == "mixed"
 
+
+def test_carried_forward_corrected_projection_uses_provenance_without_fake_local_action():
+    payload = {
+        "semantic_type": "screen_purpose",
+        "screen_id": "screen:carry",
+        "purpose_summary": "Descripción humana heredada.",
+        "supported_capabilities": [],
+        "limitations": [],
+        "uncertainties": [],
+    }
+    proposal = SimpleNamespace(
+        id=uuid.uuid4(),
+        semantic_type=SemanticType.SCREEN_PURPOSE,
+        current_review_status=ReviewStatus.CORRECTED,
+        lifecycle_origin=SemanticLifecycleOrigin.CARRIED_FORWARD,
+        source_payload=payload,
+        source_effective_content_hash=canonical_json_hash(payload),
+        created_at=datetime.now(timezone.utc),
+    )
+    projection = semantic_projection(((proposal, 0),), actions={})
+    assert projection.state == "corrected"
+    assert projection.diagnostic is None
+    assert projection.payload is not None
+    assert projection.payload.purpose_summary == "Descripción humana heredada."
+
+    proposal.source_effective_content_hash = "f" * 64
+    invalid = semantic_projection(((proposal, 0),), actions={})
+    assert invalid.state == "unavailable"
+    assert invalid.payload is None
+    assert "provenance" in invalid.diagnostic
 
 def test_corrected_effective_payload_and_capabilities(admin_api):
     client, factory, _ = admin_api

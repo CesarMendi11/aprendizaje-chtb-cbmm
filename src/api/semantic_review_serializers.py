@@ -25,6 +25,20 @@ def proposal_summary(
         semantic_type=str(proposal.semantic_type),
         current_review_status=proposal.current_review_status,
         review_revision=proposal.review_revision,
+        lifecycle_origin=proposal.lifecycle_origin,
+        source_semantic_proposal_id=(
+            str(proposal.source_semantic_proposal_id)
+            if proposal.source_semantic_proposal_id is not None
+            else None
+        ),
+        source_knowledge_version_id=(
+            str(proposal.source_knowledge_version_id)
+            if proposal.source_knowledge_version_id is not None
+            else None
+        ),
+        source_review_status=proposal.source_review_status,
+        source_review_revision=proposal.source_review_revision,
+        source_effective_content_hash=proposal.source_effective_content_hash,
         erp_id=proposal.knowledge_version.erp_id,
         knowledge_version_id=str(proposal.knowledge_version_id),
         screen_id=proposal.screen_knowledge_item.canonical_id,

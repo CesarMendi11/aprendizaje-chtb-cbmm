@@ -6,6 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.analysis.schemas import ScreenPurposeInference
+from src.database.enums import SemanticLifecycleOrigin
 from src.knowledge.canonical.enums import ReviewStatus
 
 
@@ -18,6 +19,12 @@ class SemanticProposalSummaryResponse(StrictResponseModel):
     semantic_type: str
     current_review_status: ReviewStatus
     review_revision: int
+    lifecycle_origin: SemanticLifecycleOrigin
+    source_semantic_proposal_id: str | None
+    source_knowledge_version_id: str | None
+    source_review_status: ReviewStatus | None
+    source_review_revision: int | None
+    source_effective_content_hash: str | None
     erp_id: str
     knowledge_version_id: str
     screen_id: str

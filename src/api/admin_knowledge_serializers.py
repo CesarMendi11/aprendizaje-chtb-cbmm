@@ -38,6 +38,7 @@ from src.api.schemas.admin_knowledge import (
     KnowledgeTreeScreen,
     ScreenSemanticState,
 )
+from src.database.enums import SemanticLifecycleOrigin
 from src.database.models import KnowledgeItem, SemanticProposal, SemanticReviewAction
 from src.database.repositories.admin_knowledge_repository import EffectiveModule, EffectiveScreen
 from src.database.services.semantic_payloads import canonical_json_hash
@@ -93,6 +94,29 @@ def semantic_projection(
                     )
                 break
         if correction is None:
+            if latest.lifecycle_origin == SemanticLifecycleOrigin.CARRIED_FORWARD:
+                carried_payload = _valid_payload(latest.source_payload)
+                if carried_payload is None:
+                    return SemanticProjection(
+                        ScreenSemanticState.UNAVAILABLE,
+                        latest,
+                        None,
+                        "El payload heredado por carry-forward no cumple el esquema esperado.",
+                    )
+                carried_hash = canonical_json_hash(carried_payload.model_dump(mode="json"))
+                if (
+                    latest.source_effective_content_hash is None
+                    or carried_hash != latest.source_effective_content_hash
+                ):
+                    return SemanticProjection(
+                        ScreenSemanticState.UNAVAILABLE,
+                        latest,
+                        None,
+                        "El payload heredado por carry-forward no coincide con su provenance.",
+                    )
+                return SemanticProjection(
+                    ScreenSemanticState.CORRECTED, latest, carried_payload
+                )
             return SemanticProjection(
                 ScreenSemanticState.UNAVAILABLE,
                 latest,
@@ -151,6 +175,20 @@ def tolerant_proposal_summary(proposal, action_count: int, payload):
         semantic_type=str(proposal.semantic_type),
         current_review_status=proposal.current_review_status,
         review_revision=proposal.review_revision,
+        lifecycle_origin=proposal.lifecycle_origin,
+        source_semantic_proposal_id=(
+            str(proposal.source_semantic_proposal_id)
+            if proposal.source_semantic_proposal_id is not None
+            else None
+        ),
+        source_knowledge_version_id=(
+            str(proposal.source_knowledge_version_id)
+            if proposal.source_knowledge_version_id is not None
+            else None
+        ),
+        source_review_status=proposal.source_review_status,
+        source_review_revision=proposal.source_review_revision,
+        source_effective_content_hash=proposal.source_effective_content_hash,
         erp_id=proposal.knowledge_version.erp_id,
         knowledge_version_id=str(proposal.knowledge_version_id),
         screen_id=proposal.screen_knowledge_item.canonical_id,
