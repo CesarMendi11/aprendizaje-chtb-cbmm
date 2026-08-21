@@ -80,9 +80,12 @@ class SemanticChromaSyncJobExecutor:
                     session,
                     repository=repository,
                     embeddings=embeddings,
-                ).run(
+                ).publish_prepared(
+                    knowledge_version_id=version.id,
                     erp_id=version.erp_id,
                     knowledge_version=version.knowledge_version,
+                    documents=documents,
+                    summary=summary,
                 )
                 summary = dict(result.summary)
         except SemanticChromaSyncJobExecutionError:

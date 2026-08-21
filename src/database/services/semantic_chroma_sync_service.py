@@ -207,20 +207,63 @@ class SemanticChromaSyncService:
         version, documents, summary = self.prepare(
             erp_id=erp_id, knowledge_version=knowledge_version
         )
-        if not self.repository or not self.embeddings:
-            raise ValueError("ChromaDB semántico y cliente de embeddings deben estar configurados")
-        vectors = (
-            self.embeddings.embed([document.text for document in documents])
-            if documents
-            else []
-        )
-        changed, removed = self.repository.sync(
-            documents,
-            vectors,
+        return self.publish_prepared(
+            knowledge_version_id=version.id,
             erp_id=version.erp_id,
             knowledge_version=version.knowledge_version,
+            documents=documents,
+            summary=summary,
         )
-        summary.update(
+
+    def publish_prepared(
+        self,
+        *,
+        knowledge_version_id,
+        erp_id: str,
+        knowledge_version: str,
+        documents,
+        summary,
+    ):
+        if not self.repository or not self.embeddings:
+            raise ValueError("ChromaDB semántico y cliente de embeddings deben estar configurados")
+
+        prepared_documents = list(documents)
+        prepared_summary = dict(summary)
+        if (
+            prepared_summary.get("erp_id") != erp_id
+            or prepared_summary.get("knowledge_version") != knowledge_version
+            or prepared_summary.get("documents") != len(prepared_documents)
+        ):
+            raise ValueError("semantic_prepared_projection_identity_mismatch")
+
+        vectors = (
+            self.embeddings.embed([document.text for document in prepared_documents])
+            if prepared_documents
+            else []
+        )
+
+        # Embeddings can be slow and Chroma is outside the PostgreSQL transaction.
+        # Refresh all ORM state and rebuild the publishable projection immediately
+        # before the external write. Any promotion, review, or evidence change must
+        # fail closed instead of publishing the now-stale prepared documents.
+        self.session.expire_all()
+        current_version, current_documents, _current_summary = self.prepare(
+            erp_id=erp_id,
+            knowledge_version=knowledge_version,
+        )
+        if (
+            current_version.id != knowledge_version_id
+            or current_documents != prepared_documents
+        ):
+            raise ValueError("semantic_projection_changed_during_sync")
+
+        changed, removed = self.repository.sync(
+            prepared_documents,
+            vectors,
+            erp_id=erp_id,
+            knowledge_version=knowledge_version,
+        )
+        prepared_summary.update(
             {
                 "embedding_model": self.embeddings.model,
                 "embedding_dimensions": self.embeddings.dimensions,
@@ -228,7 +271,7 @@ class SemanticChromaSyncService:
                 "removed_stale": removed,
             }
         )
-        return SemanticChromaSyncResult("succeeded", summary)
+        return SemanticChromaSyncResult("succeeded", prepared_summary)
 
     def _version(self, erp_id, knowledge_version):
         query = select(KnowledgeVersionRecord).options(joinedload(KnowledgeVersionRecord.erp))

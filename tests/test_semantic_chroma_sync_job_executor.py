@@ -34,7 +34,18 @@ class FakeService:
             "skipped": 0,
         }
 
-    def run(self, *, erp_id, knowledge_version):
+    def publish_prepared(
+        self,
+        *,
+        knowledge_version_id,
+        erp_id,
+        knowledge_version,
+        documents,
+        summary,
+    ):
+        assert knowledge_version_id is not None
+        assert len(documents) == 1
+        assert summary["documents"] == 1
         return FakeResult(
             {
                 "erp_id": erp_id,

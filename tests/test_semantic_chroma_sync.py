@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import uuid
 
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -31,8 +33,10 @@ class FakeRepository:
     def __init__(self):
         self.documents = []
         self.embeddings = []
+        self.sync_calls = 0
 
     def sync(self, documents, embeddings, *, erp_id, knowledge_version):
+        self.sync_calls += 1
         self.documents = list(documents)
         self.embeddings = list(embeddings)
         return len(self.documents), 0
@@ -41,12 +45,15 @@ class FakeRepository:
 class FakeEmbeddings:
     model = "fake-semantic-embedding"
 
-    def __init__(self):
+    def __init__(self, on_embed=None):
         self.dimensions = None
+        self.on_embed = on_embed
 
     def embed(self, texts):
         values = list(texts)
         self.dimensions = 4
+        if self.on_embed is not None:
+            self.on_embed()
         return [[1.0, 0.0, 0.0, 0.0] for _ in values]
 
 
@@ -259,4 +266,32 @@ def test_prepare_excludes_semantics_when_current_structure_is_ineligible():
         )
         assert documents == []
         assert summary["skipped_reasons"] == {"current_evidence_ineligible": 1}
+    engine.dispose()
+
+
+def test_run_fails_closed_when_active_version_changes_after_embedding_before_sync():
+    engine, factory = build_factory()
+    version_id, erp_id, knowledge_version, _screen_id, _proposal_id, package = seed(factory)
+    repository = FakeRepository()
+
+    with factory() as session:
+        version = session.get(KnowledgeVersionRecord, uuid.UUID(version_id))
+
+        def archive_after_embedding():
+            version.status = KnowledgeVersionStatus.ARCHIVED
+            session.flush()
+
+        embeddings = FakeEmbeddings(on_embed=archive_after_embedding)
+        service = SemanticChromaSyncService(
+            session,
+            repository=repository,
+            embeddings=embeddings,
+            evidence_builder=FakeEvidenceBuilder(package),
+        )
+
+        with pytest.raises(ValueError, match="ACTIVE"):
+            service.run(erp_id=erp_id, knowledge_version=knowledge_version)
+
+        assert repository.sync_calls == 0
+
     engine.dispose()

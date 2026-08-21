@@ -38,7 +38,22 @@ class SemanticChromaRepository:
         )
 
     def sync(self, documents, embeddings, *, erp_id: str, knowledge_version: str):
+        documents = list(documents)
+        embeddings = list(embeddings)
+        if len(documents) != len(embeddings):
+            raise ValueError("semantic_document_embedding_count_mismatch")
+
         ids = [document.id for document in documents]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate_semantic_document_id")
+        for document in documents:
+            metadata = document.metadata
+            if (
+                metadata.get("erp_id") != erp_id
+                or metadata.get("knowledge_version") != knowledge_version
+            ):
+                raise ValueError("semantic_document_scope_mismatch")
+
         if ids:
             self.collection.upsert(
                 ids=ids,
@@ -46,7 +61,11 @@ class SemanticChromaRepository:
                 metadatas=[document.metadata for document in documents],
                 embeddings=embeddings,
             )
-        scope = {"$and": [{"erp_id": erp_id}, {"knowledge_version": knowledge_version}]}
+
+        # The semantic collection is an ACTIVE-only physical projection per ERP.
+        # Cleaning only the current knowledge_version would leave documents from
+        # the previously ACTIVE version behind after a replacement promotion.
+        scope = {"erp_id": erp_id}
         current = self.collection.get(where=scope, include=[])["ids"]
         stale = sorted(set(current) - set(ids))
         if stale:
