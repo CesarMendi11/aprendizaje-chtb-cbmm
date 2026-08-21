@@ -161,3 +161,110 @@ def test_path_replayer_refuses_non_allowed_event():
 
     assert result.success is False
     assert "no autorizado" in result.error
+
+
+def test_path_replayer_waits_for_expected_root_fingerprint_after_stable_partial_render():
+    profile = {
+        "erp": {"base_url": "http://example.invalid"},
+        "exploration": {"page_wait_ms": 0},
+        "state_detection": {
+            "stability": {
+                "enabled": True,
+                "timeout_ms": 1000,
+                "interval_ms": 250,
+                "minimum_observation_ms": 500,
+                "required_consecutive_samples": 2,
+            },
+        },
+        "state_replay": {
+            "page_wait_ms": 0,
+            "step_wait_ms": 0,
+            "click_timeout_ms": 1000,
+            "verify_each_step": True,
+        },
+    }
+    builder = StateSignatureBuilder.from_profile(profile)
+    registry = StateRegistry()
+
+    target_data = {
+        "path": ROUTE,
+        "title": "Dashboard",
+        "functional_title": "Dashboard",
+        "visible_text": "Dashboard listo",
+        "main_visible_text": "Dashboard listo",
+        "links": [],
+        "buttons": [{"text": "Menú", "tag": "button"}],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "regions": {
+            "main_content": {
+                "visible_text": "Dashboard listo",
+                "elements_count": 1,
+            }
+        },
+        "custom_interactives": [],
+    }
+    partial_data = {
+        **target_data,
+        "visible_text": "Dashboard",
+        "main_visible_text": "Dashboard",
+        "buttons": [],
+    }
+
+    target_signature = builder.build(target_data)
+    target_id = registry.build_state_id(target_signature.structural_fingerprint)
+    target = registry.register_signature(
+        target_signature,
+        path=CrawlPath(root_state_id=target_id),
+    ).state
+
+    class DummyPage:
+        def wait_for_timeout(self, milliseconds):
+            return None
+
+    class SequenceExtractor:
+        def __init__(self):
+            self.values = [
+                partial_data,
+                partial_data,
+                partial_data,
+                target_data,
+                target_data,
+            ]
+            self.index = 0
+
+        def extract(self, title_hint=""):
+            value = self.values[min(self.index, len(self.values) - 1)]
+            self.index += 1
+            return dict(value)
+
+    class DummyNavigator:
+        def __init__(self):
+            self.page = DummyPage()
+            self.paths = []
+
+        def goto_path(self, path):
+            self.paths.append(path)
+
+    navigator = DummyNavigator()
+    replayer = PathReplayer(
+        page=navigator.page,
+        profile=profile,
+        navigator=navigator,
+        extractor=SequenceExtractor(),
+        signature_builder=builder,
+        registry=registry,
+    )
+
+    result = replayer.replay(
+        target.path,
+        expected_target_state_id=target.state_id,
+    )
+
+    assert result.success is True
+    assert result.completed_steps == 0
+    assert result.reached_state_id == target.state_id
+    assert result.signature is not None
+    assert result.signature.structural_fingerprint == target.structural_signature
+    assert navigator.paths == [ROUTE]

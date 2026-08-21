@@ -431,3 +431,121 @@ def test_state_restorer_keeps_safe_history_when_retry_recovers_navigation_mismat
     assert result.attempt_history[1]["summary_comparison"] == {}
     assert result.diagnostics()["attempt_history"] == result.attempt_history
     assert navigator.paths == [ROUTE, ROUTE]
+
+
+def test_state_restorer_waits_for_expected_root_fingerprint_after_stable_partial_render():
+    cfg = {
+        "navigation": {"home_url": ROUTE},
+        "exploration": {"page_wait_ms": 0},
+        "state_detection": {
+            "stability": {
+                "enabled": True,
+                "timeout_ms": 1000,
+                "interval_ms": 250,
+                "minimum_observation_ms": 500,
+                "required_consecutive_samples": 2,
+            },
+        },
+        "state_replay": {"page_wait_ms": 0, "restore_attempts": 1},
+    }
+    builder = StateSignatureBuilder.from_profile(cfg)
+    registry = StateRegistry()
+
+    target_data = {
+        "path": ROUTE,
+        "title": "Dashboard",
+        "functional_title": "Dashboard",
+        "visible_text": "Dashboard listo",
+        "main_visible_text": "Dashboard listo",
+        "links": [],
+        "buttons": [{"text": "Menú", "tag": "button"}],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "regions": {
+            "main_content": {
+                "visible_text": "Dashboard listo",
+                "elements_count": 1,
+            }
+        },
+        "custom_interactives": [],
+    }
+    current_data = {
+        **target_data,
+        "visible_text": "Otro estado",
+        "main_visible_text": "Otro estado",
+        "buttons": [],
+    }
+    partial_data = {
+        **target_data,
+        "visible_text": "Dashboard",
+        "main_visible_text": "Dashboard",
+        "buttons": [],
+    }
+
+    target_signature = builder.build(target_data)
+    target_id = registry.build_state_id(target_signature.structural_fingerprint)
+    target = registry.register_signature(
+        target_signature,
+        path=CrawlPath(root_state_id=target_id),
+    ).state
+
+    class DummyPage:
+        def wait_for_timeout(self, milliseconds):
+            return None
+
+    class SequenceExtractor:
+        def __init__(self):
+            self.phase = "current"
+            self.restore_values = [
+                partial_data,
+                partial_data,
+                partial_data,
+                target_data,
+                target_data,
+            ]
+            self.restore_index = 0
+
+        def extract(self, title_hint=""):
+            if self.phase == "current":
+                return dict(current_data)
+            value = self.restore_values[
+                min(self.restore_index, len(self.restore_values) - 1)
+            ]
+            self.restore_index += 1
+            return dict(value)
+
+    extractor = SequenceExtractor()
+
+    class DummyNavigator:
+        def __init__(self):
+            self.page = DummyPage()
+            self.paths = []
+
+        def goto_path(self, path):
+            self.paths.append(path)
+            extractor.phase = "restore"
+
+    navigator = DummyNavigator()
+    restorer = StateRestorer(
+        profile=cfg,
+        navigator=navigator,
+        extractor=extractor,
+        signature_builder=builder,
+        registry=registry,
+        path_replayer=object(),
+    )
+
+    result = restorer.restore(target)
+
+    assert result.success is True
+    assert result.strategy == "direct_route"
+    assert result.attempts == 1
+    assert navigator.paths == [ROUTE]
+    assert result.observation["samples_count"] == 5
+    assert result.observation["observed_fingerprints"][:3] == [
+        builder.build(partial_data).structural_fingerprint,
+    ] * 3
+    assert result.observation["observed_fingerprints"][-2:] == [
+        target.structural_signature,
+    ] * 2

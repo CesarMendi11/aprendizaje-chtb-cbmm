@@ -109,6 +109,7 @@ class PathReplayer:
             observation = self._observe(
                 title_hint=self._state_title_hint(root_state),
                 canonical_title=root_state.title,
+                expected_structural_fingerprint=root_state.structural_signature,
             )
             observation_diagnostics = observation.diagnostics()
             self._assert_observation_stable(observation, "estado raíz")
@@ -136,6 +137,9 @@ class PathReplayer:
                     ),
                     canonical_title=(
                         expected_state.title if expected_state else root_state.title
+                    ),
+                    expected_structural_fingerprint=(
+                        expected_state.structural_signature if expected_state else None
                     ),
                 )
                 observation_diagnostics = observation.diagnostics()
@@ -194,6 +198,7 @@ class PathReplayer:
         self,
         title_hint: str = "",
         canonical_title: str | None = None,
+        expected_structural_fingerprint: str | None = None,
     ):
         observer = StableStateObserver(
             profile=self.profile,
@@ -204,6 +209,7 @@ class PathReplayer:
         return observer.observe(
             title_hint=title_hint,
             canonical_title=canonical_title,
+            expected_structural_fingerprint=expected_structural_fingerprint,
         )
 
     @staticmethod

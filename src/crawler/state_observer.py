@@ -69,6 +69,7 @@ class StableStateObserver:
         self,
         title_hint: str = "",
         canonical_title: str | None = None,
+        expected_structural_fingerprint: str | None = None,
     ) -> StateObservation:
         fingerprints: list[str] = []
         samples_count = 0
@@ -96,9 +97,14 @@ class StableStateObserver:
 
             if not self.enabled:
                 break
-            if (
+            stable_enough = (
                 consecutive >= self.required_consecutive_samples
                 and elapsed_ms >= self.minimum_observation_ms
+            )
+            if stable_enough and (
+                expected_structural_fingerprint is None
+                or signature.structural_fingerprint
+                == expected_structural_fingerprint
             ):
                 break
             if elapsed_ms >= self.timeout_ms:

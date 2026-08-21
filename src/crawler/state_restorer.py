@@ -271,6 +271,7 @@ class StateRestorer:
         return observer.observe(
             title_hint=self._title_hint(target),
             canonical_title=target.title,
+            expected_structural_fingerprint=target.structural_signature,
         )
 
     def _observer(self) -> StableStateObserver:
