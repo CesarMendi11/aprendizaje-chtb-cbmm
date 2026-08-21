@@ -22,7 +22,7 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.1"
+GENERATOR_VERSION = "4.0.2"
 ARTIFACT_NAMES = (
     "screen_index.json", "routes_graph.json", "state_registry.json",
     "state_flow_graph.json", "event_policy_audit.json", "ui_event_execution_audit.json",
@@ -87,7 +87,7 @@ class CanonicalKnowledgeBuilder:
                 self.sensitive_exclusions += 1
                 self._omit("dynamic_text_sources")
             module_id = self._module_for_route(route, route_modules)
-            if module_id is None:
+            if module_id is None and route != home_route:
                 self._warn("route_without_module", "Pantalla sin módulo inferible", "screen", screen_id)
             evidence_id = self._evidence(evidence, "screen", screen_id, "screen_index.json", hashes, EvidenceType.STRUCTURAL_JSON, artifact_base)
             title = str(raw.get("functional_title") or raw.get("title") or route)

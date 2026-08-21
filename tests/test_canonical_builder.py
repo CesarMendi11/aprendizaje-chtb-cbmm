@@ -25,6 +25,34 @@ def test_builder_preserves_typed_elements_and_transitions():
     assert len(kb.transitions) == 1 and kb.transitions[0].route_changed
 
 
+def test_home_screen_without_module_is_not_reported_as_route_without_module():
+    kb = build()
+    home = next(item for item in kb.screens if item.route == "/app/home")
+
+    assert kb.generator_version == "4.0.2"
+    assert home.module_id is None
+    assert not any(
+        warning.code == "route_without_module" and warning.entity_id == home.id
+        for warning in kb.build_warnings
+    )
+
+
+def test_non_home_screen_without_module_keeps_route_without_module_warning():
+    artifacts = fictional_artifacts()
+    artifacts["screen_index.json"]["screens"].append(
+        {"route": "/app/orphan", "title": "Orphan"}
+    )
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    orphan = next(item for item in kb.screens if item.route == "/app/orphan")
+
+    assert orphan.module_id is None
+    assert any(
+        warning.code == "route_without_module" and warning.entity_id == orphan.id
+        for warning in kb.build_warnings
+    )
+
+
 def test_privacy_removes_sensitive_and_volatile_content():
     kb = build()
     home = next(item for item in kb.screens if item.route == "/app/home")

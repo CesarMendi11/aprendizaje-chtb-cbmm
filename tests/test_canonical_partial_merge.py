@@ -271,7 +271,7 @@ def test_merge_knowledge_version_is_deterministic_for_same_inputs():
     second, _ = merger.merge(base, partial, _snapshot())
 
     assert first.knowledge_version == second.knowledge_version
-    assert first.generator_version == "canonical-partial-merge-1.1.3"
+    assert first.generator_version == "canonical-partial-merge-1.1.4"
     assert first.source_artifact_hashes == {
         "base:screen_index.json": "hash-base-v1",
         "partial:screen_index.json": "hash-partial-v1",
@@ -327,6 +327,55 @@ def test_screen_partial_replaces_only_target_screen_and_preserves_module_context
     assert report.target_module_id is None
     assert report.removed_counts["screens"] == 1
     assert report.inserted_counts["screens"] == 1
+
+
+def test_screen_partial_drops_route_without_module_warning_after_module_restore():
+    base = _knowledge(version="base-v1")
+    partial_payload = _knowledge(version="partial-v1", partial=True).model_dump(mode="json")
+    target = next(item for item in partial_payload["screens"] if item["id"] == "screen:tracking")
+    target["module_id"] = None
+    partial_payload["build_warnings"] = [
+        {
+            "code": "route_without_module",
+            "message": "Pantalla sin módulo inferible",
+            "entity_type": "screen",
+            "entity_id": "screen:tracking",
+        }
+    ]
+    partial = CanonicalKnowledgeBase.model_validate(partial_payload)
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _screen_snapshot())
+
+    tracking = next(item for item in merged.screens if item.id == "screen:tracking")
+    assert tracking.module_id == "module:tracking"
+    assert not any(
+        warning.code == "route_without_module"
+        and warning.entity_id == "screen:tracking"
+        for warning in merged.build_warnings
+    )
+
+
+def test_screen_partial_preserves_and_deduplicates_unrelated_warnings():
+    base_payload = _knowledge(version="base-v1").model_dump(mode="json")
+    partial_payload = _knowledge(version="partial-v1", partial=True).model_dump(mode="json")
+    warning = {
+        "code": "synthetic_warning",
+        "message": "Synthetic warning",
+        "entity_type": "screen",
+        "entity_id": None,
+    }
+    base_payload["build_warnings"] = [{**warning, "count": 1}]
+    partial_payload["build_warnings"] = [{**warning, "count": 2}]
+    base = CanonicalKnowledgeBase.model_validate(base_payload)
+    partial = CanonicalKnowledgeBase.model_validate(partial_payload)
+
+    merged, _ = CanonicalPartialMerger().merge(base, partial, _screen_snapshot())
+
+    matching = [
+        item for item in merged.build_warnings if item.code == "synthetic_warning"
+    ]
+    assert len(matching) == 1
+    assert matching[0].count == 2
 
 
 def test_screen_partial_requires_same_pinned_screen_route():

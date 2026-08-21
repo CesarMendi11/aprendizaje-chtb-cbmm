@@ -59,7 +59,7 @@ _COLLECTIONS = (
 class CanonicalPartialMerger:
     """Replace exactly one governed MODULE subtree or SCREEN inside a FULL snapshot."""
 
-    GENERATOR_VERSION = "canonical-partial-merge-1.1.3"
+    GENERATOR_VERSION = "canonical-partial-merge-1.1.4"
 
     def merge(
         self,
@@ -151,6 +151,9 @@ class CanonicalPartialMerger:
             partial.build_warnings,
             removed_entity_ids,
             partial_entity_ids,
+        )
+        warnings = self._drop_resolved_route_without_module_warnings(
+            warnings, merged_collections["screens"]
         )
 
         statistics = {name: len(merged_collections[name]) for name in _COLLECTIONS}
@@ -500,6 +503,23 @@ class CanonicalPartialMerger:
                 item.message,
             ),
         )
+
+    @staticmethod
+    def _drop_resolved_route_without_module_warnings(
+        warnings: Iterable[BuildWarning],
+        screens: Iterable,
+    ) -> list[BuildWarning]:
+        screens_by_id = {item.id: item for item in screens}
+        return [
+            item
+            for item in warnings
+            if not (
+                item.code == "route_without_module"
+                and item.entity_type == "screen"
+                and item.entity_id in screens_by_id
+                and screens_by_id[item.entity_id].module_id is not None
+            )
+        ]
 
     @staticmethod
     def _merge_provenance(
