@@ -96,6 +96,28 @@ def semantic_evidence_hash(evidence_payload: dict[str, Any], evidence_ids: list[
     )
 
 
+def semantic_evidence_compatibility_payload(package: Any) -> dict[str, Any]:
+    """Canonical Safe Evidence for cross-version comparison, excluding version identity only."""
+    from src.analysis.schemas import ScreenEvidencePackage
+
+    if not isinstance(package, ScreenEvidencePackage):
+        raise SemanticPayloadError("Se requiere un ScreenEvidencePackage validado")
+    validated = ScreenEvidencePackage.model_validate(package.model_dump(mode="python"))
+    payload = validated.model_dump(mode="json", exclude={"evidence_hash"})
+    if canonical_json_hash(payload) != validate_sha256(
+        validated.evidence_hash, field="evidence_hash"
+    ):
+        raise SemanticPayloadError("evidence_hash no coincide con el paquete validado")
+    payload.pop("knowledge_version_id", None)
+    payload.pop("knowledge_version", None)
+    return payload
+
+
+def semantic_evidence_compatibility_hash(package: Any) -> str:
+    """Hash semantic evidence across KnowledgeVersions without weakening per-version freshness."""
+    return canonical_json_hash(semantic_evidence_compatibility_payload(package))
+
+
 @dataclass(frozen=True, init=False)
 class ValidatedSemanticEvidenceSnapshot:
     """Immutable, canonical JSON produced only from a validated screen evidence package."""
