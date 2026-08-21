@@ -82,7 +82,7 @@ def seed(factory, *, version_status=KnowledgeVersionStatus.ACTIVE, review=Review
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="active-semantic-v1",
             canonical_hash=HASH,
             generated_at=datetime.now(timezone.utc),
@@ -249,7 +249,7 @@ def seed_replacement(factory):
         source_version = KnowledgeVersionRecord(
             erp=erp,
             import_run=source_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="source-semantic-v1",
             canonical_hash=HASH,
             generated_at=datetime.now(timezone.utc),
@@ -281,7 +281,7 @@ def seed_replacement(factory):
         target_version = KnowledgeVersionRecord(
             erp=erp,
             import_run=target_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="target-semantic-v2",
             canonical_hash="b" * 64,
             generated_at=datetime.now(timezone.utc),

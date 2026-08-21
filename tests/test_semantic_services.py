@@ -87,7 +87,7 @@ def seed_screen(
     version = KnowledgeVersionRecord(
         erp=erp,
         import_run=run,
-        schema_version="1.0.0",
+        schema_version="1.1.0",
         knowledge_version=suffix,
         canonical_hash=HASH_A,
         generated_at=datetime.now(timezone.utc),
@@ -467,7 +467,7 @@ def seed_semantic_lineage_pair(session):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0.0",
+            schema_version="1.1.0",
             knowledge_version=name,
             canonical_hash=HASH_A,
             generated_at=datetime.now(timezone.utc),

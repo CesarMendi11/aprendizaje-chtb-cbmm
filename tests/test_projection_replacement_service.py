@@ -29,7 +29,7 @@ def _version(erp, *, name: str, status: KnowledgeVersionStatus):
     return KnowledgeVersionRecord(
         erp=erp,
         import_run=run,
-        schema_version="1.0",
+        schema_version="1.1.0",
         knowledge_version=name,
         canonical_hash=("a" if status == KnowledgeVersionStatus.ARCHIVED else "b") * 64,
         generated_at=datetime.now(timezone.utc),

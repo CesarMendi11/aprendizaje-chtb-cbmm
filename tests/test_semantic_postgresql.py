@@ -73,7 +73,7 @@ def semantic_graph(pg_engine):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0.0",
+            schema_version="1.1.0",
             knowledge_version=f"test-{suffix}",
             canonical_hash=HASH_A,
             generated_at=now,

@@ -113,7 +113,7 @@ def seed_active(factory, *, screen_title="Pantalla prueba"):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="active-v1",
             canonical_hash="a" * 64,
             generated_at=datetime.now(timezone.utc),
@@ -305,7 +305,7 @@ def seed_replacement_active(factory):
         previous = KnowledgeVersionRecord(
             erp=erp,
             import_run=old_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="old-v1",
             canonical_hash="c" * 64,
             generated_at=datetime.now(timezone.utc),
@@ -317,7 +317,7 @@ def seed_replacement_active(factory):
         current = KnowledgeVersionRecord(
             erp=erp,
             import_run=new_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="new-v2",
             canonical_hash="d" * 64,
             generated_at=datetime.now(timezone.utc),

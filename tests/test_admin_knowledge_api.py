@@ -188,7 +188,7 @@ def seed_tree(factory):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="v1",
             canonical_hash=HASH,
             generated_at=datetime.now(timezone.utc),
@@ -650,7 +650,7 @@ def test_query_count_is_stable_with_multiple_erps(admin_api):
             version = KnowledgeVersionRecord(
                 erp=erp,
                 import_run=run,
-                schema_version="1.0",
+                schema_version="1.1.0",
                 knowledge_version=f"many-{index}",
                 canonical_hash=HASH,
                 generated_at=datetime.now(timezone.utc),
@@ -931,7 +931,7 @@ def test_latest_active_version_is_unique_per_erp(admin_api):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="v-new",
             canonical_hash=HASH,
             generated_at=datetime.now(timezone.utc),

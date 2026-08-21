@@ -288,7 +288,7 @@ def seed_versions(factory):
         source = KnowledgeVersionRecord(
             erp=erp,
             import_run=source_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version=SOURCE_VERSION,
             canonical_hash="1" * 64,
             generated_at=datetime.now(timezone.utc),
@@ -300,7 +300,7 @@ def seed_versions(factory):
         target = KnowledgeVersionRecord(
             erp=erp,
             import_run=target_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version=TARGET_VERSION,
             canonical_hash="2" * 64,
             generated_at=datetime.now(timezone.utc),

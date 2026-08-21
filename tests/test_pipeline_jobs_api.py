@@ -498,7 +498,7 @@ def seed_active_version(factory, *, status=KnowledgeVersionStatus.ACTIVE):
         version = KnowledgeVersionRecord(
             erp=erp,
             import_run=run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="active-v1",
             canonical_hash="a" * 64,
             generated_at=datetime.now(timezone.utc),
@@ -1140,7 +1140,7 @@ def test_create_canonical_import_accepts_hitl_reconciliation_source(api):
         raw = KnowledgeVersionRecord(
             erp=active.erp,
             import_run=raw_run,
-            schema_version="1.0",
+            schema_version="1.1.0",
             knowledge_version="raw-v2",
             canonical_hash="b" * 64,
             generated_at=datetime.now(timezone.utc),

@@ -56,7 +56,7 @@ def test_postgresql_admin_tree_isolated_paginated_visible_and_read_only(tmp_path
             KnowledgeVersionRecord(
                 erp=erp,
                 import_run=run,
-                schema_version="1.0",
+                schema_version="1.1.0",
                 knowledge_version="v2",
                 canonical_hash=HASH,
                 generated_at=datetime.now(timezone.utc),
