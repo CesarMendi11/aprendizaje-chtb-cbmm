@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from dataclasses import replace
 
 import httpx
@@ -110,6 +111,70 @@ def test_health_without_knowledge_file(settings, tmp_path):
     assert ApiClient(app).get("/api/health").json()["knowledge_loaded"] is False
 
 
+def test_missing_legacy_index_is_optional_and_quiet(settings, tmp_path, caplog):
+    caplog.set_level(logging.WARNING)
+    missing = tmp_path / "missing.json"
+
+    app = create_app(replace(settings, screen_index_path=missing))
+    payload = ApiClient(app).get("/api/health/dependencies").json()
+
+    assert payload == {
+        "status": "ok",
+        "dependencies": {
+            "postgresql": "not_probed",
+            "neo4j": "not_probed",
+            "chroma": "not_probed",
+            "semantic_chroma": "not_probed",
+            "ollama": "not_probed",
+            "legacy_structural": "unavailable",
+        },
+    }
+    assert "No se pudo cargar el conocimiento estructural" not in caplog.text
+
+
+def test_governed_dependency_health_does_not_use_legacy_index_as_authority(
+    settings, tmp_path, monkeypatch
+):
+    from src.api import admin_system_service
+
+    monkeypatch.setattr(
+        admin_system_service,
+        "collect_admin_system_status",
+        lambda _factory: {
+            "ok": True,
+            "services": {
+                "postgresql": {"status": "online"},
+                "neo4j": {"status": "online"},
+                "chroma": {"status": "ready"},
+                "semantic_chroma": {"status": "ready"},
+                "ollama": {"status": "online"},
+            },
+            "knowledge": {},
+        },
+    )
+
+    app = create_app(
+        replace(
+            settings,
+            screen_index_path=tmp_path / "missing.json",
+            semantic_review_api_enabled=True,
+        ),
+        semantic_review_session_factory=object(),
+        pipeline_job_dispatcher=object(),
+    )
+    payload = ApiClient(app).get("/api/health/dependencies").json()
+
+    assert payload["status"] == "ok"
+    assert payload["dependencies"] == {
+        "postgresql": "online",
+        "neo4j": "online",
+        "chroma": "ready",
+        "semantic_chroma": "ready",
+        "ollama": "online",
+        "legacy_structural": "unavailable",
+    }
+
+
 def test_blank_question_is_rejected(client):
     response = ask(client, "   ")
     assert response.status_code == 422
@@ -200,6 +265,43 @@ def test_chat_does_not_execute_mutative_actions(client, monkeypatch):
     payload = ask(client, "Guarda y elimina todos los registros").json()
     assert payload["status"] == "not_found"
     assert called is False
+
+
+def test_hybrid_chat_does_not_require_legacy_screen_index(settings, tmp_path):
+    from contextlib import contextmanager
+
+    class Retriever:
+        def ask(self, question, *, generate=True):
+            return {
+                "answer": "Respuesta híbrida autorizada.",
+                "answer_mode": "deterministic_graph",
+                "intent": "SCREEN_LOCATION",
+                "confidence": "high",
+                "evidence_ids": ["screen:test"],
+                "retrieval": {"validated_items": 1},
+                "sources": [
+                    {
+                        "safe_label": "Pantalla de prueba",
+                        "screen_route": "/admin/test",
+                    }
+                ],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    app = create_app(
+        replace(settings, screen_index_path=tmp_path / "missing.json")
+    )
+    app.state.hybrid_factory = Factory()
+
+    payload = ask(ApiClient(app), "¿Dónde está la pantalla de prueba?").json()
+
+    assert payload["status"] == "answered"
+    assert payload["answer"] == "Respuesta híbrida autorizada."
+    assert payload["sources"][0]["title"] == "Pantalla de prueba"
 
 
 def test_chat_returns_deterministic_semantic_answer(settings):

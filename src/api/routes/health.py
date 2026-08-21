@@ -1,8 +1,6 @@
-import os
-from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from src.api.dependencies import get_repository
 from src.api.schemas.chat import HealthResponse
@@ -22,17 +20,42 @@ async def health(
 
 @router.get("/health/dependencies")
 async def dependency_health(
+    request: Request,
     repository: Annotated[StructuralKnowledgeRepository, Depends(get_repository)],
 ):
-    dependencies = {
-        "postgresql": "unknown",
-        "neo4j": "unknown",
-        "chroma": "ok"
-        if Path(os.getenv("ERP_ASSISTANT_CHROMA_PATH", "data/vectorstore/chroma")).exists()
-        else "unknown",
-        "ollama": "unknown",
-    }
+    legacy_status = "ready" if repository.knowledge_loaded else "unavailable"
+    settings = request.app.state.settings
+
+    if settings.semantic_review_api_enabled:
+        # Reuse the governed runtime probes that already back
+        # /api/admin/system/status.  The optional legacy screen index must not
+        # decide whether PostgreSQL/Neo4j/Chroma/Ollama are healthy.
+        from src.api.admin_system_service import collect_admin_system_status
+
+        system_status = collect_admin_system_status(
+            request.app.state.semantic_review_session_factory
+        )
+        dependencies = {
+            name: service["status"]
+            for name, service in system_status["services"].items()
+        }
+        dependencies["legacy_structural"] = legacy_status
+        return {
+            "status": "ok" if system_status["ok"] else "degraded",
+            "dependencies": dependencies,
+        }
+
+    # Without the governed/admin runtime enabled, keep this endpoint as a
+    # lightweight capability report.  Do not pretend that unprobed services
+    # are healthy or unhealthy.
     return {
-        "status": "ok" if repository.knowledge_loaded else "degraded",
-        "dependencies": dependencies,
+        "status": "ok",
+        "dependencies": {
+            "postgresql": "not_probed",
+            "neo4j": "not_probed",
+            "chroma": "not_probed",
+            "semantic_chroma": "not_probed",
+            "ollama": "not_probed",
+            "legacy_structural": legacy_status,
+        },
     }

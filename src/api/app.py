@@ -25,8 +25,14 @@ def create_app(
     pipeline_job_dispatcher=None,
 ) -> FastAPI:
     settings = settings or ApiSettings()
+    # ``screen_index.json`` is a legacy compatibility projection for the
+    # deterministic chat fallback.  The governed vNext/Admin/Hybrid runtime
+    # must be able to start without that global artifact.  Per-run
+    # ``screen_index.json`` files remain valid crawler evidence and are not
+    # affected by this optional compatibility load.
     repository = StructuralKnowledgeRepository(settings.screen_index_path)
-    repository.load()
+    if settings.screen_index_path.is_file():
+        repository.load()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
