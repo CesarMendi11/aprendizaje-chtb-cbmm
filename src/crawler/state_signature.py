@@ -51,7 +51,10 @@ class StateSignatureBuilder:
     DEFAULT_VOLATILE_PATTERNS = (
         # UUID.
         r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b",
-        # Fechas ISO y fechas comunes en español.
+        # Fechas ISO y fechas comunes en español. Un nombre de día solo es
+        # volátil cuando forma parte explícita de una fecha; un "miércoles"
+        # aislado puede ser una etiqueta funcional de la interfaz.
+        r"\b(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b(?=\s+\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b)",
         r"\b\d{4}-\d{2}-\d{2}\b",
         r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",
         # Horas.

@@ -222,6 +222,58 @@ def test_state_signature_separates_exact_and_structural_changes():
     assert builder.has_changed(first, second, mode="exact")
 
 
+def test_state_signature_ignores_weekday_when_it_belongs_to_a_date():
+    builder = StateSignatureBuilder()
+
+    first_data = {
+        "path": "/admin/home",
+        "title": "Dashboard",
+        "visible_text": "miércoles 19/8/2026",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [],
+    }
+    second_data = {
+        **first_data,
+        "visible_text": "viernes 21/8/2026",
+    }
+
+    first = builder.build(first_data)
+    second = builder.build(second_data)
+
+    assert first.exact_fingerprint != second.exact_fingerprint
+    assert first.structural_fingerprint == second.structural_fingerprint
+    assert first.summary["visible_text"] == "<volatile>"
+    assert second.summary["visible_text"] == "<volatile>"
+
+
+def test_state_signature_keeps_standalone_weekday_as_functional_text():
+    builder = StateSignatureBuilder()
+
+    first_data = {
+        "path": "/admin/agenda",
+        "title": "Agenda",
+        "visible_text": "Día seleccionado: miércoles",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [],
+    }
+    second_data = {
+        **first_data,
+        "visible_text": "Día seleccionado: viernes",
+    }
+
+    first = builder.build(first_data)
+    second = builder.build(second_data)
+
+    assert first.structural_fingerprint != second.structural_fingerprint
+    assert builder.has_changed(first, second)
+
+
 def test_state_signature_detects_active_tab_change():
     builder = StateSignatureBuilder()
 
