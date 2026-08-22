@@ -14,7 +14,9 @@ from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
+from .context_builder import EvidenceContextBuilder
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
+from .evidence_selector import EvidenceSelector
 from .graph_expansion import QueryAwareGraphExpansionPlanner
 from .query_plan import QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
@@ -51,19 +53,6 @@ MUTATIVE_FORMS = {
     "aprobar": r"aprob(?:ar|o|a|e|ando|ado)",
     "confirmar": r"confirm(?:ar|o|a|e|ando|ado)",
 }
-TYPE_NAMES = {
-    "erp_system": "ERP",
-    "module": "módulo",
-    "screen": "pantalla",
-    "ui_state": "estado",
-    "field": "campo",
-    "control": "control",
-    "table": "tabla",
-    "table_column": "columna",
-    "event": "evento",
-    "transition": "transición",
-    "link": "enlace",
-}
 
 
 class HybridKnowledgeRetriever:
@@ -82,6 +71,8 @@ class HybridKnowledgeRetriever:
         entity_resolver=None,
         rank_fusion=None,
         graph_planner=None,
+        evidence_selector=None,
+        context_builder=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -93,6 +84,8 @@ class HybridKnowledgeRetriever:
         self.query_planner = query_planner or QueryPlanner()
         self.rank_fusion = rank_fusion or ReciprocalRankFusion()
         self.graph_planner = graph_planner or QueryAwareGraphExpansionPlanner()
+        self.evidence_selector = evidence_selector or EvidenceSelector()
+        self.context_builder = context_builder or EvidenceContextBuilder()
         self.entity_resolver = entity_resolver
         if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
@@ -316,6 +309,20 @@ class HybridKnowledgeRetriever:
             if column_relation:
                 screen_id = table_screen.get(column_relation["source_canonical_id"])
                 source["screen_route"] = route_by_screen.get(screen_id)
+
+        evidence = self.evidence_selector.select(
+            query_plan,
+            resolution,
+            graph_plan,
+            sources,
+            relations,
+            approved_semantics,
+        )
+        selected_sources = list(evidence.sources)
+        selected_relations = list(evidence.relations)
+        selected_semantics = list(evidence.approved_semantics)
+        context = self.context_builder.build(query_plan, evidence)
+
         return {
             "status": "ok",
             "question": question,
@@ -333,6 +340,9 @@ class HybridKnowledgeRetriever:
                 "graph_neighbors": len(neighbors),
                 "graph_seed_count": len(graph_plan.seed_canonical_ids),
                 "validated_items": len(sources),
+                "selected_sources": len(selected_sources),
+                "selected_relations": len(selected_relations),
+                "selected_semantics": len(selected_semantics),
             },
             "graph_expansion": graph_plan.as_dict(),
             "rank_fusion": {
@@ -345,10 +355,11 @@ class HybridKnowledgeRetriever:
                 "excluded_ambiguous_canonical_ids": sorted(ambiguous_ids),
                 "candidates": [candidate.as_dict() for candidate in fused],
             },
-            "sources": sources[:10],
-            "relations": relations,
-            "approved_semantics": approved_semantics,
-            "context": self._context(sources, relations, semantic, approved_semantics),
+            "evidence_selection": evidence.as_dict(),
+            "sources": selected_sources,
+            "relations": selected_relations,
+            "approved_semantics": selected_semantics,
+            "context": context,
         }
 
     def ask(self, question, *, generate=True, **kwargs):
@@ -581,52 +592,6 @@ class HybridKnowledgeRetriever:
                     }
                 )
         return out
-
-    @staticmethod
-    def _context(sources, relations, semantic, approved_semantics=None):
-        entities = "\n".join(f"- {s['entity_type']}: {s['safe_label']}" for s in sources[:10])
-        matches = "\n".join(
-            f"- {s['entity_type']}: {s.get('safe_label', s['canonical_id'])}" for s in semantic[:8]
-        )
-        facts = "\n".join(HybridKnowledgeRetriever._natural_fact(r) for r in relations[:12])
-        semantic_facts = []
-        for row in approved_semantics or []:
-            semantic_facts.append(
-                f'- Propósito aprobado de la pantalla "{row["safe_label"]}": {row["purpose_summary"]}'
-            )
-            semantic_facts.extend(
-                f'- Capacidad aprobada de "{row["safe_label"]}": {statement}'
-                for statement in row.get("supported_capabilities", [])
-            )
-        approved = "\n".join(semantic_facts[:12])
-        return (
-            f"COINCIDENCIAS SEMÁNTICAS ESTRUCTURALES\n{matches}\n\n"
-            f"SEMÁNTICA HUMANA APROBADA\n{approved}\n\n"
-            f"ENTIDADES VALIDADAS\n{entities}\n\nRELACIONES VALIDADAS\n{facts}"
-        )[:6000]
-
-    @staticmethod
-    def _natural_fact(r):
-        templates = {
-            "HAS_MODULE": 'El ERP "{s}" contiene el módulo "{t}".',
-            "HAS_SUBMODULE": 'El módulo "{s}" contiene el submódulo "{t}".',
-            "HAS_SCREEN": 'El {st} "{s}" contiene la pantalla "{t}".',
-            "HAS_FIELD": 'La pantalla "{s}" contiene el campo "{t}".',
-            "HAS_CONTROL": 'La pantalla "{s}" contiene el control "{t}".',
-            "HAS_TABLE": 'La pantalla "{s}" contiene la tabla "{t}".',
-            "HAS_COLUMN": 'La tabla "{s}" contiene la columna "{t}".',
-        }
-        template = templates.get(r["relationship_type"])
-        return (
-            template.format(
-                s=r["source_label"],
-                t=r["target_label"],
-                st=TYPE_NAMES.get(r["source_type"], r["source_type"]),
-            )
-            if template
-            else f'"{r["source_label"]}" se relaciona mediante {r["relationship_type"]} '
-            f'con "{r["target_label"]}".'
-        )
 
     @staticmethod
     def _needs_abstention(question, result):

@@ -1,9 +1,11 @@
 from .answer_planner import StructuralAnswerPlanner
+from .context_builder import EvidenceContextBuilder
 from .entity_resolver import (
     CanonicalEntityResolver,
     EntityResolution,
     EntityResolutionCandidate,
 )
+from .evidence_selector import EvidenceSelection, EvidenceSelector
 from .graph_expansion import (
     GraphExpansionPlan,
     QueryAwareGraphExpansionPlanner,
@@ -14,6 +16,9 @@ from .retriever import HybridKnowledgeRetriever
 
 __all__ = [
     "CanonicalEntityResolver",
+    "EvidenceContextBuilder",
+    "EvidenceSelection",
+    "EvidenceSelector",
     "EntityResolution",
     "EntityResolutionCandidate",
     "GraphExpansionPlan",

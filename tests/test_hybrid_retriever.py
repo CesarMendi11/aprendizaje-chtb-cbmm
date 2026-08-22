@@ -756,6 +756,11 @@ def test_query_aware_graph_uses_strong_screen_seed_instead_of_dense_noise(monkey
     assert source["retrieval_rank"] == 1
     assert source["rrf_score"] is not None
     assert source["score"] == 1.0
+    assert result["evidence_selection"]["status"] == "selected"
+    assert result["evidence_selection"]["reason"] == "locate_screen"
+    assert result["evidence_selection"]["source_ids"] == ["screen:ano"]
+    assert result["retrieval"]["selected_sources"] == 1
+    assert "field:other" not in result["evidence_selection"]["source_ids"]
 
 
 def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_seeds(monkeypatch):
@@ -842,3 +847,10 @@ def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_se
     }
     assert graph.parameters is None
     assert result["sources"] == []
+    assert result["context"] == ""
+    assert result["evidence_selection"]["status"] == "clarification_required"
+    assert result["evidence_selection"]["reason"] == "entity_resolution_ambiguous"
+    assert {
+        row["canonical_id"]
+        for row in result["evidence_selection"]["clarification_candidates"]
+    } == {"field:ruc-1", "field:ruc-2"}
