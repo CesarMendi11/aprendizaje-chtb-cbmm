@@ -171,6 +171,44 @@ def test_screen_purpose_keeps_only_semantic_for_focal_screen():
     assert [row["semantic_id"] for row in result.approved_semantics] == ["semantic:ano"]
 
 
+def test_screen_purpose_does_not_fallback_to_unrelated_single_semantic():
+    selector = EvidenceSelector()
+    resolution = resolved(candidate("screen:dashboard", "screen", "Dashboard"))
+    sources = [
+        {
+            "canonical_id": "screen:dashboard",
+            "entity_type": "screen",
+            "safe_label": "Dashboard",
+        },
+        {
+            "canonical_id": "screen:ano",
+            "entity_type": "screen",
+            "safe_label": "Año",
+        },
+    ]
+    semantics = [
+        {
+            "semantic_id": "semantic:ano",
+            "screen_id": "screen:ano",
+            "safe_label": "Año",
+        }
+    ]
+
+    result = selector.select(
+        plan(QueryIntent.SCREEN_PURPOSE),
+        resolution,
+        graph_plan(),
+        sources,
+        [],
+        semantics,
+    )
+
+    assert result.status == "insufficient"
+    assert result.reason == "screen_purpose_semantic_missing"
+    assert [row["canonical_id"] for row in result.sources] == ["screen:dashboard"]
+    assert result.approved_semantics == ()
+    assert result.focal_canonical_ids == ("screen:dashboard",)
+
 def test_ambiguity_becomes_clarification_boundary_not_answer_context():
     selector = EvidenceSelector()
     resolution = resolved(

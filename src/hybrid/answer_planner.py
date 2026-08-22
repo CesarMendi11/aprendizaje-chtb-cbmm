@@ -189,7 +189,7 @@ class StructuralAnswerPlanner:
                 )
                 answer = f'El campo "{field["target_label"]}" se encuentra en la pantalla "{field["source_label"]}"'  # noqa: E501
                 if module:
-                    answer += f', dentro del módulo "{module["source_label"]}"'
+                    answer += self._screen_parent_clause(module)
                 return self._ok(
                     intent, answer + ".", [field] + ([module] if module else []), "high"
                 )
@@ -210,7 +210,7 @@ class StructuralAnswerPlanner:
                 )
                 return self._ok(
                     intent,
-                    f'La pantalla "{r["target_label"]}" está dentro del módulo "{r["source_label"]}".',  # noqa: E501
+                    self._screen_location_answer(r),
                     [r],
                     "high",
                 )
@@ -271,6 +271,34 @@ class StructuralAnswerPlanner:
             "evidence_ids": [],
             "confidence": "low",
         }
+
+
+    @staticmethod
+    def _screen_parent_type(relation):
+        source_type = str(relation.get("source_type") or "").strip()
+        if source_type:
+            return source_type
+        source_id = str(relation.get("source_canonical_id") or "")
+        if source_id.startswith("erp:"):
+            return "erp_system"
+        if source_id.startswith("module:"):
+            return "module"
+        return None
+
+    @classmethod
+    def _screen_location_answer(cls, relation):
+        screen = relation.get("target_label") or "la pantalla recuperada"
+        parent = relation.get("source_label") or "el ERP"
+        if cls._screen_parent_type(relation) == "erp_system":
+            return f'La pantalla "{screen}" está disponible directamente en el ERP "{parent}".'
+        return f'La pantalla "{screen}" está dentro del módulo "{parent}".'
+
+    @classmethod
+    def _screen_parent_clause(cls, relation):
+        parent = relation.get("source_label") or "el ERP"
+        if cls._screen_parent_type(relation) == "erp_system":
+            return f', en una pantalla raíz del ERP "{parent}"'
+        return f', dentro del módulo "{parent}"'
 
     def _ok(self, intent, answer, evidence, confidence):
         ids = []

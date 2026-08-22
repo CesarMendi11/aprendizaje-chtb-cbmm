@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.routes import chat, health
 from src.config.api_settings import ApiSettings
+from src.hybrid.conversation_store import ConversationStateStore
 from src.hybrid.factory import HybridRetrieverFactory
 from src.knowledge.answer_builder import AnswerBuilder
 from src.knowledge.structural_knowledge_repository import StructuralKnowledgeRepository
@@ -23,6 +24,7 @@ def create_app(
     *,
     semantic_review_session_factory: Callable | None = None,
     pipeline_job_dispatcher=None,
+    conversation_state_store: ConversationStateStore | None = None,
 ) -> FastAPI:
     settings = settings or ApiSettings()
     # ``screen_index.json`` is a legacy compatibility projection for the
@@ -75,6 +77,9 @@ def create_app(
     app.state.answer_builder = AnswerBuilder()
     app.state.hybrid_factory = (
         HybridRetrieverFactory() if os.getenv("ERP_ASSISTANT_HYBRID_API") == "1" else None
+    )
+    app.state.conversation_state_store = (
+        conversation_state_store or ConversationStateStore()
     )
     app.add_middleware(
         CORSMiddleware,

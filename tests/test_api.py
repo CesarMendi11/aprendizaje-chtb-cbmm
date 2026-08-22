@@ -271,7 +271,7 @@ def test_hybrid_chat_does_not_require_legacy_screen_index(settings, tmp_path):
     from contextlib import contextmanager
 
     class Retriever:
-        def ask(self, question, *, generate=True):
+        def ask(self, question, *, generate=True, conversation_state=None):
             return {
                 "answer": "Respuesta híbrida autorizada.",
                 "answer_mode": "deterministic_graph",
@@ -308,7 +308,7 @@ def test_chat_returns_deterministic_semantic_answer(settings):
     from contextlib import contextmanager
 
     class Retriever:
-        def ask(self, question, *, generate=True):
+        def ask(self, question, *, generate=True, conversation_state=None):
             return {
                 "answer": "Permite buscar y consultar retenciones.",
                 "answer_mode": "deterministic_semantic",
@@ -357,7 +357,7 @@ def test_chat_returns_ollama_grounded_answer_as_answered(settings):
     from contextlib import contextmanager
 
     class Retriever:
-        def ask(self, question, *, generate=True):
+        def ask(self, question, *, generate=True, conversation_state=None):
             return {
                 "answer": "En Retenciones puedes consultar información usando los criterios disponibles.",
                 "answer_mode": "ollama_grounded",
@@ -401,7 +401,7 @@ def test_chat_returns_hybrid_clarification_without_legacy_fallback(settings):
     from contextlib import contextmanager
 
     class Retriever:
-        def ask(self, question, *, generate=True):
+        def ask(self, question, *, generate=True, conversation_state=None):
             return {
                 "answer": (
                     'Encontré varias coincidencias para "RUC". '
@@ -440,3 +440,214 @@ def test_chat_returns_hybrid_clarification_without_legacy_fallback(settings):
     assert payload["answerDecision"]["reason"] == "entity_resolution_ambiguous"
     assert payload["sources"] == []
     assert "RUC" in payload["answer"]
+
+
+
+def test_hybrid_api_persists_governed_state_by_conversation_id(settings):
+    from contextlib import contextmanager
+
+    from src.hybrid.conversation_context import ConversationEntity, ConversationState
+    from src.hybrid.conversation_store import ConversationStateStore
+
+    calls = []
+
+    class Retriever:
+        def ask(self, question, *, generate=True, conversation_state=None):
+            state = ConversationState.coerce(conversation_state)
+            calls.append((question, state))
+            screen = state.current_screen or ConversationEntity(
+                canonical_id="screen:ano",
+                entity_type="screen",
+                safe_label="Año",
+                route="/admin/general/anios",
+            )
+            next_state = ConversationState(
+                erp_id="erp:test",
+                knowledge_version="kv:test",
+                current_screen=screen,
+                turn_index=state.turn_index + 1,
+            )
+            return {
+                "answer": "Respuesta gobernada.",
+                "answer_mode": "deterministic_graph",
+                "answer_decision": {
+                    "decision": "DETERMINISTIC_ANSWER",
+                    "reason": "test",
+                    "intent": "SCREEN_PURPOSE",
+                    "confidence": "high",
+                },
+                "intent": "SCREEN_PURPOSE",
+                "confidence": "high",
+                "evidence_ids": [screen.canonical_id],
+                "retrieval": {"validated_items": 1},
+                "sources": [
+                    {
+                        "safe_label": screen.safe_label,
+                        "screen_route": screen.route,
+                    }
+                ],
+                "conversation_state": next_state.as_dict(),
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    store = ConversationStateStore()
+    app = create_app(settings, conversation_state_store=store)
+    app.state.hybrid_factory = Factory()
+    client = ApiClient(app)
+
+    first = ask(client, "¿Dónde está Año?", conversation_id="conv-a")
+    assert first.status_code == 200
+    assert calls[-1][1].turn_index == 0
+
+    second = ask(client, "¿Y para qué sirve?", conversation_id="conv-a")
+    assert second.status_code == 200
+    assert calls[-1][1].turn_index == 1
+    assert calls[-1][1].current_screen.safe_label == "Año"
+    assert store.load("conv-a").turn_index == 2
+
+    ask(client, "¿Y para qué sirve?", conversation_id="conv-b")
+    assert calls[-1][1].turn_index == 0
+    assert calls[-1][1].current_screen is None
+
+
+def test_hybrid_api_generates_conversation_id_when_missing(settings):
+    from contextlib import contextmanager
+
+    from src.hybrid.conversation_context import ConversationState
+    from src.hybrid.conversation_store import ConversationStateStore
+
+    class Retriever:
+        def ask(self, question, *, generate=True, conversation_state=None):
+            state = ConversationState.coerce(conversation_state)
+            return {
+                "answer": "OK",
+                "answer_mode": "deterministic_graph",
+                "intent": "LOCATE_SCREEN",
+                "confidence": "high",
+                "evidence_ids": [],
+                "retrieval": {},
+                "sources": [],
+                "conversation_state": ConversationState(
+                    erp_id="erp:test",
+                    knowledge_version="kv:test",
+                    turn_index=state.turn_index + 1,
+                ).as_dict(),
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    store = ConversationStateStore(id_factory=lambda: "server-generated-id")
+    app = create_app(settings, conversation_state_store=store)
+    app.state.hybrid_factory = Factory()
+    client = ApiClient(app)
+
+    response = client.post("/api/chat", json={"question": "Hola"})
+
+    assert response.status_code == 200
+    assert response.json()["conversationId"] == "server-generated-id"
+    assert store.load("server-generated-id").turn_index == 1
+
+
+def test_client_cannot_submit_conversation_state(settings):
+    app = create_app(settings)
+    response = ApiClient(app).post(
+        "/api/chat",
+        json={
+            "question": "¿Y para qué sirve?",
+            "conversationId": "conv-a",
+            "conversationState": {
+                "current_screen": {
+                    "canonical_id": "screen:forged",
+                    "entity_type": "screen",
+                    "safe_label": "Forjada",
+                }
+            },
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_blank_conversation_id_is_replaced_server_side(settings):
+    from src.hybrid.conversation_store import ConversationStateStore
+
+    store = ConversationStateStore(id_factory=lambda: "replacement-id")
+    app = create_app(settings, conversation_state_store=store)
+    response = ApiClient(app).post(
+        "/api/chat",
+        json={
+            "question": "¿Dónde consulto retenciones?",
+            "conversationId": "   ",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["conversationId"] == "replacement-id"
+
+
+def test_hybrid_chat_preserves_canonical_source_types(settings):
+    from contextlib import contextmanager
+
+    class Retriever:
+        def ask(self, question, *, generate=True, conversation_state=None):
+            return {
+                "answer": (
+                    'La pantalla "Dashboard" está disponible directamente en el ERP '
+                    '"ERP Cuerpo de Bomberos Municipal de Machala".'
+                ),
+                "answer_mode": "deterministic_graph",
+                "answer_decision": {
+                    "decision": "DETERMINISTIC_ANSWER",
+                    "reason": "deterministic_structural_answer",
+                    "intent": "LOCATE_SCREEN",
+                    "confidence": "high",
+                },
+                "intent": "LOCATE_SCREEN",
+                "confidence": "high",
+                "evidence_ids": ["erp:cbmm", "screen:dashboard"],
+                "retrieval": {"selected_sources": 2},
+                "sources": [
+                    {
+                        "canonical_id": "screen:dashboard",
+                        "entity_type": "screen",
+                        "safe_label": "Dashboard",
+                        "screen_route": "/admin/home",
+                    },
+                    {
+                        "canonical_id": "erp:cbmm",
+                        "entity_type": "erp_system",
+                        "safe_label": "ERP Cuerpo de Bomberos Municipal de Machala",
+                        "screen_route": None,
+                    },
+                ],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    app = create_app(settings)
+    app.state.hybrid_factory = Factory()
+    payload = ask(ApiClient(app), "¿Dónde está Dashboard?").json()
+
+    assert payload["status"] == "answered"
+    assert payload["sources"] == [
+        {
+            "title": "Dashboard",
+            "route": "/admin/home",
+            "sourceType": "screen",
+        },
+        {
+            "title": "ERP Cuerpo de Bomberos Municipal de Machala",
+            "route": "",
+            "sourceType": "erp_system",
+        },
+    ]

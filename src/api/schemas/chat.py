@@ -34,13 +34,21 @@ class ChatRequest(BaseModel):
             raise ValueError("question no puede estar vacía")
         return value.strip()
 
+    @field_validator("conversation_id")
+    @classmethod
+    def normalize_conversation_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
 
 class ChatSource(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     title: str
     route: str
-    source_type: Literal["screen"] = Field(default="screen", alias="sourceType")
+    source_type: str = Field(default="screen", alias="sourceType", min_length=1, max_length=50)
 
 
 class ChatResponse(BaseModel):

@@ -203,6 +203,36 @@ def test_locate_screen_prefers_module_over_erp_root_relation():
         'La pantalla "Lista de facturas" está dentro del módulo "Cuentas por cobrar".'
     )
 
+def test_locate_screen_reports_erp_root_without_calling_it_a_module():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "erp:cbmm",
+            "target_canonical_id": "screen:dashboard",
+            "source_label": "ERP Cuerpo de Bomberos Municipal de Machala",
+            "target_label": "Dashboard",
+            "source_type": "erp_system",
+            "target_type": "screen",
+        }
+    ]
+
+    result = planner.plan(
+        "¿Dónde está Dashboard?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "LOCATE_SCREEN"
+    assert result["answer"] == (
+        'La pantalla "Dashboard" está disponible directamente en el ERP '
+        '"ERP Cuerpo de Bomberos Municipal de Machala".'
+    )
+    assert "módulo" not in result["answer"]
+
+
 def test_list_columns_names_the_screen_when_table_has_no_safe_name():
     planner = StructuralAnswerPlanner()
     sources = [

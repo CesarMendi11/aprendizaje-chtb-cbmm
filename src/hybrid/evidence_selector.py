@@ -114,6 +114,15 @@ class EvidenceSelector:
                 sources,
                 selected_ids or set(focal_ids),
             )
+            if not semantics:
+                return EvidenceSelection(
+                    status="insufficient",
+                    reason="screen_purpose_semantic_missing",
+                    focal_canonical_ids=tuple(i for i in focal_ids if i),
+                    sources=selected_sources,
+                    relations=(),
+                    approved_semantics=(),
+                )
             return self._selection(
                 reason="screen_purpose",
                 focal_ids=focal_ids,
@@ -347,9 +356,7 @@ class EvidenceSelector:
             for row in approved_semantics
             if row.get("screen_id") in focal
         )
-        if matches:
-            return matches[:2]
-        return tuple(approved_semantics[:1]) if len(approved_semantics) == 1 else ()
+        return matches[:2]
 
     @staticmethod
     def _locate_screen_relations(screen_id, relations):

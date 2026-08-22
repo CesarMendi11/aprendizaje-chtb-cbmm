@@ -14,6 +14,7 @@ from .conversation_context import (
     ConversationState,
     render_missing_context_clarification,
 )
+from .conversation_store import ConversationStateStore, ConversationTurn
 from .entity_resolver import (
     CanonicalEntityResolver,
     EntityResolution,
@@ -38,6 +39,8 @@ __all__ = [
     "ConversationContextResolver",
     "ConversationEntity",
     "ConversationState",
+    "ConversationStateStore",
+    "ConversationTurn",
     "EvidenceContextBuilder",
     "EvidenceSelection",
     "EvidenceSelector",
