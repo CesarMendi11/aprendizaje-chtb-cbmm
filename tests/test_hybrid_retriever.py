@@ -1,4 +1,4 @@
-from src.hybrid.retriever import ABSTAIN, ALLOWED_RELATIONSHIPS, HybridKnowledgeRetriever
+from src.hybrid.retriever import ABSTAIN, HybridKnowledgeRetriever
 
 
 class Generator:
@@ -110,11 +110,23 @@ def test_expansion_is_bidirectional_read_only_and_parameterized():
 
     graph = Graph()
     retriever = HybridKnowledgeRetriever(None, chroma=None, neo4j=graph, embeddings=None)
-    retriever._expand(["field:1"], "erp:s", "v1", 5)
-    assert "[*1..2]-(b)" in graph.query
+    retriever._expand(
+        ["field:1"],
+        "erp:s",
+        "v1",
+        5,
+        relationships=("HAS_FIELD", "HAS_SCREEN"),
+        endpoint_entity_types=("field", "screen", "module"),
+        max_hops=2,
+    )
+    assert "[*1..3]-(b)" in graph.query
+    assert "length(p) <= $max_hops" in graph.query
+    assert "b.entity_type IN $endpoint_types" in graph.query
     assert "relationships(p)" in graph.query
     assert "WRITE" not in graph.query.upper()
-    assert set(graph.parameters["rels"]) == ALLOWED_RELATIONSHIPS
+    assert set(graph.parameters["rels"]) == {"HAS_FIELD", "HAS_SCREEN"}
+    assert graph.parameters["endpoint_types"] == ["field", "screen", "module"]
+    assert graph.parameters["max_hops"] == 2
     assert graph.parameters["erp_id"] == "erp:s"
 
 
@@ -251,7 +263,7 @@ def test_semantic_purpose_answer_is_deterministic_and_skips_generator():
     assert gen.prompt is None
 
 
-def test_retrieve_uses_only_reauthorized_semantic_screen_as_graph_seed(monkeypatch):
+def test_screen_purpose_uses_reauthorized_semantics_without_graph_expansion(monkeypatch):
     from types import SimpleNamespace
 
     version = SimpleNamespace(
@@ -341,7 +353,9 @@ def test_retrieve_uses_only_reauthorized_semantic_screen_as_graph_seed(monkeypat
     result = retriever.retrieve("¿Para qué sirve la pantalla Retenciones?")
 
     assert authorizer.hits[0]["screen_id"] == "screen:untrusted"
-    assert graph.parameters["seeds"] == ["screen:retenciones"]
+    assert graph.parameters is None
+    assert result["graph_expansion"]["enabled"] is False
+    assert result["graph_expansion"]["reason"] == "query_plan_no_graph_context"
     assert result["retrieval"]["semantic_candidates"] == 1
     assert result["retrieval"]["approved_semantic_hits"] == 1
     assert result["sources"][0]["origin"] == "approved_semantic"
@@ -385,7 +399,7 @@ def test_grounded_generator_paraphrased_abstention_stays_insufficient_evidence()
     assert result["answer_mode"] == "insufficient_evidence"
 
 
-def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
+def test_list_columns_uses_query_aware_three_hop_graph_from_ui_state(monkeypatch):
     from types import SimpleNamespace
 
     version = SimpleNamespace(
@@ -409,8 +423,8 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
 
     class StructuralChroma:
         def query(self, embedding, **kwargs):
-            # Simulates the observed case where UI states crowd the top-k and the
-            # screen itself is not among the structural vector hits.
+            # Simulates the observed case where a UI state crowds out the screen
+            # itself from structural dense retrieval.
             return [
                 {
                     "canonical_id": "ui_state:comp",
@@ -440,18 +454,6 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
             entity_type="screen",
             route="/admin/cuentasxcobrar/comprobantes",
         ),
-        "field:ruc": SimpleNamespace(
-            id="db-field-ruc",
-            canonical_id="field:ruc",
-            entity_type="field",
-            route=None,
-        ),
-        "field:desde": SimpleNamespace(
-            id="db-field-desde",
-            canonical_id="field:desde",
-            entity_type="field",
-            route=None,
-        ),
         "table:comp": SimpleNamespace(
             id="db-table",
             canonical_id="table:comp",
@@ -468,8 +470,6 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
     payloads = {
         "db-state": {"label": "Comprobantes electrónicos emitidos"},
         "db-screen": {"title": "Comprobantes electrónicos emitidos"},
-        "db-field-ruc": {"label": "RUC"},
-        "db-field-desde": {"label": "Desde"},
         "db-table": {"name": None},
         "db-column": {"name": "CORREO"},
     }
@@ -479,67 +479,69 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
 
     calls = []
 
-    def expand(seeds, erp_id, knowledge_version, limit):
-        calls.append((list(seeds), limit))
-        if seeds == ["ui_state:comp"]:
-            return [
-                {
-                    "source_canonical_id": "ui_state:comp",
-                    "canonical_id": "screen:comp",
-                    "entity_type": "screen",
-                    "path_edges": [
-                        {
-                            "relationship_type": "HAS_STATE",
-                            "from_canonical_id": "screen:comp",
-                            "to_canonical_id": "ui_state:comp",
-                        }
-                    ],
-                }
-            ]
-        assert seeds == ["screen:comp"]
+    def expand(
+        seeds,
+        erp_id,
+        knowledge_version,
+        limit,
+        *,
+        relationships,
+        endpoint_entity_types,
+        max_hops,
+    ):
+        calls.append(
+            {
+                "seeds": list(seeds),
+                "limit": limit,
+                "relationships": tuple(relationships),
+                "endpoint_entity_types": tuple(endpoint_entity_types),
+                "max_hops": max_hops,
+            }
+        )
+        assert seeds == ["ui_state:comp"]
         assert limit >= 64
+        assert set(relationships) == {"HAS_STATE", "HAS_TABLE", "HAS_COLUMN"}
+        assert max_hops == 3
         return [
             {
-                "source_canonical_id": "screen:comp",
-                "canonical_id": "field:ruc",
-                "entity_type": "field",
+                "source_canonical_id": "ui_state:comp",
+                "canonical_id": "screen:comp",
+                "entity_type": "screen",
                 "path_edges": [
                     {
-                        "relationship_type": "HAS_FIELD",
+                        "relationship_type": "HAS_STATE",
                         "from_canonical_id": "screen:comp",
-                        "to_canonical_id": "field:ruc",
+                        "to_canonical_id": "ui_state:comp",
                     }
                 ],
             },
             {
-                "source_canonical_id": "screen:comp",
-                "canonical_id": "field:desde",
-                "entity_type": "field",
-                "path_edges": [
-                    {
-                        "relationship_type": "HAS_FIELD",
-                        "from_canonical_id": "screen:comp",
-                        "to_canonical_id": "field:desde",
-                    }
-                ],
-            },
-            {
-                "source_canonical_id": "screen:comp",
+                "source_canonical_id": "ui_state:comp",
                 "canonical_id": "table:comp",
                 "entity_type": "table",
                 "path_edges": [
                     {
+                        "relationship_type": "HAS_STATE",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "ui_state:comp",
+                    },
+                    {
                         "relationship_type": "HAS_TABLE",
                         "from_canonical_id": "screen:comp",
                         "to_canonical_id": "table:comp",
-                    }
+                    },
                 ],
             },
             {
-                "source_canonical_id": "screen:comp",
+                "source_canonical_id": "ui_state:comp",
                 "canonical_id": "column:correo",
                 "entity_type": "table_column",
                 "path_edges": [
+                    {
+                        "relationship_type": "HAS_STATE",
+                        "from_canonical_id": "screen:comp",
+                        "to_canonical_id": "ui_state:comp",
+                    },
                     {
                         "relationship_type": "HAS_TABLE",
                         "from_canonical_id": "screen:comp",
@@ -560,13 +562,13 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
         "¿Qué información aparece en la tabla de Comprobantes electrónicos emitidos?"
     )
 
-    assert calls[0] == (["ui_state:comp"], 20)
-    assert calls[1][0] == ["screen:comp"]
-    assert any(r["relationship_type"] == "HAS_FIELD" for r in result["relations"])
+    assert len(calls) == 1
+    assert result["graph_expansion"]["strategy"] == "list_columns"
+    assert result["graph_expansion"]["seed_canonical_ids"] == ["ui_state:comp"]
+    assert result["graph_expansion"]["max_hops"] == 3
     assert any(r["relationship_type"] == "HAS_COLUMN" for r in result["relations"])
     column_source = next(s for s in result["sources"] if s["canonical_id"] == "column:correo")
     assert column_source["screen_route"] == "/admin/cuentasxcobrar/comprobantes"
-
 
 def test_ask_builds_one_query_plan_before_retrieval_and_exposes_it():
     from src.hybrid.query_plan import QueryIntent, QueryPlan
@@ -619,7 +621,7 @@ def test_ask_builds_one_query_plan_before_retrieval_and_exposes_it():
     assert result["query_plan"]["requires_semantic_evidence"] is True
 
 
-def test_entity_resolution_candidates_become_priority_graph_seeds_and_focus_screen(monkeypatch):
+def test_query_aware_graph_uses_strong_screen_seed_instead_of_dense_noise(monkeypatch):
     from types import SimpleNamespace
 
     from src.hybrid.entity_resolver import EntityResolution, EntityResolutionCandidate
@@ -704,17 +706,42 @@ def test_entity_resolution_candidates_become_priority_graph_seeds_and_focus_scre
 
     calls = []
 
-    def expand(seeds, erp_id, knowledge_version, limit):
-        calls.append((list(seeds), limit))
+    def expand(
+        seeds,
+        erp_id,
+        knowledge_version,
+        limit,
+        *,
+        relationships,
+        endpoint_entity_types,
+        max_hops,
+    ):
+        calls.append(
+            {
+                "seeds": list(seeds),
+                "limit": limit,
+                "relationships": tuple(relationships),
+                "endpoint_entity_types": tuple(endpoint_entity_types),
+                "max_hops": max_hops,
+            }
+        )
         return []
 
     retriever._expand = expand
 
     result = retriever.retrieve("¿Dónde configuro los años?")
 
-    assert calls[0][0] == ["screen:ano", "field:other"]
-    assert calls[1][0] == ["screen:ano"]
-    assert calls[1][1] >= 64
+    assert len(calls) == 1
+    assert calls[0]["seeds"] == ["screen:ano"]
+    assert set(calls[0]["relationships"]) == {
+        "HAS_MODULE",
+        "HAS_SUBMODULE",
+        "HAS_SCREEN",
+        "HAS_STATE",
+    }
+    assert calls[0]["max_hops"] == 2
+    assert result["graph_expansion"]["strategy"] == "locate_screen"
+    assert result["graph_expansion"]["seed_canonical_ids"] == ["screen:ano"]
     assert result["entity_resolution"]["primary_canonical_id"] == "screen:ano"
     assert result["retrieval"]["entity_candidates"] == 1
     assert result["rank_fusion"]["algorithm"] == "rrf"

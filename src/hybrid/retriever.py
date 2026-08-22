@@ -15,6 +15,7 @@ from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
+from .graph_expansion import QueryAwareGraphExpansionPlanner
 from .query_plan import QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
 
@@ -80,6 +81,7 @@ class HybridKnowledgeRetriever:
         query_planner=None,
         entity_resolver=None,
         rank_fusion=None,
+        graph_planner=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -90,6 +92,7 @@ class HybridKnowledgeRetriever:
         )
         self.query_planner = query_planner or QueryPlanner()
         self.rank_fusion = rank_fusion or ReciprocalRankFusion()
+        self.graph_planner = graph_planner or QueryAwareGraphExpansionPlanner()
         self.entity_resolver = entity_resolver
         if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
@@ -175,42 +178,44 @@ class HybridKnowledgeRetriever:
         }
         fused = self.rank_fusion.fuse(rankings)
         ambiguous_ids = set(resolution.ambiguous_candidate_ids)
-        seeds = [
+
+        # RRF ranking is retrieval, not authority. Validate candidates in
+        # PostgreSQL before any of them are allowed to become Neo4j seeds.
+        fused_ids = [
             candidate.canonical_id
             for candidate in fused
             if candidate.canonical_id not in ambiguous_ids
         ]
-        neighbors = self._expand(seeds, erp_id, knowledge_version, graph_limit)
-        ids = self._candidate_ids(seeds, neighbors)
-        valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
-
-        # If the question explicitly names a validated screen, complete a focused
-        # two-hop expansion from that screen. The initial semantic top-k can be
-        # dominated by UI states/fields and the global graph limit may otherwise
-        # omit sibling fields or table columns needed by deterministic answers.
-        resolved_screen_ids = {
-            candidate.canonical_id
-            for candidate in resolution.seed_candidates
-            if candidate.entity_type == "screen"
+        prevalidated = {
+            item.canonical_id: item
+            for item in self._validate(fused_ids, version.id)
         }
-        focused_screen_ids = []
-        for cid, item in valid.items():
-            if item.entity_type != "screen":
-                continue
-            payload = self._effective(item.id)
-            label = self._label(item.entity_type, payload)
-            if cid in resolved_screen_ids or self.planner._matches(question, label):
-                focused_screen_ids.append(cid)
-        if focused_screen_ids:
-            focused_neighbors = self._expand(
-                focused_screen_ids,
+        candidate_types = {
+            canonical_id: item.entity_type
+            for canonical_id, item in prevalidated.items()
+        }
+        graph_plan = self.graph_planner.plan(
+            query_plan,
+            resolution,
+            fused,
+            candidate_types=candidate_types,
+            graph_limit=graph_limit,
+        )
+        neighbors = (
+            self._expand(
+                list(graph_plan.seed_canonical_ids),
                 erp_id,
                 knowledge_version,
-                max(graph_limit, 64),
+                graph_plan.limit,
+                relationships=graph_plan.relationships,
+                endpoint_entity_types=graph_plan.endpoint_entity_types,
+                max_hops=graph_plan.max_hops,
             )
-            neighbors = self._merge_neighbors(neighbors, focused_neighbors)
-            ids = self._candidate_ids(seeds, neighbors)
-            valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
+            if graph_plan.enabled
+            else []
+        )
+        ids = self._candidate_ids(fused_ids, neighbors)
+        valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
         resolved_by_id = {candidate.canonical_id: candidate for candidate in resolution.candidates}
@@ -326,8 +331,10 @@ class HybridKnowledgeRetriever:
                 "approved_semantic_hits": len(approved_semantics),
                 "semantic_dense_hits": len(approved_semantics),
                 "graph_neighbors": len(neighbors),
+                "graph_seed_count": len(graph_plan.seed_canonical_ids),
                 "validated_items": len(sources),
             },
+            "graph_expansion": graph_plan.as_dict(),
             "rank_fusion": {
                 "algorithm": "rrf",
                 "k": self.rank_fusion.k,
@@ -452,15 +459,30 @@ class HybridKnowledgeRetriever:
             )
         )
 
-    def _expand(self, seeds, erp_id, version, limit):
+    def _expand(
+        self,
+        seeds,
+        erp_id,
+        version,
+        limit,
+        *,
+        relationships=None,
+        endpoint_entity_types=(),
+        max_hops=2,
+    ):
         if not seeds:
             return []
+        relationships = tuple(relationships or sorted(ALLOWED_RELATIONSHIPS))
+        endpoint_entity_types = tuple(endpoint_entity_types or ())
+        max_hops = max(1, min(3, int(max_hops)))
         query = (
-            "MATCH p=(a)-[*1..2]-(b) WHERE a.canonical_id IN $seeds "
+            "MATCH p=(a)-[*1..3]-(b) WHERE a.canonical_id IN $seeds "
             "AND a.erp_id=$erp_id AND a.knowledge_version=$version "
             "AND b.canonical_id <> a.canonical_id AND b.erp_id=$erp_id "
             "AND b.knowledge_version=$version "
+            "AND length(p) <= $max_hops "
             "AND all(rel IN relationships(p) WHERE type(rel) IN $rels) "
+            "AND (size($endpoint_types) = 0 OR b.entity_type IN $endpoint_types) "
             "WITH a,b,p ORDER BY length(p), b.canonical_id, a.canonical_id LIMIT $limit "
             "RETURN a.canonical_id AS source_canonical_id, "
             "b.canonical_id AS canonical_id, b.entity_type AS entity_type, "
@@ -474,7 +496,9 @@ class HybridKnowledgeRetriever:
                 "seeds": seeds,
                 "erp_id": erp_id,
                 "version": version,
-                "rels": sorted(ALLOWED_RELATIONSHIPS),
+                "rels": sorted(relationships),
+                "endpoint_types": list(endpoint_entity_types),
+                "max_hops": max_hops,
                 "limit": limit,
             },
         )
