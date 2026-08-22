@@ -566,3 +566,54 @@ def test_retrieve_completes_graph_from_explicitly_named_screen(monkeypatch):
     assert any(r["relationship_type"] == "HAS_COLUMN" for r in result["relations"])
     column_source = next(s for s in result["sources"] if s["canonical_id"] == "column:correo")
     assert column_source["screen_route"] == "/admin/cuentasxcobrar/comprobantes"
+
+
+def test_ask_builds_one_query_plan_before_retrieval_and_exposes_it():
+    from src.hybrid.query_plan import QueryIntent, QueryPlan
+
+    class QueryPlannerSpy:
+        def __init__(self):
+            self.calls = []
+
+        def plan(self, question):
+            self.calls.append(question)
+            return QueryPlan(
+                question=question,
+                normalized_question="para que sirve retenciones",
+                intent=QueryIntent.SCREEN_PURPOSE,
+                target_entity_types=("screen",),
+                requires_entity_resolution=True,
+                requires_graph_context=False,
+                requires_semantic_evidence=True,
+                mutative_action=False,
+            )
+
+    query_planner = QueryPlannerSpy()
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        query_planner=query_planner,
+    )
+    captured = {}
+
+    def fake_retrieve(question, **kwargs):
+        captured["query_plan"] = kwargs["query_plan"]
+        return {
+            "status": "ok",
+            "question": question,
+            "sources": [],
+            "relations": [],
+            "approved_semantics": [],
+            "context": "",
+        }
+
+    retriever.retrieve = fake_retrieve
+
+    result = retriever.ask("¿Para qué sirve Retenciones?", generate=False)
+
+    assert query_planner.calls == ["¿Para qué sirve Retenciones?"]
+    assert captured["query_plan"].intent == QueryIntent.SCREEN_PURPOSE
+    assert result["query_plan"]["intent"] == "SCREEN_PURPOSE"
+    assert result["query_plan"]["requires_semantic_evidence"] is True

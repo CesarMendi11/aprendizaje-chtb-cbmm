@@ -14,6 +14,7 @@ from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
+from .query_plan import QueryPlan, QueryPlanner
 
 ALLOWED_RELATIONSHIPS = {
     "HAS_MODULE",
@@ -74,6 +75,7 @@ class HybridKnowledgeRetriever:
         semantic_authorizer=None,
         generator=None,
         planner=None,
+        query_planner=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -82,11 +84,22 @@ class HybridKnowledgeRetriever:
         self.semantic_authorizer = semantic_authorizer or (
             SemanticRetrievalAuthorizationService(session) if session is not None else None
         )
-        self.planner = planner or StructuralAnswerPlanner(aliases)
+        self.query_planner = query_planner or QueryPlanner()
+        self.planner = planner or StructuralAnswerPlanner(
+            aliases, query_planner=self.query_planner
+        )
 
     def retrieve(
-        self, question, *, erp_id=None, knowledge_version=None, semantic_top_k=8, graph_limit=20
+        self,
+        question,
+        *,
+        erp_id=None,
+        knowledge_version=None,
+        semantic_top_k=8,
+        graph_limit=20,
+        query_plan: QueryPlan | None = None,
     ):
+        query_plan = query_plan or self.query_planner.plan(question)
         version, _, _ = ChromaSyncService(self.session).prepare(
             erp_id=erp_id, knowledge_version=knowledge_version
         )
@@ -222,6 +235,7 @@ class HybridKnowledgeRetriever:
         return {
             "status": "ok",
             "question": question,
+            "query_plan": query_plan.as_dict(),
             "erp_id": erp_id,
             "knowledge_version": knowledge_version,
             "retrieval": {
@@ -238,13 +252,16 @@ class HybridKnowledgeRetriever:
         }
 
     def ask(self, question, *, generate=True, **kwargs):
-        result = self.retrieve(question, **kwargs)
+        query_plan = self.query_planner.plan(question)
+        result = self.retrieve(question, query_plan=query_plan, **kwargs)
+        result.setdefault("query_plan", query_plan.as_dict())
         plan = self.planner.plan(
             question,
             result["sources"],
             result.get("relations", []),
             result["sources"],
             approved_semantics=result.get("approved_semantics", []),
+            query_plan=query_plan,
         )
         result["intent"] = plan.get("intent")
         result["confidence"] = plan.get("confidence")

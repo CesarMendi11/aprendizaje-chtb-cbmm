@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import re
-import unicodedata
+
+from .query_plan import QueryPlan, QueryPlanner
+
 
 ABSTAIN = "No encontré conocimiento validado suficiente para responder esa pregunta."
 
 
 class StructuralAnswerPlanner:
-    def __init__(self, aliases=None):
+    def __init__(self, aliases=None, *, query_planner=None):
         self.aliases = {
             self._norm(k): tuple(self._norm(value) for value in values)
             for k, values in (aliases or {}).items()
         }
+        self.query_planner = query_planner or QueryPlanner()
 
     def plan(
         self,
@@ -21,8 +24,10 @@ class StructuralAnswerPlanner:
         semantic_hits,
         erp_context=None,
         approved_semantics=None,
+        query_plan: QueryPlan | None = None,
     ):
-        intent = self._intent(question)
+        query_plan = query_plan or self.query_planner.plan(question)
+        intent = query_plan.intent
         if not intent:
             return {
                 "supported": False,
@@ -339,49 +344,11 @@ class StructuralAnswerPlanner:
 
     @staticmethod
     def _norm(value):
-        text = unicodedata.normalize("NFKD", str(value).casefold())
-        text = "".join(char for char in text if not unicodedata.combining(char))
-        return " ".join(re.sub(r"[^\w\s]", " ", text).split())
+        return QueryPlanner.normalize(value)
 
     @staticmethod
     def _intent(question):
-        q = question.casefold()
-        normalized = StructuralAnswerPlanner._norm(question)
-        if re.search(r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)", q):
-            return "MUTATIVE_ACTION"
-        if any(
-            phrase in normalized
-            for phrase in (
-                "para que sirve",
-                "que hace la pantalla",
-                "que hace esta pantalla",
-                "proposito de la pantalla",
-                "cual es el proposito",
-                "funcion de la pantalla",
-                "para que se usa la pantalla",
-            )
-        ):
-            return "SCREEN_PURPOSE"
-        if re.search(
-            r"\b(buscar|busco|busca|búsqueda|busqueda|filtrar)\b",
-            q,
-        ):
-            return "SEARCH_BY_FIELD"
-        if re.search(r"\b(campo|campos|filtro|filtros)\b", q):
-            return "LIST_FIELDS"
-        if re.search(r"\b(dónde|donde|ingreso|aparece)\b.*\b(campo|ruc|identificaci)", q):
-            return "LOCATE_FIELD"
-        if re.search(r"\b(módulo|modulo)\b", q) and re.search(
-            r"\b(qué|que|cuál|cual|dónde|donde|está|esta|pertenece|pantalla)\b", q
-        ):
-            return "LOCATE_SCREEN"
-        if re.search(r"\b(botón|boton|control)\b", q):
-            return "FIND_CONTROL"
-        if re.search(r"\b(columnas|columna|tabla)\b", q):
-            return "LIST_COLUMNS"
-        if re.search(r"\b(página|pagina|avanz|siguiente)\b", q):
-            return "NAVIGATION_EVENT"
-        return None
+        return QueryPlanner().plan(question).intent
 
 
     @staticmethod

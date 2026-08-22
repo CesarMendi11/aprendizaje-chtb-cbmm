@@ -280,3 +280,40 @@ def test_search_control_display_removes_extractor_prefix():
     assert result["supported"] is True
     assert 'control "Buscar"' in result["answer"]
     assert "search Buscar" not in result["answer"]
+
+
+def test_answer_planner_consumes_explicit_query_plan_instead_of_reparsing_question():
+    from src.hybrid.query_plan import QueryIntent, QueryPlan
+
+    planner = StructuralAnswerPlanner()
+    query_plan = QueryPlan(
+        question="texto deliberadamente neutro",
+        normalized_question="texto deliberadamente neutro",
+        intent=QueryIntent.LIST_FIELDS,
+        target_entity_types=("screen", "field", "control"),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+    relations = [
+        {
+            "relationship_type": "HAS_FIELD",
+            "source_canonical_id": "screen:retenciones",
+            "target_canonical_id": "field:ruc",
+            "source_label": "Retenciones",
+            "target_label": "RUC",
+        }
+    ]
+
+    result = planner.plan(
+        "texto deliberadamente neutro",
+        [{"canonical_id": "screen:retenciones", "entity_type": "screen", "safe_label": "Retenciones"}],
+        relations,
+        [],
+        query_plan=query_plan,
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == QueryIntent.LIST_FIELDS
+    assert "RUC" in result["answer"]
