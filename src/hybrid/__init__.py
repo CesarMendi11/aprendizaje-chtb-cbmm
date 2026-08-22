@@ -6,6 +6,14 @@ from .answer_decision import (
 )
 from .answer_planner import StructuralAnswerPlanner
 from .context_builder import EvidenceContextBuilder
+from .conversation_context import (
+    ConversationContextMode,
+    ConversationContextResolution,
+    ConversationContextResolver,
+    ConversationEntity,
+    ConversationState,
+    render_missing_context_clarification,
+)
 from .entity_resolver import (
     CanonicalEntityResolver,
     EntityResolution,
@@ -25,6 +33,11 @@ __all__ = [
     "AnswerDecisionPlanner",
     "AnswerDecisionType",
     "CanonicalEntityResolver",
+    "ConversationContextMode",
+    "ConversationContextResolution",
+    "ConversationContextResolver",
+    "ConversationEntity",
+    "ConversationState",
     "EvidenceContextBuilder",
     "EvidenceSelection",
     "EvidenceSelector",
@@ -41,4 +54,5 @@ __all__ = [
     "ReciprocalRankFusion",
     "StructuralAnswerPlanner",
     "render_clarification",
+    "render_missing_context_clarification",
 ]

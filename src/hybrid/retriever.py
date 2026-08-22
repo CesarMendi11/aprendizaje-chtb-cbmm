@@ -20,8 +20,14 @@ from .answer_decision import (
 )
 from .answer_planner import StructuralAnswerPlanner
 from .context_builder import EvidenceContextBuilder
+from .conversation_context import (
+    ConversationContextMode,
+    ConversationContextResolver,
+    ConversationState,
+    render_missing_context_clarification,
+)
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
-from .evidence_selector import EvidenceSelector
+from .evidence_selector import EvidenceSelection, EvidenceSelector
 from .graph_expansion import QueryAwareGraphExpansionPlanner
 from .query_plan import QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
@@ -79,6 +85,7 @@ class HybridKnowledgeRetriever:
         graph_planner=None,
         evidence_selector=None,
         context_builder=None,
+        conversation_context_resolver=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -92,6 +99,10 @@ class HybridKnowledgeRetriever:
         self.graph_planner = graph_planner or QueryAwareGraphExpansionPlanner()
         self.evidence_selector = evidence_selector or EvidenceSelector()
         self.context_builder = context_builder or EvidenceContextBuilder()
+        self.conversation_context_resolver = (
+            conversation_context_resolver
+            or ConversationContextResolver(query_planner=self.query_planner)
+        )
         self.entity_resolver = entity_resolver
         if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
@@ -112,6 +123,7 @@ class HybridKnowledgeRetriever:
         entity_top_k=12,
         graph_limit=20,
         query_plan: QueryPlan | None = None,
+        conversation_state: ConversationState | dict[str, object] | None = None,
     ):
         query_plan = query_plan or self.query_planner.plan(question)
         version, _, _ = ChromaSyncService(self.session).prepare(
@@ -131,7 +143,97 @@ class HybridKnowledgeRetriever:
                 candidates=(),
             )
         )
-        query_embedding = self.embeddings.embed(question)[0]
+        conversation_context = self.conversation_context_resolver.resolve(
+            question,
+            conversation_state,
+            query_plan=query_plan,
+            direct_resolution=resolution,
+            erp_id=erp_id,
+            knowledge_version=knowledge_version,
+        )
+        effective_question = conversation_context.effective_question
+
+        if conversation_context.mode == ConversationContextMode.CLARIFICATION_REQUIRED:
+            evidence = EvidenceSelection(
+                status="clarification_required",
+                reason=conversation_context.reason,
+                focal_canonical_ids=(),
+                sources=(),
+                relations=(),
+                approved_semantics=(),
+                clarification_candidates=(),
+            )
+            return {
+                "status": "ok",
+                "question": question,
+                "effective_question": effective_question,
+                "query_plan": query_plan.as_dict(),
+                "erp_id": erp_id,
+                "knowledge_version": knowledge_version,
+                "conversation_context": conversation_context.as_dict(),
+                "entity_resolution": resolution.as_dict(),
+                "retrieval": {
+                    "entity_candidates": len(resolution.candidates),
+                    "semantic_hits": 0,
+                    "structural_dense_hits": 0,
+                    "semantic_candidates": 0,
+                    "approved_semantic_hits": 0,
+                    "semantic_dense_hits": 0,
+                    "graph_neighbors": 0,
+                    "graph_seed_count": 0,
+                    "validated_items": 0,
+                    "selected_sources": 0,
+                    "selected_relations": 0,
+                    "selected_semantics": 0,
+                },
+                "graph_expansion": {
+                    "enabled": False,
+                    "strategy": "conversation_context",
+                    "reason": conversation_context.reason,
+                    "seed_canonical_ids": [],
+                    "seed_entity_types": [],
+                    "endpoint_entity_types": [],
+                    "relationships": [],
+                    "max_hops": 0,
+                    "limit": 0,
+                },
+                "rank_fusion": {
+                    "algorithm": "rrf",
+                    "k": self.rank_fusion.k,
+                    "channel_sizes": {
+                        "canonical": 0,
+                        "lexical": 0,
+                        "trigram": 0,
+                        "structural_dense": 0,
+                        "semantic_dense": 0,
+                    },
+                    "excluded_ambiguous_canonical_ids": [],
+                    "candidates": [],
+                },
+                "evidence_selection": evidence.as_dict(),
+                "sources": [],
+                "relations": [],
+                "approved_semantics": [],
+                "context": "",
+            }
+
+        if conversation_context.mode == ConversationContextMode.CONTEXTUALIZED:
+            query_plan = self.query_planner.plan(effective_question)
+            resolution = (
+                self.entity_resolver.resolve(
+                    query_plan,
+                    version_id=version.id,
+                    limit=entity_top_k,
+                )
+                if self.entity_resolver is not None
+                else EntityResolution(
+                    query=effective_question,
+                    normalized_query=query_plan.normalized_question,
+                    candidates=(),
+                )
+            )
+
+        query_embedding = self.embeddings.embed(effective_question)[0]
         semantic = self.chroma.query(
             query_embedding,
             top_k=semantic_top_k,
@@ -335,8 +437,10 @@ class HybridKnowledgeRetriever:
         return {
             "status": "ok",
             "question": question,
+            "effective_question": effective_question,
             "query_plan": query_plan.as_dict(),
             "erp_id": erp_id,
+            "conversation_context": conversation_context.as_dict(),
             "knowledge_version": knowledge_version,
             "entity_resolution": resolution.as_dict(),
             "retrieval": {
@@ -371,13 +475,25 @@ class HybridKnowledgeRetriever:
             "context": context,
         }
 
-    def ask(self, question, *, generate=True, **kwargs):
-        query_plan = self.query_planner.plan(question)
-        result = self.retrieve(question, query_plan=query_plan, **kwargs)
+    def ask(self, question, *, generate=True, conversation_state=None, **kwargs):
+        previous_state = ConversationState.coerce(conversation_state)
+        initial_query_plan = self.query_planner.plan(question)
+        result = self.retrieve(
+            question,
+            query_plan=initial_query_plan,
+            conversation_state=previous_state,
+            **kwargs,
+        )
+        effective_question = result.get("effective_question") or question
+        query_plan = (
+            initial_query_plan
+            if effective_question == question
+            else self.query_planner.plan(effective_question)
+        )
         result.setdefault("query_plan", query_plan.as_dict())
 
         structural_plan = self.planner.plan(
-            question,
+            effective_question,
             result.get("sources", []),
             result.get("relations", []),
             result.get("sources", []),
@@ -398,17 +514,37 @@ class HybridKnowledgeRetriever:
         result["evidence_ids"] = structural_plan.get("evidence_ids", [])
         result["answer_decision"] = decision.as_dict()
 
+        def finalize():
+            selection = result.get("evidence_selection") or {}
+            next_state = self.conversation_context_resolver.next_state(
+                previous_state,
+                erp_id=str(result.get("erp_id") or ""),
+                knowledge_version=str(result.get("knowledge_version") or ""),
+                query_plan=query_plan,
+                answer_decision=str(result.get("answer_decision", {}).get("decision") or ""),
+                sources=result.get("sources", []),
+                clarification_candidates=selection.get("clarification_candidates", []),
+                evidence_ids=result.get("evidence_ids", []),
+            )
+            result["conversation_state"] = next_state.as_dict()
+            return result
+
         if decision.decision == AnswerDecisionType.CLARIFICATION:
             candidates = (
                 result.get("evidence_selection", {}).get(
                     "clarification_candidates", []
                 )
             )
-            result["answer"] = render_clarification(candidates)
+            reason = str(result.get("answer_decision", {}).get("reason") or "")
+            result["answer"] = (
+                render_missing_context_clarification(reason)
+                if reason.startswith("conversation_")
+                else render_clarification(candidates)
+            )
             result["answer_mode"] = "clarification"
             result["evidence_ids"] = []
             result.pop("context", None)
-            return result
+            return finalize()
 
         if decision.decision == AnswerDecisionType.DETERMINISTIC_ANSWER:
             result["answer"] = structural_plan["answer"]
@@ -417,7 +553,7 @@ class HybridKnowledgeRetriever:
             )
             result["evidence_ids"] = structural_plan.get("evidence_ids", [])
             result.pop("context", None)
-            return result
+            return finalize()
 
         if decision.decision == AnswerDecisionType.ABSTENTION:
             result["answer"] = ABSTAIN
@@ -428,16 +564,16 @@ class HybridKnowledgeRetriever:
             )
             result["evidence_ids"] = []
             result.pop("context", None)
-            return result
+            return finalize()
 
         # GROUNDED_LLM is the only path on which generated prose is allowed.
         result["answer_mode"] = "ollama_grounded"
         if not generate or not self.generator:
             result["answer"] = None
-            return result
+            return finalize()
 
         prompt = (
-            f"Pregunta del usuario:\n{question}\n\nContexto validado:\n"
+            f"Pregunta contextualizada:\n{effective_question}\n\nContexto validado:\n"
             f"{result['context']}\n\nResponde únicamente con información respaldada "
             f"explícitamente por el contexto. Puedes interpretar abreviaturas y sinónimos "
             f"comunes, pero no inventes estructura ni procedimientos. Si no basta, responde "
@@ -454,7 +590,7 @@ class HybridKnowledgeRetriever:
             result["answer_mode"] = "insufficient_evidence"
             result["evidence_ids"] = []
         result.pop("context", None)
-        return result
+        return finalize()
 
     @staticmethod
     def _merge_neighbors(*groups):

@@ -103,6 +103,13 @@ class QueryPlanner:
                 "cual es el proposito",
                 "funcion de la pantalla",
                 "para que se usa la pantalla",
+                "que puedo hacer ahi",
+                "que puedo hacer aqui",
+                "que puedo hacer en esta pantalla",
+                "que puedo hacer en esa pantalla",
+                "que se puede hacer ahi",
+                "que se puede hacer en esta pantalla",
+                "que se puede hacer en esa pantalla",
             )
         ):
             return QueryIntent.SCREEN_PURPOSE
