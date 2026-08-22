@@ -489,7 +489,16 @@
               "field",
               "control"
             ],
-            "retrieval_exact": [],
+            "retrieval_exact": [
+              [
+                "selected_sources",
+                3
+              ],
+              [
+                "selected_relations",
+                2
+              ]
+            ],
             "retrieval_zero": []
           }
         },

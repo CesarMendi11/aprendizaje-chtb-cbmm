@@ -126,7 +126,7 @@ class HybridKnowledgeRetriever:
         conversation_state: ConversationState | dict[str, object] | None = None,
     ):
         query_plan = query_plan or self.query_planner.plan(question)
-        version, _, _ = ChromaSyncService(self.session).prepare(
+        version = ChromaSyncService(self.session).resolve_version(
             erp_id=erp_id, knowledge_version=knowledge_version
         )
         erp_id, knowledge_version = version.erp_id, version.knowledge_version

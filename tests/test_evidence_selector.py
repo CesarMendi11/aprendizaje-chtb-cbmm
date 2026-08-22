@@ -370,3 +370,79 @@ def test_navigation_event_matches_named_control_when_context_screen_is_only_foca
     assert [row["target_canonical_id"] for row in result.relations] == [
         "control:next",
     ]
+
+
+def test_search_by_field_keeps_only_focal_field_and_search_control():
+    selector = EvidenceSelector()
+    resolution = resolved(candidate("field:ruc", "field", "RUC"))
+    sources = [
+        {
+            "canonical_id": "screen:comp",
+            "entity_type": "screen",
+            "safe_label": "Comprobantes eléctronicos emitidos",
+        },
+        {"canonical_id": "field:ruc", "entity_type": "field", "safe_label": "RUC"},
+        {
+            "canonical_id": "field:number",
+            "entity_type": "field",
+            "safe_label": "Núm. comprobante",
+        },
+        {"canonical_id": "field:from", "entity_type": "field", "safe_label": "Desde"},
+        {"canonical_id": "field:to", "entity_type": "field", "safe_label": "Hasta"},
+        {
+            "canonical_id": "control:search",
+            "entity_type": "control",
+            "safe_label": "Buscar",
+        },
+    ]
+    relations = [
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "field:ruc",
+            "relationship_type": "HAS_FIELD",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "field:number",
+            "relationship_type": "HAS_FIELD",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "field:from",
+            "relationship_type": "HAS_FIELD",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "field:to",
+            "relationship_type": "HAS_FIELD",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:search",
+            "relationship_type": "HAS_CONTROL",
+            "target_label": "Buscar",
+        },
+    ]
+
+    result = selector.select(
+        plan(QueryIntent.SEARCH_BY_FIELD),
+        resolution,
+        graph_plan("screen:comp"),
+        sources,
+        relations,
+        [],
+    )
+
+    assert {row["canonical_id"] for row in result.sources} == {
+        "screen:comp",
+        "field:ruc",
+        "control:search",
+    }
+    assert [row["relationship_type"] for row in result.relations] == [
+        "HAS_FIELD",
+        "HAS_CONTROL",
+    ]
+    assert {row["target_canonical_id"] for row in result.relations} == {
+        "field:ruc",
+        "control:search",
+    }

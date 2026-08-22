@@ -162,8 +162,14 @@ class ChromaSyncService:
         self.embeddings = embeddings
         self.builder = builder or SafeDocumentBuilder()
 
+    def resolve_version(self, *, erp_id=None, knowledge_version=None):
+        """Resolve the governed knowledge version without preparing projection documents."""
+        return self._version(erp_id, knowledge_version)
+
     def prepare(self, *, erp_id=None, knowledge_version=None):
-        version = self._version(erp_id, knowledge_version)
+        version = self.resolve_version(
+            erp_id=erp_id, knowledge_version=knowledge_version
+        )
         erp = self.erps.get(version.erp_id)
         if not erp:
             raise LookupError("ERP de la versión no encontrado")

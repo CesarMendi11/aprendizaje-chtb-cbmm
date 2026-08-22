@@ -529,7 +529,17 @@ class EvidenceSelector:
             and (not screen_ids or row.get("source_canonical_id") in screen_ids)
         ]
         if control_filter:
-            fields = [row for row in rows if row.get("relationship_type") == "HAS_FIELD"]
+            focal_field_ids = {
+                canonical_id
+                for canonical_id in focal_ids
+                if source_by_id.get(canonical_id, {}).get("entity_type") == "field"
+            }
+            fields = [
+                row
+                for row in rows
+                if row.get("relationship_type") == "HAS_FIELD"
+                and row.get("target_canonical_id") in focal_field_ids
+            ]
             controls = [
                 row
                 for row in rows

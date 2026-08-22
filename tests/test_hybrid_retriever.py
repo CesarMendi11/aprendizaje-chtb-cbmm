@@ -276,8 +276,8 @@ def test_screen_purpose_uses_reauthorized_semantics_without_graph_expansion(monk
         def __init__(self, session):
             pass
 
-        def prepare(self, *, erp_id=None, knowledge_version=None):
-            return version, [], {}
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
 
     monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
 
@@ -412,8 +412,8 @@ def test_list_columns_uses_query_aware_three_hop_graph_from_ui_state(monkeypatch
         def __init__(self, session):
             pass
 
-        def prepare(self, *, erp_id=None, knowledge_version=None):
-            return version, [], {}
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
 
     monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
 
@@ -636,8 +636,8 @@ def test_query_aware_graph_uses_strong_screen_seed_instead_of_dense_noise(monkey
         def __init__(self, session):
             pass
 
-        def prepare(self, *, erp_id=None, knowledge_version=None):
-            return version, [], {}
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
 
     monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
 
@@ -778,8 +778,8 @@ def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_se
         def __init__(self, session):
             pass
 
-        def prepare(self, *, erp_id=None, knowledge_version=None):
-            return version, [], {}
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
 
     monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
 
@@ -1047,8 +1047,8 @@ def test_unknown_question_without_canonical_anchor_fails_closed_before_dense_ret
         def __init__(self, session):
             pass
 
-        def prepare(self, *, erp_id=None, knowledge_version=None):
-            return version, [], {}
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
 
     monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
 
@@ -1084,3 +1084,52 @@ def test_unknown_question_without_canonical_anchor_fails_closed_before_dense_ret
     assert result["retrieval"]["selected_sources"] == 0
     assert result["retrieval"]["selected_relations"] == 0
     assert result["retrieval"]["selected_semantics"] == 0
+
+
+def test_retrieve_resolves_version_without_preparing_chroma_projection(monkeypatch):
+    from types import SimpleNamespace
+
+    from src.hybrid.entity_resolver import EntityResolution
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
+
+        def prepare(self, **kwargs):
+            raise AssertionError("query runtime must not prepare the full Chroma projection")
+
+    class Resolver:
+        def resolve(self, query_plan, *, version_id, limit):
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(),
+            )
+
+    class ForbiddenEmbeddings:
+        def embed(self, value):
+            raise AssertionError("out-of-domain query must fail before dense retrieval")
+
+    monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=None,
+        neo4j=None,
+        embeddings=ForbiddenEmbeddings(),
+        entity_resolver=Resolver(),
+    )
+
+    result = retriever.retrieve("¿Cuál es la capital de Francia?")
+
+    assert result["knowledge_version"] == "v1"
+    assert result["evidence_selection"]["reason"] == "insufficient_evidence"
