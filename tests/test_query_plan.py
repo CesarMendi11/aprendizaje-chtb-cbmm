@@ -12,6 +12,8 @@ def test_query_planner_preserves_current_intent_contract():
         # improved in later resolver/planner work without mixing concerns here.
         "¿Dónde aparece el campo RUC?": QueryIntent.LIST_FIELDS,
         "¿En qué módulo está la pantalla Año?": QueryIntent.LOCATE_SCREEN,
+        "¿Dónde configuro los años?": QueryIntent.LOCATE_SCREEN,
+        "¿Dónde está anoo?": QueryIntent.LOCATE_SCREEN,
         "¿Dónde está el botón Imprimir?": QueryIntent.FIND_CONTROL,
         "¿Qué columnas tiene la tabla?": QueryIntent.LIST_COLUMNS,
         "¿Cómo avanzo a la siguiente página?": QueryIntent.NAVIGATION_EVENT,

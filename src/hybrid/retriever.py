@@ -14,6 +14,7 @@ from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
 from .answer_planner import StructuralAnswerPlanner
+from .entity_resolver import CanonicalEntityResolver, EntityResolution
 from .query_plan import QueryPlan, QueryPlanner
 
 ALLOWED_RELATIONSHIPS = {
@@ -76,6 +77,7 @@ class HybridKnowledgeRetriever:
         generator=None,
         planner=None,
         query_planner=None,
+        entity_resolver=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -85,6 +87,9 @@ class HybridKnowledgeRetriever:
             SemanticRetrievalAuthorizationService(session) if session is not None else None
         )
         self.query_planner = query_planner or QueryPlanner()
+        self.entity_resolver = entity_resolver
+        if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
+            self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
         self.planner = planner or StructuralAnswerPlanner(
             aliases, query_planner=self.query_planner
         )
@@ -96,6 +101,7 @@ class HybridKnowledgeRetriever:
         erp_id=None,
         knowledge_version=None,
         semantic_top_k=8,
+        entity_top_k=12,
         graph_limit=20,
         query_plan: QueryPlan | None = None,
     ):
@@ -104,6 +110,19 @@ class HybridKnowledgeRetriever:
             erp_id=erp_id, knowledge_version=knowledge_version
         )
         erp_id, knowledge_version = version.erp_id, version.knowledge_version
+        resolution = (
+            self.entity_resolver.resolve(
+                query_plan,
+                version_id=version.id,
+                limit=entity_top_k,
+            )
+            if self.entity_resolver is not None
+            else EntityResolution(
+                query=question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(),
+            )
+        )
         query_embedding = self.embeddings.embed(question)[0]
         semantic = self.chroma.query(
             query_embedding,
@@ -128,7 +147,8 @@ class HybridKnowledgeRetriever:
         )
         seeds = list(
             OrderedDict.fromkeys(
-                [row["canonical_id"] for row in semantic]
+                [candidate.canonical_id for candidate in resolution.seed_candidates]
+                + [row["canonical_id"] for row in semantic]
                 + [row["screen_id"] for row in approved_semantics]
             )
         )
@@ -140,13 +160,18 @@ class HybridKnowledgeRetriever:
         # two-hop expansion from that screen. The initial semantic top-k can be
         # dominated by UI states/fields and the global graph limit may otherwise
         # omit sibling fields or table columns needed by deterministic answers.
+        resolved_screen_ids = {
+            candidate.canonical_id
+            for candidate in resolution.seed_candidates
+            if candidate.entity_type == "screen"
+        }
         focused_screen_ids = []
         for cid, item in valid.items():
             if item.entity_type != "screen":
                 continue
             payload = self._effective(item.id)
             label = self._label(item.entity_type, payload)
-            if self.planner._matches(question, label):
+            if cid in resolved_screen_ids or self.planner._matches(question, label):
                 focused_screen_ids.append(cid)
         if focused_screen_ids:
             focused_neighbors = self._expand(
@@ -160,6 +185,7 @@ class HybridKnowledgeRetriever:
             valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
+        resolved_by_id = {candidate.canonical_id: candidate for candidate in resolution.candidates}
         graph_ids = {n["canonical_id"] for n in neighbors}
         sources = []
         for cid in ids:
@@ -179,6 +205,7 @@ class HybridKnowledgeRetriever:
                 origin = "approved_semantic"
             else:
                 origin = "semantic" if hit else "graph"
+            resolved_candidate = resolved_by_id.get(cid)
             sources.append(
                 {
                     "canonical_id": cid,
@@ -187,9 +214,16 @@ class HybridKnowledgeRetriever:
                     "screen_route": item.route,
                     "origin": origin,
                     "score": (
-                        approved_semantic.get("score")
+                        resolved_candidate.score
+                        if resolved_candidate is not None
+                        else approved_semantic.get("score")
                         if approved_semantic is not None
                         else (hit.get("score") if hit else None)
+                    ),
+                    "resolution_channels": (
+                        list(resolved_candidate.channels)
+                        if resolved_candidate is not None
+                        else []
                     ),
                 }
             )
@@ -238,7 +272,9 @@ class HybridKnowledgeRetriever:
             "query_plan": query_plan.as_dict(),
             "erp_id": erp_id,
             "knowledge_version": knowledge_version,
+            "entity_resolution": resolution.as_dict(),
             "retrieval": {
+                "entity_candidates": len(resolution.candidates),
                 "semantic_hits": len(semantic),
                 "semantic_candidates": len(semantic_candidates),
                 "approved_semantic_hits": len(approved_semantics),

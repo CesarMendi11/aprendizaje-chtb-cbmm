@@ -122,4 +122,9 @@ class QueryPlanner:
             return QueryIntent.LIST_COLUMNS
         if re.search(r"\b(página|pagina|avanz|siguiente)\b", q):
             return QueryIntent.NAVIGATION_EVENT
+        if re.search(
+            r"\b(dónde|donde|ubico|encuentro|entro|accedo)\b",
+            q,
+        ):
+            return QueryIntent.LOCATE_SCREEN
         return None

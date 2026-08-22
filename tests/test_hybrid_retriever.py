@@ -617,3 +617,106 @@ def test_ask_builds_one_query_plan_before_retrieval_and_exposes_it():
     assert captured["query_plan"].intent == QueryIntent.SCREEN_PURPOSE
     assert result["query_plan"]["intent"] == "SCREEN_PURPOSE"
     assert result["query_plan"]["requires_semantic_evidence"] is True
+
+
+def test_entity_resolution_candidates_become_priority_graph_seeds_and_focus_screen(monkeypatch):
+    from types import SimpleNamespace
+
+    from src.hybrid.entity_resolver import EntityResolution, EntityResolutionCandidate
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def prepare(self, *, erp_id=None, knowledge_version=None):
+            return version, [], {}
+
+    monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return [
+                {
+                    "canonical_id": "field:other",
+                    "entity_type": "field",
+                    "safe_label": "Otro",
+                    "score": 0.8,
+                }
+            ]
+
+    class Resolver:
+        def resolve(self, query_plan, *, version_id, limit):
+            assert version_id == "version-db-id"
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(
+                    EntityResolutionCandidate(
+                        canonical_id="screen:ano",
+                        entity_type="screen",
+                        safe_label="Año",
+                        route="/admin/general/anios",
+                        score=1.0,
+                        channels=("normalized_mention",),
+                        matched_terms=("ano",),
+                    ),
+                ),
+            )
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=object(),
+        embeddings=Embeddings(),
+        entity_resolver=Resolver(),
+    )
+
+    items = {
+        "screen:ano": SimpleNamespace(
+            id="db-screen-ano",
+            canonical_id="screen:ano",
+            entity_type="screen",
+            route="/admin/general/anios",
+        ),
+        "field:other": SimpleNamespace(
+            id="db-field-other",
+            canonical_id="field:other",
+            entity_type="field",
+            route=None,
+        ),
+    }
+    payloads = {
+        "db-screen-ano": {"title": "Año"},
+        "db-field-other": {"label": "Otro"},
+    }
+    retriever._validate = lambda ids, version_id: [items[cid] for cid in ids if cid in items]
+    retriever._effective = lambda item_id: payloads[item_id]
+
+    calls = []
+
+    def expand(seeds, erp_id, knowledge_version, limit):
+        calls.append((list(seeds), limit))
+        return []
+
+    retriever._expand = expand
+
+    result = retriever.retrieve("¿Dónde configuro los años?")
+
+    assert calls[0][0] == ["screen:ano", "field:other"]
+    assert calls[1][0] == ["screen:ano"]
+    assert calls[1][1] >= 64
+    assert result["entity_resolution"]["primary_canonical_id"] == "screen:ano"
+    assert result["retrieval"]["entity_candidates"] == 1
+    source = next(row for row in result["sources"] if row["canonical_id"] == "screen:ano")
+    assert source["resolution_channels"] == ["normalized_mention"]
+    assert source["score"] == 1.0

@@ -4,6 +4,8 @@ from pathlib import Path
 
 import yaml
 
+from src.knowledge.canonical.ids import normalize_text, stable_id
+
 
 def semantic_aliases_for(erp_id=None, *, config_dir="configs"):
     """Load optional aliases from the matching profile; empty for unknown ERPs."""
@@ -14,12 +16,16 @@ def semantic_aliases_for(erp_id=None, *, config_dir="configs"):
         except (OSError, yaml.YAMLError):
             continue
         erp = profile.get("erp", {})
-        identifiers = {erp.get("id"), erp.get("code"), erp.get("name")}
-        if (
-            erp_id
-            and erp_id not in identifiers
-            and not str(erp_id).casefold().endswith(str(erp.get("code", "")).casefold())
-        ):
+        code = str(erp.get("code") or "").strip()
+        slug = normalize_text(code or erp.get("name") or "erp").replace(" ", "-")
+        identifiers = {
+            erp.get("id"),
+            erp.get("code"),
+            erp.get("name"),
+            stable_id("erp", slug),
+        }
+        suffix_match = bool(code) and str(erp_id or "").casefold().endswith(code.casefold())
+        if erp_id and erp_id not in identifiers and not suffix_match:
             continue
         result = profile.get("semantic_aliases", {}) or {}
         if erp_id:
