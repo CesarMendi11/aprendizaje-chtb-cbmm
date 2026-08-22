@@ -211,3 +211,44 @@ def test_postgres_statement_contains_authority_filters_full_text_and_trigram():
     assert "TO_TSQUERY" in sql
     assert "WORD_SIMILARITY" in sql
     assert "LIMIT" in sql
+
+
+def test_resolution_exposes_independent_canonical_lexical_and_trigram_rankings():
+    ano = item("screen:ano", "screen", "Año", "ano")
+    solicitudes = item("screen:solicitudes", "screen", "Solicitudes", "solicitudes")
+    resolver = Resolver(
+        [
+            (ano, 0.8, 0.91),
+            (solicitudes, 0.4, 0.70),
+        ]
+    )
+
+    result = resolver.resolve(
+        plan("¿Dónde está el año?"),
+        version_id="version-1",
+    )
+
+    ano_candidate = next(
+        candidate for candidate in result.candidates if candidate.canonical_id == "screen:ano"
+    )
+    assert ano_candidate.channel_score("normalized_mention") == 1.0
+    assert ano_candidate.channel_score("lexical") is not None
+    assert ano_candidate.channel_score("trigram") is not None
+
+    assert result.ranking("canonical")[0][0] == "screen:ano"
+    assert result.ranking("lexical")[0][0] == "screen:ano"
+    assert result.ranking("trigram")[0][0] == "screen:ano"
+
+
+def test_ambiguous_candidate_ids_are_explicit_for_downstream_fusion_guard():
+    first = item("field:ruc-1", "field", "RUC", "ruc")
+    second = item("field:ruc-2", "field", "RUC", "ruc")
+    resolver = Resolver([(first, 0.0, 0.0), (second, 0.0, 0.0)])
+
+    result = resolver.resolve(
+        plan("¿Dónde aparece RUC?", entity_types=("field",)),
+        version_id="version-1",
+    )
+
+    assert result.status == "ambiguous"
+    assert set(result.ambiguous_candidate_ids) == {"field:ruc-1", "field:ruc-2"}

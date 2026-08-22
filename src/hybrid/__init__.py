@@ -5,6 +5,7 @@ from .entity_resolver import (
     EntityResolutionCandidate,
 )
 from .query_plan import QueryIntent, QueryPlan, QueryPlanner
+from .rank_fusion import FusedCandidate, RankedItem, ReciprocalRankFusion
 from .retriever import HybridKnowledgeRetriever
 
 __all__ = [
@@ -15,5 +16,8 @@ __all__ = [
     "QueryIntent",
     "QueryPlan",
     "QueryPlanner",
+    "FusedCandidate",
+    "RankedItem",
+    "ReciprocalRankFusion",
     "StructuralAnswerPlanner",
 ]

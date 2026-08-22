@@ -717,6 +717,101 @@ def test_entity_resolution_candidates_become_priority_graph_seeds_and_focus_scre
     assert calls[1][1] >= 64
     assert result["entity_resolution"]["primary_canonical_id"] == "screen:ano"
     assert result["retrieval"]["entity_candidates"] == 1
+    assert result["rank_fusion"]["algorithm"] == "rrf"
+    assert result["rank_fusion"]["channel_sizes"]["canonical"] == 1
+    assert result["rank_fusion"]["channel_sizes"]["structural_dense"] == 1
+    assert [
+        candidate["canonical_id"] for candidate in result["rank_fusion"]["candidates"][:2]
+    ] == ["screen:ano", "field:other"]
     source = next(row for row in result["sources"] if row["canonical_id"] == "screen:ano")
     assert source["resolution_channels"] == ["normalized_mention"]
+    assert source["retrieval_channels"] == ["canonical"]
+    assert source["retrieval_rank"] == 1
+    assert source["rrf_score"] is not None
     assert source["score"] == 1.0
+
+
+def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_seeds(monkeypatch):
+    from types import SimpleNamespace
+
+    from src.hybrid.entity_resolver import EntityResolution, EntityResolutionCandidate
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def prepare(self, *, erp_id=None, knowledge_version=None):
+            return version, [], {}
+
+    monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return []
+
+    class Resolver:
+        def resolve(self, query_plan, *, version_id, limit):
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(
+                    EntityResolutionCandidate(
+                        canonical_id="field:ruc-1",
+                        entity_type="field",
+                        safe_label="RUC",
+                        route=None,
+                        score=0.99,
+                        channels=("alias",),
+                        matched_terms=("ruc",),
+                        channel_scores=(("alias", 0.99),),
+                    ),
+                    EntityResolutionCandidate(
+                        canonical_id="field:ruc-2",
+                        entity_type="field",
+                        safe_label="RUC",
+                        route=None,
+                        score=0.99,
+                        channels=("alias",),
+                        matched_terms=("ruc",),
+                        channel_scores=(("alias", 0.99),),
+                    ),
+                ),
+            )
+
+    class Graph:
+        def __init__(self):
+            self.parameters = None
+
+        def execute(self, query, parameters):
+            self.parameters = parameters
+            return []
+
+    graph = Graph()
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=graph,
+        embeddings=Embeddings(),
+        entity_resolver=Resolver(),
+    )
+    retriever._validate = lambda ids, version_id: []
+
+    result = retriever.retrieve("¿Dónde aparece la identificación tributaria?")
+
+    assert result["entity_resolution"]["status"] == "ambiguous"
+    assert set(result["rank_fusion"]["excluded_ambiguous_canonical_ids"]) == {
+        "field:ruc-1",
+        "field:ruc-2",
+    }
+    assert graph.parameters is None
+    assert result["sources"] == []

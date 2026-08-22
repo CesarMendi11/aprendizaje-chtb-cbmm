@@ -16,6 +16,7 @@ from src.knowledge.canonical.privacy import sanitize_text
 from .answer_planner import StructuralAnswerPlanner
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
 from .query_plan import QueryPlan, QueryPlanner
+from .rank_fusion import RankedItem, ReciprocalRankFusion
 
 ALLOWED_RELATIONSHIPS = {
     "HAS_MODULE",
@@ -78,6 +79,7 @@ class HybridKnowledgeRetriever:
         planner=None,
         query_planner=None,
         entity_resolver=None,
+        rank_fusion=None,
         aliases=None,
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
@@ -87,6 +89,7 @@ class HybridKnowledgeRetriever:
             SemanticRetrievalAuthorizationService(session) if session is not None else None
         )
         self.query_planner = query_planner or QueryPlanner()
+        self.rank_fusion = rank_fusion or ReciprocalRankFusion()
         self.entity_resolver = entity_resolver
         if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
@@ -145,13 +148,38 @@ class HybridKnowledgeRetriever:
             if self.semantic_authorizer is not None
             else []
         )
-        seeds = list(
-            OrderedDict.fromkeys(
-                [candidate.canonical_id for candidate in resolution.seed_candidates]
-                + [row["canonical_id"] for row in semantic]
-                + [row["screen_id"] for row in approved_semantics]
-            )
-        )
+
+        rankings = {
+            "canonical": [
+                RankedItem(canonical_id, score)
+                for canonical_id, score in resolution.ranking("canonical")
+            ],
+            "lexical": [
+                RankedItem(canonical_id, score)
+                for canonical_id, score in resolution.ranking("lexical")
+            ],
+            "trigram": [
+                RankedItem(canonical_id, score)
+                for canonical_id, score in resolution.ranking("trigram")
+            ],
+            "structural_dense": [
+                RankedItem(row["canonical_id"], row.get("score"))
+                for row in semantic
+                if row.get("canonical_id")
+            ],
+            "semantic_dense": [
+                RankedItem(row["screen_id"], row.get("score"))
+                for row in approved_semantics
+                if row.get("screen_id")
+            ],
+        }
+        fused = self.rank_fusion.fuse(rankings)
+        ambiguous_ids = set(resolution.ambiguous_candidate_ids)
+        seeds = [
+            candidate.canonical_id
+            for candidate in fused
+            if candidate.canonical_id not in ambiguous_ids
+        ]
         neighbors = self._expand(seeds, erp_id, knowledge_version, graph_limit)
         ids = self._candidate_ids(seeds, neighbors)
         valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
@@ -186,6 +214,11 @@ class HybridKnowledgeRetriever:
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
         resolved_by_id = {candidate.canonical_id: candidate for candidate in resolution.candidates}
+        fused_by_id = {candidate.canonical_id: candidate for candidate in fused}
+        fused_rank_by_id = {
+            candidate.canonical_id: rank
+            for rank, candidate in enumerate(fused, start=1)
+        }
         graph_ids = {n["canonical_id"] for n in neighbors}
         sources = []
         for cid in ids:
@@ -206,6 +239,7 @@ class HybridKnowledgeRetriever:
             else:
                 origin = "semantic" if hit else "graph"
             resolved_candidate = resolved_by_id.get(cid)
+            fused_candidate = fused_by_id.get(cid)
             sources.append(
                 {
                     "canonical_id": cid,
@@ -224,6 +258,17 @@ class HybridKnowledgeRetriever:
                         list(resolved_candidate.channels)
                         if resolved_candidate is not None
                         else []
+                    ),
+                    "retrieval_rank": fused_rank_by_id.get(cid),
+                    "rrf_score": (
+                        round(float(fused_candidate.rrf_score), 9)
+                        if fused_candidate is not None
+                        else None
+                    ),
+                    "retrieval_channels": (
+                        list(fused_candidate.channels)
+                        if fused_candidate is not None
+                        else ["graph"] if cid in graph_ids else []
                     ),
                 }
             )
@@ -276,10 +321,22 @@ class HybridKnowledgeRetriever:
             "retrieval": {
                 "entity_candidates": len(resolution.candidates),
                 "semantic_hits": len(semantic),
+                "structural_dense_hits": len(semantic),
                 "semantic_candidates": len(semantic_candidates),
                 "approved_semantic_hits": len(approved_semantics),
+                "semantic_dense_hits": len(approved_semantics),
                 "graph_neighbors": len(neighbors),
                 "validated_items": len(sources),
+            },
+            "rank_fusion": {
+                "algorithm": "rrf",
+                "k": self.rank_fusion.k,
+                "channel_sizes": {
+                    channel: len(rows)
+                    for channel, rows in rankings.items()
+                },
+                "excluded_ambiguous_canonical_ids": sorted(ambiguous_ids),
+                "candidates": [candidate.as_dict() for candidate in fused],
             },
             "sources": sources[:10],
             "relations": relations,

@@ -89,6 +89,13 @@ class EntityResolutionCandidate:
     score: float
     channels: tuple[str, ...]
     matched_terms: tuple[str, ...]
+    channel_scores: tuple[tuple[str, float], ...] = ()
+
+    def channel_score(self, channel: str) -> float | None:
+        for current, score in self.channel_scores:
+            if current == channel:
+                return float(score)
+        return None
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -99,6 +106,10 @@ class EntityResolutionCandidate:
             "score": round(float(self.score), 6),
             "channels": list(self.channels),
             "matched_terms": list(self.matched_terms),
+            "channel_scores": {
+                channel: round(float(score), 6)
+                for channel, score in self.channel_scores
+            },
         }
 
 
@@ -147,6 +158,44 @@ class EntityResolution:
     def primary_canonical_id(self) -> str | None:
         seeds = self.seed_candidates
         return seeds[0].canonical_id if self.status == "resolved" and len(seeds) == 1 else None
+
+    @property
+    def ambiguous_candidate_ids(self) -> tuple[str, ...]:
+        ambiguous = set(self.ambiguous_labels)
+        return tuple(
+            candidate.canonical_id
+            for candidate in self.candidates
+            if f"{candidate.entity_type}:{normalize_entity_text(candidate.safe_label)}"
+            in ambiguous
+        )
+
+    def ranking(self, channel: str) -> tuple[tuple[str, float], ...]:
+        if channel == "canonical":
+            accepted = {"normalized_mention", "alias", "normalized_containment"}
+            rows = []
+            for candidate in self.candidates:
+                scores = [
+                    score
+                    for current, score in candidate.channel_scores
+                    if current in accepted
+                ]
+                if not scores and any(current in accepted for current in candidate.channels):
+                    scores = [candidate.score]
+                if scores:
+                    rows.append((candidate.canonical_id, max(scores)))
+        else:
+            rows = []
+            for candidate in self.candidates:
+                scores = [
+                    score
+                    for current, score in candidate.channel_scores
+                    if current == channel
+                ]
+                if not scores and channel in candidate.channels:
+                    scores = [candidate.score]
+                if scores:
+                    rows.append((candidate.canonical_id, max(scores)))
+        return tuple(sorted(rows, key=lambda row: (-row[1], row[0])))
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -223,7 +272,7 @@ class CanonicalEntityResolver:
                 lexical_score = portable_lexical_score(normalized_label, normalized_query)
                 trigram_score = portable_trigram_score(normalized_label, query_forms)
 
-            score, channels, matched_terms = self._score(
+            score, channels, matched_terms, channel_scores = self._score(
                 normalized_label=normalized_label,
                 normalized_query=normalized_query,
                 query_forms=query_forms,
@@ -242,6 +291,7 @@ class CanonicalEntityResolver:
                 score=score,
                 channels=channels,
                 matched_terms=matched_terms,
+                channel_scores=channel_scores,
             )
             previous = candidates.get(item.canonical_id)
             if previous is None or candidate.score > previous.score:
@@ -412,7 +462,7 @@ class CanonicalEntityResolver:
             normalized_label = normalize_entity_text(label)
             lexical = portable_lexical_score(normalized_label, normalized_query)
             trigram = portable_trigram_score(normalized_label, query_forms)
-            score, _, _ = self._score(
+            score, _, _, _ = self._score(
                 normalized_label=normalized_label,
                 normalized_query=normalized_query,
                 query_forms=query_forms,
@@ -477,39 +527,43 @@ class CanonicalEntityResolver:
     ):
         channels = []
         matched_terms = []
-        scores = []
+        channel_scores: list[tuple[str, float]] = []
+
+        def add_channel(channel: str, score: float) -> None:
+            channels.append(channel)
+            channel_scores.append((channel, float(score)))
 
         if normalized_label in query_forms:
-            channels.append("normalized_mention")
+            add_channel("normalized_mention", 1.0)
             matched_terms.append(normalized_label)
-            scores.append(1.0)
 
         if normalized_label in alias_targets:
-            channels.append("alias")
+            add_channel("alias", 0.99)
             matched_terms.append(normalized_label)
-            scores.append(0.99)
 
         lexical_score = float(lexical_score or 0.0)
         if lexical_score > 0:
-            channels.append("lexical")
-            scores.append(min(0.94, 0.72 + math.log1p(lexical_score) * 0.12))
+            add_channel(
+                "lexical",
+                min(0.94, 0.72 + math.log1p(lexical_score) * 0.12),
+            )
 
         trigram_score = float(trigram_score or 0.0)
         if trigram_score >= 0.34:
-            channels.append("trigram")
-            scores.append(min(0.93, 0.55 + trigram_score * 0.38))
+            add_channel("trigram", min(0.93, 0.55 + trigram_score * 0.38))
 
         # Portable word containment is useful for corrected effective labels and
         # mirrors PostgreSQL word_similarity without claiming the same metric.
         if contains_normalized_phrase(normalized_query, normalized_label):
-            channels.append("normalized_containment")
+            add_channel("normalized_containment", 0.97)
             matched_terms.append(normalized_label)
-            scores.append(0.97)
 
+        score_values = [score for _, score in channel_scores]
         return (
-            max(scores) if scores else 0.0,
+            max(score_values) if score_values else 0.0,
             tuple(dict.fromkeys(channels)),
             tuple(dict.fromkeys(matched_terms)),
+            tuple(dict.fromkeys(channel_scores)),
         )
 
 
