@@ -245,3 +245,35 @@ def test_missing_context_clarification_is_safe_and_specific():
     assert "pantalla o un módulo" in answer
     assert "screen:" not in answer
     assert "module:" not in answer
+
+
+def test_contextual_child_ambiguity_reuses_governed_screen_scope():
+    direct = resolution(
+        candidate("field:ruc-a", "RUC", entity_type="field"),
+        candidate("field:ruc-b", "RUC", entity_type="field"),
+    )
+
+    result = resolve("¿Cómo busco por RUC aquí?", direct, state())
+
+    assert result.mode == ConversationContextMode.CONTEXTUALIZED
+    assert result.reason == "governed_entity_reference"
+    assert result.inherited_entities == (SCREEN,)
+    assert 'pantalla "Año"' in result.effective_question
+
+
+def test_contextual_same_screen_mention_does_not_disable_scope_reuse():
+    direct = resolution(candidate("screen:ano", "Año"))
+
+    result = resolve("¿Cómo creo un nuevo año aquí?", direct, state())
+
+    assert result.mode == ConversationContextMode.CONTEXTUALIZED
+    assert result.inherited_entities == (SCREEN,)
+
+
+def test_contextual_reference_still_allows_explicit_different_screen_switch():
+    direct = resolution(candidate("screen:dashboard", "Dashboard"))
+
+    result = resolve("¿Y dónde está Dashboard?", direct, state())
+
+    assert result.mode == ConversationContextMode.DIRECT
+    assert result.reason == "current_turn_entity"

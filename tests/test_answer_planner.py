@@ -347,3 +347,177 @@ def test_answer_planner_consumes_explicit_query_plan_instead_of_reparsing_questi
     assert result["supported"] is True
     assert result["intent"] == QueryIntent.LIST_FIELDS
     assert "RUC" in result["answer"]
+
+
+def test_navigation_event_names_matching_validated_event():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_EVENT",
+            "source_canonical_id": "screen:list",
+            "target_canonical_id": "event:next",
+            "source_label": "Comprobantes eléctricos emitidos",
+            "target_label": "Siguiente página",
+        }
+    ]
+
+    result = planner.plan(
+        "¿Cómo avanzo a la siguiente página aquí?",
+        [
+            {
+                "canonical_id": "screen:list",
+                "entity_type": "screen",
+                "safe_label": "Comprobantes eléctricos emitidos",
+            }
+        ],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "NAVIGATION_EVENT"
+    assert "Siguiente página" in result["answer"]
+    assert "Comprobantes eléctricos emitidos" in result["answer"]
+
+
+def test_mutative_guidance_uses_the_matching_control_not_first_relation():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_CONTROL",
+            "source_canonical_id": "screen:year",
+            "target_canonical_id": "control:buscar",
+            "source_label": "Año",
+            "target_label": "Buscar",
+        },
+        {
+            "relationship_type": "HAS_CONTROL",
+            "source_canonical_id": "screen:year",
+            "target_canonical_id": "control:new",
+            "source_label": "Año",
+            "target_label": "Nuevo",
+        },
+    ]
+
+    result = planner.plan(
+        "¿Cómo creo un nuevo año aquí?",
+        [
+            {
+                "canonical_id": "screen:year",
+                "entity_type": "screen",
+                "safe_label": "Año",
+            }
+        ],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "MUTATIVE_ACTION"
+    assert 'control "Nuevo"' in result["answer"]
+    assert "control:buscar" not in result["evidence_ids"]
+    assert "control:new" in result["evidence_ids"]
+
+
+def test_navigation_event_ignores_context_screen_label_on_state_edges():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "FROM_STATE",
+            "source_canonical_id": "event:filter",
+            "target_canonical_id": "ui_state:current",
+            "source_label": "-- NOTA DE CRÉDITO RETENCIONES FACTURA",
+            "target_label": "Comprobantes eléctronicos emitidos",
+            "source_type": "event",
+            "target_type": "ui_state",
+        },
+        {
+            "relationship_type": "HAS_EVENT",
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:next",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "Siguiente página",
+            "source_type": "screen",
+            "target_type": "event",
+        },
+    ]
+
+    result = planner.plan(
+        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        'pantalla "Comprobantes eléctronicos emitidos".',
+        [
+            {
+                "canonical_id": "screen:comp",
+                "entity_type": "screen",
+                "safe_label": "Comprobantes eléctronicos emitidos",
+            }
+        ],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "NAVIGATION_EVENT"
+    assert "Siguiente página" in result["answer"]
+    assert 'pantalla "Comprobantes eléctronicos emitidos"' in result["answer"]
+    assert "NOTA DE CRÉDITO" not in result["answer"]
+    assert result["evidence_ids"] == ["screen:comp", "event:next"]
+
+
+def test_navigation_event_uses_matching_control_when_no_direct_event_exists():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_CONTROL",
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:next",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "Siguiente página",
+            "source_type": "screen",
+            "target_type": "control",
+        },
+        {
+            "relationship_type": "HAS_EVENT",
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:noise-a",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "-- NOTA DE CRÉDITO RETENCIONES FACTURA",
+            "source_type": "screen",
+            "target_type": "event",
+        },
+        {
+            "relationship_type": "HAS_EVENT",
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:noise-b",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "--Seleccione--",
+            "source_type": "screen",
+            "target_type": "event",
+        },
+    ]
+
+    result = planner.plan(
+        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        'pantalla "Comprobantes eléctronicos emitidos".',
+        [
+            {
+                "canonical_id": "screen:comp",
+                "entity_type": "screen",
+                "safe_label": "Comprobantes eléctronicos emitidos",
+            },
+            {
+                "canonical_id": "control:next",
+                "entity_type": "control",
+                "safe_label": "Siguiente página",
+            },
+        ],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "NAVIGATION_EVENT"
+    assert 'control "Siguiente página"' in result["answer"]
+    assert 'pantalla "Comprobantes eléctronicos emitidos"' in result["answer"]
+    assert "NOTA DE CRÉDITO" not in result["answer"]
+    assert result["evidence_ids"] == ["screen:comp", "control:next"]

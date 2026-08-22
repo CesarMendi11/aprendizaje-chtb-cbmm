@@ -27,7 +27,7 @@ INTENT_ENTITY_TYPES: dict[QueryIntent, tuple[str, ...]] = {
     QueryIntent.LOCATE_SCREEN: ("screen", "module", "erp_system"),
     QueryIntent.FIND_CONTROL: ("control", "screen"),
     QueryIntent.LIST_COLUMNS: ("screen", "table", "table_column"),
-    QueryIntent.NAVIGATION_EVENT: ("screen", "ui_state", "event", "transition"),
+    QueryIntent.NAVIGATION_EVENT: ("screen", "control", "ui_state", "event", "transition"),
 }
 
 
@@ -113,6 +113,11 @@ class QueryPlanner:
             )
         ):
             return QueryIntent.SCREEN_PURPOSE
+        # Explicit control language is more specific than the generic
+        # search-by-field verb.  For example, "botón Buscar" asks where the
+        # control is; it is not a request to search by a field named Buscar.
+        if re.search(r"\b(botón|boton|control)\b", q):
+            return QueryIntent.FIND_CONTROL
         if re.search(r"\b(buscar|busco|busca|búsqueda|busqueda|filtrar)\b", q):
             return QueryIntent.SEARCH_BY_FIELD
         if re.search(r"\b(campo|campos|filtro|filtros)\b", q):
@@ -123,8 +128,6 @@ class QueryPlanner:
             r"\b(qué|que|cuál|cual|dónde|donde|está|esta|pertenece|pantalla)\b", q
         ):
             return QueryIntent.LOCATE_SCREEN
-        if re.search(r"\b(botón|boton|control)\b", q):
-            return QueryIntent.FIND_CONTROL
         if re.search(r"\b(columnas|columna|tabla)\b", q):
             return QueryIntent.LIST_COLUMNS
         if re.search(r"\b(página|pagina|avanz|siguiente)\b", q):

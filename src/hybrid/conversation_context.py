@@ -187,10 +187,25 @@ class ConversationContextResolver:
     ) -> ConversationContextResolution:
         state = ConversationState.coerce(state)
         normalized = self.query_planner.normalize(question)
+        explicit_reference = self._references_prior_context(normalized)
+        scoped_state = self._state_matches(state, erp_id, knowledge_version)
 
-        # Current-turn evidence wins. This prevents a previous screen from
-        # contaminating an explicit new entity, including strong trigram hits.
-        if self._has_current_turn_entity(direct_resolution):
+        # Current-turn evidence normally wins.  A contextual cue such as
+        # "aquí" or "esta pantalla" is different: child labels like RUC,
+        # Buscar, Nuevo or Siguiente página can be globally ambiguous while
+        # the governed current screen already provides the missing scope.  In
+        # that case we contextualize first and let PostgreSQL narrow the child
+        # candidates to the inherited screen.  An explicit switch to another
+        # screen/module/ERP still wins immediately.
+        has_current_entity = self._has_current_turn_entity(direct_resolution)
+        reuse_scope = bool(
+            has_current_entity
+            and explicit_reference
+            and scoped_state
+            and state.current_screen is not None
+            and not self._has_explicit_scope_switch(direct_resolution, state)
+        )
+        if has_current_entity and not reuse_scope:
             return ConversationContextResolution(
                 mode=ConversationContextMode.DIRECT,
                 reason=(
@@ -202,8 +217,6 @@ class ConversationContextResolver:
                 effective_question=question,
             )
 
-        explicit_reference = self._references_prior_context(normalized)
-        scoped_state = self._state_matches(state, erp_id, knowledge_version)
         elliptical_reference = (
             scoped_state
             and query_plan.intent in CONTEXT_REUSABLE_INTENTS
@@ -326,6 +339,30 @@ class ConversationContextResolver:
             relevant_evidence_refs=evidence_refs,
             turn_index=(previous.turn_index + 1) if same_scope else 1,
         )
+
+    @staticmethod
+    def _has_explicit_scope_switch(
+        resolution: EntityResolution,
+        state: ConversationState,
+    ) -> bool:
+        """Return True only for a strong top-level entity that changes scope."""
+
+        current_screen = state.current_screen.canonical_id if state.current_screen else None
+        current_module = state.current_module.canonical_id if state.current_module else None
+        for candidate in resolution.candidates:
+            if candidate.score < 0.80:
+                continue
+            if candidate.entity_type == "screen":
+                if candidate.canonical_id != current_screen:
+                    return True
+                continue
+            if candidate.entity_type == "module":
+                if candidate.canonical_id != current_module:
+                    return True
+                continue
+            if candidate.entity_type == "erp_system":
+                return True
+        return False
 
     @staticmethod
     def _has_current_turn_entity(resolution: EntityResolution) -> bool:

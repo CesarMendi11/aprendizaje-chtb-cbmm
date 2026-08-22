@@ -103,9 +103,14 @@ POLICIES: dict[QueryIntent, GraphTraversalPolicy] = {
     ),
     QueryIntent.NAVIGATION_EVENT: GraphTraversalPolicy(
         name="navigation_event",
-        seed_entity_types=("screen", "ui_state", "event", "transition"),
-        endpoint_entity_types=("screen", "ui_state", "event", "transition"),
+        # Prefer a concrete governed navigation target before the contextual
+        # screen. Some ERP affordances are represented structurally as Events,
+        # while others (for example a paginator button) exist only as Controls
+        # when no transition was observed. Both remain screen-scoped evidence.
+        seed_entity_types=("event", "control", "transition", "ui_state", "screen"),
+        endpoint_entity_types=("screen", "control", "ui_state", "event", "transition"),
         relationships=(
+            "HAS_CONTROL",
             "HAS_STATE",
             "HAS_EVENT",
             "FROM_STATE",

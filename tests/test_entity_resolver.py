@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from src.hybrid.entity_resolver import (
     CanonicalEntityResolver,
+    EntityResolution,
     EntityResolutionCandidate,
     lexical_query_terms,
     normalize_entity_text,
@@ -252,3 +253,241 @@ def test_ambiguous_candidate_ids_are_explicit_for_downstream_fusion_guard():
 
     assert result.status == "ambiguous"
     assert set(result.ambiguous_candidate_ids) == {"field:ruc-1", "field:ruc-2"}
+
+
+def test_screen_scope_resolves_global_child_ambiguity_without_guessing():
+    first = item("field:ruc-current", "field", "RUC", "ruc")
+    first.parent_canonical_id = "screen:current"
+    second = item("field:ruc-other", "field", "RUC", "ruc")
+    second.parent_canonical_id = "screen:other"
+    screen_current = item("screen:current", "screen", "Actual", "actual")
+    screen_current.parent_canonical_id = "module:one"
+    screen_other = item("screen:other", "screen", "Otra", "otra")
+    screen_other.parent_canonical_id = "module:two"
+
+    class ScopedResolver(Resolver):
+        def _scope_items(self, candidate_ids, *, version_id):
+            return {
+                row.canonical_id: row
+                for row in (first, second, screen_current, screen_other)
+            }
+
+    resolver = ScopedResolver([(first, 0.0, 0.0), (second, 0.0, 0.0)])
+    result = resolver.resolve(
+        plan("¿Cómo busco por RUC aquí?", entity_types=("field",)),
+        version_id="version-1",
+    )
+
+    assert result.status == "ambiguous"
+
+    scoped = resolver.scope_to_screen(
+        result,
+        version_id="version-1",
+        screen_id="screen:current",
+    )
+
+    assert scoped.status == "resolved"
+    assert scoped.primary_canonical_id == "field:ruc-current"
+    assert [candidate.canonical_id for candidate in scoped.candidates] == [
+        "field:ruc-current"
+    ]
+
+
+def test_screen_scope_follows_table_column_parent_chain():
+    column = item("table_column:status", "table_column", "ESTADO", "estado")
+    column.parent_canonical_id = "table:current"
+    table = item("table:current", "table", "Resultados", "resultados")
+    table.parent_canonical_id = "screen:current"
+    screen = item("screen:current", "screen", "Actual", "actual")
+    screen.parent_canonical_id = "module:one"
+
+    class ScopedResolver(Resolver):
+        def _scope_items(self, candidate_ids, *, version_id):
+            return {
+                row.canonical_id: row
+                for row in (column, table, screen)
+            }
+
+    resolver = ScopedResolver([])
+    from src.hybrid.entity_resolver import EntityResolution
+
+    result = EntityResolution(
+        query="¿Qué columnas tiene esta pantalla?",
+        normalized_query="que columnas tiene esta pantalla",
+        candidates=(
+            EntityResolutionCandidate(
+                canonical_id="table_column:status",
+                entity_type="table_column",
+                safe_label="ESTADO",
+                route=None,
+                score=0.95,
+                channels=("trigram",),
+                matched_terms=("estado",),
+            ),
+        ),
+    )
+
+    scoped = resolver.scope_to_screen(
+        result,
+        version_id="version-1",
+        screen_id="screen:current",
+    )
+
+    assert [candidate.canonical_id for candidate in scoped.candidates] == [
+        "table_column:status"
+    ]
+
+
+def test_screen_scope_drops_synthetic_ui_state_title_shadows_for_contextual_navigation():
+    screen = item(
+        "screen:current",
+        "screen",
+        "Comprobantes eléctronicos emitidos",
+        "comprobantes electronicos emitidos",
+    )
+    state_a = item(
+        "ui_state:a",
+        "ui_state",
+        "Comprobantes eléctronicos emitidos",
+        "comprobantes electronicos emitidos",
+    )
+    state_a.parent_canonical_id = "screen:current"
+    state_b = item(
+        "ui_state:b",
+        "ui_state",
+        "Comprobantes eléctronicos emitidos",
+        "comprobantes electronicos emitidos",
+    )
+    state_b.parent_canonical_id = "screen:current"
+    event = item(
+        "event:next",
+        "event",
+        "Siguiente página",
+        "siguiente pagina",
+    )
+    event.parent_canonical_id = "screen:current"
+
+    class ScopedResolver(Resolver):
+        def _scope_items(self, candidate_ids, *, version_id):
+            return {
+                row.canonical_id: row
+                for row in (screen, state_a, state_b, event)
+            }
+
+    resolver = ScopedResolver([])
+    result = EntityResolution(
+        query=(
+            "¿Cómo avanzo a la siguiente página aquí? "
+            'Referencia contextual validada: pantalla "Comprobantes eléctronicos emitidos".'
+        ),
+        normalized_query=(
+            "como avanzo a la siguiente pagina aqui referencia contextual validada "
+            "pantalla comprobantes electronicos emitidos"
+        ),
+        candidates=(
+            EntityResolutionCandidate(
+                canonical_id="screen:current",
+                entity_type="screen",
+                safe_label="Comprobantes eléctronicos emitidos",
+                route="/admin/cuentasxcobrar/comprobantes",
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("comprobantes electronicos emitidos",),
+            ),
+            EntityResolutionCandidate(
+                canonical_id="ui_state:a",
+                entity_type="ui_state",
+                safe_label="Comprobantes eléctronicos emitidos",
+                route=None,
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("comprobantes electronicos emitidos",),
+            ),
+            EntityResolutionCandidate(
+                canonical_id="ui_state:b",
+                entity_type="ui_state",
+                safe_label="Comprobantes eléctronicos emitidos",
+                route=None,
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("comprobantes electronicos emitidos",),
+            ),
+            EntityResolutionCandidate(
+                canonical_id="event:next",
+                entity_type="event",
+                safe_label="Siguiente página",
+                route=None,
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("siguiente pagina",),
+            ),
+        ),
+    )
+
+    assert result.status == "ambiguous"
+    assert result.ambiguous_labels == (
+        "ui_state:comprobantes electronicos emitidos",
+    )
+
+    scoped = resolver.scope_to_screen(
+        result,
+        version_id="version-1",
+        screen_id="screen:current",
+        context_label="Comprobantes eléctronicos emitidos",
+    )
+
+    assert scoped.status == "resolved"
+    assert [candidate.canonical_id for candidate in scoped.candidates] == [
+        "screen:current",
+        "event:next",
+    ]
+
+
+def test_screen_scope_keeps_real_same_label_event_ambiguity():
+    event_a = item("event:next-a", "event", "Siguiente página", "siguiente pagina")
+    event_a.parent_canonical_id = "screen:current"
+    event_b = item("event:next-b", "event", "Siguiente página", "siguiente pagina")
+    event_b.parent_canonical_id = "screen:current"
+
+    class ScopedResolver(Resolver):
+        def _scope_items(self, candidate_ids, *, version_id):
+            return {
+                row.canonical_id: row
+                for row in (event_a, event_b)
+            }
+
+    resolver = ScopedResolver([])
+    result = EntityResolution(
+        query="¿Cómo avanzo a la siguiente página aquí?",
+        normalized_query="como avanzo a la siguiente pagina aqui",
+        candidates=(
+            EntityResolutionCandidate(
+                canonical_id="event:next-a",
+                entity_type="event",
+                safe_label="Siguiente página",
+                route=None,
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("siguiente pagina",),
+            ),
+            EntityResolutionCandidate(
+                canonical_id="event:next-b",
+                entity_type="event",
+                safe_label="Siguiente página",
+                route=None,
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("siguiente pagina",),
+            ),
+        ),
+    )
+
+    scoped = resolver.scope_to_screen(
+        result,
+        version_id="version-1",
+        screen_id="screen:current",
+        context_label="Comprobantes eléctronicos emitidos",
+    )
+
+    assert scoped.status == "ambiguous"
+    assert scoped.ambiguous_labels == ("event:siguiente pagina",)

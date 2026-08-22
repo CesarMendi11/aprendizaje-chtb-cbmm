@@ -1,0 +1,951 @@
+{
+  "scenarios": [
+    {
+      "name": "year_location_natural",
+      "turns": [
+        {
+          "name": "where_configure_years",
+          "question": "¿Dónde configuro los años?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "year_location_module_phrase",
+      "turns": [
+        {
+          "name": "which_module_year",
+          "question": "¿En qué módulo está Año?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "year_typo_rrf_recovery",
+      "turns": [
+        {
+          "name": "typo_anoo",
+          "question": "¿Dónde está anoo?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "year_controlled_multi_turn",
+      "turns": [
+        {
+          "name": "establish_year",
+          "question": "¿Dónde configuro los años?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "elliptical_purpose",
+          "question": "¿Y para qué sirve?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "approved_semantic_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_semantics",
+                1
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "elliptical_columns",
+          "question": "¿Qué columnas tiene?",
+          "expectation": {
+            "intent": "LIST_COLUMNS",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "DETALLE",
+              "ACTIVO"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "table",
+              "table_column"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "pronoun_purpose",
+          "question": "¿Y qué puedo hacer ahí?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "approved_semantic_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_semantics",
+                1
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "ruc_ambiguity",
+      "turns": [
+        {
+          "name": "ambiguous_tax_id",
+          "question": "¿Dónde aparece la identificación tributaria?",
+          "expectation": {
+            "intent": "LOCATE_FIELD",
+            "decision": "CLARIFICATION",
+            "reason": "entity_resolution_ambiguous",
+            "status": "answered",
+            "answer_contains": [
+              "RUC"
+            ],
+            "answer_excludes": [],
+            "required_sources": [],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [],
+            "retrieval_exact": [],
+            "retrieval_zero": [
+              "selected_sources",
+              "selected_relations",
+              "selected_semantics"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing_conversation_reference",
+      "turns": [
+        {
+          "name": "missing_screen_antecedent",
+          "question": "¿Para qué sirve esa pantalla?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "CLARIFICATION",
+            "reason": "conversation_reference_missing",
+            "status": "answered",
+            "answer_contains": [
+              "pantalla",
+              "módulo"
+            ],
+            "answer_excludes": [],
+            "required_sources": [],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [],
+            "retrieval_exact": [],
+            "retrieval_zero": [
+              "structural_dense_hits",
+              "semantic_dense_hits",
+              "graph_neighbors",
+              "selected_sources",
+              "selected_relations",
+              "selected_semantics"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "dashboard_cross_entity_grounding",
+      "turns": [
+        {
+          "name": "locate_dashboard",
+          "question": "¿Dónde está Dashboard?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Dashboard",
+              "disponible directamente en el ERP"
+            ],
+            "answer_excludes": [
+              "dentro del módulo"
+            ],
+            "required_sources": [
+              {
+                "title": "Dashboard",
+                "source_type": "screen"
+              },
+              {
+                "title": "ERP Cuerpo de Bomberos Municipal de Machala",
+                "source_type": "erp_system"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "General"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "erp_system"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "dashboard_purpose_without_semantic",
+          "question": "¿Y para qué sirve?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "ABSTENTION",
+            "reason": "screen_purpose_semantic_missing",
+            "status": "not_found",
+            "answer_contains": [
+              "conocimiento validado suficiente"
+            ],
+            "answer_excludes": [
+              "Año"
+            ],
+            "required_sources": [
+              {
+                "title": "Dashboard",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "General"
+            ],
+            "allowed_source_types": [
+              "screen"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_semantics",
+                0
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "comprobantes_full_intent_surface",
+      "turns": [
+        {
+          "name": "locate_comprobantes",
+          "question": "¿Dónde encuentro Comprobantes eléctronicos emitidos?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Comprobantes eléctronicos emitidos",
+              "Cuentas por cobrar"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              },
+              {
+                "title": "Cuentas por cobrar",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "list_fields_contextual",
+          "question": "¿Qué campos tiene esta pantalla?",
+          "expectation": {
+            "intent": "LIST_FIELDS",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "RUC",
+              "Núm. comprobante",
+              "Desde",
+              "Hasta"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "field",
+              "control"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "search_by_ruc_contextual",
+          "question": "¿Cómo busco por RUC aquí?",
+          "expectation": {
+            "intent": "SEARCH_BY_FIELD",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "RUC",
+              "Buscar",
+              "Comprobantes eléctronicos emitidos"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              },
+              {
+                "title": "RUC",
+                "source_type": "field"
+              },
+              {
+                "title": "Buscar",
+                "source_type": "control"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "field",
+              "control"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "find_search_control_contextual",
+          "question": "¿Dónde está el botón Buscar aquí?",
+          "expectation": {
+            "intent": "FIND_CONTROL",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Buscar",
+              "Comprobantes eléctronicos emitidos"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              },
+              {
+                "title": "Buscar",
+                "source_type": "control"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "control"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "list_columns_contextual",
+          "question": "¿Qué columnas tiene esta pantalla?",
+          "expectation": {
+            "intent": "LIST_COLUMNS",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "RUC/CI",
+              "COMPROBANTE",
+              "FECHA EMISIÓN",
+              "TOTAL",
+              "ESTADO"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "table",
+              "table_column"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "next_page_navigation_contextual",
+          "question": "¿Cómo avanzo a la siguiente página aquí?",
+          "expectation": {
+            "intent": "NAVIGATION_EVENT",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Siguiente página"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Comprobantes eléctronicos emitidos",
+                "source_type": "screen"
+              },
+              {
+                "title": "Siguiente página",
+                "source_type": "control"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard",
+              "Página anterior",
+              "Buscar",
+              "unlabeled control",
+              "--Seleccione--"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "control"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_sources",
+                2
+              ],
+              [
+                "selected_relations",
+                1
+              ],
+              [
+                "selected_semantics",
+                0
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "mutative_guidance_without_execution",
+      "turns": [
+        {
+          "name": "establish_year_for_mutative",
+          "question": "¿Dónde configuro los años?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "create_year_guidance",
+          "question": "¿Cómo creo un nuevo año aquí?",
+          "expectation": {
+            "intent": "MUTATIVE_ACTION",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Nuevo"
+            ],
+            "answer_excludes": [
+              "he creado",
+              "creado correctamente",
+              "ejecuté",
+              "realicé la acción"
+            ],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "Nuevo",
+                "source_type": "control"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "control",
+              "event",
+              "transition",
+              "ui_state"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "unsupported_delete_fails_safe",
+          "question": "Elimina el año aquí",
+          "expectation": {
+            "intent": "MUTATIVE_ACTION",
+            "decision": "ABSTENTION",
+            "reason": "mutative_action_policy",
+            "status": "answered",
+            "answer_contains": [
+              "conocimiento validado suficiente"
+            ],
+            "answer_excludes": [
+              "eliminado",
+              "borrado",
+              "acción completada",
+              "operación realizada"
+            ],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "control",
+              "event",
+              "transition",
+              "ui_state"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "explicit_cross_entity_round_trip",
+      "turns": [
+        {
+          "name": "roundtrip_establish_year",
+          "question": "¿Dónde configuro los años?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "roundtrip_switch_dashboard",
+          "question": "¿Y dónde está Dashboard?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Dashboard",
+              "disponible directamente en el ERP"
+            ],
+            "answer_excludes": [
+              "dentro del módulo"
+            ],
+            "required_sources": [
+              {
+                "title": "Dashboard",
+                "source_type": "screen"
+              },
+              {
+                "title": "ERP Cuerpo de Bomberos Municipal de Machala",
+                "source_type": "erp_system"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "General"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "erp_system"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "roundtrip_dashboard_purpose",
+          "question": "¿Y para qué sirve?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "ABSTENTION",
+            "reason": "screen_purpose_semantic_missing",
+            "status": "not_found",
+            "answer_contains": [
+              "conocimiento validado suficiente"
+            ],
+            "answer_excludes": [
+              "Año"
+            ],
+            "required_sources": [
+              {
+                "title": "Dashboard",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Año",
+              "General"
+            ],
+            "allowed_source_types": [
+              "screen"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_semantics",
+                0
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "roundtrip_switch_year",
+          "question": "¿Y dónde está Año?",
+          "expectation": {
+            "intent": "LOCATE_SCREEN",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "deterministic_structural_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año",
+              "General"
+            ],
+            "answer_excludes": [
+              "Dashboard"
+            ],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              },
+              {
+                "title": "General",
+                "source_type": "module"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen",
+              "module"
+            ],
+            "retrieval_exact": [],
+            "retrieval_zero": []
+          }
+        },
+        {
+          "name": "roundtrip_year_purpose",
+          "question": "¿Y para qué sirve?",
+          "expectation": {
+            "intent": "SCREEN_PURPOSE",
+            "decision": "DETERMINISTIC_ANSWER",
+            "reason": "approved_semantic_answer",
+            "status": "answered",
+            "answer_contains": [
+              "Año"
+            ],
+            "answer_excludes": [
+              "Dashboard"
+            ],
+            "required_sources": [
+              {
+                "title": "Año",
+                "source_type": "screen"
+              }
+            ],
+            "forbidden_source_titles": [
+              "Dashboard"
+            ],
+            "allowed_source_types": [
+              "screen"
+            ],
+            "retrieval_exact": [
+              [
+                "selected_semantics",
+                1
+              ]
+            ],
+            "retrieval_zero": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "out_of_domain_fail_closed",
+      "turns": [
+        {
+          "name": "general_knowledge_question",
+          "question": "¿Cuál es la capital de Francia?",
+          "expectation": {
+            "intent": null,
+            "decision": "ABSTENTION",
+            "reason": "insufficient_evidence",
+            "status": "not_found",
+            "answer_contains": [
+              "conocimiento validado suficiente"
+            ],
+            "answer_excludes": [
+              "París",
+              "Paris"
+            ],
+            "required_sources": [],
+            "forbidden_source_titles": [
+              "Año",
+              "Dashboard",
+              "General"
+            ],
+            "allowed_source_types": [],
+            "retrieval_exact": [],
+            "retrieval_zero": [
+              "selected_sources",
+              "selected_relations",
+              "selected_semantics"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

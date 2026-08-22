@@ -1030,3 +1030,57 @@ def test_generator_abstention_updates_final_answer_decision():
     assert result["answer_mode"] == "insufficient_evidence"
     assert result["answer_decision"]["decision"] == "ABSTENTION"
     assert result["answer_decision"]["reason"] == "generator_abstained"
+
+
+def test_unknown_question_without_canonical_anchor_fails_closed_before_dense_retrieval(monkeypatch):
+    from types import SimpleNamespace
+
+    from src.hybrid.entity_resolver import EntityResolution
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def prepare(self, *, erp_id=None, knowledge_version=None):
+            return version, [], {}
+
+    monkeypatch.setattr("src.hybrid.retriever.ChromaSyncService", SyncService)
+
+    class Resolver:
+        def resolve(self, query_plan, *, version_id, limit):
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(),
+            )
+
+    class ForbiddenEmbeddings:
+        def embed(self, value):
+            raise AssertionError("unknown out-of-domain query must not reach dense retrieval")
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=None,
+        neo4j=None,
+        embeddings=ForbiddenEmbeddings(),
+        entity_resolver=Resolver(),
+    )
+
+    result = retriever.retrieve("¿Cuál es la capital de Francia?")
+
+    assert result["query_plan"]["intent"] is None
+    assert result["sources"] == []
+    assert result["relations"] == []
+    assert result["approved_semantics"] == []
+    assert result["context"] == ""
+    assert result["evidence_selection"]["status"] == "insufficient"
+    assert result["evidence_selection"]["reason"] == "insufficient_evidence"
+    assert result["retrieval"]["selected_sources"] == 0
+    assert result["retrieval"]["selected_relations"] == 0
+    assert result["retrieval"]["selected_semantics"] == 0

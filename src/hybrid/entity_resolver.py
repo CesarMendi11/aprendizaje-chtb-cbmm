@@ -313,6 +313,115 @@ class CanonicalEntityResolver:
             candidates=tuple(ordered),
         )
 
+    def scope_to_screen(
+        self,
+        resolution: EntityResolution,
+        *,
+        version_id,
+        screen_id: str,
+        context_label: str | None = None,
+    ) -> EntityResolution:
+        """Narrow already-resolved candidates to one governed screen scope.
+
+        The scope itself is not inferred here: callers may pass only a screen
+        that already came from governed conversation state.  PostgreSQL remains
+        the authority for membership.  Parent chains cover field/control/table
+        -> screen and table_column -> table -> screen, while events and UI
+        states are imported with the screen in their structural ancestry.
+
+        ``context_label`` is the safe label that the conversation layer injected
+        into the effective question.  UI states commonly inherit the screen
+        title as their own label, so that synthetic phrase can make multiple
+        states look like an explicit ambiguous user mention.  Those shadow
+        candidates are not user-selected entities and are removed only when the
+        caller supplies the governed context label.  Real child ambiguities such
+        as two controls or two events with the same label remain untouched.
+        """
+
+        screen_id = str(screen_id or "").strip()
+        if not screen_id or not resolution.candidates:
+            return resolution
+
+        candidate_ids = tuple(
+            candidate.canonical_id
+            for candidate in resolution.candidates
+            if candidate.canonical_id
+        )
+        items = self._scope_items(
+            candidate_ids,
+            version_id=version_id,
+        )
+        scoped = tuple(
+            candidate
+            for candidate in resolution.candidates
+            if self._belongs_to_screen(
+                candidate.canonical_id,
+                screen_id,
+                items,
+            )
+        )
+
+        normalized_context_label = normalize_entity_text(context_label or "")
+        if normalized_context_label:
+            scoped = tuple(
+                candidate
+                for candidate in scoped
+                if not (
+                    candidate.entity_type == "ui_state"
+                    and candidate.canonical_id != screen_id
+                    and normalize_entity_text(candidate.safe_label)
+                    == normalized_context_label
+                )
+            )
+
+        return EntityResolution(
+            query=resolution.query,
+            normalized_query=resolution.normalized_query,
+            candidates=scoped,
+        )
+
+    def _scope_items(self, candidate_ids, *, version_id):
+        pending = {str(value) for value in candidate_ids if str(value).strip()}
+        by_id = {}
+        for _ in range(4):
+            missing = sorted(pending - set(by_id))
+            if not missing:
+                break
+            statement = select(KnowledgeItem).where(
+                KnowledgeItem.knowledge_version_id == version_id,
+                KnowledgeItem.current_review_status.in_(
+                    [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
+                ),
+                KnowledgeItem.canonical_id.in_(missing),
+            )
+            rows = list(self.session.scalars(statement))
+            if not rows:
+                break
+            for item in rows:
+                by_id[item.canonical_id] = item
+                parent_id = str(getattr(item, "parent_canonical_id", None) or "").strip()
+                if parent_id:
+                    pending.add(parent_id)
+        return by_id
+
+    @staticmethod
+    def _belongs_to_screen(canonical_id, screen_id, items):
+        current = str(canonical_id or "").strip()
+        seen = set()
+        for _ in range(5):
+            if not current or current in seen:
+                return False
+            if current == screen_id:
+                return True
+            seen.add(current)
+            item = items.get(current)
+            if item is None:
+                return False
+            current = str(
+                getattr(item, "parent_canonical_id", None) or ""
+            ).strip()
+        return False
+
     def _candidate_rows(
         self,
         *,

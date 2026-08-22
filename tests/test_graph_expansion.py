@@ -204,3 +204,87 @@ def test_list_columns_prefers_strong_screen_over_same_label_column_seed():
     assert plan.enabled is True
     assert plan.strategy == "list_columns"
     assert plan.seed_canonical_ids == ("screen:ano",)
+
+
+def test_navigation_event_prefers_explicit_event_over_contextual_screen_seed():
+    query_plan = QueryPlanner().plan(
+        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        'pantalla "Comprobantes eléctronicos emitidos".'
+    )
+    resolution = EntityResolution(
+        query=query_plan.question,
+        normalized_query=query_plan.normalized_question,
+        candidates=(
+            _candidate(
+                "screen:comp",
+                "screen",
+                "Comprobantes eléctronicos emitidos",
+            ),
+            _candidate(
+                "event:next",
+                "event",
+                "Siguiente página",
+            ),
+        ),
+    )
+
+    assert resolution.primary_canonical_id is None
+
+    plan = QueryAwareGraphExpansionPlanner().plan(
+        query_plan,
+        resolution,
+        _fused("screen:comp", "event:next"),
+        candidate_types={
+            "screen:comp": "screen",
+            "event:next": "event",
+        },
+        graph_limit=20,
+    )
+
+    assert plan.enabled is True
+    assert plan.strategy == "navigation_event"
+    assert plan.seed_canonical_ids == ("event:next",)
+    assert plan.seed_entity_types == ("event",)
+    assert plan.max_hops == 2
+    assert plan.limit == 64
+
+
+def test_navigation_event_can_anchor_screen_scoped_control_when_no_event_exists():
+    query_plan = QueryPlanner().plan(
+        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        'pantalla "Comprobantes eléctronicos emitidos".'
+    )
+    resolution = EntityResolution(
+        query=query_plan.question,
+        normalized_query=query_plan.normalized_question,
+        candidates=(
+            _candidate(
+                "screen:comp",
+                "screen",
+                "Comprobantes eléctronicos emitidos",
+            ),
+            _candidate(
+                "control:next",
+                "control",
+                "Siguiente página",
+            ),
+        ),
+    )
+
+    plan = QueryAwareGraphExpansionPlanner().plan(
+        query_plan,
+        resolution,
+        _fused("screen:comp", "control:next"),
+        candidate_types={
+            "screen:comp": "screen",
+            "control:next": "control",
+        },
+        graph_limit=20,
+    )
+
+    assert plan.enabled is True
+    assert plan.strategy == "navigation_event"
+    assert plan.seed_canonical_ids == ("control:next",)
+    assert plan.seed_entity_types == ("control",)
+    assert "HAS_CONTROL" in plan.relationships
+    assert "control" in plan.endpoint_entity_types

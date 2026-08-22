@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
 
-from .entity_resolver import EntityResolution
+from .entity_resolver import EntityResolution, normalize_entity_text
 from .graph_expansion import GraphExpansionPlan
 from .query_plan import QueryIntent, QueryPlan
 
@@ -216,12 +216,11 @@ class EvidenceSelector:
             )
 
         if query_plan.intent == QueryIntent.NAVIGATION_EVENT:
-            selected_relations = tuple(
-                row
-                for row in relations
-                if row.get("relationship_type")
-                in {"HAS_STATE", "HAS_EVENT", "FROM_STATE", "TO_STATE", "TRIGGERED_BY"}
-            )[:32]
+            selected_relations = self._navigation_relations(
+                query_plan,
+                focal_ids,
+                relations,
+            )
             return self._from_relations(
                 reason="navigation_event",
                 focal_ids=focal_ids,
@@ -296,6 +295,80 @@ class EvidenceSelector:
             relations=relations,
             semantics=(),
         )
+
+
+    @staticmethod
+    def _navigation_relations(query_plan, focal_ids, relations):
+        """Prefer one explicit governed navigation affordance.
+
+        Contextualization can make the current screen the only strong canonical
+        resolution seed even when the requested paginator control is present in
+        the graph neighborhood. In that case, select the direct HAS_EVENT or
+        HAS_CONTROL whose safe label is actually mentioned by the user's
+        question instead of forwarding the whole screen neighborhood.
+        """
+
+        focal = set(focal_ids)
+        direct = tuple(
+            row
+            for row in relations
+            if row.get("relationship_type") in {"HAS_EVENT", "HAS_CONTROL"}
+            and row.get("target_canonical_id") in focal
+        )
+        if direct:
+            return direct[:1]
+
+        normalized_question = normalize_entity_text(query_plan.question)
+        question_tokens = set(normalized_question.split())
+        generic_navigation_tokens = {
+            "pagina",
+            "control",
+            "boton",
+            "evento",
+            "navegacion",
+        }
+
+        def label_matches(row):
+            label = normalize_entity_text(str(row.get("target_label") or ""))
+            if not label:
+                return False
+            if label in normalized_question:
+                return True
+            tokens = {
+                token
+                for token in label.split()
+                if token not in generic_navigation_tokens
+            }
+            return bool(tokens) and tokens.issubset(question_tokens)
+
+        named = [
+            row
+            for row in relations
+            if row.get("relationship_type") in {"HAS_EVENT", "HAS_CONTROL"}
+            and label_matches(row)
+        ]
+        if named:
+            named.sort(
+                key=lambda row: (
+                    0 if row.get("relationship_type") == "HAS_EVENT" else 1,
+                    str(row.get("target_label") or ""),
+                )
+            )
+            return (named[0],)
+
+        return tuple(
+            row
+            for row in relations
+            if row.get("relationship_type")
+            in {
+                "HAS_CONTROL",
+                "HAS_STATE",
+                "HAS_EVENT",
+                "FROM_STATE",
+                "TO_STATE",
+                "TRIGGERED_BY",
+            }
+        )[:32]
 
     @staticmethod
     def _ordered_sources(sources, selected_ids):

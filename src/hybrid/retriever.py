@@ -232,6 +232,97 @@ class HybridKnowledgeRetriever:
                     candidates=(),
                 )
             )
+            inherited_screen = next(
+                (
+                    row
+                    for row in conversation_context.inherited_entities
+                    if row.entity_type == "screen"
+                ),
+                None,
+            )
+            if (
+                inherited_screen is not None
+                and self.entity_resolver is not None
+                and hasattr(self.entity_resolver, "scope_to_screen")
+            ):
+                resolution = self.entity_resolver.scope_to_screen(
+                    resolution,
+                    version_id=version.id,
+                    screen_id=inherited_screen.canonical_id,
+                    context_label=inherited_screen.safe_label,
+                )
+
+        # Unknown natural-language questions may still use the generic grounded
+        # path when they contain a strong canonical ERP entity (for example
+        # "Cuéntame sobre Año").  Without such an anchor, fail closed before
+        # dense retrieval so unrelated vector neighbors cannot manufacture an
+        # apparently grounded context for general-knowledge questions.
+        if (
+            query_plan.intent is None
+            and resolution.status != "ambiguous"
+            and not resolution.seed_candidates
+        ):
+            evidence = EvidenceSelection(
+                status="insufficient",
+                reason="insufficient_evidence",
+                focal_canonical_ids=(),
+                sources=(),
+                relations=(),
+                approved_semantics=(),
+            )
+            return {
+                "status": "ok",
+                "question": question,
+                "effective_question": effective_question,
+                "query_plan": query_plan.as_dict(),
+                "erp_id": erp_id,
+                "knowledge_version": knowledge_version,
+                "conversation_context": conversation_context.as_dict(),
+                "entity_resolution": resolution.as_dict(),
+                "retrieval": {
+                    "entity_candidates": len(resolution.candidates),
+                    "semantic_hits": 0,
+                    "structural_dense_hits": 0,
+                    "semantic_candidates": 0,
+                    "approved_semantic_hits": 0,
+                    "semantic_dense_hits": 0,
+                    "graph_neighbors": 0,
+                    "graph_seed_count": 0,
+                    "validated_items": 0,
+                    "selected_sources": 0,
+                    "selected_relations": 0,
+                    "selected_semantics": 0,
+                },
+                "graph_expansion": {
+                    "enabled": False,
+                    "strategy": "unsupported_query",
+                    "reason": "insufficient_evidence",
+                    "seed_canonical_ids": [],
+                    "seed_entity_types": [],
+                    "endpoint_entity_types": [],
+                    "relationships": [],
+                    "max_hops": 0,
+                    "limit": 0,
+                },
+                "rank_fusion": {
+                    "algorithm": "rrf",
+                    "k": self.rank_fusion.k,
+                    "channel_sizes": {
+                        "canonical": 0,
+                        "lexical": 0,
+                        "trigram": 0,
+                        "structural_dense": 0,
+                        "semantic_dense": 0,
+                    },
+                    "excluded_ambiguous_canonical_ids": [],
+                    "candidates": [],
+                },
+                "evidence_selection": evidence.as_dict(),
+                "sources": [],
+                "relations": [],
+                "approved_semantics": [],
+                "context": "",
+            }
 
         query_embedding = self.embeddings.embed(effective_question)[0]
         semantic = self.chroma.query(

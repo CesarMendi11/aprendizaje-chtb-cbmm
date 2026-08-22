@@ -73,16 +73,24 @@ class StructuralAnswerPlanner:
                 for r in relations
                 if r.get("relationship_type") in {"HAS_CONTROL", "HAS_EVENT", "TRIGGERED_BY"}
             ]
-            if any(
-                any(token.startswith(key) for token in words)
-                and any(x in r.get("target_label", "").casefold() for x in vals)
-                for key, vals in compatible.items()
-                for r in evidence
-            ):
+            matched = next(
+                (
+                    relation
+                    for key, labels in compatible.items()
+                    if any(token.startswith(key) for token in words)
+                    for relation in evidence
+                    if any(
+                        label in str(relation.get("target_label") or "").casefold()
+                        for label in labels
+                    )
+                ),
+                None,
+            )
+            if matched is not None:
                 return self._ok(
                     intent,
-                    f'La acción está respaldada por el control "{evidence[0]["target_label"]}".',
-                    evidence[:1],
+                    f'La acción está respaldada por el control "{matched["target_label"]}".',
+                    [matched],
                     "high",
                 )
             return {
@@ -251,17 +259,81 @@ class StructuralAnswerPlanner:
                     "high",
                 )
         if intent == "NAVIGATION_EVENT":
-            events = [
+            navigation_relations = [
                 r
                 for r in rels
                 if r.get("relationship_type")
-                in {"HAS_EVENT", "FROM_STATE", "TO_STATE", "TRIGGERED_BY"}
+                in {
+                    "HAS_CONTROL",
+                    "HAS_EVENT",
+                    "FROM_STATE",
+                    "TO_STATE",
+                    "TRIGGERED_BY",
+                }
             ]
-            if events:
+            if navigation_relations:
+                # Prefer an explicit Event when the graph has one. A visible
+                # navigation affordance can also be represented only as a
+                # Control when no state transition was observed during crawling.
+                # State/transition labels are supporting evidence only: they can
+                # equal the synthetic contextual screen label and must never be
+                # verbalized as the requested navigation action.
+                direct_events = [
+                    relation
+                    for relation in navigation_relations
+                    if relation.get("relationship_type") == "HAS_EVENT"
+                    and relation.get("target_type") in {None, "event"}
+                    and relation.get("target_label")
+                ]
+                matched_event = next(
+                    (
+                        relation
+                        for relation in direct_events
+                        if self._matches(question, relation.get("target_label", ""))
+                    ),
+                    None,
+                )
+                if matched_event is None and len(direct_events) == 1:
+                    matched_event = direct_events[0]
+                if matched_event is not None:
+                    screen = str(matched_event.get("source_label") or "").strip()
+                    suffix = f' en la pantalla "{screen}"' if screen else ""
+                    return self._ok(
+                        intent,
+                        f'La navegación validada incluye "{matched_event["target_label"]}"{suffix}.',
+                        [matched_event],
+                        "high",
+                    )
+
+                direct_controls = [
+                    relation
+                    for relation in navigation_relations
+                    if relation.get("relationship_type") == "HAS_CONTROL"
+                    and relation.get("target_type") in {None, "control"}
+                    and relation.get("target_label")
+                ]
+                matched_control = next(
+                    (
+                        relation
+                        for relation in direct_controls
+                        if self._matches(question, relation.get("target_label", ""))
+                    ),
+                    None,
+                )
+                if matched_control is not None:
+                    screen = str(matched_control.get("source_label") or "").strip()
+                    suffix = f' en la pantalla "{screen}"' if screen else ""
+                    return self._ok(
+                        intent,
+                        f'Para avanzar, usa el control "{self._display_label(matched_control["target_label"])}"{suffix}.',
+                        [matched_control],
+                        "high",
+                    )
+
                 return self._ok(
                     intent,
                     "La navegación validada incluye eventos y estados relacionados en la pantalla recuperada.",  # noqa: E501
-                    events,
+                    navigation_relations,
                     "medium",
                 )
         return {

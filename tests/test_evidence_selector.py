@@ -234,3 +234,139 @@ def test_ambiguity_becomes_clarification_boundary_not_answer_context():
         "field:ruc-1",
         "field:ruc-2",
     }
+
+
+def test_navigation_event_prefers_focal_control_and_drops_unrelated_events():
+    selector = EvidenceSelector()
+    resolution = resolved(
+        candidate("screen:comp", "screen", "Comprobantes eléctronicos emitidos"),
+        candidate("control:next", "control", "Siguiente página"),
+    )
+    sources = [
+        {
+            "canonical_id": "screen:comp",
+            "entity_type": "screen",
+            "safe_label": "Comprobantes eléctronicos emitidos",
+        },
+        {
+            "canonical_id": "control:next",
+            "entity_type": "control",
+            "safe_label": "Siguiente página",
+        },
+        {
+            "canonical_id": "event:noise",
+            "entity_type": "event",
+            "safe_label": "--Seleccione--",
+        },
+    ]
+    relations = [
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:next",
+            "relationship_type": "HAS_CONTROL",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:noise",
+            "relationship_type": "HAS_EVENT",
+        },
+    ]
+
+    result = selector.select(
+        plan(QueryIntent.NAVIGATION_EVENT),
+        resolution,
+        graph_plan("control:next"),
+        sources,
+        relations,
+        [],
+    )
+
+    assert [row["canonical_id"] for row in result.sources] == [
+        "screen:comp",
+        "control:next",
+    ]
+    assert [row["relationship_type"] for row in result.relations] == [
+        "HAS_CONTROL"
+    ]
+
+
+def test_navigation_event_matches_named_control_when_context_screen_is_only_focal_seed():
+    selector = EvidenceSelector()
+    query = QueryPlan(
+        question=(
+            '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+            'pantalla "Comprobantes eléctronicos emitidos".'
+        ),
+        normalized_question=(
+            'como avanzo a la siguiente pagina aqui referencia contextual validada '
+            'pantalla comprobantes electronicos emitidos'
+        ),
+        intent=QueryIntent.NAVIGATION_EVENT,
+        target_entity_types=("screen", "control", "ui_state", "event", "transition"),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+    resolution = resolved(
+        candidate("screen:comp", "screen", "Comprobantes eléctronicos emitidos"),
+    )
+    sources = [
+        {
+            "canonical_id": "screen:comp",
+            "entity_type": "screen",
+            "safe_label": "Comprobantes eléctronicos emitidos",
+        },
+        {
+            "canonical_id": "control:next",
+            "entity_type": "control",
+            "safe_label": "Siguiente página",
+        },
+        {
+            "canonical_id": "control:previous",
+            "entity_type": "control",
+            "safe_label": "Página anterior",
+        },
+        {
+            "canonical_id": "event:noise",
+            "entity_type": "event",
+            "safe_label": "--Seleccione--",
+        },
+    ]
+    relations = [
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:previous",
+            "relationship_type": "HAS_CONTROL",
+            "target_label": "Página anterior",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:next",
+            "relationship_type": "HAS_CONTROL",
+            "target_label": "Siguiente página",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:noise",
+            "relationship_type": "HAS_EVENT",
+            "target_label": "--Seleccione--",
+        },
+    ]
+
+    result = selector.select(
+        query,
+        resolution,
+        graph_plan("screen:comp"),
+        sources,
+        relations,
+        [],
+    )
+
+    assert [row["canonical_id"] for row in result.sources] == [
+        "screen:comp",
+        "control:next",
+    ]
+    assert [row["target_canonical_id"] for row in result.relations] == [
+        "control:next",
+    ]

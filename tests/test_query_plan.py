@@ -15,6 +15,7 @@ def test_query_planner_preserves_current_intent_contract():
         "¿Dónde configuro los años?": QueryIntent.LOCATE_SCREEN,
         "¿Dónde está anoo?": QueryIntent.LOCATE_SCREEN,
         "¿Dónde está el botón Imprimir?": QueryIntent.FIND_CONTROL,
+        "¿Dónde está el botón Buscar aquí?": QueryIntent.FIND_CONTROL,
         "¿Qué columnas tiene la tabla?": QueryIntent.LIST_COLUMNS,
         "¿Cómo avanzo a la siguiente página?": QueryIntent.NAVIGATION_EVENT,
         "Quiero crear un año": QueryIntent.MUTATIVE_ACTION,
@@ -64,3 +65,16 @@ def test_query_plan_serialization_uses_stable_primitive_values():
     assert payload["intent"] == "MUTATIVE_ACTION"
     assert payload["mutative_action"] is True
     assert payload["target_entity_types"] == ["screen", "control", "event"]
+
+
+def test_navigation_event_query_plan_includes_visible_controls_as_resolvable_targets():
+    plan = QueryPlanner().plan("¿Cómo avanzo a la siguiente página aquí?")
+
+    assert plan.intent == QueryIntent.NAVIGATION_EVENT
+    assert plan.target_entity_types == (
+        "screen",
+        "control",
+        "ui_state",
+        "event",
+        "transition",
+    )
