@@ -30,6 +30,7 @@ async def chat(
                 "policy_abstention",
                 "ollama_grounded",
                 "insufficient_evidence",
+                "clarification",
             }:
                 return ChatResponse(
                     answer=result["answer"],
@@ -43,6 +44,7 @@ async def chat(
                         for s in result.get("sources", [])[:10]
                     ],
                     answer_mode=result.get("answer_mode"),
+                    answerDecision=result.get("answer_decision"),
                     intent=result.get("intent"),
                     confidence=result.get("confidence"),
                     evidence_ids=result.get("evidence_ids", []),

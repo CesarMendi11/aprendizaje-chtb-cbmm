@@ -52,6 +52,7 @@ class ChatResponse(BaseModel):
     status: Literal["answered", "not_found", "error"]
     sources: list[ChatSource]
     answer_mode: str | None = None
+    answer_decision: dict[str, object] | None = Field(default=None, alias="answerDecision")
     intent: str | None = None
     confidence: str | None = None
     evidence_ids: list[str] = []

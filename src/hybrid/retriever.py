@@ -13,6 +13,11 @@ from src.database.services.semantic_retrieval_authorization_service import (
 from src.knowledge.canonical.enums import ReviewStatus
 from src.knowledge.canonical.privacy import sanitize_text
 
+from .answer_decision import (
+    AnswerDecisionPlanner,
+    AnswerDecisionType,
+    render_clarification,
+)
 from .answer_planner import StructuralAnswerPlanner
 from .context_builder import EvidenceContextBuilder
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
@@ -67,6 +72,7 @@ class HybridKnowledgeRetriever:
         semantic_authorizer=None,
         generator=None,
         planner=None,
+        answer_decision_planner=None,
         query_planner=None,
         entity_resolver=None,
         rank_fusion=None,
@@ -91,6 +97,9 @@ class HybridKnowledgeRetriever:
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
         self.planner = planner or StructuralAnswerPlanner(
             aliases, query_planner=self.query_planner
+        )
+        self.answer_decision_planner = (
+            answer_decision_planner or AnswerDecisionPlanner()
         )
 
     def retrieve(
@@ -366,52 +375,85 @@ class HybridKnowledgeRetriever:
         query_plan = self.query_planner.plan(question)
         result = self.retrieve(question, query_plan=query_plan, **kwargs)
         result.setdefault("query_plan", query_plan.as_dict())
-        plan = self.planner.plan(
+
+        structural_plan = self.planner.plan(
             question,
-            result["sources"],
+            result.get("sources", []),
             result.get("relations", []),
-            result["sources"],
+            result.get("sources", []),
             approved_semantics=result.get("approved_semantics", []),
             query_plan=query_plan,
         )
-        result["intent"] = plan.get("intent")
-        result["confidence"] = plan.get("confidence")
-        result["evidence_ids"] = plan.get("evidence_ids", [])
-        result["answer_mode"] = "insufficient_evidence"
-        if plan["supported"]:
-            result["answer"] = plan["answer"]
-            result["answer_mode"] = plan.get("answer_mode", "deterministic_graph")
-            result["evidence_ids"] = plan["evidence_ids"]
-            result.pop("context", None)
-            return result
-        if plan["intent"] == "MUTATIVE_ACTION":
-            result["answer"] = ABSTAIN
-            result["answer_mode"] = "policy_abstention"
-            result.pop("context", None)
-            return result
-        if (
-            not result["context"]
-            or not result["sources"]
-            or self._needs_abstention(question, result)
-        ):
-            result["answer"] = ABSTAIN
-        elif not generate or not self.generator:
-            result["answer"] = None
-            result["answer_mode"] = "ollama_grounded"
-        else:
-            prompt = (
-                f"Pregunta del usuario:\n{question}\n\nContexto validado:\n"
-                f"{result['context']}\n\nResponde únicamente con información respaldada "
-                f"explícitamente por el contexto. Puedes interpretar abreviaturas y sinónimos "
-                f"comunes, pero no inventes estructura ni procedimientos. Si no basta, responde "
-                f"exactamente:\n{ABSTAIN}"
+        decision = self.answer_decision_planner.decide(
+            query_plan,
+            evidence_selection=result.get("evidence_selection"),
+            deterministic_plan=structural_plan,
+            has_context=bool(result.get("context")),
+            has_sources=bool(result.get("sources")),
+            policy_abstention=self._needs_abstention(question, result),
+        )
+
+        result["intent"] = structural_plan.get("intent")
+        result["confidence"] = decision.confidence
+        result["evidence_ids"] = structural_plan.get("evidence_ids", [])
+        result["answer_decision"] = decision.as_dict()
+
+        if decision.decision == AnswerDecisionType.CLARIFICATION:
+            candidates = (
+                result.get("evidence_selection", {}).get(
+                    "clarification_candidates", []
+                )
             )
-            generated_answer = self.generator.generate(prompt, system=SYSTEM_PROMPT)
-            result["answer"] = generated_answer
-            if not self._is_abstention(generated_answer):
-                result["answer_mode"] = "ollama_grounded"
-        if generate:
+            result["answer"] = render_clarification(candidates)
+            result["answer_mode"] = "clarification"
+            result["evidence_ids"] = []
             result.pop("context", None)
+            return result
+
+        if decision.decision == AnswerDecisionType.DETERMINISTIC_ANSWER:
+            result["answer"] = structural_plan["answer"]
+            result["answer_mode"] = structural_plan.get(
+                "answer_mode", "deterministic_graph"
+            )
+            result["evidence_ids"] = structural_plan.get("evidence_ids", [])
+            result.pop("context", None)
+            return result
+
+        if decision.decision == AnswerDecisionType.ABSTENTION:
+            result["answer"] = ABSTAIN
+            result["answer_mode"] = (
+                "policy_abstention"
+                if decision.reason == "mutative_action_policy"
+                else "insufficient_evidence"
+            )
+            result["evidence_ids"] = []
+            result.pop("context", None)
+            return result
+
+        # GROUNDED_LLM is the only path on which generated prose is allowed.
+        result["answer_mode"] = "ollama_grounded"
+        if not generate or not self.generator:
+            result["answer"] = None
+            return result
+
+        prompt = (
+            f"Pregunta del usuario:\n{question}\n\nContexto validado:\n"
+            f"{result['context']}\n\nResponde únicamente con información respaldada "
+            f"explícitamente por el contexto. Puedes interpretar abreviaturas y sinónimos "
+            f"comunes, pero no inventes estructura ni procedimientos. Si no basta, responde "
+            f"exactamente:\n{ABSTAIN}"
+        )
+        generated_answer = self.generator.generate(prompt, system=SYSTEM_PROMPT)
+        result["answer"] = generated_answer
+        if self._is_abstention(generated_answer):
+            final_decision = self.answer_decision_planner.generator_abstention(
+                query_plan
+            )
+            result["answer_decision"] = final_decision.as_dict()
+            result["confidence"] = final_decision.confidence
+            result["answer_mode"] = "insufficient_evidence"
+            result["evidence_ids"] = []
+        result.pop("context", None)
         return result
 
     @staticmethod
@@ -606,7 +648,9 @@ class HybridKnowledgeRetriever:
         if not terms:
             return False
         evidence = [
-            s for s in result["sources"] if s["entity_type"] in {"control", "event", "transition"}
+            s
+            for s in result.get("sources", [])
+            if s.get("entity_type") in {"control", "event", "transition"}
         ]
         equivalents = {
             "crear": ("crear", "nuevo", "nueva", "agregar", "añadir", "registrar"),

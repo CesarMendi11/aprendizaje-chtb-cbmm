@@ -854,3 +854,179 @@ def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_se
         row["canonical_id"]
         for row in result["evidence_selection"]["clarification_candidates"]
     } == {"field:ruc-1", "field:ruc-2"}
+
+
+def test_answer_decision_exposes_deterministic_path():
+    retriever = HybridKnowledgeRetriever(
+        None, chroma=None, neo4j=None, embeddings=None
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:years",
+                "entity_type": "screen",
+                "safe_label": "Año",
+                "screen_route": "/admin/general/anios",
+            },
+            {
+                "canonical_id": "module:general",
+                "entity_type": "module",
+                "safe_label": "General",
+                "screen_route": None,
+            },
+        ],
+        "relations": [
+            {
+                "relationship_type": "HAS_SCREEN",
+                "source_canonical_id": "module:general",
+                "target_canonical_id": "screen:years",
+                "source_label": "General",
+                "target_label": "Año",
+                "source_type": "module",
+                "target_type": "screen",
+            }
+        ],
+        "approved_semantics": [],
+        "context": "ENTIDADES VALIDADAS\n- screen: Año\n- module: General",
+        "evidence_selection": {
+            "status": "selected",
+            "reason": "locate_screen",
+            "clarification_candidates": [],
+        },
+    }
+
+    result = retriever.ask("¿Dónde está Año?")
+
+    assert result["answer_mode"] == "deterministic_graph"
+    assert result["answer_decision"] == {
+        "decision": "DETERMINISTIC_ANSWER",
+        "reason": "deterministic_structural_answer",
+        "intent": "LOCATE_SCREEN",
+        "confidence": "high",
+    }
+
+
+def test_ambiguity_returns_deterministic_clarification_without_generator():
+    class ForbiddenGenerator:
+        def generate(self, prompt, *, system):
+            raise AssertionError("clarification must not call the LLM")
+
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        generator=ForbiddenGenerator(),
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [],
+        "relations": [],
+        "approved_semantics": [],
+        "context": "",
+        "evidence_selection": {
+            "status": "clarification_required",
+            "reason": "entity_resolution_ambiguous",
+            "clarification_candidates": [
+                {
+                    "canonical_id": "field:ruc-a",
+                    "entity_type": "field",
+                    "safe_label": "RUC",
+                    "route": None,
+                },
+                {
+                    "canonical_id": "field:ruc-b",
+                    "entity_type": "field",
+                    "safe_label": "RUC",
+                    "route": None,
+                },
+            ],
+        },
+    }
+
+    result = retriever.ask("¿Dónde aparece la identificación tributaria?")
+
+    assert result["answer_mode"] == "clarification"
+    assert result["answer_decision"]["decision"] == "CLARIFICATION"
+    assert result["answer_decision"]["reason"] == "entity_resolution_ambiguous"
+    assert "RUC" in result["answer"]
+    assert "field:" not in result["answer"]
+    assert result["evidence_ids"] == []
+
+
+def test_grounded_generation_exposes_grounded_llm_decision():
+    gen = Generator()
+    retriever = HybridKnowledgeRetriever(
+        None, chroma=None, neo4j=None, embeddings=None, generator=gen
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:years",
+                "entity_type": "screen",
+                "safe_label": "Año",
+                "screen_route": "/admin/general/anios",
+            }
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": "ENTIDADES VALIDADAS\n- screen: Año",
+        "evidence_selection": {
+            "status": "selected",
+            "reason": "bounded_generic",
+            "clarification_candidates": [],
+        },
+    }
+
+    result = retriever.ask("Cuéntame sobre Año")
+
+    assert result["answer"] == "respuesta"
+    assert result["answer_mode"] == "ollama_grounded"
+    assert result["answer_decision"]["decision"] == "GROUNDED_LLM"
+    assert result["answer_decision"]["reason"] == "grounded_context_available"
+
+
+def test_generator_abstention_updates_final_answer_decision():
+    class AbstainingGenerator:
+        def generate(self, prompt, *, system):
+            return ABSTAIN
+
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        generator=AbstainingGenerator(),
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "screen:years",
+                "entity_type": "screen",
+                "safe_label": "Año",
+                "screen_route": "/admin/general/anios",
+            }
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": "ENTIDADES VALIDADAS\n- screen: Año",
+        "evidence_selection": {
+            "status": "selected",
+            "reason": "bounded_generic",
+            "clarification_candidates": [],
+        },
+    }
+
+    result = retriever.ask("Cuéntame algo no respaldado sobre Año")
+
+    assert result["answer"] == ABSTAIN
+    assert result["answer_mode"] == "insufficient_evidence"
+    assert result["answer_decision"]["decision"] == "ABSTENTION"
+    assert result["answer_decision"]["reason"] == "generator_abstained"

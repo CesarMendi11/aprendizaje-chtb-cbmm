@@ -395,3 +395,48 @@ def test_chat_returns_ollama_grounded_answer_as_answered(settings):
     assert payload["answer_mode"] == "ollama_grounded"
     assert "Retenciones" in payload["answer"]
     assert payload["sources"][0]["title"] == "Retenciones"
+
+
+def test_chat_returns_hybrid_clarification_without_legacy_fallback(settings):
+    from contextlib import contextmanager
+
+    class Retriever:
+        def ask(self, question, *, generate=True):
+            return {
+                "answer": (
+                    'Encontré varias coincidencias para "RUC". '
+                    "Indícame la pantalla o el módulo al que te refieres para poder elegir la correcta."
+                ),
+                "answer_mode": "clarification",
+                "answer_decision": {
+                    "decision": "CLARIFICATION",
+                    "reason": "entity_resolution_ambiguous",
+                    "intent": "LOCATE_FIELD",
+                    "confidence": "high",
+                },
+                "intent": "LOCATE_FIELD",
+                "confidence": "high",
+                "evidence_ids": [],
+                "retrieval": {"selected_sources": 0},
+                "sources": [],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
+
+    app = create_app(settings)
+    app.state.hybrid_factory = Factory()
+
+    payload = ask(
+        ApiClient(app),
+        "¿Dónde aparece la identificación tributaria?",
+    ).json()
+
+    assert payload["status"] == "answered"
+    assert payload["answer_mode"] == "clarification"
+    assert payload["answerDecision"]["decision"] == "CLARIFICATION"
+    assert payload["answerDecision"]["reason"] == "entity_resolution_ambiguous"
+    assert payload["sources"] == []
+    assert "RUC" in payload["answer"]
