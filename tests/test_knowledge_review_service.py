@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session
 
 from src.database.base import Base
@@ -86,6 +86,33 @@ def test_describe_approve_and_reset_history_is_safe_and_ordered(reviewed):
     assert item.current_review_status == ReviewStatus.PENDING_REVIEW
     assert item.source_payload == original
     assert item.source_payload.get("review_status") == original_generated_status
+
+
+def test_describe_many_batches_review_history_without_refetching_items(reviewed):
+    session, item = reviewed
+    session.rollback()
+    with session.begin():
+        KnowledgeReviewService(session).approve(item.id)
+
+    statements = []
+
+    def capture(
+        conn, cursor, statement, parameters, context, executemany
+    ):
+        statements.append(statement.casefold())
+
+    engine = session.get_bind()
+    event.listen(engine, "before_cursor_execute", capture)
+    try:
+        descriptions = EffectiveKnowledgeService(session).describe_many([item])
+    finally:
+        event.remove(engine, "before_cursor_execute", capture)
+
+    description = descriptions[item.id]
+    assert description["effective_payload"] == item.source_payload
+    assert [row["action"] for row in description["history"]] == ["approve"]
+    assert sum("review_actions" in statement for statement in statements) == 1
+    assert sum("knowledge_items" in statement for statement in statements) == 0
 
 
 def test_invalid_transition_and_concurrent_revision(reviewed):

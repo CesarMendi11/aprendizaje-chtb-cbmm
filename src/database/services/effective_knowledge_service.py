@@ -15,11 +15,9 @@ class EffectiveKnowledgeService:
         self.knowledge = KnowledgeRepository(session)
         self.reviews = ReviewRepository(session)
 
-    def describe(self, item_id):
-        item = self.knowledge.get_item(item_id)
-        if not item:
-            raise LookupError("KnowledgeItem no encontrado")
-        correction = self.reviews.latest_correction(item.id)
+    @staticmethod
+    def _description(item, history):
+        correction = ReviewRepository.latest_correction_from_history(history)
         source = copy.deepcopy(item.source_payload)
         corrected = copy.deepcopy(correction.corrected_payload) if correction else None
         return {
@@ -27,7 +25,25 @@ class EffectiveKnowledgeService:
             "corrected_payload": corrected,
             "effective_payload": corrected or source,
             "was_corrected": corrected is not None,
-            "history": [review_action_payload(action) for action in self.reviews.history(item.id)],
+            "history": [review_action_payload(action) for action in history],
+        }
+
+    def describe_item(self, item):
+        history = self.reviews.history(item.id)
+        return self._description(item, history)
+
+    def describe(self, item_id):
+        item = self.knowledge.get_item(item_id)
+        if not item:
+            raise LookupError("KnowledgeItem no encontrado")
+        return self.describe_item(item)
+
+    def describe_many(self, items):
+        rows = list(items)
+        histories = self.reviews.history_many([item.id for item in rows])
+        return {
+            item.id: self._description(item, histories.get(item.id, []))
+            for item in rows
         }
 
     def list_approved(self, *, version_id=None):
@@ -45,21 +61,25 @@ class EffectiveKnowledgeService:
         return result
 
     def projection_for_sync(self, *, version_id):
+        items = self.list_approved(version_id=version_id)
+        descriptions = self.describe_many(items)
         return [
             {
                 "canonical_id": item.canonical_id,
                 "entity_type": item.entity_type,
                 "content_hash": item.content_hash,
                 "review_status": str(item.current_review_status),
-                "payload": self.describe(item.id)["effective_payload"],
+                "payload": descriptions[item.id]["effective_payload"],
             }
-            for item in self.list_approved(version_id=version_id)
+            for item in items
         ]
 
     def export_effective(self, *, version_id):
+        items = self.list_approved(version_id=version_id)
+        descriptions = self.describe_many(items)
         grouped = {}
-        for item in self.list_approved(version_id=version_id):
+        for item in items:
             grouped.setdefault(item.entity_type, []).append(
-                self.describe(item.id)["effective_payload"]
+                descriptions[item.id]["effective_payload"]
             )
         return grouped

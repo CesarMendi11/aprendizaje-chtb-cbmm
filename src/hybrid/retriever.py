@@ -6,7 +6,7 @@ from collections import OrderedDict
 from sqlalchemy import select
 
 from src.database.models import KnowledgeItem
-from src.database.services import ChromaSyncService
+from src.database.services import ChromaSyncService, EffectiveKnowledgeService
 from src.database.services.semantic_retrieval_authorization_service import (
     SemanticRetrievalAuthorizationService,
 )
@@ -90,6 +90,9 @@ class HybridKnowledgeRetriever:
     ):
         self.session, self.chroma, self.neo4j = session, chroma, neo4j
         self.semantic_chroma = semantic_chroma
+        self.effective = EffectiveKnowledgeService(session) if session is not None else None
+        self._effective_cache = {}
+        self._effective_items = {}
         self.embeddings, self.generator = embeddings, generator
         self.semantic_authorizer = semantic_authorizer or (
             SemanticRetrievalAuthorizationService(session) if session is not None else None
@@ -125,6 +128,8 @@ class HybridKnowledgeRetriever:
         query_plan: QueryPlan | None = None,
         conversation_state: ConversationState | dict[str, object] | None = None,
     ):
+        self._effective_cache = {}
+        self._effective_items = {}
         query_plan = query_plan or self.query_planner.plan(question)
         version = ChromaSyncService(self.session).resolve_version(
             erp_id=erp_id, knowledge_version=knowledge_version
@@ -411,6 +416,7 @@ class HybridKnowledgeRetriever:
         )
         ids = self._candidate_ids(fused_ids, neighbors)
         valid = {i.canonical_id: i for i in self._validate(ids, version.id)}
+        self._effective_items = {item.id: item for item in valid.values()}
         semantic_by_id = {row["canonical_id"]: row for row in semantic}
         approved_semantics_by_screen = {row["screen_id"]: row for row in approved_semantics}
         resolved_by_id = {candidate.canonical_id: candidate for candidate in resolution.candidates}
@@ -801,7 +807,25 @@ class HybridKnowledgeRetriever:
         return [by_id[cid] for cid in ids if cid in by_id]
 
     def _effective(self, item_id):
-        return ChromaSyncService(self.session).effective.describe(item_id)["effective_payload"]
+        cached = self._effective_cache.get(item_id)
+        if cached is not None:
+            return cached
+        if self._effective_items and self.effective is not None:
+            descriptions = self.effective.describe_many(self._effective_items.values())
+            self._effective_cache.update(
+                {
+                    current_id: description["effective_payload"]
+                    for current_id, description in descriptions.items()
+                }
+            )
+            cached = self._effective_cache.get(item_id)
+            if cached is not None:
+                return cached
+        payload = ChromaSyncService(self.session).effective.describe(item_id)[
+            "effective_payload"
+        ]
+        self._effective_cache[item_id] = payload
+        return payload
 
     @staticmethod
     def _label(entity_type, payload):

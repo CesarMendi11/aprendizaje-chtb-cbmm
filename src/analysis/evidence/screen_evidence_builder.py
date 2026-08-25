@@ -89,6 +89,7 @@ class ScreenEvidenceBuilder:
     def __init__(self, session: Session):
         self.session = session
         self.effective = EffectiveKnowledgeService(session)
+        self._effective_descriptions = {}
 
     def build(self, knowledge_version_id, screen_knowledge_item_id) -> ScreenEvidencePackage:
         version = self._version(knowledge_version_id)
@@ -100,6 +101,7 @@ class ScreenEvidenceBuilder:
                 .order_by(KnowledgeItem.entity_type, KnowledgeItem.canonical_id)
             )
         )
+        self._effective_descriptions = self.effective.describe_many(items)
         eligible = {
             item.canonical_id: item for item in items if item.current_review_status in ELIGIBLE
         }
@@ -466,7 +468,9 @@ class ScreenEvidenceBuilder:
         return item
 
     def _effective(self, item):
-        description = self.effective.describe(item.id)
+        description = self._effective_descriptions.get(item.id)
+        if description is None:
+            description = self.effective.describe(item.id)
         if (
             item.current_review_status == ReviewStatus.CORRECTED
             and not description["was_corrected"]
