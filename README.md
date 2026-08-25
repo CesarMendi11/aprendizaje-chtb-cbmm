@@ -1,852 +1,804 @@
-# Chat CBMM — Asistente funcional ERP con Graph RAG híbrido
+<div align="center">
 
-Proyecto de desarrollo de un prototipo de asistente inteligente para soporte funcional en sistemas ERP institucionales.
-El caso de estudio corresponde al sistema ERP del **Cuerpo de Bomberos Municipal de Machala (CBMM)**.
+# 🚒 Chat-CBMM vNext
 
-El objetivo del sistema es construir semiautomáticamente conocimiento funcional del ERP a partir de su interfaz, representarlo estructuralmente mediante grafos, enriquecerlo semánticamente con modelos locales y utilizarlo posteriormente en un asistente basado en recuperación híbrida Graph RAG.
+### Asistente conversacional gobernado para ERP institucional
 
-## Modelo canónico (Fase 3A)
+**Conocimiento verificable · Human-in-the-Loop · Hybrid Graph RAG · Fail-closed**
 
-Los artefactos estructurales pueden transformarse en un modelo tipado, versionado, trazable y validable sin cambiar la API actual. Consulta [docs/FASE_3A_MODELO_CANONICO.md](docs/FASE_3A_MODELO_CANONICO.md) para conocer entidades, privacidad, comandos y archivos generados.
+![Status](https://img.shields.io/badge/status-RC1-2ea44f?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![M3](https://img.shields.io/badge/M3-26%2F26%20PASS-2ea44f?style=for-the-badge)
+![Authority](https://img.shields.io/badge/authority-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
-## Persistencia y revisión (Fase 3B.1)
+**Release Candidate:** `vnext-post-privacy-m3-rc1-20260825`
 
-PostgreSQL conserva versiones importadas, elementos canónicos, decisiones
-humanas append-only y trabajos futuros de sincronización. La API actual sigue
-funcionando sin base configurada. Consulta
-[docs/FASE_3B_POSTGRESQL_REVISION.md](docs/FASE_3B_POSTGRESQL_REVISION.md) para
-Docker, Alembic, importación, revisión, privacidad y diagnóstico.
+</div>
 
 ---
 
-## 1. Alcance del proyecto
+## 📌 Contenido
 
-El prototipo se enfoca exclusivamente en **soporte funcional del ERP**.
-
-Incluye consultas relacionadas con:
-
-- navegación dentro del ERP;
-- ubicación de módulos;
-- ubicación de pantallas;
-- rutas de acceso;
-- formularios;
-- campos;
-- botones;
-- tablas;
-- acciones disponibles;
-- interpretación funcional básica de pantallas;
-- orientación sobre cómo usar funcionalidades del sistema.
-
-Queda fuera del alcance actual:
-
-- generación o gestión formal de tickets;
-- soporte técnico general;
-- impresoras;
-- internet;
-- hardware;
-- sistema operativo;
-- problemas físicos de equipos;
-- mesa de ayuda completa.
-
-Las carpetas relacionadas con `tickets`, `soporte_ti` o `incidencias` se consideran por ahora material no activo o posible extensión futura.
+- [¿Qué es Chat-CBMM?](#-qué-es-chat-cbmm)
+- [Principios de diseño](#-principios-de-diseño)
+- [Arquitectura](#-arquitectura)
+- [Capas funcionales: M1, M2 y M3](#-capas-funcionales-m1-m2-y-m3)
+- [Estado certificado del RC1](#-estado-certificado-del-rc1)
+- [Privacidad y límites de confianza](#-privacidad-y-límites-de-confianza)
+- [Admin UI y frontend Angular](#-admin-ui-y-frontend-angular)
+- [Puesta en marcha](#-puesta-en-marcha)
+- [Pruebas y certificación](#-pruebas-y-certificación)
+- [Estructura del repositorio](#-estructura-del-repositorio)
+- [Limitaciones actuales](#-limitaciones-actuales)
+- [Roadmap](#-roadmap)
+- [Hitos y tags](#-hitos-y-tags)
 
 ---
 
-## 2. Arquitectura general
+## ✨ ¿Qué es Chat-CBMM?
 
-La arquitectura prevista se organiza en las siguientes capas:
+**Chat-CBMM vNext** es una plataforma de conocimiento gobernado para orientar a usuarios dentro de un ERP institucional. Su interfaz final es conversacional, pero el sistema no está diseñado como un “chatbot que sabe cosas” ni como un LLM conectado directamente al ERP.
 
-```text
-ERP institucional
-        ↓
-Crawler estructural con Playwright
-        ↓
-Evidencias crudas
-HTML + JSON Playwright + screenshots
-        ↓
-Procesamiento estructural
-screen_index.json + routes_graph.json
-        ↓
-Normalización para grafo
-        ↓
-Neo4j
-Grafo funcional del ERP
-        ↓
-LLM semántico + validación humana
-        ↓
-ChromaDB
-Conocimiento semántico aprobado
-        ↓
-Graph RAG híbrido
-Neo4j + ChromaDB + RBAC
-        ↓
-Asistente funcional ERP
-```
+Su función es construir, revisar, publicar y consultar conocimiento verificable sobre el sistema, manteniendo separadas la **evidencia observada**, la **autoridad del conocimiento**, las **proyecciones de búsqueda** y la **generación lingüística**.
+
+El asistente puede responder preguntas como:
+
+- **¿Dónde configuro los años?**
+- **¿Para qué sirve esta pantalla?**
+- **¿Dónde está el botón Buscar?**
+- **¿Cómo busco por RUC aquí?**
+- **¿Qué columnas tiene esta tabla?**
+- **¿Cómo avanzo a la siguiente página?**
+- **¿Cómo creo un nuevo año aquí?**
+
+Si no existe evidencia gobernada suficiente, el sistema **se abstiene** en lugar de completar la respuesta con conocimiento no autorizado.
+
+> **Idea central:** determinismo en los límites de confianza; LLM en los límites de incertidumbre lingüística.
 
 ---
 
-## 3. Funciones de los modelos LLM
+## 🎯 Objetivo
 
-El proyecto contempla tres usos diferenciados de modelos de lenguaje locales mediante Ollama.
+Construir un asistente ERP que sea útil sin convertir al modelo generativo en fuente de verdad.
 
-### 3.1. LLM Helper para el crawler
+El diseño busca que:
 
-Apoya al crawler cuando aparecen incertidumbres durante la exploración.
-
-Ejemplos:
-
-- pantalla con demasiados botones ambiguos;
-- formulario que requiere datos;
-- acción potencialmente riesgosa;
-- menú dinámico complejo;
-- ruta que necesita una regla especial.
-
-El LLM Helper no ejecuta acciones directamente. Solo propone reglas o sugerencias que deben ser revisadas.
-
-```text
-Crawler detecta incertidumbre
-→ LLM Helper propone regla
-→ humano valida
-→ regla aprobada se incorpora al perfil YAML
-```
-
-### 3.2. LLM semántico
-
-Convierte la estructura descubierta en conocimiento funcional comprensible.
-
-Ejemplo:
-
-```text
-Ruta: /admin/cuentasxcobrar/comprobantes
-Botones: Buscar, Open calendar
-Campos: RUC, Núm. comprobante
-Tabla: comprobantes emitidos
-```
-
-Puede proponer una descripción como:
-
-```text
-Pantalla utilizada para consultar comprobantes electrónicos emitidos,
-filtrar por RUC, número de comprobante, fecha y estado.
-```
-
-Estas inferencias no se aprueban automáticamente. Deben pasar por revisión humana.
-
-### 3.3. LLM generador de respuestas
-
-Responde al usuario final, pero solo usando contexto recuperado desde:
-
-- Neo4j;
-- ChromaDB;
-- conocimiento aprobado;
-- permisos autorizados mediante RBAC.
-
-Si no existe información suficiente, el asistente debe responder que no dispone de conocimiento validado para contestar.
+- ✅ el conocimiento autorizado tenga trazabilidad;
+- ✅ PostgreSQL conserve la autoridad;
+- ✅ Neo4j y Chroma sean proyecciones reconstruibles;
+- ✅ la semántica generada pase por revisión humana;
+- ✅ el crawler explore sin ejecutar mutaciones inseguras;
+- ✅ la conversación mantenga contexto sin inventar autoridad;
+- ✅ las preguntas fuera de dominio fallen de forma segura;
+- ✅ las respuestas puedan explicar de dónde proviene la información.
 
 ---
 
-## 4. Estado actual del desarrollo
+## 🧱 Principios de diseño
 
-El proyecto ya cuenta con una primera fase funcional de exploración estructural.
+### 🗃️ PostgreSQL es la fuente de verdad
 
-Actualmente se ha verificado que:
+El estado autorizado del conocimiento estructural y semántico reside en PostgreSQL. Las decisiones de revisión, corrección, promoción y publicación se gobiernan desde esta capa.
 
-- el entorno Python funciona;
-- las pruebas unitarias pasan correctamente;
-- el crawler puede ejecutarse desde el perfil YAML;
-- el sistema captura evidencias reales del ERP;
-- se generan archivos estructurales procesados;
-- se registran incertidumbres para revisión.
+### 🕸️ Neo4j es una proyección estructural
 
-Resultado actual de pruebas:
+Neo4j representa relaciones navegables entre módulos, pantallas, estados, controles, campos, eventos y transiciones. No decide qué conocimiento es válido: puede reconstruirse desde la autoridad en PostgreSQL.
 
-```bash
-59 passed
-```
+### 🔎 ChromaDB es una proyección vectorial
 
----
+Chroma contiene documentos seguros e indexables para recuperación densa. La similitud vectorial ayuda a recuperar candidatos, pero **no concede autoridad**.
 
-## 5. Estructura principal del proyecto
+### 🧠 El LLM propone; no gobierna
 
-```text
-.
-├── app.py
-├── configs
-│   ├── cbmm.yaml
-│   └── cbmm.legacy.yaml
-├── data
-│   ├── raw
-│   │   ├── html
-│   │   ├── playwright
-│   │   └── screenshots
-│   ├── processed
-│   │   ├── structural
-│   │   ├── semantic
-│   │   └── visual
-│   ├── review
-│   │   ├── structural
-│   │   ├── semantic
-│   │   └── visual
-│   ├── approved
-│   │   ├── neo4j
-│   │   └── chromadb
-│   └── rejected
-├── docker
-│   └── neo4j
-├── docs
-├── scripts
-│   ├── crawl_profile.py
-│   └── inspect_login.py
-├── src
-│   ├── auth
-│   ├── browser
-│   ├── config
-│   ├── crawler
-│   ├── discovery
-│   ├── extraction
-│   ├── graph
-│   ├── llm
-│   ├── policy
-│   ├── rag
-│   ├── review
-│   ├── semantic
-│   └── storage
-└── tests
-```
+Ollama se utiliza en los puntos donde existe incertidumbre lingüística, por ejemplo para inferencia semántica. Una propuesta generada no se convierte automáticamente en conocimiento publicable.
+
+### 👨‍⚖️ Human-in-the-Loop en los límites de confianza
+
+Las propuestas semánticas pueden ser aprobadas, corregidas o rechazadas. La revisión humana queda registrada y la proyección semántica solo publica contenido que continúa siendo válido.
+
+### 🔒 Fail-closed por defecto
+
+Cuando la evidencia disponible no permite sostener una respuesta, el asistente responde con abstención.
+
+### 🧩 Separación explícita de responsabilidades
+
+En este proyecto:
+
+- descubrir **no** significa aprobar;
+- observar **no** significa publicar;
+- RAW **no** significa conocimiento autorizado;
+- un candidato de retrieval **no** significa evidencia;
+- ranking **no** significa autoridad;
+- Neo4j/Chroma **no** son fuente de verdad;
+- una propuesta del LLM **no** es verdad;
+- el LLM **no** controla Playwright;
+- el cliente **no** define la autoridad del backend.
 
 ---
 
-## 6. Módulos principales
+## 🏗️ Arquitectura
 
-### Configuración
+```mermaid
+flowchart TD
+    ERP[ERP institucional] --> PW[Playwright / crawler]
+    PW --> EV[Evidencia observada]
+    EV --> PRIV[Privacy hardening]
+    PRIV --> CAN[Canonical builder + validator]
+    CAN --> PG[(PostgreSQL\nAuthority)]
 
-```text
-src/config/profile_loader.py
+    PG --> HITL[HITL estructural]
+    HITL --> ACTIVE[Knowledge Version ACTIVE]
+
+    ACTIVE --> NEO[(Neo4j\nproyección estructural)]
+    ACTIVE --> CHS[(Chroma\nestructural)]
+
+    ACTIVE --> SAFE[Safe Evidence]
+    SAFE --> LLM[Ollama\ninferencia semántica]
+    LLM --> PROP[Semantic Proposal]
+    PROP --> SHITL[HITL semántico]
+    SHITL --> SEMPG[Semántica autorizada\nen PostgreSQL]
+    SEMPG --> CHSEM[(Semantic Chroma)]
+
+    NEO --> HYB[Hybrid Graph RAG]
+    CHS --> HYB
+    CHSEM --> HYB
+    PG --> HYB
+
+    HYB --> API[FastAPI /api/chat]
+    API --> ADMIN[Admin UI]
+    API --> ANG[Angular ERP Frontend]
 ```
 
-Carga y valida perfiles YAML del crawler.
+### Componentes principales
 
-### Autenticación
-
-```text
-src/auth/auth_manager.py
-```
-
-Gestiona login y acceso al ERP.
-
-### Navegación
-
-```text
-src/browser/navigator.py
-```
-
-Encapsula la navegación mediante Playwright.
-
-### Políticas de ruta
-
-```text
-src/policy/route_policy.py
-```
-
-Controla qué rutas pueden o no explorarse.
-
-### Crawler estructural
-
-```text
-src/crawler/route_crawler.py
-src/crawler/frontier.py
-src/crawler/state_signature.py
-src/crawler/ui_event_explorer.py
-```
-
-Gestiona exploración, frontera de rutas, firmas de estados y eventos de interfaz.
-
-### Descubrimiento de elementos
-
-```text
-src/discovery/link_discovery.py
-src/discovery/menu_discovery.py
-src/discovery/event_candidate_discovery.py
-src/discovery/link_normalizer.py
-```
-
-Detecta enlaces, menús, eventos candidatos y normaliza rutas.
-
-### Extracción de pantallas
-
-```text
-src/extraction/screen_extractor.py
-```
-
-Extrae texto visible, enlaces, botones, inputs, tablas e interactivos personalizados.
-
-### Construcción estructural
-
-```text
-src/graph/screen_index_builder.py
-src/graph/routes_graph_builder.py
-```
-
-Construye el índice estructural de pantallas y el grafo de navegación.
+| Componente               | Función                                                                    |
+| ------------------------ | -------------------------------------------------------------------------- |
+| **PostgreSQL**           | Autoridad del conocimiento, versiones, revisiones, lifecycle y publicación |
+| **Neo4j**                | Proyección estructural para relaciones y expansión de grafo                |
+| **ChromaDB estructural** | Recuperación vectorial del conocimiento estructural autorizado             |
+| **Semantic Chroma**      | Recuperación de semántica revisada y publicable                            |
+| **Ollama**               | Embeddings e inferencia generativa restringida                             |
+| **Playwright / crawler** | Exploración controlada del ERP y captura de evidencia                      |
+| **FastAPI**              | API operacional y conversacional                                           |
+| **Admin UI**             | Gobierno, revisión, publicación, observabilidad y jobs                     |
+| **Angular Frontend**     | Integración del asistente dentro del ERP institucional                     |
 
 ---
 
-## 7. Archivos generados por el crawler
+## 🧠 Capas funcionales: M1, M2 y M3
 
-Al ejecutar el crawler se generan evidencias crudas en:
+### M1 — Conocimiento estructural gobernado
 
-```text
-data/raw/html/
-data/raw/playwright/
-data/raw/screenshots/
-```
+M1 transforma la observación del ERP en conocimiento estructural autorizado.
 
-También se generan archivos procesados en:
-
-```text
-data/processed/structural/routes_graph.json
-data/processed/structural/routes_graph.partial.json
-data/processed/structural/screen_index.json
-data/processed/structural/screen_index.partial.json
-```
-
-Además, las pantallas inciertas o errores de navegación se guardan en:
-
-```text
-data/review/structural/
-```
-
----
-
-## 8. Archivos estructurales principales
-
-### screen_index.json
-
-Archivo que contiene el índice detallado de pantallas descubiertas.
-
-Incluye:
-
-- ruta;
-- URL;
-- título;
-- texto visible;
-- enlaces;
-- botones;
-- campos;
-- tablas;
-- elementos interactivos personalizados;
-- artefactos asociados;
-- estado de descubrimiento;
-- estado semántico.
-
-Ejemplo de estado:
-
-```json
-{
-  "status": "discovered",
-  "knowledge_origin": "discovered",
-  "semantic_status": "pending"
-}
-```
-
-### routes_graph.json
-
-Archivo que contiene el grafo preliminar de navegación.
-
-Incluye:
-
-- nodos;
-- rutas;
-- estados de interfaz;
-- transiciones;
-- eventos de clic;
-- enlaces descubiertos;
-- metadatos del crawler.
-
-Ejemplos de relaciones:
-
-```text
-ui_event
-ui_event_discovered_href
-href_discovered
-```
-
----
-
-## 9. Comandos principales
-
-### Entrar al proyecto
-
-```bash
-cd ~/Desktop/aprendizaje-chtb-cbmm
-```
-
-### Activar entorno virtual
-
-```bash
-source .venv/bin/activate
-```
-
-### Ejecutar pruebas
-
-```bash
-pytest
-```
-
-### Ejecutar crawler
-
-Forma recomendada:
-
-```bash
-python -m scripts.crawl_profile --profile configs/cbmm.yaml --slow-mo 200
-```
-
-Modo headless:
-
-```bash
-python -m scripts.crawl_profile --profile configs/cbmm.yaml --headless
-```
-
-### Inspeccionar login
-
-```bash
-python -m scripts.inspect_login --profile configs/cbmm.yaml
-```
-
-### Ver archivos generados
-
-```bash
-find data -type f | sort
-```
-
-### Revisar carpetas de salida
-
-```bash
-ls -lah data/raw/html
-ls -lah data/raw/playwright
-ls -lah data/raw/screenshots
-ls -lah data/processed/structural
-ls -lah data/review/structural
-```
-
----
-
-## 10. Docker y Neo4j
-
-Levantar Neo4j:
-
-```bash
-docker compose up -d neo4j
-```
-
-Ver estado:
-
-```bash
-docker compose ps
-```
-
-Ver logs:
-
-```bash
-docker compose logs -f neo4j
-```
-
-Detener Neo4j:
-
-```bash
-docker compose stop neo4j
-```
-
-Detener todos los servicios:
-
-```bash
-docker compose down
-```
-
-Acceso web:
-
-```text
-http://localhost:7474
-```
-
-Configuración local, con la contraseña únicamente en el entorno:
-
-```bash
-export ERP_ASSISTANT_NEO4J_URI=bolt://127.0.0.1:7687
-export ERP_ASSISTANT_NEO4J_USER=neo4j
-export ERP_ASSISTANT_NEO4J_PASSWORD='contraseña-local'
-export ERP_ASSISTANT_NEO4J_DATABASE=neo4j
-```
-
----
-
-## 11. Ollama
-
-Ver modelos instalados:
-
-```bash
-ollama list
-```
-
-Levantar servidor Ollama:
-
-```bash
-ollama serve
-```
-
-Descargar modelo generador:
-
-```bash
-ollama pull llama3.2
-```
-
-Descargar modelo para apoyo al crawler:
-
-```bash
-ollama pull qwen2.5-coder
-```
-
-Probar Ollama:
-
-```bash
-ollama run llama3.2 "Responde solo: Ollama funcionando"
-```
-
-Ver API local:
-
-```bash
-curl http://localhost:11434/api/tags
-```
-
----
-
-## 12. Flujo de desarrollo actual
-
-El flujo actualmente confirmado es:
-
-```text
-1. Cargar perfil YAML.
-2. Iniciar navegador con Playwright.
-3. Autenticar en el ERP.
-4. Navegar rutas permitidas.
-5. Detectar enlaces, menús, botones y estados.
-6. Capturar HTML, JSON y screenshots.
-7. Construir screen_index.json.
-8. Construir routes_graph.json.
-9. Registrar incertidumbres en data/review/structural/.
-```
-
----
-
-## 13. Próximas fases de desarrollo
-
-### Fase 1 — Normalización para Neo4j
-
-Crear una capa que transforme:
-
-```text
-screen_index.json + routes_graph.json
-```
-
-en:
-
-```text
-graph_for_neo4j.json
-```
-
-Este archivo debe separar nodos y relaciones limpias para Neo4j.
-
-Nodos esperados:
+Flujo conceptual:
 
 ```text
 ERP
-Module
-Screen
-Route
-UIState
-Form
-Field
-Action
-Table
-Artifact
+  ↓
+Playwright / crawler
+  ↓
+Evidencia
+  ↓
+Privacy hardening
+  ↓
+Canonical
+  ↓
+Validación
+  ↓
+PostgreSQL STAGING
+  ↓
+HITL estructural
+  ↓
+ACTIVE
+  ↓
+Neo4j + Chroma estructural
 ```
 
-Relaciones esperadas:
+Entre las entidades estructurales se incluyen:
+
+- ERP system;
+- módulos y submódulos;
+- pantallas;
+- estados de UI;
+- campos;
+- controles;
+- tablas y columnas;
+- enlaces;
+- eventos;
+- transiciones;
+- evidencias.
+
+### M2 — Semántica gobernada con HITL
+
+M2 añade significado funcional sin otorgar autoridad automática a un modelo generativo.
+
+Flujo:
+
+1. Se parte de una pantalla estructural ACTIVE.
+2. `ScreenEvidenceBuilder` construye evidencia segura.
+3. La pantalla debe pasar la evaluación de elegibilidad semántica.
+4. El lifecycle decide si corresponde `GENERATED`, `CARRIED_FORWARD`, `REINFERRED` o bloqueo.
+5. Ollama produce una propuesta estructurada bajo grounding.
+6. La propuesta queda `pending_review`.
+7. Un operador puede aprobar, corregir o rechazar.
+8. Solo una propuesta publicable puede entrar en Semantic Chroma.
+
+> **Cobertura certificada en RC1:** el vertical slice demostrado es `SCREEN_PURPOSE`. La pantalla **Año** tiene una propuesta corregida por HITL y publicada. Esto **no** implica cobertura semántica completa de las 52 pantallas.
+
+### M3 — Hybrid Graph RAG conversacional
+
+M3 integra recuperación léxica, densa, semántica y de grafo con validación contra la autoridad.
+
+La ruta conversacional incluye, de forma resumida:
 
 ```text
-HAS_MODULE
-HAS_SCREEN
-HAS_ROUTE
-HAS_UI_STATE
-HAS_FIELD
-HAS_ACTION
-HAS_TABLE
-HAS_ARTIFACT
-NAVIGATES_TO
-DISCOVERED_FROM
+Pregunta
+  ↓
+Conversation Context
+  ↓
+Query Planner
+  ↓
+Canonical Entity Resolver
+  ↓
+PG lexical/full-text/trigram + Chroma structural + Semantic Chroma
+  ↓
+RRF rank fusion
+  ↓
+Validación PostgreSQL
+  ↓
+Expansión Neo4j
+  ↓
+Revalidación PostgreSQL
+  ↓
+Evidence Selector
+  ↓
+Answer Decision
+  ↓
+Respuesta / Clarification / Abstention
 ```
 
-### Fase 2 — Importador Neo4j
+Intenciones soportadas en la matriz M3:
 
-Crear script para importar el grafo limpio a Neo4j.
-
-Archivo sugerido:
-
-```text
-scripts/import_graph_to_neo4j.py
-```
-
-Módulo sugerido:
-
-```text
-src/graph/neo4j_importer.py
-```
-
-### Fase 3 — LLM semántico
-
-Crear módulo para generar descripciones funcionales propuestas a partir de pantallas descubiertas.
-
-Salida esperada:
-
-```text
-data/review/semantic/
-```
-
-### Fase 4 — Validación humana
-
-Implementar mecanismo para aprobar, corregir o rechazar inferencias.
-
-Estados sugeridos:
-
-```text
-pending
-approved
-rejected
-needs_changes
-```
-
-### Fase 5 — Indexación en ChromaDB
-
-Indexar únicamente conocimiento aprobado.
-
-Salida esperada:
-
-```text
-data/approved/chromadb/
-data/chroma_db/
-```
-
-### Fase 6 — Orquestador Graph RAG
-
-Implementar recuperación híbrida:
-
-```text
-Consulta usuario
-→ RBAC
-→ Neo4j
-→ ChromaDB
-→ LLM generador
-→ respuesta funcional
-```
-
-### Fase 7 — API y chat
-
-Crear endpoints FastAPI para:
-
-```text
-/chat
-/search
-/screens
-/review
-/health
-```
+| Intent             | Propósito                                                |
+| ------------------ | -------------------------------------------------------- |
+| `LOCATE_SCREEN`    | Localizar una pantalla                                   |
+| `LOCATE_FIELD`     | Localizar un campo                                       |
+| `SCREEN_PURPOSE`   | Explicar el propósito autorizado de una pantalla         |
+| `LIST_FIELDS`      | Listar campos disponibles                                |
+| `SEARCH_BY_FIELD`  | Orientar una búsqueda usando un campo                    |
+| `FIND_CONTROL`     | Localizar un control                                     |
+| `LIST_COLUMNS`     | Listar columnas de una tabla                             |
+| `NAVIGATION_EVENT` | Orientar navegación mediante eventos conocidos           |
+| `MUTATIVE_ACTION`  | Guiar una acción mutativa sin ejecutarla automáticamente |
 
 ---
 
-## 14. Reglas de seguridad del crawler
+## ✅ Estado certificado del RC1
 
-El crawler debe operar bajo reglas controladas.
+### 🏷️ Release Candidate
 
-Debe evitar:
+| Artefacto          | Valor                                      |
+| ------------------ | ------------------------------------------ |
+| **Tag compartido** | `vnext-post-privacy-m3-rc1-20260825`       |
+| **Backend branch** | `feat/vnext-generic-bootstrap`             |
+| **Backend commit** | `7d5582fb09f48809639e7893fe7c9f230f758662` |
+| **Angular branch** | `feat/erp-assistant-chat`                  |
+| **Angular commit** | `f6af9b2600a9b6a70dbf19eb6bf91f2ab904ada8` |
 
-- acciones destructivas;
-- eliminar registros;
-- guardar cambios reales;
-- enviar formularios sensibles;
-- confirmar procesos;
-- ejecutar acciones de negocio sin autorización.
+### 🗃️ Knowledge Authority
 
-Acciones peligrosas deben enviarse a revisión antes de ejecutarse o descartarse.
+| Métrica                  |                RC1 |
+| ------------------------ | -----------------: |
+| ACTIVE knowledge version | `bc4fc5135e34f92e` |
+| Knowledge items          |           **1867** |
+| Approved                 |           **1867** |
+| Pending                  |              **0** |
+| Rejected                 |              **0** |
+
+Distribución estructural ACTIVE:
+
+| Tipo         | Cantidad |
+| ------------ | -------: |
+| ERP System   |        1 |
+| Module       |       12 |
+| Screen       |       52 |
+| UI State     |      111 |
+| Field        |       29 |
+| Control      |      619 |
+| Table        |       46 |
+| Table Column |      217 |
+| Link         |      506 |
+| Event        |       79 |
+| Transition   |       79 |
+| Evidence     |      116 |
+| **Total**    | **1867** |
+
+### 🕸️ Neo4j estructural
+
+| Métrica           |                RC1 |
+| ----------------- | -----------------: |
+| Nodos             |           **1867** |
+| Relaciones        |           **2550** |
+| Knowledge version | `bc4fc5135e34f92e` |
+
+La proyección física fue certificada contra el plan gobernado de PostgreSQL.
+
+### 🔎 Chroma estructural
+
+| Métrica              |                          RC1 |
+| -------------------- | ---------------------------: |
+| Colección            | `erp_assistant_knowledge_v1` |
+| Documentos           |                     **1705** |
+| Embedding model      |       `qwen3-embedding:0.6b` |
+| Dimensiones          |                     **1024** |
+| Omitidos controlados |                      **162** |
+
+Los 162 omitidos corresponden a `missing_safe_label` y no representan documentos parcialmente indexados.
+
+### 🧠 Semántica gobernada
+
+| Campo                | RC1              |
+| -------------------- | ---------------- |
+| Pantalla certificada | **Año**          |
+| Semantic type        | `screen_purpose` |
+| Estado HITL          | `corrected`      |
+| Review revision      | `1`              |
+| Lifecycle origin     | `generated`      |
+| Generation model     | `llama3.2:3b`    |
+| Capabilities         | `2`              |
+
+Propósito efectivo certificado:
+
+> Permite visualizar la información disponible en la pantalla Año y navegar entre las páginas de resultados.
+
+### 🧬 Semantic Chroma
+
+| Métrica                |                         RC1 |
+| ---------------------- | --------------------------: |
+| Colección              | `erp_assistant_semantic_v1` |
+| Documentos publicables |                       **1** |
+| Embedding model        |      `qwen3-embedding:0.6b` |
+| Dimensiones            |                    **1024** |
+
+### 💬 M3 conversacional
+
+| Métrica   | Antes del batching |            RC1 |
+| --------- | -----------------: | -------------: |
+| Matriz    |              26/26 |      **26/26** |
+| Pass rate |              100 % |      **100 %** |
+| Mean      |          969.90 ms |  **650.01 ms** |
+| p50       |          917.70 ms |  **638.17 ms** |
+| p95       |         1350.86 ms | **1002.98 ms** |
+| Max       |         3468.82 ms | **1869.97 ms** |
+
+La optimización del hot path redujo las consultas SQL observadas en una consulta representativa de:
+
+```text
+233 → 13 consultas
+```
+
+sin eliminar las validaciones de autoridad ni alterar el resultado funcional de la matriz M3.
 
 ---
 
-## 15. Estado de conocimiento
+## 🔐 Privacidad y límites de confianza
 
-Actualmente los elementos descubiertos tienen:
+El RC1 incluye privacy hardening en la frontera pre-canonical.
 
-```text
-knowledge_origin: discovered
-semantic_status: pending
-```
+### Política de persistencia
 
-Esto significa que el crawler descubrió la estructura, pero todavía no existe conocimiento semántico aprobado.
+Por defecto:
 
-La aprobación semántica será una fase posterior.
+- no se persiste HTML durable;
+- no se persisten screenshots durables;
+- los payloads JSON pre-canonical pasan por sanitización;
+- `visible_text` y otros campos sensibles no se conservan como evidencia durable sin control.
 
----
+La auditoría del crawl post-hardening verificó:
 
-## 16. Buenas prácticas
+- **69 rutas** evaluadas;
+- **52 pantallas funcionales**;
+- **17 rutas no disponibles**;
+- **111 estados UI**;
+- **79 transiciones**;
+- **586 Network Evidence** agregadas/distintas;
+- **276 artefactos pre-canonical persistidos**, todos JSON;
+- **0 violaciones** en la auditoría de artefactos;
+- **0 HTML/screenshots durables**.
 
-No subir al repositorio:
-
-```text
-.env
-contraseñas reales
-tokens
-credenciales del ERP
-datos sensibles
-docker/neo4j/data/
-venv/
-.venv/
-__pycache__/
-*.pyc
-data_backup_*/
-ZIP o TAR de transferencia
-```
-
-Los artefactos estructurales vigentes en `data/processed/structural/` y los
-artefactos canónicos vigentes en `data/processed/canonical/` deben conservarse,
-aunque sean outputs locales ignorados. Los contenidos de `data/raw/`,
-`data/review/`, caches y artefactos intermedios son locales; algunos pueden
-reconstruirse, pero no deben borrarse si constituyen la única evidencia de una
-ejecución real.
-
-Para limpiar caches sin afectar el conocimiento vigente se pueden retirar
-`.pytest_cache/`, `.ruff_cache/` y los directorios `__pycache__/` bajo código y
-pruebas. Nunca se debe aplicar una limpieza recursiva indiscriminada sobre
-`data/` ni `docker/neo4j/data/`. Los ZIP futuros deben excluir `.git/`, entornos
-virtuales, caches, `data/raw/`, `data/review/`, `data_backup_*/` y volúmenes
-locales de Docker.
-
-Crear ZIP seguro:
+Herramienta de auditoría:
 
 ```bash
-zip -r chat_cbmm_actual.zip . \
-  -x "venv/*" ".venv/*" ".git/*" "*/__pycache__/*" "*.pyc" ".env" \
-     ".pytest_cache/*" ".ruff_cache/*" "data/raw/*" "data/review/*" \
-     "data_backup_*/*" "docker/neo4j/data/*" "docker/neo4j/logs/*"
+python -m scripts.audit_artifact_privacy --help
 ```
+
+### Trust boundaries
+
+Las capas externas de recuperación no sustituyen la autoridad:
+
+```text
+Chroma candidate
+      ↓
+PostgreSQL validation
+      ↓
+Neo4j expansion
+      ↓
+PostgreSQL revalidation
+      ↓
+Evidence selection
+      ↓
+Answer decision
+```
+
+La semántica recuperada también se vuelve a autorizar frente a PostgreSQL y Safe Evidence antes de usarse como evidencia efectiva.
 
 ---
 
-## 17. Comandos recomendados para iniciar cada jornada
+## 🧰 Admin UI y frontend Angular
+
+### Admin UI
+
+`admin-ui/` contiene una consola React + TypeScript + Vite conectable al backend real.
+
+Funciones disponibles en el RC1:
+
+- 📊 estado operativo del sistema;
+- 🧭 pipeline y jobs;
+- 📦 publicación y promoción de versiones;
+- 🧱 revisión estructural;
+- 🧠 inferencia semántica;
+- 👨‍⚖️ HITL semántico;
+- 🕸️ sincronización Neo4j;
+- 🔎 sincronización Chroma estructural;
+- 🧬 sincronización Semantic Chroma.
+
+Para usar datos reales:
+
+```env
+# admin-ui/.env.local
+VITE_ADMIN_API_MODE=live
+```
+
+> La identidad de revisor disponible en esta etapa es provisional y no equivale a un sistema completo de autenticación/RBAC.
+
+### Angular ERP Frontend
+
+El frontend institucional se mantiene en un repositorio separado.
+
+RC certificado:
+
+```text
+branch: feat/erp-assistant-chat
+commit: f6af9b2600a9b6a70dbf19eb6bf91f2ab904ada8
+tag:    vnext-post-privacy-m3-rc1-20260825
+```
+
+El smoke test de extremo a extremo verificó:
+
+- ✅ respuesta estructural;
+- ✅ continuidad mediante `conversationId`;
+- ✅ respuesta semántica HITL;
+- ✅ abstención fuera de dominio;
+- ✅ navegación desde una fuente hacia `/admin/general/anios`.
+
+---
+
+## ⚙️ Requisitos
+
+### Backend
+
+- Python **>= 3.11**
+- entorno virtual Python
+- Docker + Docker Compose
+- PostgreSQL 17 en el entorno certificado
+- Neo4j
+- ChromaDB
+- Ollama accesible desde el backend
+
+### Interfaces web
+
+- Node.js + npm
+- Admin UI: React 19 + Vite
+- Frontend institucional: Angular 18
+
+### Ollama remoto
+
+El runtime también fue certificado con Ollama ejecutándose en otra máquina a través de Tailscale.
+
+Modelos del RC1:
+
+```text
+Embeddings: qwen3-embedding:0.6b  (1024 dimensiones)
+Generation: llama3.2:3b
+```
+
+No es obligatorio usar Tailscale: `ERP_ASSISTANT_OLLAMA_URL` puede apuntar a un Ollama local o a un host accesible por red.
+
+---
+
+## 🔐 Configuración
+
+El proyecto utiliza variables de entorno para credenciales, endpoints y flags operativos. **No subir `.env` al repositorio.**
+
+Variables relevantes:
+
+```env
+ERP_ASSISTANT_HYBRID_API=1
+ERP_ASSISTANT_SEMANTIC_REVIEW_API=1
+ERP_ASSISTANT_CRAWL_PROFILE=configs/cbmm.yaml
+
+ERP_ASSISTANT_OLLAMA_URL=http://OLLAMA_HOST:11434
+ERP_ASSISTANT_EMBEDDING_MODEL=qwen3-embedding:0.6b
+ERP_ASSISTANT_GENERATION_MODEL=llama3.2:3b
+```
+
+Las credenciales de PostgreSQL, Neo4j, ERP y cualquier proveedor externo deben mantenerse únicamente en configuración local segura.
+
+---
+
+## 🚀 Puesta en marcha
+
+### 1. Backend
 
 ```bash
 cd ~/Desktop/aprendizaje-chtb-cbmm
 source .venv/bin/activate
-git status
-pytest
-docker compose up -d neo4j
 ```
 
-Luego, si se va a ejecutar el crawler:
+### 2. PostgreSQL
 
 ```bash
-python -m scripts.crawl_profile --profile configs/cbmm.yaml --slow-mo 200
+docker compose --env-file .env \
+  -f docker-compose.postgres.yml up -d
 ```
 
----
-
-## 18. Estado resumido
-
-```text
-Ya implementado:
-- carga de perfil YAML;
-- login;
-- navegación Playwright;
-- políticas de ruta;
-- exploración de enlaces y menús;
-- detección de eventos UI;
-- captura HTML/JSON/screenshot;
-- screen_index.json;
-- routes_graph.json;
-- registro de incertidumbres;
-- pruebas unitarias funcionales.
-
-Pendiente:
-- normalización para Neo4j;
-- importación real a Neo4j;
-- LLM Helper;
-- LLM semántico;
-- validación humana;
-- indexación en ChromaDB;
-- Graph RAG híbrido;
-- RBAC en consulta;
-- API/chat final.
-```
-
----
-
-## 19. Proyección PostgreSQL → Neo4j
-
-Neo4j es una proyección reconstruible de los elementos `approved` y
-`corrected` de PostgreSQL. No consume filas del ERP ni elementos pendientes o
-rechazados. Comandos principales:
+### 3. Neo4j
 
 ```bash
+docker compose --env-file .env up -d
+```
+
+> Los dos compose files pueden reportar servicios “orphan” del otro stack. No usar `--remove-orphans` de forma automática, porque podría detener servicios que pertenecen al otro compose.
+
+### 4. Estado de PostgreSQL y Neo4j
+
+```bash
+python -m dotenv run -- \
+python -m scripts.database_status
+
+python -m dotenv run -- \
 python -m scripts.neo4j_status
-python -m scripts.bootstrap_neo4j
-python -m scripts.sync_approved_to_neo4j --dry-run --pretty
-python -m scripts.sync_approved_to_neo4j --pretty
-python -m scripts.inspect_neo4j_projection
 ```
 
-La sincronización normal hace upsert idempotente. `--replace-version` exige
-confirmación y solo elimina el namespace administrado del ERP y versión
-solicitados. Detalles en `docs/FASE_3C_NEO4J_PROJECTION.md`.
-
-## Backend FastAPI del asistente ERP (Fase 2B)
-
-Esta fase expone una API determinista sobre `data/processed/structural/screen_index.json`. No usa LLM, embeddings, bases vectoriales, Neo4j ni ejecuta acciones en el ERP.
-
-Terminal 1:
+### 5. API
 
 ```bash
-cd ~/Desktop/aprendizaje-chtb-cbmm
-source .venv/bin/activate
+python -m dotenv run -- \
 python -m scripts.run_api
 ```
 
-Terminal 2:
+API local:
 
-```bash
-cd ~/Desktop/SiaCat/siacat_backend
-yarn start:dev
+```text
+http://127.0.0.1:8000
 ```
 
-Terminal 3:
+### 6. Admin UI
+
+```bash
+cd admin-ui
+npm install
+npm run dev
+```
+
+Vite suele exponer la consola en:
+
+```text
+http://localhost:5173
+```
+
+### 7. Angular institucional
+
+En el repositorio Angular:
 
 ```bash
 cd ~/Desktop/SiaCat/siacat_frontend
+npm install
 npm run start:local
 ```
 
-La configuración admite las variables opcionales `API_HOST`, `API_PORT`, `API_CORS_ORIGINS`, `SCREEN_INDEX_PATH`, `ROUTES_GRAPH_PATH`, `STATE_FLOW_GRAPH_PATH`, `SEARCH_MAX_RESULTS` y `SEARCH_MINIMUM_SCORE`. Las rutas relativas se resuelven desde la raíz del proyecto. CORS acepta por defecto únicamente `http://localhost:4200` y `http://127.0.0.1:4200`.
+El perfil `local` usa `/api` y el proxy de desarrollo apunta al backend local.
 
-```bash
-curl http://127.0.0.1:8000/api/health
+```text
+http://localhost:4200
 ```
 
+---
+
+## 🧪 Pruebas y certificación
+
+### Suite completa
+
 ```bash
-curl -X POST http://127.0.0.1:8000/api/chat \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "question": "¿Dónde consulto retenciones?",
-    "conversationId": "prueba-local",
-    "context": {
-      "currentRoute": "/admin/home"
-    }
-  }'
+pytest -q
 ```
 
-OpenAPI está disponible localmente en `http://127.0.0.1:8000/api/docs`.
+### Integridad de bytecode
+
+```bash
+python -m compileall -q src scripts
+```
+
+### Matriz M3 conversacional
+
+```bash
+python -m dotenv run -- \
+python -m scripts.run_m3_9_conversational_matrix \
+  --output ~/Downloads/m3-report.json
+```
+
+Resultado certificado para RC1:
+
+```text
+turns=26
+passed=26
+failed=0
+```
+
+### Dry-run de Chroma estructural
+
+```bash
+python -m dotenv run -- \
+python -m scripts.sync_approved_to_chroma \
+  --knowledge-version bc4fc5135e34f92e \
+  --dry-run \
+  --pretty
+```
+
+El dry-run certificado produjo:
+
+```text
+eligible_items: 1867
+documents: 1705
+skipped: 162
+collection: erp_assistant_knowledge_v1
+```
+
+---
+
+## 🗂️ Estructura del repositorio
+
+```text
+.
+├── admin-ui/                  # Consola React/Vite de administración
+├── configs/                   # Perfiles del ERP y políticas
+├── data/                      # Artefactos y persistencias locales
+├── scripts/                   # Operación, auditoría y certificación
+├── src/
+│   ├── analysis/              # Safe Evidence, elegibilidad, prompts, generación
+│   ├── api/                   # FastAPI y contratos HTTP
+│   ├── database/              # Modelos, repositorios, servicios y lifecycle
+│   ├── hybrid/                # Hybrid Graph RAG
+│   ├── knowledge/             # Crawl, canonicalización, validación y privacidad
+│   ├── pipeline/              # Ejecutores de PipelineJob
+│   └── vectorstore/           # Chroma y clientes Ollama
+├── tests/                     # Suite automatizada
+├── docker-compose.postgres.yml
+├── docker-compose.yml
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## 💬 Qué puede hacer hoy el asistente
+
+En el RC1, la arquitectura conversacional puede:
+
+- localizar pantallas;
+- localizar campos;
+- listar campos;
+- listar columnas;
+- localizar controles;
+- orientar búsquedas por campo;
+- orientar eventos de navegación;
+- explicar propósito de pantalla cuando existe semántica autorizada;
+- mantener referencias conversacionales entre turnos;
+- ofrecer guía para acciones mutativas sin ejecutarlas;
+- abstenerse cuando la evidencia no es suficiente.
+
+Ejemplo certificado:
+
+```text
+Usuario: ¿Dónde configuro los años?
+Asistente: La pantalla "Año" está dentro del módulo "General".
+
+Usuario: ¿Y para qué sirve?
+Asistente: Permite visualizar la información disponible en la pantalla Año
+           y navegar entre las páginas de resultados.
+
+Usuario: ¿Cuál es la capital de Francia?
+Asistente: No encontré conocimiento validado suficiente para responder esa pregunta.
+```
+
+---
+
+## ⚠️ Limitaciones actuales
+
+Este RC es funcional y está certificado internamente, pero no debe interpretarse como una versión final de producción.
+
+- La semántica HITL certificada cubre actualmente el vertical `SCREEN_PURPOSE` para **Año**, no todas las pantallas.
+- La identidad `reviewer_id`/revisor de Admin UI es provisional; todavía no representa autenticación y RBAC de producción.
+- El asistente orienta; **no ejecuta transacciones ERP**.
+- Chroma y Neo4j son proyecciones y nunca deben tratarse como autoridad independiente.
+- La matriz M3 de 26 turnos es una regresión de ingeniería, no una evaluación científica completa.
+- Falta la evaluación científica con Gold Standard, métricas formales y evaluación de usabilidad.
+- La configuración de dependencias y despliegue todavía requiere endurecimiento para una distribución productiva reproducible.
+
+---
+
+## 🛣️ Roadmap
+
+Después del RC1, las líneas de trabajo principales son:
+
+1. 📚 sincronizar documentación técnica y contexto maestro con el RC1;
+2. 📘 actualizar el manual completo del proyecto;
+3. 🧪 preparar evaluación científica con Gold Standard y baseline congelado;
+4. 📄 alinear el artículo científico con el sistema real;
+5. 🧠 ampliar semántica gobernada más allá del vertical `SCREEN_PURPOSE` certificado;
+6. 🔐 diseñar identidad confiable, autenticación y RBAC para operación real;
+7. 📦 endurecer instalación, dependencias, deployment y runbook;
+8. 👥 preparar UAT y validación institucional.
+
+---
+
+## 🏷️ Hitos y tags
+
+| Tag                                  | Significado                                        |
+| ------------------------------------ | -------------------------------------------------- |
+| `assistant-mvp-v0.1.0`               | Hito histórico del asistente MVP                   |
+| `canonical-knowledge-v0.1.0`         | Hito histórico de conocimiento canonical           |
+| `vnext-m1-m2-freeze-20260821`        | Freeze histórico de M1/M2                          |
+| `vnext-m3-freeze-20260822`           | Freeze histórico de M3                             |
+| `vnext-post-privacy-m3-rc1-20260825` | **RC1 actual post-privacy + M2/M3 recertificados** |
+
+Los freezes históricos no deben moverse. El RC1 representa un estado posterior con privacy hardening, nueva ACTIVE, proyecciones reconstruidas y optimización del hot path.
+
+---
+
+## 🤝 Estado del proyecto
+
+> **RC interno funcionalmente certificado.**
+
+Backend, autoridad PostgreSQL, proyecciones Neo4j/Chroma, semántica HITL, Hybrid Graph RAG, API, Admin UI y frontend Angular fueron validados de extremo a extremo para el tag:
+
+```text
+vnext-post-privacy-m3-rc1-20260825
+```
+
+---
+
+## 📜 Licencia
+
+La licencia de distribución/uso del proyecto debe definirse de acuerdo con la política institucional correspondiente antes de una publicación externa.
+
+---
+
+## 🙌 Créditos
+
+Proyecto de investigación, prototipado e ingeniería orientado a un asistente ERP gobernado para CBMM, integrando:
+
+- construcción de conocimiento desde evidencia;
+- privacidad en fronteras pre-canonical;
+- autoridad y HITL en PostgreSQL;
+- proyecciones reconstruibles en Neo4j y ChromaDB;
+- semántica gobernada;
+- Hybrid Graph RAG;
+- integración con Admin UI y ERP Angular.
+
+<div align="center">
+
+**Chat-CBMM vNext — conocimiento antes que improvisación.**
+
+</div>
