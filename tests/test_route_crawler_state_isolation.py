@@ -194,8 +194,11 @@ def test_route_crawler_builds_isolated_state_flow_graph(tmp_path):
     ]
     assert len(dynamic_states) == 2
 
-    visible_texts = {
-        state["summary"]["visible_text"] for state in dynamic_states
-    }
-    assert any("pantalla a" in text and "pantalla b" not in text for text in visible_texts)
-    assert any("pantalla b" in text and "pantalla a" not in text for text in visible_texts)
+    # Persisted state summaries intentionally omit free rendered text.
+    # Isolation is asserted through safe structural links instead.
+    link_sets = [
+        {link["href"] for link in state["summary"]["links"]}
+        for state in dynamic_states
+    ]
+    assert any("/admin/a" in links and "/admin/b" not in links for links in link_sets)
+    assert any("/admin/b" in links and "/admin/a" not in links for links in link_sets)

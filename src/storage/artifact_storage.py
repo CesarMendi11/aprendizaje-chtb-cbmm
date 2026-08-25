@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from src.knowledge.canonical.privacy import sanitize_artifact_payload
+
 
 def safe_slug(value: str, fallback: str = "artifact") -> str:
     """
@@ -31,10 +33,10 @@ class ArtifactStorage:
 
     Responsabilidad:
     - Crear carpetas necesarias.
-    - Guardar JSON crudo.
-    - Guardar HTML.
+    - Guardar JSON estructural sanitizado.
     - Guardar rutas estructurales procesadas.
-    - Guardar archivos de incertidumbre para revisión.
+    - Guardar archivos de incertidumbre sanitizados para revisión.
+    - Bloquear persistencia durable de HTML y screenshots crudos.
     """
 
     def __init__(self, profile: dict[str, Any]):
@@ -67,6 +69,12 @@ class ArtifactStorage:
         self.rejected_dir = Path(output.get("rejected_dir", "data/rejected"))
         self.cache_dir = Path(output.get("cache_dir", "data/cache"))
 
+        # Privacy contract: durable crawler evidence is structural JSON only.
+        # Raw DOM and screenshots can contain row-level personal/financial data
+        # that cannot be generically redacted with sufficient confidence.
+        self.persist_html = False
+        self.persist_screenshots = False
+
         self.ensure_directories()
 
     def ensure_directories(self) -> None:
@@ -92,8 +100,9 @@ class ArtifactStorage:
         path = directory / filename
         path.parent.mkdir(parents=True, exist_ok=True)
 
+        safe_data = sanitize_artifact_payload(data)
         with path.open("w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=2)
+            json.dump(safe_data, file, ensure_ascii=False, indent=2)
 
         return path
 
@@ -112,22 +121,12 @@ class ArtifactStorage:
 
         return self.save_json(data, self.review_structural_dir, filename)
 
-    def save_html_content(self, html: str, prefix: str) -> Path:
-        filename = f"{safe_slug(prefix)}.html"
-        path = self.html_dir / filename
-        path.parent.mkdir(parents=True, exist_ok=True)
+    def save_html_content(self, html: str, prefix: str) -> Path | None:
+        # Disabled by the privacy contract. Structural JSON remains the durable
+        # evidence boundary; raw rendered DOM is intentionally not retained.
+        return None
 
-        with path.open("w", encoding="utf-8") as file:
-            file.write(html)
-
-        return path
-
-    def save_screenshot_bytes(self, content: bytes, prefix: str) -> Path:
-        filename = f"{safe_slug(prefix)}.png"
-        path = self.screenshots_dir / filename
-        path.parent.mkdir(parents=True, exist_ok=True)
-
-        with path.open("wb") as file:
-            file.write(content)
-
-        return path
+    def save_screenshot_bytes(self, content: bytes, prefix: str) -> Path | None:
+        # Arbitrary screenshots cannot be reliably redacted for a generic ERP.
+        # They are therefore excluded from durable crawler evidence.
+        return None

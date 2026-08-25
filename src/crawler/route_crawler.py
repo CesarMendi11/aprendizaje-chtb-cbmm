@@ -763,20 +763,24 @@ class RouteCrawler:
         reason: str,
         status: str = "discovered",
     ) -> None:
-        html_path = self.storage.save_html_content(
-            html=self.navigator.get_html(),
-            prefix=prefix,
-        )
+        artifacts: dict[str, str] = {}
+        if self.storage.persist_html:
+            html_path = self.storage.save_html_content(
+                html=self.navigator.get_html(),
+                prefix=prefix,
+            )
+            if html_path is not None:
+                artifacts["html"] = str(html_path)
 
-        screenshot_path = self.storage.save_screenshot_bytes(
-            content=self.navigator.screenshot_bytes(full_page=True),
-            prefix=prefix,
-        )
+        if self.storage.persist_screenshots:
+            screenshot_path = self.storage.save_screenshot_bytes(
+                content=self.navigator.screenshot_bytes(full_page=True),
+                prefix=prefix,
+            )
+            if screenshot_path is not None:
+                artifacts["screenshot"] = str(screenshot_path)
 
-        screen_data["artifacts"] = {
-            "html": str(html_path),
-            "screenshot": str(screenshot_path),
-        }
+        screen_data["artifacts"] = artifacts
 
         screen_data["crawler"] = {
             "route": route,
@@ -1005,19 +1009,24 @@ class RouteCrawler:
         after_screen_data = result.after_screen_data
         artifacts: dict[str, str] = {}
 
-        if result.after_html is not None:
+        if result.after_html is not None and self.storage.persist_html:
             html_path = self.storage.save_html_content(
                 html=result.after_html,
                 prefix=event_prefix,
             )
-            artifacts["html"] = str(html_path)
+            if html_path is not None:
+                artifacts["html"] = str(html_path)
 
-        if result.after_screenshot is not None:
+        if (
+            result.after_screenshot is not None
+            and self.storage.persist_screenshots
+        ):
             screenshot_path = self.storage.save_screenshot_bytes(
                 content=result.after_screenshot,
                 prefix=event_prefix,
             )
-            artifacts["screenshot"] = str(screenshot_path)
+            if screenshot_path is not None:
+                artifacts["screenshot"] = str(screenshot_path)
 
         after_screen_data["artifacts"] = artifacts
         after_screen_data["ui_state"] = target_state.to_dict()

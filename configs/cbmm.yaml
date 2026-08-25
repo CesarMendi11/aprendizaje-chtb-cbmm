@@ -268,7 +268,9 @@ ui_events:
     - "open_dropdown"
     - "change_pagination"
   restore_after_exploration: true
-  capture_event_artifacts: true
+  # Privacy contract: durable evidence is structural JSON. Raw DOM and
+  # screenshots are not retained because they can contain row-level data.
+  capture_event_artifacts: false
   artifact_timeout_ms: 3000
   artifact_full_page: false
 

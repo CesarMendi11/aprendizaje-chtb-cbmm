@@ -55,13 +55,42 @@ def test_artifact_storage_saves_raw_json(tmp_path):
     assert content["status"] == "discovered"
 
 
-def test_artifact_storage_saves_html_content(tmp_path):
+def test_artifact_storage_does_not_persist_html_content(tmp_path):
     storage = ArtifactStorage(build_profile(tmp_path))
 
-    path = storage.save_html_content("<html><body>ERP</body></html>", "/admin/home")
+    path = storage.save_html_content(
+        "<html><body>alice@example.test</body></html>",
+        "/admin/home",
+    )
 
-    assert path.exists()
-    assert path.read_text(encoding="utf-8") == "<html><body>ERP</body></html>"
+    assert path is None
+    assert list(storage.html_dir.iterdir()) == []
+
+
+def test_artifact_storage_does_not_persist_screenshots(tmp_path):
+    storage = ArtifactStorage(build_profile(tmp_path))
+
+    path = storage.save_screenshot_bytes(b"synthetic-image", "/admin/home")
+
+    assert path is None
+    assert list(storage.screenshots_dir.iterdir()) == []
+
+
+def test_artifact_storage_sanitizes_json_before_persistence(tmp_path):
+    storage = ArtifactStorage(build_profile(tmp_path))
+
+    path = storage.save_raw_screen_json(
+        {
+            "route": "/admin/personas",
+            "visible_text": "Alice alice@example.test 0701234567",
+            "buttons": [{"text": "Buscar", "region": "main_content"}],
+        },
+        "/admin/personas",
+    )
+
+    content = json.loads(path.read_text(encoding="utf-8"))
+    assert "visible_text" not in content
+    assert content["buttons"][0]["text"] == "Buscar"
 
 
 def test_artifact_storage_saves_uncertainty_json(tmp_path):

@@ -138,7 +138,7 @@ class UIEventExplorer:
             "restore_after_exploration", True
         )
         self.capture_event_artifacts = ui_events.get(
-            "capture_event_artifacts", True
+            "capture_event_artifacts", False
         )
         self.artifact_timeout_ms = ui_events.get(
             "artifact_timeout_ms", 3000

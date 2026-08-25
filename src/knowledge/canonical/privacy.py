@@ -164,3 +164,260 @@ def _safe_scalar(value: Any) -> bool:
     if value is None or isinstance(value, (bool, int, float)):
         return True
     return isinstance(value, str) and not contains_sensitive(value) and len(value) <= 500
+
+
+# Persistence contract for crawler artifacts. The crawler may need rich text
+# transiently to detect state changes, but persisted artifacts must never keep
+# full rendered text, query values, table-row interaction labels, or obvious
+# secret/PII patterns. This contract intentionally runs *before* canonical
+# construction so privacy does not depend on a later layer cleaning the data.
+PERSISTED_TEXT_KEYS = {
+    "text",
+    "label",
+    "aria_label",
+    "title",
+    "placeholder",
+    "document_title",
+    "functional_title",
+    "observed_functional_title",
+    "expected_title",
+    "observed_title",
+    "final_title",
+}
+PERSISTED_ROUTE_KEYS = {
+    "route",
+    "url",
+    "path",
+    "href",
+    "absolute_href",
+    "form_action",
+    "target_route",
+    "before_route",
+    "after_route",
+    "current_route",
+}
+PERSISTED_SELECTOR_KEYS = {
+    "selector",
+    "navigation_origin",
+    "navigation_origin_path",
+}
+PERSISTED_DROP_KEYS = {
+    # Full rendered prose can contain names, row values and other PII that
+    # cannot be recognized reliably with regular expressions. Structural
+    # labels remain available through fields/buttons/headers/links.
+    "visible_text",
+    "main_visible_text",
+    "title_candidates",
+    # Browser document titles are not needed for canonical identity and can
+    # include a selected record/person name in some ERP screens.
+    "document_title",
+    "html",
+    "screenshot",
+}
+PERSISTED_FORBIDDEN_KEYS = {
+    "password",
+    "passwd",
+    "token",
+    "cookie",
+    "authorization",
+    "username",
+    "email",
+    "session",
+}
+
+PERSISTED_TECHNICAL_TOKEN_KEYS = {
+    "action_kind",
+    "code",
+    "decision",
+    "event_category",
+    "event_type",
+    "form_method",
+    "kind",
+    "knowledge_origin",
+    "method",
+    "outcome",
+    "policy_reasons",
+    "reason",
+    "reasons",
+    "region",
+    "restore_strategy",
+    "risk_level",
+    "role",
+    "semantic_status",
+    "source",
+    "status",
+    "tag",
+    "title_source",
+    "type",
+}
+TECHNICAL_TOKEN = re.compile(r"^[A-Za-z][A-Za-z0-9_.:-]{0,160}$")
+PERSISTED_INTERNAL_STATE_FRAGMENT = re.compile(r"^state:[0-9a-f]{12}$")
+
+
+def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
+    """Return a persistence-safe copy of a crawler artifact payload.
+
+    The function is deliberately conservative. Rich UI text remains available
+    in memory while a crawl is running, but persistence keeps only structural
+    labels and metadata required by canonical construction/replay. Strings that
+    match known sensitive-value patterns are dropped as complete fragments.
+    """
+
+    if isinstance(value, dict):
+        metadata = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
+        region = str(
+            value.get("region")
+            or metadata.get("region")
+            or ""
+        ).casefold()
+        within_table = bool(
+            value.get("within_table")
+            or metadata.get("within_table")
+        )
+        cleaned: dict[str, Any] = {}
+        for raw_name, item in value.items():
+            name = str(raw_name)
+            lowered = name.casefold()
+
+            if lowered in PERSISTED_DROP_KEYS:
+                continue
+            if lowered in PERSISTED_FORBIDDEN_KEYS:
+                continue
+
+            # Header/session/volatile regions are excluded from canonical
+            # knowledge already. Do not persist their free-text labels either.
+            if (
+                lowered in PERSISTED_TEXT_KEYS
+                and region in SENSITIVE_REGIONS
+            ):
+                continue
+
+            # Per-row controls can carry customer/person names or record
+            # identifiers. Their transient behavior may help state detection,
+            # but their free-text/selector data is not needed for the persisted
+            # structural model.
+            if within_table and lowered in (
+                PERSISTED_TEXT_KEYS
+                | PERSISTED_ROUTE_KEYS
+                | PERSISTED_SELECTOR_KEYS
+            ):
+                continue
+
+            cleaned[name] = sanitize_artifact_payload(item, key=lowered)
+        return cleaned
+
+    if isinstance(value, list):
+        if _is_technical_persistence_key(key):
+            return list(value)
+        return [sanitize_artifact_payload(item, key=key) for item in value]
+
+    if isinstance(value, tuple):
+        return sanitize_artifact_payload(list(value), key=key)
+
+    if not isinstance(value, str):
+        return value
+
+    if _is_technical_persistence_key(key):
+        return value
+
+    if _is_safe_technical_token(key, value):
+        return value
+
+    if key in PERSISTED_ROUTE_KEYS:
+        return _sanitize_persisted_route(value)
+
+    if key in PERSISTED_SELECTOR_KEYS:
+        return _sanitize_persisted_selector(key, value)
+
+    clean, detections = sanitize_text(value, limit=4000)
+    if detections:
+        return ""
+    return clean
+
+
+
+def _is_safe_technical_token(key: Any, value: Any) -> bool:
+    name = str(key or "").casefold()
+    text = str(value or "")
+    return (
+        name in PERSISTED_TECHNICAL_TOKEN_KEYS
+        and bool(TECHNICAL_TOKEN.fullmatch(text))
+    )
+
+
+def _is_technical_persistence_key(key: Any) -> bool:
+    name = str(key or "").casefold()
+    if name in {
+        "state_id",
+        "source_state_id",
+        "target_state_id",
+        "canonical_id",
+        "id",
+        "observed_exact_signatures",
+        "knowledge_version",
+        "profile_sha256",
+    }:
+        return True
+    return name.endswith(
+        (
+            "_hash",
+            "_sha256",
+            "_fingerprint",
+            "_fingerprints",
+            "_signature",
+            "_signatures",
+        )
+    )
+
+
+def _sanitize_persisted_route(value: Any) -> str:
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+    text = str(value or "").strip()
+    if not text:
+        return ""
+
+    parsed = urlsplit(text)
+    segments = []
+    for segment in parsed.path.split("/"):
+        segments.append("<redacted>" if contains_sensitive(segment) else segment)
+    path = "/".join(segments)
+
+    query_keys = sorted(
+        {
+            key
+            for key, _ in parse_qsl(
+                parsed.query,
+                keep_blank_values=True,
+            )
+            if key and not contains_sensitive(key)
+        }
+    )
+    query = urlencode([(item, "*") for item in query_keys])
+    fragment = (
+        parsed.fragment
+        if PERSISTED_INTERNAL_STATE_FRAGMENT.fullmatch(parsed.fragment)
+        else ""
+    )
+    # Origins are operational deployment details and can expose internal
+    # addresses. Persist only the ERP-relative path plus query-key names.
+    # The crawler's synthetic ``#state:<12-hex>`` fragment is structural
+    # identity used by routes_graph; arbitrary fragments are discarded.
+    return urlunsplit(("", "", path, query, fragment))
+
+
+def _sanitize_persisted_selector(key: str, value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if not contains_sensitive(text):
+        return text
+
+    metadata_key = (
+        key
+        if key in {"navigation_origin", "navigation_origin_path"}
+        else "navigation_origin"
+    )
+    if is_safe_navigation_metadata(metadata_key, text):
+        return text
+    return ""
