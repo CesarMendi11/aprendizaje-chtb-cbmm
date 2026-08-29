@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import os
 
+from src.config.chroma_settings import ChromaSettings
 from src.config.neo4j_settings import Neo4jSettings
 from src.database.session import session_scope
 from src.graph.client import Neo4jClient
@@ -11,7 +11,7 @@ from src.hybrid.aliases import semantic_aliases_for
 from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
 from src.vectorstore.ollama_generation import OllamaGenerationClient
 
-from .database_common import database_engine, print_json, project_path
+from .database_common import database_engine, print_json
 
 
 def main(argv=None):
@@ -26,10 +26,7 @@ def main(argv=None):
     a = p.parse_args(argv)
     try:
         with session_scope(database_engine()) as session, Neo4jClient(Neo4jSettings()) as graph:
-            chroma = ChromaRepository(
-                path=os.getenv("ERP_ASSISTANT_CHROMA_PATH")
-                or project_path("data/vectorstore/chroma")
-            )
+            chroma = ChromaRepository(path=ChromaSettings().path)
             generator = None if a.no_generate else OllamaGenerationClient()
             result = HybridKnowledgeRetriever(
                 session,

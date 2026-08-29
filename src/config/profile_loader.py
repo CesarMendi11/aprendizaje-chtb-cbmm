@@ -82,6 +82,17 @@ class ProfileLoader:
             if field not in profile["login"]:
                 raise ValueError(f"Falta login.{field}")
 
+        if "username" in profile["login"] or "password" in profile["login"]:
+            raise ValueError(
+                "login.username/login.password no están permitidos; "
+                "usa variables de entorno mediante login.username_env/login.password_env."
+            )
+
+        for field in ["username_env", "password_env"]:
+            value = profile["login"].get(field)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise ValueError(f"login.{field} debe ser un nombre de variable no vacío.")
+
         if not profile["login"].get("submit_selector") and not profile["login"].get(
             "submit_role_name"
         ):

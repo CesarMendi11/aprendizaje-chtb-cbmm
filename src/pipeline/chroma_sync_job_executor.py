@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import os
 import uuid
-from pathlib import Path
 from typing import Any
 
+from src.config.chroma_settings import ChromaSettings
 from src.database.enums import KnowledgeVersionStatus, PipelineJobScope, SyncTarget
 from src.database.models import KnowledgeVersionRecord
 from src.database.services import ChromaSyncService
@@ -33,8 +32,7 @@ class ChromaSyncJobExecutor:
 
     @staticmethod
     def _default_repository():
-        path = os.getenv("ERP_ASSISTANT_CHROMA_PATH") or Path("data/vectorstore/chroma")
-        return ChromaRepository(path=path)
+        return ChromaRepository(path=ChromaSettings().path)
 
     def execute(self, *, job_id, scope, target, parameters, progress):
         if scope != PipelineJobScope.VERSION:

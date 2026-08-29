@@ -36,11 +36,6 @@ class ApiSettings:
             if origin.strip() and origin.strip() != "*"
         )
     )
-    crawl_profile_path: Path = field(
-        default_factory=lambda: _path_from_env(
-            "ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml"
-        )
-    )
     screen_index_path: Path = field(
         default_factory=lambda: _path_from_env(
             "SCREEN_INDEX_PATH", "data/processed/structural/screen_index.json"

@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.routes import chat, health
 from src.config.api_settings import ApiSettings
+from src.config.pipeline_settings import PipelineSettings
 from src.hybrid.conversation_store import ConversationStateStore
 from src.hybrid.factory import HybridRetrieverFactory
 from src.knowledge.answer_builder import AnswerBuilder
@@ -142,7 +143,7 @@ def create_app(
             pipeline_job_dispatcher = PipelineJobDispatcher(semantic_review_session_factory)
         app.state.pipeline_job_dispatcher = pipeline_job_dispatcher
 
-        app.state.pipeline_crawl_profile_name = settings.crawl_profile_path.stem
+        app.state.pipeline_crawl_profile_name = PipelineSettings().crawl_profile_path.stem
 
         @app.middleware("http")
         async def sanitize_admin_failures(request: Request, call_next):

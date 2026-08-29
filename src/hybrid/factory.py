@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import os
 from contextlib import contextmanager
 
-from scripts.database_common import database_engine, project_path
+from scripts.database_common import database_engine
+from src.config.chroma_settings import ChromaSettings
 from src.config.neo4j_settings import Neo4jSettings
 from src.database.session import session_scope
 from src.graph.client import Neo4jClient
@@ -24,10 +24,7 @@ class HybridRetrieverFactory:
             yield self.retriever_factory()
             return
         with session_scope(database_engine()) as session, Neo4jClient(Neo4jSettings()) as graph:
-            chroma = ChromaRepository(
-                path=os.getenv("ERP_ASSISTANT_CHROMA_PATH")
-                or project_path("data/vectorstore/chroma")
-            )
+            chroma = ChromaRepository(path=ChromaSettings().path)
             semantic_chroma = SemanticChromaRepository(client=chroma.client)
             yield HybridKnowledgeRetriever(
                 session,

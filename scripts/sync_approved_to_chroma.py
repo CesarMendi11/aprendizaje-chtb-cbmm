@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import argparse
-import os
 
+from src.config.chroma_settings import ChromaSettings
 from src.database.services import ChromaSyncService
 from src.database.session import session_scope
 from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
 
-from .database_common import database_engine, print_json, project_path
+from .database_common import database_engine, print_json
 
 
 def build_parser():
@@ -29,8 +29,7 @@ def main(argv=None):
                 )
                 print_json({"status": "dry_run", **summary}, pretty=args.pretty)
                 return 0
-            path = os.getenv("ERP_ASSISTANT_CHROMA_PATH") or project_path("data/vectorstore/chroma")
-            repository = ChromaRepository(path=path)
+            repository = ChromaRepository(path=ChromaSettings().path)
             result = ChromaSyncService(
                 session, repository=repository, embeddings=OllamaEmbeddingClient()
             ).run(erp_id=args.erp_id, knowledge_version=args.knowledge_version)

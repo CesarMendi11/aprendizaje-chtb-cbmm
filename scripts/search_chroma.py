@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import argparse
-import os
 
+from src.config.chroma_settings import ChromaSettings
 from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
 
-from .database_common import print_json, project_path
+from .database_common import print_json
 
 
 def build_parser():
@@ -25,8 +25,7 @@ def main(argv=None):
             raise ValueError("top-k debe ser positivo")
         embeddings = OllamaEmbeddingClient()
         vector = embeddings.embed(args.query)[0]
-        path = os.getenv("ERP_ASSISTANT_CHROMA_PATH") or project_path("data/vectorstore/chroma")
-        results = ChromaRepository(path=path).query(
+        results = ChromaRepository(path=ChromaSettings().path).query(
             vector,
             top_k=args.top_k,
             erp_id=args.erp_id,

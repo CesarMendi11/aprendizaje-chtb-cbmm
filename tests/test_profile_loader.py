@@ -1,6 +1,8 @@
 import hashlib
 from pathlib import Path
 
+import pytest
+
 from src.config.profile_loader import ProfileLoader
 
 
@@ -339,3 +341,40 @@ output:
 
     assert loaded.profile["erp"]["code"] == "test"
     assert loaded.sha256 == hashlib.sha256(raw).hexdigest()
+
+
+def test_profile_loader_rejects_literal_login_credentials(tmp_path):
+    profile_path = tmp_path / "literal_credentials.yaml"
+    profile_path.write_text(
+        """
+erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username: admin
+  password: secret
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="login.username/login.password"):
+        ProfileLoader(profile_path).load()

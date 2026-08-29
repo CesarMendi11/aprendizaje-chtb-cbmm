@@ -16,7 +16,7 @@ class AuthManager:
     Maneja la configuración de autenticación del ERP.
 
     Responsabilidad:
-    - Obtener credenciales desde .env o YAML.
+    - Obtener credenciales exclusivamente desde variables de entorno.
     - Construir URL de login.
     - Validar si una URL corresponde a login exitoso.
 
@@ -27,6 +27,12 @@ class AuthManager:
         self.profile = profile
         self.base_url = profile["erp"]["base_url"].rstrip("/")
         self.login_config = profile["login"]
+        if "username" in self.login_config or "password" in self.login_config:
+            raise ValueError(
+                "Las credenciales literales no están permitidas en el perfil YAML; "
+                "usa login.username_env/login.password_env y define los secretos "
+                "en variables de entorno."
+            )
 
     def get_login_url(self) -> str:
         login_path = self.login_config["url"].lstrip("/")
@@ -36,14 +42,13 @@ class AuthManager:
         username_env = self.login_config.get("username_env", "ERP_USERNAME")
         password_env = self.login_config.get("password_env", "ERP_PASSWORD")
 
-        username = os.getenv(username_env) or self.login_config.get("username")
-        password = os.getenv(password_env) or self.login_config.get("password")
+        username = os.getenv(username_env)
+        password = os.getenv(password_env)
 
         if not username or not password:
             raise RuntimeError(
                 "No se encontraron credenciales. "
-                "Define ERP_USERNAME y ERP_PASSWORD en .env "
-                "o username/password en el YAML."
+                f"Define {username_env} y {password_env} en el entorno/.env."
             )
 
         return ERPCredentials(username=username, password=password)

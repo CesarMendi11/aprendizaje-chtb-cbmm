@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
 import uuid
 from pathlib import Path
 from typing import Any, Callable
 
 from sqlalchemy import select
 
+from src.config.pipeline_settings import PipelineSettings
 from src.database.enums import KnowledgeVersionStatus, PipelineJobScope
 from src.database.models import KnowledgeVersionRecord
 from src.database.services import (
@@ -60,9 +60,7 @@ class CanonicalMergeJobExecutor:
     ):
         self.session_factory = session_factory
         self.project_root = Path(project_root or PROJECT_ROOT).resolve()
-        configured_runs = runs_root or os.getenv(
-            "ERP_ASSISTANT_PIPELINE_RUNS_DIR", "data/runs/pipeline"
-        )
+        configured_runs = runs_root or PipelineSettings().runs_root
         self.runs_root = _project_path(self.project_root, configured_runs).resolve()
 
     def execute(

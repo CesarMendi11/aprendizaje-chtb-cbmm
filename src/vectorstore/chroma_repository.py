@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-import os
 from pathlib import Path
+
+from src.config.chroma_settings import ChromaSettings
 
 
 def collection_name() -> str:
@@ -19,9 +20,7 @@ class ChromaRepository:
         if client is None:
             import chromadb
 
-            location = Path(
-                path or os.getenv("ERP_ASSISTANT_CHROMA_PATH", "data/vectorstore/chroma")
-            )
+            location = Path(path) if path is not None else ChromaSettings().path
             client = chromadb.PersistentClient(path=str(location))
         self.client = client
         self.collection = client.get_or_create_collection(

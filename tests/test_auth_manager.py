@@ -52,3 +52,11 @@ def test_auth_manager_validates_successful_login_url():
 
     assert manager.is_successful_login_url("http://localhost:8080/admin/home")
     assert not manager.is_successful_login_url("http://localhost:8080/login")
+
+
+def test_auth_manager_rejects_literal_credentials_in_profile():
+    profile = build_profile()
+    profile["login"]["username"] = "admin"
+
+    with pytest.raises(ValueError, match="credenciales literales"):
+        AuthManager(profile)

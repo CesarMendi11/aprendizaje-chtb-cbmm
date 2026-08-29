@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -8,6 +7,7 @@ from typing import Any
 import httpx
 from sqlalchemy import func, select, text
 
+from src.config.chroma_settings import ChromaSettings
 from src.config.neo4j_settings import Neo4jSettings
 from src.config.ollama_settings import OllamaEmbeddingSettings
 from src.database.enums import KnowledgeVersionStatus
@@ -174,12 +174,7 @@ def probe_neo4j() -> dict[str, Any]:
 
 
 def probe_chroma() -> dict[str, Any]:
-    location = Path(
-        os.getenv(
-            "ERP_ASSISTANT_CHROMA_PATH",
-            "data/vectorstore/chroma",
-        )
-    )
+    location = ChromaSettings().path
 
     if not location.exists():
         return {
@@ -211,12 +206,7 @@ def probe_chroma() -> dict[str, Any]:
 
 def probe_semantic_chroma() -> dict[str, Any]:
     """Probe the dedicated projection that stores approved semantic proposals."""
-    location = Path(
-        os.getenv(
-            "ERP_ASSISTANT_CHROMA_PATH",
-            "data/vectorstore/chroma",
-        )
-    )
+    location = ChromaSettings().path
 
     if not location.exists():
         return {

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from copy import deepcopy
 from pathlib import Path
@@ -9,6 +8,7 @@ from typing import Any, Callable
 from playwright.sync_api import sync_playwright
 
 from src.browser.navigator import ERPNavigator
+from src.config.pipeline_settings import PipelineSettings
 from src.config.profile_loader import ProfileLoader
 from src.crawler.module_scope import ModuleCrawlBoundary, ModuleCrawlBoundaryError
 from src.crawler.route_crawler import CrawlSummary, RouteCrawler
@@ -66,12 +66,9 @@ class CrawlJobExecutor:
         profile_path: str | Path | None = None,
         runs_root: str | Path | None = None,
     ):
-        configured_profile = profile_path or os.getenv(
-            "ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml"
-        )
-        configured_runs = runs_root or os.getenv(
-            "ERP_ASSISTANT_PIPELINE_RUNS_DIR", "data/runs/pipeline"
-        )
+        pipeline_settings = PipelineSettings()
+        configured_profile = profile_path or pipeline_settings.crawl_profile_path
+        configured_runs = runs_root or pipeline_settings.runs_root
         self.profile_path = _project_path(configured_profile)
         self.runs_root = _project_path(configured_runs)
 
