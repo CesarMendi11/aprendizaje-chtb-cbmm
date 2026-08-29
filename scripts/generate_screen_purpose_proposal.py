@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,7 +13,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import httpx
-from sqlalchemy import URL, create_engine, func, select
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,7 @@ from src.analysis.evidence import ScreenEvidenceBuilder
 from src.analysis.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
 from src.analysis.generation.errors import ScreenPurposeGenerationError
 from src.analysis.workflows import ScreenPurposeProposalWorkflow
+from src.config.database_settings import DatabaseSettings
 from src.database.enums import KnowledgeVersionStatus
 from src.database.models import KnowledgeItem, KnowledgeVersionRecord
 from src.database.services.semantic_exceptions import SemanticDomainError
@@ -52,29 +53,11 @@ class TrackedOllamaStructuredGenerationClient(OllamaStructuredGenerationClient):
 
 
 def _load_env() -> None:
-    path = Path(".env")
-    if not path.is_file():
-        return
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 
 def _database_url():
-    configured = os.getenv("ERP_ASSISTANT_DATABASE_URL")
-    if configured:
-        return make_url(configured)
-    return URL.create(
-        "postgresql+psycopg",
-        username=os.getenv("ERP_ASSISTANT_POSTGRES_USER", "erp_assistant"),
-        password=os.getenv("ERP_ASSISTANT_POSTGRES_PASSWORD", "erp_assistant_local"),
-        host="127.0.0.1",
-        port=5434,
-        database="erp_assistant",
-    )
+    return make_url(DatabaseSettings().require_url())
 
 
 def _screen(session: Session, *, title: str | None, canonical_id: str | None):
@@ -149,7 +132,8 @@ def main() -> int:
                 database_name = connection.exec_driver_sql(
                     "SELECT current_database()"
                 ).scalar_one()
-                if database_name != "erp_assistant":
+                expected_database = engine.url.database
+                if not expected_database or database_name != expected_database:
                     raise CLIError("database_identity_mismatch")
                 if args.persist:
                     _semantic_schema_preflight(connection)
@@ -160,14 +144,18 @@ def main() -> int:
                     canonical_id=args.screen_id,
                 )
                 ollama = OllamaGenerationSettings()
-                tags = httpx.get(f"{ollama.url.rstrip('/')}/api/tags", timeout=5)
+                tags = httpx.get(
+                    f"{ollama.url}/api/tags",
+                    timeout=min(ollama.timeout, 5.0),
+                )
                 tags.raise_for_status()
                 installed = {item.get("name") for item in tags.json().get("models", [])}
                 if ollama.model not in installed:
                     raise CLIError("generation_model_not_installed")
                 inference = ScreenPurposeInferenceService(
                     TrackedOllamaStructuredGenerationClient(
-                        settings=ollama, mode="json_schema", timeout=120
+                        settings=ollama,
+                        mode="json_schema",
                     )
                 )
                 workflow = ScreenPurposeProposalWorkflow(

@@ -58,7 +58,6 @@ class SemanticInferenceJobExecutor:
         client = OllamaStructuredGenerationClient(
             settings=settings,
             mode="json_schema",
-            timeout=max(120.0, float(settings.timeout)),
         )
         return ScreenPurposeInferenceService(client)
 

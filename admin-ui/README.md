@@ -9,15 +9,16 @@ Aplicación cliente React + TypeScript + Vite, sin dependencias visuales ni esta
 ## Modos de datos
 
 - `demo` (predeterminado): usa un snapshot local tipado y no realiza solicitudes HTTP. La cabecera identifica “Modo demostración” y “Snapshot validado”. Este modo no prueba ni finge una conexión a PostgreSQL, FastAPI o la base real.
-- `live`: consume exclusivamente FastAPI mediante la base relativa `/api`. Vite redirige esas solicitudes a `http://127.0.0.1:8000`. Un fallo se muestra claramente y nunca activa el snapshot de forma silenciosa.
+- `live`: consume exclusivamente FastAPI mediante la base relativa `/api`. Vite redirige esas solicitudes al target configurado por `VITE_ADMIN_API_TARGET`. Un fallo se muestra claramente y nunca activa el snapshot de forma silenciosa.
 
-Copie `.env.example` a `.env.local` y defina:
+Copie `.env.example` a `.env.local` y defina, por ejemplo:
 
 ```env
-VITE_ADMIN_API_MODE=demo
+VITE_ADMIN_API_MODE=live
+VITE_ADMIN_API_TARGET=http://127.0.0.1:8000
 ```
 
-Valores admitidos: `demo` y `live`.
+`VITE_ADMIN_API_MODE` admite `demo` y `live`. `VITE_ADMIN_API_TARGET` sólo configura el proxy del servidor de desarrollo de Vite; el navegador continúa consumiendo rutas relativas `/api`.
 
 ## Comandos
 
@@ -29,7 +30,7 @@ npm run typecheck
 npm run build
 ```
 
-Para la presentación, use `demo` y `npm run dev`; detenga el proceso al terminar. Para `live`, FastAPI debe estar disponible en `127.0.0.1:8000` y la API administrativa local debe estar habilitada por su configuración de backend.
+Para la presentación, use `demo` y `npm run dev`; detenga el proceso al terminar. Para `live`, FastAPI debe estar disponible en el target configurado y la API administrativa local debe estar habilitada por su configuración de backend.
 
 ## Endpoints live
 

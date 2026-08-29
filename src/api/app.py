@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -76,7 +74,7 @@ def create_app(
     )
     app.state.answer_builder = AnswerBuilder()
     app.state.hybrid_factory = (
-        HybridRetrieverFactory() if os.getenv("ERP_ASSISTANT_HYBRID_API") == "1" else None
+        HybridRetrieverFactory() if settings.hybrid_api_enabled else None
     )
     app.state.conversation_state_store = (
         conversation_state_store or ConversationStateStore()
@@ -144,9 +142,7 @@ def create_app(
             pipeline_job_dispatcher = PipelineJobDispatcher(semantic_review_session_factory)
         app.state.pipeline_job_dispatcher = pipeline_job_dispatcher
 
-        app.state.pipeline_crawl_profile_name = Path(
-            os.getenv("ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml")
-        ).stem
+        app.state.pipeline_crawl_profile_name = settings.crawl_profile_path.stem
 
         @app.middleware("http")
         async def sanitize_admin_failures(request: Request, call_next):

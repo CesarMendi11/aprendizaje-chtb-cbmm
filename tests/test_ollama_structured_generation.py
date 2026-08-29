@@ -114,3 +114,49 @@ def test_structured_timeout_defaults_to_120_and_can_be_overridden():
     assert OllamaStructuredGenerationClient(settings).timeout == 120
     assert OllamaStructuredGenerationClient(settings, timeout=45).timeout == 45
     assert OllamaGenerationClient(settings).settings.timeout == 30
+
+
+def test_generation_settings_read_environment_at_instantiation(monkeypatch):
+    monkeypatch.setenv("ERP_ASSISTANT_OLLAMA_URL", "http://ollama.env:11434/")
+    monkeypatch.setenv("ERP_ASSISTANT_GENERATION_MODEL", "env-model")
+    monkeypatch.setenv("ERP_ASSISTANT_OLLAMA_TIMEOUT", "12")
+    monkeypatch.setenv("ERP_ASSISTANT_OLLAMA_STRUCTURED_TIMEOUT", "34")
+
+    settings = OllamaGenerationSettings()
+
+    assert settings.url == "http://ollama.env:11434"
+    assert settings.model == "env-model"
+    assert settings.timeout == 12
+    assert settings.structured_timeout == 34
+
+
+def test_text_generation_client_uses_settings_and_returns_trimmed_text():
+    captured = {}
+
+    def handler(request):
+        captured.update(__import__("json").loads(request.content))
+        return httpx.Response(200, json={"response": "  respuesta grounded  "})
+
+    transport = httpx.MockTransport(handler)
+    http = httpx.Client(transport=transport, base_url="http://ollama.test")
+    settings = OllamaGenerationSettings(
+        url="http://ollama.test",
+        model="text-model",
+        timeout=7,
+    )
+    try:
+        result = OllamaGenerationClient(settings, client=http).generate(
+            "pregunta",
+            system="system",
+        )
+    finally:
+        http.close()
+
+    assert result == "respuesta grounded"
+    assert captured == {
+        "model": "text-model",
+        "prompt": "pregunta",
+        "system": "system",
+        "stream": False,
+        "options": {"temperature": 0},
+    }

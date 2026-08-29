@@ -14,6 +14,9 @@ def _path_from_env(name: str, default: str) -> Path:
 
 @dataclass(frozen=True)
 class ApiSettings:
+    hybrid_api_enabled: bool = field(
+        default_factory=lambda: os.getenv("ERP_ASSISTANT_HYBRID_API") == "1"
+    )
     semantic_review_api_enabled: bool = field(
         default_factory=lambda: os.getenv("ERP_ASSISTANT_SEMANTIC_REVIEW_API") == "1"
     )
@@ -22,6 +25,7 @@ class ApiSettings:
     )
     host: str = field(default_factory=lambda: os.getenv("API_HOST", "127.0.0.1"))
     port: int = field(default_factory=lambda: int(os.getenv("API_PORT", "8000")))
+    reload: bool = field(default_factory=lambda: os.getenv("API_RELOAD") == "1")
     cors_origins: tuple[str, ...] = field(
         default_factory=lambda: tuple(
             origin.strip()
@@ -30,6 +34,11 @@ class ApiSettings:
                 "http://localhost:4200,http://127.0.0.1:4200",
             ).split(",")
             if origin.strip() and origin.strip() != "*"
+        )
+    )
+    crawl_profile_path: Path = field(
+        default_factory=lambda: _path_from_env(
+            "ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml"
         )
     )
     screen_index_path: Path = field(

@@ -29,14 +29,23 @@ class StructuredGenerationResponse:
 
 class OllamaStructuredGenerationClient:
     def __init__(
-        self, settings=None, *, client=None, mode: str = "json_schema", timeout: float = 120
+        self,
+        settings=None,
+        *,
+        client=None,
+        mode: str = "json_schema",
+        timeout: float | None = None,
     ):
         if mode not in {"json_schema", "json"}:
             raise ValueError("Modo estructurado no soportado")
         self.settings = settings or OllamaGenerationSettings()
         self.client = client
         self.mode = mode
-        self.timeout = float(timeout)
+        self.timeout = float(
+            self.settings.structured_timeout
+            if timeout is None
+            else timeout
+        )
         if self.timeout <= 0:
             raise ValueError("El timeout estructurado debe ser positivo")
 

@@ -4,15 +4,15 @@ services:
     container_name: erp_assistant_postgres
     restart: "no"
     ports:
-      - "5434:5432"
+      - "${ERP_ASSISTANT_POSTGRES_PORT:-5434}:5432"
     environment:
-      POSTGRES_DB: erp_assistant
-      POSTGRES_USER: erp_assistant
-      POSTGRES_PASSWORD: ${ERP_ASSISTANT_POSTGRES_PASSWORD:-erp_assistant_local}
+      POSTGRES_DB: ${ERP_ASSISTANT_POSTGRES_DB:-erp_assistant}
+      POSTGRES_USER: ${ERP_ASSISTANT_POSTGRES_USER:-erp_assistant}
+      POSTGRES_PASSWORD: ${ERP_ASSISTANT_POSTGRES_PASSWORD:?ERP_ASSISTANT_POSTGRES_PASSWORD is required}
     volumes:
       - erp_assistant_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U erp_assistant -d erp_assistant"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 12

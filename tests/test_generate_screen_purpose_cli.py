@@ -98,3 +98,17 @@ def test_dry_run_read_only_check_is_explicit():
     source = open(cli.__file__, encoding="utf-8").read()
     assert "SHOW transaction_read_only" in source
     assert 'read_only != "on"' in source
+
+
+def test_database_url_uses_authoritative_database_setting(monkeypatch):
+    monkeypatch.setenv(
+        "ERP_ASSISTANT_DATABASE_URL",
+        "postgresql+psycopg://app:secret@db.example:5544/custom_db",
+    )
+
+    url = cli._database_url()
+
+    assert url.host == "db.example"
+    assert url.port == 5544
+    assert url.database == "custom_db"
+    assert url.username == "app"
