@@ -311,7 +311,7 @@ def test_removal_reconciliation_plan_api(tmp_path):
     with factory() as session:
         _, candidate_id = partial_candidate(session, tmp_path)
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True),
+        replace(ApiSettings(), semantic_review_api_enabled=True),
         semantic_review_session_factory=factory,
     )
 

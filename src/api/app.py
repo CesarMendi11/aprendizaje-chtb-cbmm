@@ -13,9 +13,6 @@ from src.config.api_settings import ApiSettings
 from src.config.pipeline_settings import PipelineSettings
 from src.hybrid.conversation_store import ConversationStateStore
 from src.hybrid.factory import HybridRetrieverFactory
-from src.knowledge.answer_builder import AnswerBuilder
-from src.knowledge.structural_knowledge_repository import StructuralKnowledgeRepository
-from src.knowledge.structural_search_service import StructuralSearchService
 
 
 def create_app(
@@ -26,15 +23,6 @@ def create_app(
     conversation_state_store: ConversationStateStore | None = None,
 ) -> FastAPI:
     settings = settings or ApiSettings()
-    # ``screen_index.json`` is a legacy compatibility projection for the
-    # deterministic chat fallback.  The governed vNext/Admin/Hybrid runtime
-    # must be able to start without that global artifact.  Per-run
-    # ``screen_index.json`` files remain valid crawler evidence and are not
-    # affected by this optional compatibility load.
-    repository = StructuralKnowledgeRepository(settings.screen_index_path)
-    if settings.screen_index_path.is_file():
-        repository.load()
-
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         if settings.semantic_review_api_enabled:
@@ -69,14 +57,7 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.settings = settings
-    app.state.repository = repository
-    app.state.search_service = StructuralSearchService(
-        repository, settings.max_results, settings.minimum_score
-    )
-    app.state.answer_builder = AnswerBuilder()
-    app.state.hybrid_factory = (
-        HybridRetrieverFactory() if settings.hybrid_api_enabled else None
-    )
+    app.state.hybrid_factory = HybridRetrieverFactory()
     app.state.conversation_state_store = (
         conversation_state_store or ConversationStateStore()
     )

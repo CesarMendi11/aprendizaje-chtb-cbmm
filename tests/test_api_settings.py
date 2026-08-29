@@ -5,11 +5,9 @@ from src.config.pipeline_settings import PipelineSettings
 
 
 def test_api_settings_centralize_runtime_environment(monkeypatch):
-    monkeypatch.setenv("ERP_ASSISTANT_HYBRID_API", "1")
     monkeypatch.setenv("API_RELOAD", "1")
     settings = ApiSettings()
 
-    assert settings.hybrid_api_enabled is True
     assert settings.reload is True
 
 

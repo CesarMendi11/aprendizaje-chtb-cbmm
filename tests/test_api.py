@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import logging
 from dataclasses import replace
 
 import httpx
@@ -14,50 +12,8 @@ from src.knowledge.text_normalizer import normalize_text
 
 
 @pytest.fixture
-def screen_index(tmp_path):
-    screens = [
-        {
-            "route": "/admin/home",
-            "title": "Dashboard",
-            "main_visible_text": "Página de inicio",
-        },
-        {
-            "route": "/admin/cuentasxcobrar/retenciones",
-            "title": "Retenciones",
-            "main_visible_text": "Filtros de consulta y tabla de resultados",
-            "inputs": [
-                {"label": "RUC", "placeholder": "0000000000001"},
-                {"label": "Fecha desde"},
-                {"label": "Estado"},
-            ],
-            "buttons": [{"text": "Buscar"}],
-            "tables": [{"headers": ["ESTADO", "RUC", "TOTAL RETENIDO"]}],
-            "local_links": [{"text": "Dashboard", "href": "/"}],
-        },
-        {
-            "route": "/admin/cuentasxcobrar/lista-facturas",
-            "title": "Lista de facturas",
-            "main_visible_text": "Consulta de facturas emitidas",
-            "inputs": [{"label": "Núm. comprobante"}],
-            "tables": [{"headers": ["FECHA EMISIÓN", "TOTAL"]}],
-        },
-        {
-            "route": "/admin/general/personas",
-            "title": "Personas",
-            "buttons": [{"text": "Buscar"}, {"aria_label": "Filtrar"}],
-            "tables": [{"headers": ["CÉDULA", "NOMBRE"]}],
-        },
-    ]
-    path = tmp_path / "screen_index.json"
-    path.write_text(
-        json.dumps({"index_type": "erp_screen_index", "screens": screens}), encoding="utf-8"
-    )
-    return path
-
-
-@pytest.fixture
-def settings(screen_index):
-    return replace(ApiSettings(), screen_index_path=screen_index, minimum_score=2.0)
+def settings():
+    return ApiSettings()
 
 
 @pytest.fixture
@@ -97,25 +53,15 @@ def ask(client, question, *, route=None, conversation_id="conversation-1"):
     )
 
 
-def test_health_with_loaded_knowledge(client):
+def test_health_is_runtime_liveness(client):
     assert client.get("/api/health").json() == {
         "status": "ok",
         "service": "erp-assistant-api",
-        "knowledge_loaded": True,
-        "screens_count": 4,
     }
 
 
-def test_health_without_knowledge_file(settings, tmp_path):
-    app = create_app(replace(settings, screen_index_path=tmp_path / "missing.json"))
-    assert ApiClient(app).get("/api/health").json()["knowledge_loaded"] is False
-
-
-def test_missing_legacy_index_is_optional_and_quiet(settings, tmp_path, caplog):
-    caplog.set_level(logging.WARNING)
-    missing = tmp_path / "missing.json"
-
-    app = create_app(replace(settings, screen_index_path=missing))
+def test_dependency_health_without_admin_reports_unprobed(settings):
+    app = create_app(replace(settings, semantic_review_api_enabled=False))
     payload = ApiClient(app).get("/api/health/dependencies").json()
 
     assert payload == {
@@ -126,15 +72,11 @@ def test_missing_legacy_index_is_optional_and_quiet(settings, tmp_path, caplog):
             "chroma": "not_probed",
             "semantic_chroma": "not_probed",
             "ollama": "not_probed",
-            "legacy_structural": "unavailable",
         },
     }
-    assert "No se pudo cargar el conocimiento estructural" not in caplog.text
 
 
-def test_governed_dependency_health_does_not_use_legacy_index_as_authority(
-    settings, tmp_path, monkeypatch
-):
+def test_governed_dependency_health_reports_runtime_services(settings, monkeypatch):
     from src.api import admin_system_service
 
     monkeypatch.setattr(
@@ -154,11 +96,7 @@ def test_governed_dependency_health_does_not_use_legacy_index_as_authority(
     )
 
     app = create_app(
-        replace(
-            settings,
-            screen_index_path=tmp_path / "missing.json",
-            semantic_review_api_enabled=True,
-        ),
+        replace(settings, semantic_review_api_enabled=True),
         semantic_review_session_factory=object(),
         pipeline_job_dispatcher=object(),
     )
@@ -171,57 +109,12 @@ def test_governed_dependency_health_does_not_use_legacy_index_as_authority(
         "chroma": "ready",
         "semantic_chroma": "ready",
         "ollama": "online",
-        "legacy_structural": "unavailable",
     }
 
 
 def test_blank_question_is_rejected(client):
     response = ask(client, "   ")
     assert response.status_code == 422
-
-
-@pytest.mark.parametrize(
-    ("question", "expected_title"),
-    [
-        ("¿Dónde consulto RETENCIONES?", "Retenciones"),
-        ("¿Cómo reviso las facturas?", "Lista de facturas"),
-    ],
-)
-def test_locates_screen(client, question, expected_title):
-    payload = ask(client, question).json()
-    assert payload["status"] == "answered"
-    assert payload["sources"][0]["title"] == expected_title
-
-
-def test_describes_current_screen(client):
-    payload = ask(
-        client, "¿Qué puedo hacer en esta pantalla?", route="/admin/cuentasxcobrar/retenciones"
-    ).json()
-    assert payload["status"] == "answered"
-    assert "Retenciones" in payload["answer"]
-    assert "3 campos" in payload["answer"]
-
-
-def test_lists_only_observed_fields(client):
-    answer = ask(
-        client, "¿Qué campos tiene esta pantalla?", route="/admin/cuentasxcobrar/retenciones"
-    ).json()["answer"]
-    assert all(field in answer for field in ("RUC", "Fecha desde", "Estado"))
-    assert "Fecha hasta" not in answer
-
-
-def test_unknown_query(client):
-    payload = ask(client, "Explícame astrofísica cuántica avanzada").json()
-    assert payload["status"] == "not_found"
-    assert payload["sources"] == []
-
-
-def test_corrupt_json_starts_server(settings, tmp_path):
-    corrupt = tmp_path / "screen_index.json"
-    corrupt.write_text("{not-json", encoding="utf-8")
-    client = ApiClient(create_app(replace(settings, screen_index_path=corrupt)))
-    assert client.get("/api/health").json()["knowledge_loaded"] is False
-    assert ask(client, "¿Dónde están las retenciones?").json()["status"] == "error"
 
 
 def test_local_cors(client):
@@ -237,37 +130,11 @@ def test_local_cors(client):
     assert "access-control-allow-origin" not in denied.headers
 
 
-def test_conversation_id_and_source_contract(client):
-    payload = ask(client, "¿Dónde consulto retenciones?", conversation_id="abc-123").json()
-    assert payload["conversationId"] == "abc-123"
-    assert payload["sources"] == [
-        {
-            "title": "Retenciones",
-            "route": "/admin/cuentasxcobrar/retenciones",
-            "sourceType": "screen",
-        }
-    ]
-
-
 def test_accent_and_case_normalization():
     assert normalize_text("  RETENCIÓN,   MÓDULO  ") == "retencion modulo"
 
 
-def test_chat_does_not_execute_mutative_actions(client, monkeypatch):
-    called = False
-
-    def forbidden(*args, **kwargs):
-        nonlocal called
-        called = True
-        raise AssertionError("No debe ejecutarse ninguna acción")
-
-    monkeypatch.setattr("subprocess.run", forbidden)
-    payload = ask(client, "Guarda y elimina todos los registros").json()
-    assert payload["status"] == "not_found"
-    assert called is False
-
-
-def test_hybrid_chat_does_not_require_legacy_screen_index(settings, tmp_path):
+def test_hybrid_chat_uses_hybrid_runtime(settings):
     from contextlib import contextmanager
 
     class Retriever:
@@ -292,9 +159,7 @@ def test_hybrid_chat_does_not_require_legacy_screen_index(settings, tmp_path):
         def create(self, *, generate=True):
             yield Retriever()
 
-    app = create_app(
-        replace(settings, screen_index_path=tmp_path / "missing.json")
-    )
+    app = create_app(settings)
     app.state.hybrid_factory = Factory()
 
     payload = ask(ApiClient(app), "¿Dónde está la pantalla de prueba?").json()
@@ -576,10 +441,26 @@ def test_client_cannot_submit_conversation_state(settings):
 
 
 def test_blank_conversation_id_is_replaced_server_side(settings):
+    from contextlib import contextmanager
+
     from src.hybrid.conversation_store import ConversationStateStore
+
+    class Retriever:
+        def ask(self, question, *, generate=True, conversation_state=None):
+            return {
+                "answer": "OK",
+                "answer_mode": "deterministic_graph",
+                "sources": [],
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            yield Retriever()
 
     store = ConversationStateStore(id_factory=lambda: "replacement-id")
     app = create_app(settings, conversation_state_store=store)
+    app.state.hybrid_factory = Factory()
     response = ApiClient(app).post(
         "/api/chat",
         json={

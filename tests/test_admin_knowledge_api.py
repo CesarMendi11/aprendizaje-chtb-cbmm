@@ -43,7 +43,7 @@ def admin_api(tmp_path):
     engine = create_engine(f"sqlite+pysqlite:///{database}")
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
-    settings = replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True)
+    settings = replace(ApiSettings(), semantic_review_api_enabled=True)
     yield Client(create_app(settings, semantic_review_session_factory=factory)), factory, engine
     engine.dispose()
 
@@ -287,7 +287,7 @@ def test_tree_disabled_and_remote_blocked(tmp_path, admin_api):
     index = tmp_path / "disabled.json"
     index.write_text('{"screens": []}', encoding="utf-8")
     disabled = Client(
-        create_app(replace(ApiSettings(), screen_index_path=index)),
+        create_app(ApiSettings()),
     )
     assert disabled.get("/api/admin/knowledge-tree").status_code == 404
     assert "/api/admin/knowledge-tree" not in disabled.get("/openapi.json").json()["paths"]

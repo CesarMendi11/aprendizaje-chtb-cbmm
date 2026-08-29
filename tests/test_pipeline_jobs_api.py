@@ -82,7 +82,7 @@ class FakeDispatcher:
 def api(tmp_path):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    settings = replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True)
+    settings = replace(ApiSettings(), semantic_review_api_enabled=True)
     database_path = tmp_path / "pipeline_jobs.sqlite3"
     engine = create_engine(f"sqlite+pysqlite:///{database_path}")
     Base.metadata.create_all(engine)
@@ -334,7 +334,7 @@ def test_pipeline_job_api_is_hidden_when_admin_api_is_disabled(tmp_path):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=False)
+        replace(ApiSettings(), semantic_review_api_enabled=False)
     )
     client = Client(app)
     assert client.get("/api/admin/pipeline-jobs").status_code == 404

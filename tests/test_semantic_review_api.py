@@ -59,9 +59,7 @@ class Client:
 def api(tmp_path, monkeypatch):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    settings = replace(
-        ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True
-    )
+    settings = replace(ApiSettings(), semantic_review_api_enabled=True)
     database_path = tmp_path / "semantic_review.sqlite3"
     engine = create_engine(f"sqlite+pysqlite:///{database_path}")
     Base.metadata.create_all(engine)
@@ -242,7 +240,7 @@ def test_disabled_by_default_and_absent_from_openapi(tmp_path):
     index = tmp_path / "index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=False)
+        replace(ApiSettings(), semantic_review_api_enabled=False)
     )
     client = Client(app)
     assert client.get("/api/admin/semantic-proposals").status_code == 404

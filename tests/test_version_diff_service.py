@@ -483,7 +483,7 @@ def test_diff_api_filters_paginates_and_uses_admin_errors(tmp_path):
     with factory() as session:
         _, candidate_id, _ = seed(session, tmp_path)
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True),
+        replace(ApiSettings(), semantic_review_api_enabled=True),
         semantic_review_session_factory=factory,
     )
     client = Client(app)

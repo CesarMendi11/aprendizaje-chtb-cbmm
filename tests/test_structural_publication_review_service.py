@@ -369,7 +369,7 @@ def test_publication_review_api_lists_and_bulk_approves_pending_package(tmp_path
         version_id = str(seeded["version"].id)
 
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True),
+        replace(ApiSettings(), semantic_review_api_enabled=True),
         semantic_review_session_factory=factory,
     )
     client = Client(app)

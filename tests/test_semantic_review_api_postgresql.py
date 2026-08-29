@@ -41,7 +41,6 @@ def pg_api(pg_engine, tmp_path):
     factory = sessionmaker(bind=pg_engine, expire_on_commit=False)
     settings = replace(
         ApiSettings(),
-        screen_index_path=index,
         semantic_review_api_enabled=True,
         semantic_review_allow_remote=False,
     )

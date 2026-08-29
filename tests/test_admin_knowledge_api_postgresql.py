@@ -69,7 +69,7 @@ def test_postgresql_admin_tree_isolated_paginated_visible_and_read_only(tmp_path
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True),
+        replace(ApiSettings(), semantic_review_api_enabled=True),
         semantic_review_session_factory=factory,
     )
     client = Client(app)

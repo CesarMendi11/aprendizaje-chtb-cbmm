@@ -252,7 +252,7 @@ def test_removal_review_api_prepare_review_history_and_stale_revision(tmp_path):
     with factory() as session:
         _, candidate_id = partial_candidate(session, tmp_path)
     app = create_app(
-        replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True),
+        replace(ApiSettings(), semantic_review_api_enabled=True),
         semantic_review_session_factory=factory,
     )
     client = Client(app)

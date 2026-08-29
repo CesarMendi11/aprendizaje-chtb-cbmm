@@ -43,7 +43,7 @@ class Client:
 def api(tmp_path):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    settings = replace(ApiSettings(), screen_index_path=index, semantic_review_api_enabled=True)
+    settings = replace(ApiSettings(), semantic_review_api_enabled=True)
     engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'review.sqlite3'}")
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)

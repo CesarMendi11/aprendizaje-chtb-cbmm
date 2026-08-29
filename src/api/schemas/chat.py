@@ -70,5 +70,3 @@ class ChatResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: Literal["erp-assistant-api"] = "erp-assistant-api"
-    knowledge_loaded: bool
-    screens_count: int

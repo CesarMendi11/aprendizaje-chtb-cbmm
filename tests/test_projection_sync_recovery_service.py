@@ -198,7 +198,6 @@ def test_app_lifespan_recovers_projection_jobs_and_shuts_down_dispatcher(tmp_pat
     index.write_text('{"screens": []}', encoding="utf-8")
     settings = replace(
         ApiSettings(),
-        screen_index_path=index,
         semantic_review_api_enabled=True,
     )
     dispatcher = _Dispatcher()

@@ -524,7 +524,6 @@ El proyecto utiliza variables de entorno para credenciales, endpoints y flags op
 Variables relevantes:
 
 ```env
-ERP_ASSISTANT_HYBRID_API=1
 ERP_ASSISTANT_SEMANTIC_REVIEW_API=1
 ERP_ASSISTANT_CRAWL_PROFILE=configs/cbmm.yaml
 
