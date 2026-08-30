@@ -44,7 +44,7 @@
   max-width: 720px;
   margin-bottom: 0;
   color: #64748b;
-  font-size: .86rem;
+  font-size: 0.86rem;
 }
 
 .pipeline-eyebrow,
@@ -52,9 +52,9 @@
 .pipeline-target span,
 .pipeline-artifacts span {
   color: #64748b;
-  font-size: .72rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -80,9 +80,8 @@
 
 .pipeline-actions button:disabled {
   cursor: not-allowed;
-  opacity: .5;
+  opacity: 0.5;
 }
-
 
 .pipeline-actions .pipeline-next {
   border-color: #7c3aed;
@@ -95,7 +94,7 @@
   gap: 9px;
   margin: 0 0 14px;
   color: #64748b;
-  font-size: .78rem;
+  font-size: 0.78rem;
 }
 
 .pipeline-flow span {
@@ -125,7 +124,7 @@
 
 .pipeline-next-step span {
   color: #6d28d9;
-  font-size: .76rem;
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -147,7 +146,7 @@
   margin-bottom: 14px;
   border-radius: 9px;
   padding: 10px 12px;
-  font-size: .82rem;
+  font-size: 0.82rem;
 }
 
 .pipeline-notice {
@@ -165,7 +164,7 @@
 
 .pipeline-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(300px, .8fr);
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.8fr);
   gap: 12px;
 }
 
@@ -188,7 +187,7 @@
   gap: 7px;
   border-radius: 999px;
   padding: 5px 9px;
-  font-size: .75rem;
+  font-size: 0.75rem;
   font-weight: 750;
   white-space: nowrap;
 }
@@ -226,7 +225,7 @@
   flex-wrap: wrap;
   margin-top: 14px;
   color: #64748b;
-  font-size: .78rem;
+  font-size: 0.78rem;
 }
 
 .pipeline-job-meta strong {
@@ -253,10 +252,17 @@
   background: #0e7490;
 }
 
-.pipeline-progress__bar--queued span { width: 10%; }
-.pipeline-progress__bar--succeeded span { width: 100%; }
+.pipeline-progress__bar--queued span {
+  width: 10%;
+}
+.pipeline-progress__bar--succeeded span {
+  width: 100%;
+}
 .pipeline-progress__bar--failed span,
-.pipeline-progress__bar--cancelled span { width: 100%; background: #b91c1c; }
+.pipeline-progress__bar--cancelled span {
+  width: 100%;
+  background: #b91c1c;
+}
 .pipeline-progress__bar--running span {
   width: 34%;
   animation: pipeline-slide 1.4s ease-in-out infinite alternate;
@@ -269,8 +275,14 @@
 }
 
 @keyframes pipeline-slide {
-  from { transform: translateX(-15%); opacity: .6; }
-  to { transform: translateX(195%); opacity: 1; }
+  from {
+    transform: translateX(-15%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(195%);
+    opacity: 1;
+  }
 }
 
 .pipeline-counters {
@@ -297,7 +309,7 @@
 .pipeline-counter span {
   overflow: hidden;
   color: #64748b;
-  font-size: .68rem;
+  font-size: 0.68rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -313,7 +325,7 @@
 .pipeline-artifacts code {
   overflow: hidden;
   color: #334155;
-  font-size: .75rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -322,13 +334,13 @@
   margin: 12px 0 0;
   border-radius: 8px;
   padding: 9px;
-  font-size: .78rem;
+  font-size: 0.78rem;
 }
 
 .pipeline-empty {
   margin: 14px 0 0 !important;
   color: #64748b;
-  font-size: .82rem;
+  font-size: 0.82rem;
 }
 
 .pipeline-job-list {
@@ -356,7 +368,10 @@
   background: #f1f5f9;
 }
 
-.pipeline-job-list > button:disabled { cursor: not-allowed; opacity: .6; }
+.pipeline-job-list > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 
 .pipeline-job-list > button div {
   display: grid;
@@ -367,7 +382,7 @@
 .pipeline-job-list > button div span {
   overflow: hidden;
   color: #64748b;
-  font-size: .68rem;
+  font-size: 0.68rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -443,7 +458,7 @@
   max-width: 760px;
   margin: 5px 0 0;
   color: #64748b;
-  font-size: .82rem;
+  font-size: 0.82rem;
 }
 
 .projection-active-version {
@@ -461,15 +476,15 @@
 .projection-main-label,
 .projection-last > span {
   color: #64748b;
-  font-size: .68rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .projection-active-version code {
   color: #0f172a;
-  font-size: .78rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
@@ -499,7 +514,7 @@
   padding: 4px 8px;
   background: #f1f5f9;
   color: #475569;
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: capitalize;
 }
@@ -551,7 +566,7 @@
 
 .projection-card dt {
   color: #64748b;
-  font-size: .68rem;
+  font-size: 0.68rem;
 }
 
 .projection-card dd {
@@ -581,20 +596,20 @@
 
 .projection-pair span {
   color: #64748b;
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 
 .projection-card > p {
   min-height: 38px;
   margin: 13px 0 0;
   color: #64748b;
-  font-size: .75rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
 .projection-card code {
   color: #334155;
-  font-size: .72rem;
+  font-size: 0.72rem;
 }
 
 .projection-action-row {
@@ -614,7 +629,7 @@
 
 .projection-action-row button:disabled {
   cursor: not-allowed;
-  opacity: .5;
+  opacity: 0.5;
 }
 
 .projection-action-row .projection-job-link {
@@ -672,7 +687,7 @@
   max-width: 760px;
   margin: 0;
   color: #64748b;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .pipeline-target-context {
@@ -695,9 +710,9 @@
 .pipeline-target-context span,
 .pipeline-target-selector > label {
   color: #64748b;
-  font-size: .7rem;
+  font-size: 0.7rem;
   font-weight: 750;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -705,7 +720,7 @@
 .pipeline-target-context code {
   overflow: hidden;
   color: #1e293b;
-  font-size: .78rem;
+  font-size: 0.78rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -750,7 +765,7 @@
   min-height: 18px;
   overflow: hidden;
   color: #64748b;
-  font-size: .72rem;
+  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -773,10 +788,10 @@
 .pipeline-target-selector button:disabled,
 .pipeline-crawl-targets__head button:disabled {
   cursor: not-allowed;
-  opacity: .5;
+  opacity: 0.5;
 }
 
-@media(max-width: 900px) {
+@media (max-width: 900px) {
   .pipeline-target-grid {
     grid-template-columns: 1fr;
   }
