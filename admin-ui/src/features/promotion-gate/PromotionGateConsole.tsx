@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AdminApiError,
-  dataMode,
   getPipelineJobs,
   getPromotionAssessment,
   promoteKnowledgeVersion,
@@ -38,7 +37,7 @@ export function PromotionGateConsole({ onPromoted }: { onPromoted?: () => void |
     versionId: null,
     assessment: null,
     result: null,
-    loading: dataMode === 'live',
+    loading: true,
     submitting: false,
     message: null,
   })
@@ -46,7 +45,6 @@ export function PromotionGateConsole({ onPromoted }: { onPromoted?: () => void |
   const [reason, setReason] = useState('')
 
   const loadImports = useCallback(async () => {
-    if (dataMode !== 'live') return
     setState((old) => ({ ...old, loading: true, message: null }))
     try {
       const response = await getPipelineJobs(100, 'canonical_import')
@@ -76,7 +74,7 @@ export function PromotionGateConsole({ onPromoted }: { onPromoted?: () => void |
 
   useEffect(() => { void loadImports() }, [loadImports])
   useEffect(() => {
-    if (!state.versionId || dataMode !== 'live') return
+    if (!state.versionId) return
     void loadAssessment(state.versionId)
   }, [loadAssessment, state.versionId])
 
@@ -116,10 +114,9 @@ export function PromotionGateConsole({ onPromoted }: { onPromoted?: () => void |
   return <section className="promotion-gate" aria-label="Promotion Gate">
     <div className="promotion-gate__heading">
       <div><span>Promotion Gate</span><h2>Activación gobernada de versión</h2><p>Evalúa el candidate importado y, sólo cuando el gate esté listo, archiva la ACTIVE anterior y activa la nueva versión.</p></div>
-      <button onClick={() => void loadImports()} disabled={dataMode !== 'live' || state.loading}>Actualizar</button>
+      <button onClick={() => void loadImports()} disabled={state.loading}>Actualizar</button>
     </div>
 
-    {dataMode !== 'live' && <div className="promotion-notice">Promotion Gate requiere <code>VITE_ADMIN_API_MODE=live</code>.</div>}
     {state.message && <div className="promotion-message" role="alert">{state.message}</div>}
 
     <div className="promotion-toolbar">

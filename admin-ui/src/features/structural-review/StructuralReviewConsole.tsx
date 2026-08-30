@@ -3,7 +3,6 @@ import {
   AdminApiError,
   approveStructuralReviewItem,
   correctStructuralReviewItem,
-  dataMode,
   getPipelineJobs,
   getStructuralReviewItem,
   getStructuralReviewItems,
@@ -45,7 +44,7 @@ function JsonBlock({ value }: { value: Record<string, unknown> }) {
 }
 
 export function StructuralReviewConsole() {
-  const [state, setState] = useState<ReviewState>({ versions: [], versionId: null, items: [], detail: null, total: 0, counts: {}, loadingVersions: dataMode === 'live', loadingItems: false, loadingDetail: false, submitting: false, message: null })
+  const [state, setState] = useState<ReviewState>({ versions: [], versionId: null, items: [], detail: null, total: 0, counts: {}, loadingVersions: true, loadingItems: false, loadingDetail: false, submitting: false, message: null })
   const [status, setStatus] = useState<FilterStatus>('pending_review')
   const [entityType, setEntityType] = useState('')
   const [search, setSearch] = useState('')
@@ -55,7 +54,6 @@ export function StructuralReviewConsole() {
   const [showCorrection, setShowCorrection] = useState(false)
 
   const loadVersions = useCallback(async () => {
-    if (dataMode !== 'live') return
     setState((old) => ({ ...old, loadingVersions: true, message: null }))
     try {
       const response = await getPipelineJobs(50, 'canonical_import')
@@ -83,7 +81,7 @@ export function StructuralReviewConsole() {
 
   useEffect(() => {
     const versionId = state.versionId
-    if (!versionId || dataMode !== 'live') return
+    if (!versionId) return
     const timer = window.setTimeout(() => void loadItems(versionId, false), 180)
     return () => window.clearTimeout(timer)
   }, [loadItems, state.versionId])
@@ -144,10 +142,9 @@ export function StructuralReviewConsole() {
   return <section className="structural-review" aria-label="Revisión estructural HITL">
     <div className="structural-review__heading">
       <div><span className="structural-eyebrow">HITL estructural</span><h2>Revisión humana del conocimiento</h2><p>Revise la versión importada antes de cualquier publicación. Las decisiones quedan persistidas y no activan ni sincronizan la versión automáticamente.</p></div>
-      <button onClick={() => void loadVersions()} disabled={dataMode !== 'live' || state.loadingVersions}>Actualizar versiones</button>
+      <button onClick={() => void loadVersions()} disabled={state.loadingVersions}>Actualizar versiones</button>
     </div>
 
-    {dataMode !== 'live' && <div className="structural-notice">La revisión estructural requiere <code>VITE_ADMIN_API_MODE=live</code>.</div>}
     {state.message && <div className="structural-error" role="alert">{state.message}</div>}
 
     <div className="structural-toolbar">

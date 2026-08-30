@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AdminApiError,
   approveStructuralPublicationPackage,
-  dataMode,
   getStructuralPublicationReview,
 } from '../../api/client'
 import type {
@@ -55,7 +54,7 @@ export function StructuralPublicationReviewConsole({
   const [state, setState] = useState<State>({
     summary: null,
     selectedKey: null,
-    loading: dataMode === 'live' && Boolean(knowledgeVersionId),
+    loading: Boolean(knowledgeVersionId),
     submitting: false,
     message: null,
     success: null,
@@ -66,7 +65,7 @@ export function StructuralPublicationReviewConsole({
   const [reason, setReason] = useState('')
 
   const load = useCallback(async (offset = 0) => {
-    if (dataMode !== 'live' || !knowledgeVersionId) {
+    if (!knowledgeVersionId) {
       setState((old) => ({
         ...old,
         summary: null,
@@ -174,11 +173,10 @@ export function StructuralPublicationReviewConsole({
         <h2>Cobertura publicable de la ACTIVE</h2>
         <p>Revisa paquetes de la versión ACTIVE y aprueba únicamente elementos pendientes. Los elementos rechazados requieren revisión individual; esta acción no los modifica.</p>
       </div>
-      <button onClick={() => void load(summary?.offset ?? 0)} disabled={dataMode !== 'live' || !knowledgeVersionId || state.loading}>Actualizar</button>
+      <button onClick={() => void load(summary?.offset ?? 0)} disabled={!knowledgeVersionId || state.loading}>Actualizar</button>
     </div>
 
-    {dataMode !== 'live' && <div className="publication-review__notice">Esta operación requiere <code>VITE_ADMIN_API_MODE=live</code>.</div>}
-    {dataMode === 'live' && !knowledgeVersionId && <div className="publication-review__notice">No existe una versión ACTIVE disponible para revisar.</div>}
+    {!knowledgeVersionId && <div className="publication-review__notice">No existe una versión ACTIVE disponible para revisar.</div>}
     {state.message && <div className="publication-review__message" role="alert">{state.message}</div>}
     {state.success && <div className="publication-review__success" role="status">{state.success}</div>}
 

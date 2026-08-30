@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AdminApiError, approveSemanticProposal, correctSemanticProposal, createSemanticInferenceJob, dataMode, getPipelineJob, rejectSemanticProposal } from '../../api/client'
+import { AdminApiError, approveSemanticProposal, correctSemanticProposal, createSemanticInferenceJob, getPipelineJob, rejectSemanticProposal } from '../../api/client'
 import type { AdminProposalSummary, NetworkTraceEvidence, PipelineJobDetail, ScreenPurposeInference, ScreenReviewContextResponse } from '../../types/admin'
 import { EmptyState } from '../../components/EmptyState'
 import { StatusBadge } from '../../components/StatusBadge'
@@ -59,8 +59,8 @@ export function ScreenDetail({ context, onNavigate, onRefresh, mode = 'full' }: 
   const proposal = context.active_proposal
   const proposalStatus = proposal?.summary.current_review_status ?? null
   const proposalFresh = proposal ? proposal.evidence_matches_current_structure !== false : true
-  const reviewable = dataMode === 'live' && proposalStatus === 'pending_review' && proposalFresh
-  const inferenceAllowed = dataMode === 'live' && ['approved', 'corrected'].includes(context.screen.structural_review_status) && context.semantic_state === 'no_proposal'
+  const reviewable = proposalStatus === 'pending_review' && proposalFresh
+  const inferenceAllowed = ['approved', 'corrected'].includes(context.screen.structural_review_status) && context.semantic_state === 'no_proposal'
 
   useEffect(() => { setTab(defaultTab) }, [mode, defaultTab])
 
@@ -178,7 +178,7 @@ function SemanticGovernancePanel({ context, proposalFresh, reviewer, reason, cor
   const inferenceRunning = inferenceJob && ['queued', 'running'].includes(inferenceJob.status)
   return <section className="semantic-governance" aria-label="Gobierno semántico">
     <div className="semantic-governance__head"><div><p className="eyebrow">HITL SEMÁNTICO</p><h2>Inferencia y revisión humana</h2><p>El executor decide determinísticamente entre generar, heredar o reinferir; solo una propuesta nueva pendiente requiere una decisión HITL local.</p></div><div className="semantic-governance__status"><span>Identidad verificada</span><strong>No · RBAC pendiente</strong></div></div>
-    {!proposal && <div className="semantic-inference-launch"><div><strong>Sin propuesta semántica</strong><p>{inferenceAllowed ? 'La estructura está aprobada. El lifecycle decidirá carry-forward, reinferencia o generación sobre evidencia segura.' : 'El lifecycle requiere estructura aprobada/corregida, versión activa y modo live.'}</p></div><button className="semantic-button semantic-button--primary" disabled={!inferenceAllowed || Boolean(inferenceRunning)} onClick={onInfer}>{inferenceRunning ? 'Ejecutando…' : 'Ejecutar lifecycle semántico'}</button></div>}
+    {!proposal && <div className="semantic-inference-launch"><div><strong>Sin propuesta semántica</strong><p>{inferenceAllowed ? 'La estructura está aprobada. El lifecycle decidirá carry-forward, reinferencia o generación sobre evidencia segura.' : 'El lifecycle requiere estructura aprobada/corregida y versión activa.'}</p></div><button className="semantic-button semantic-button--primary" disabled={!inferenceAllowed || Boolean(inferenceRunning)} onClick={onInfer}>{inferenceRunning ? 'Ejecutando…' : 'Ejecutar lifecycle semántico'}</button></div>}
     {inferenceJob && <div className={`semantic-job semantic-job--${inferenceJob.status}`}><strong>{stageLabel(inferenceJob.stage)}</strong><span>{inferenceJob.progress_percent === null ? inferenceJob.status : `${Math.round(inferenceJob.progress_percent)} %`}</span>{inferenceJob.error_summary && <small>{inferenceJob.error_summary}</small>}</div>}
     {proposal && <>
       <div className="semantic-proposal-summary"><div><span>Estado</span><StatusBadge status={proposal.summary.current_review_status}/></div><div><span>Origen</span><strong>{proposal.summary.lifecycle_origin}</strong></div><div><span>Modelo</span><strong>{proposal.summary.generation_model}</strong></div><div><span>Revisión</span><strong>{proposal.summary.review_revision}</strong></div></div>

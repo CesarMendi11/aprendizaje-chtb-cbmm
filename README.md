@@ -453,11 +453,11 @@ Funciones disponibles en el RC1:
 - 🔎 sincronización Chroma estructural;
 - 🧬 sincronización Semantic Chroma.
 
-Para usar datos reales:
+Para conectar la Admin UI al backend durante desarrollo:
 
 ```env
 # admin-ui/.env.local
-VITE_ADMIN_API_MODE=live
+VITE_ADMIN_API_TARGET=http://127.0.0.1:8000
 ```
 
 > La identidad de revisor disponible en esta etapa es provisional y no equivale a un sistema completo de autenticación/RBAC.

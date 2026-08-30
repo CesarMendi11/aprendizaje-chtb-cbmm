@@ -4,7 +4,6 @@ import {
   confirmRemovalRemove,
   confirmRemovalRetain,
   createCanonicalReconciliationJob,
-  dataMode,
   getPipelineJobs,
   getRemovalReview,
   getRemovalReviewHistory,
@@ -55,7 +54,7 @@ export function RemovalReviewConsole({ onOpenJob }: { onOpenJob?: (jobId: string
     review: null,
     selectedDecisionId: null,
     history: null,
-    loading: dataMode === 'live',
+    loading: true,
     submitting: false,
     message: null,
   })
@@ -63,7 +62,6 @@ export function RemovalReviewConsole({ onOpenJob }: { onOpenJob?: (jobId: string
   const [reason, setReason] = useState('')
 
   const loadImports = useCallback(async () => {
-    if (dataMode !== 'live') return
     setState((old) => ({ ...old, loading: true, message: null }))
     try {
       const response = await getPipelineJobs(100, 'canonical_import')
@@ -113,7 +111,7 @@ export function RemovalReviewConsole({ onOpenJob }: { onOpenJob?: (jobId: string
   useEffect(() => { void loadImports() }, [loadImports])
 
   useEffect(() => {
-    if (!state.candidateVersionId || dataMode !== 'live') return
+    if (!state.candidateVersionId) return
     void loadReview(state.candidateVersionId)
   }, [loadReview, state.candidateVersionId])
 
@@ -193,10 +191,9 @@ export function RemovalReviewConsole({ onOpenJob }: { onOpenJob?: (jobId: string
         <h2>Reconciliación humana de ausencias</h2>
         <p>Una ausencia en un candidate FULL o parcial no prueba eliminación. Confirme retención o eliminación antes de construir el candidate reconciliado final.</p>
       </div>
-      <button onClick={() => void loadImports()} disabled={dataMode !== 'live' || state.loading}>Actualizar</button>
+      <button onClick={() => void loadImports()} disabled={state.loading}>Actualizar</button>
     </div>
 
-    {dataMode !== 'live' && <div className="removal-notice">Removal HITL requiere <code>VITE_ADMIN_API_MODE=live</code>.</div>}
     {state.message && <div className="removal-message" role="alert">{state.message}</div>}
 
     <div className="removal-toolbar">

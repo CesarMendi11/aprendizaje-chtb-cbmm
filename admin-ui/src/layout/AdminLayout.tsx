@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { dataMode } from '../api/client'
 import './admin-layout.css'
 
 export type AdminSection = 'overview' | 'structural' | 'semantic' | 'publication' | 'pipeline'
@@ -59,8 +58,7 @@ export function AdminLayout({ activeSection, onNavigate, erpName, knowledgeVersi
       <div className="admin-topbar__context">
         <div className="admin-context-chip"><span>ERP</span><strong>{erpName}</strong></div>
         <div className="admin-context-chip admin-context-chip--version"><span>Versión activa</span><code>{knowledgeVersion ?? 'No disponible'}</code></div>
-        <span className={`mode mode--${dataMode}`}>{dataMode === 'demo' ? 'Modo demostración' : 'Modo live'}</span>
-        <span className={`admin-api-state admin-api-state--${sourceStatus}`}><i />{sourceStatus === 'ready' ? (dataMode === 'demo' ? 'Snapshot validado' : 'API disponible') : sourceStatus === 'error' ? 'API no disponible' : 'Verificando API'}</span>
+        <span className={`admin-api-state admin-api-state--${sourceStatus}`}><i />{sourceStatus === 'ready' ? 'API disponible' : sourceStatus === 'error' ? 'API no disponible' : 'Verificando API'}</span>
         <button className="admin-reload" onClick={onReload} disabled={reloading} title="Volver a cargar la jerarquía administrativa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2 5M20 5v6h-6"/></svg><span>{reloading ? 'Cargando…' : 'Recargar'}</span></button>
       </div>
     </header>

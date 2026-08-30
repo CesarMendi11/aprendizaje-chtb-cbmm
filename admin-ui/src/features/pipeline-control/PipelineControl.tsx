@@ -9,7 +9,6 @@ import {
   createCrawlJob,
   createNeo4jSyncJob,
   createSemanticSyncJob,
-  dataMode,
   getPipelineJob,
   getPipelineJobs,
   getSystemStatus,
@@ -108,10 +107,9 @@ function ServiceState({ status }: { status: string }) {
 }
 
 export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, refreshToken = 0 }: { view?: 'all' | 'pipeline' | 'publication'; onOpenJob?: (jobId: string) => void; focusJobId?: string | null; refreshToken?: number }) {
-  const [state, setState] = useState<PanelState>({ active: null, recent: [], system: null, loading: dataMode === 'live', launching: false, message: null })
+  const [state, setState] = useState<PanelState>({ active: null, recent: [], system: null, loading: true, launching: false, message: null })
 
   const loadRecent = useCallback(async () => {
-    if (dataMode !== 'live') return
     try {
       const response = await getPipelineJobs(20)
       let system: AdminSystemStatusResponse | null = null
@@ -134,7 +132,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
   const activeId = state.active?.id ?? null
   const activeTerminal = state.active ? terminalStatuses.has(state.active.status) : true
   useEffect(() => {
-    if (dataMode !== 'live' || !activeId || activeTerminal) return
+    if (!activeId || activeTerminal) return
     const timer = window.setInterval(async () => {
       try {
         const detail = await getPipelineJob(activeId)
@@ -155,7 +153,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
   }
 
   const launchCrawl = useCallback(async (payload: CrawlJobRequest) => {
-    if (dataMode !== 'live' || isBusy) return
+    if (isBusy) return
     setState((old) => ({ ...old, launching: true, message: null }))
     try { rememberJob(await createCrawlJob(payload)) }
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
@@ -168,7 +166,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
 
   const launchCanonicalBuild = async () => {
     const source = state.active
-    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'crawl' || source.status !== 'succeeded') return
+    if (isBusy || !source || source.kind !== 'crawl' || source.status !== 'succeeded') return
     setState((old) => ({ ...old, launching: true, message: null }))
     try { rememberJob(await createCanonicalBuildJob({ source_crawl_job_id: source.id })) }
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
@@ -176,7 +174,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
 
   const launchCanonicalMerge = async () => {
     const source = state.active
-    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_build' || !['module', 'screen'].includes(source.scope) || source.status !== 'succeeded') return
+    if (isBusy || !source || source.kind !== 'canonical_build' || !['module', 'screen'].includes(source.scope) || source.status !== 'succeeded') return
     setState((old) => ({ ...old, launching: true, message: null }))
     try { rememberJob(await createCanonicalMergeJob({ source_canonical_job_id: source.id })) }
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
@@ -184,7 +182,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
 
   const launchCanonicalImport = async () => {
     const source = state.active
-    if (dataMode !== 'live' || isBusy || !source || source.status !== 'succeeded') return
+    if (isBusy || !source || source.status !== 'succeeded') return
     if (!['canonical_build', 'canonical_merge', 'canonical_reconciliation'].includes(source.kind)) return
     setState((old) => ({ ...old, launching: true, message: null }))
     try {
@@ -201,14 +199,14 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
     const candidateVersionId = source?.result_payload && typeof source.result_payload.knowledge_version_id === 'string'
       ? source.result_payload.knowledge_version_id
       : source?.knowledge_version_id
-    if (dataMode !== 'live' || isBusy || !source || source.kind !== 'canonical_import' || source.status !== 'succeeded' || !candidateVersionId) return
+    if (isBusy || !source || source.kind !== 'canonical_import' || source.status !== 'succeeded' || !candidateVersionId) return
     setState((old) => ({ ...old, launching: true, message: null }))
     try { rememberJob(await createCanonicalReconciliationJob({ candidate_version_id: candidateVersionId })) }
     catch (error: unknown) { setState((old) => ({ ...old, launching: false, message: errorMessage(error) })) }
   }
 
   const launchProjection = async (kind: 'neo4j_sync' | 'chroma_sync' | 'semantic_sync') => {
-    if (dataMode !== 'live' || isBusy) return
+    if (isBusy) return
     setState((old) => ({ ...old, launching: true, message: null }))
     try {
       const created = kind === 'neo4j_sync'
@@ -232,7 +230,7 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
   }, [])
 
   useEffect(() => {
-    if (dataMode === 'live' && view === 'pipeline' && focusJobId) void selectJob(focusJobId)
+    if (view === 'pipeline' && focusJobId) void selectJob(focusJobId)
   }, [focusJobId, selectJob, view])
 
   const job = state.active
@@ -264,10 +262,10 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
   const neo4jOnline = system?.services.neo4j.status === 'online'
   const chromaReady = system?.services.chroma.status === 'ready'
   const ollamaReady = system?.services.ollama.status === 'online' && system.services.ollama.configured_embedding_model_available === true
-  const canSyncNeo4j = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && neo4jOnline)
+  const canSyncNeo4j = Boolean(!isBusy && activeVersion && postgresqlOnline && neo4jOnline)
   const semanticChromaReady = system?.services.semantic_chroma?.status === 'ready' || system?.services.semantic_chroma?.status === 'unavailable'
-  const canSyncChroma = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && chromaReady && ollamaReady)
-  const canSyncSemantic = Boolean(dataMode === 'live' && !isBusy && activeVersion && postgresqlOnline && chromaReady && semanticChromaReady && ollamaReady)
+  const canSyncChroma = Boolean(!isBusy && activeVersion && postgresqlOnline && chromaReady && ollamaReady)
+  const canSyncSemantic = Boolean(!isBusy && activeVersion && postgresqlOnline && chromaReady && semanticChromaReady && ollamaReady)
   const latestNeo4j = state.recent.find((item) => item.kind === 'neo4j_sync') ?? null
   const latestChroma = state.recent.find((item) => item.kind === 'chroma_sync') ?? null
   const latestSemanticSync = state.recent.find((item) => item.kind === 'semantic_sync') ?? null
@@ -275,18 +273,17 @@ export function PipelineControl({ view = 'all', onOpenJob, focusJobId = null, re
   const showPublication = view !== 'pipeline'
 
   return <section className={`pipeline-console pipeline-console--${view}`} aria-label="Control del pipeline de conocimiento">
-    {dataMode !== 'live' && <div className="pipeline-notice">Modo demostración: los procesos están desactivados. Inicia la Admin UI con <code>VITE_ADMIN_API_MODE=live</code> para operar el pipeline.</div>}
     {state.message && <div className="pipeline-error" role="alert">{state.message}</div>}
     {showPipeline && <>
     <div className="pipeline-console__heading">
       <div><span className="pipeline-eyebrow">Pipeline operativo</span><h2>Construcción de conocimiento</h2><p>Ejecuta crawling, canonicalización e importación staging con trazabilidad persistente. Los runs cortos no reemplazan la versión activa del ERP.</p></div>
       <div className="pipeline-actions">
-        <button className="pipeline-primary" onClick={launchFull} disabled={dataMode !== 'live' || isBusy}>Recorrer ERP completo</button>
-        <button className="pipeline-next" onClick={() => void launchCanonicalBuild()} disabled={dataMode !== 'live' || !canBuild}>Construir canonical</button>
-        <button className="pipeline-next" onClick={() => void launchCanonicalMerge()} disabled={dataMode !== 'live' || !canMerge}>{job?.scope === 'screen' ? 'Fusionar pantalla' : 'Fusionar módulo'}</button>
-        <button className="pipeline-next" onClick={() => void launchCanonicalReconciliation()} disabled={dataMode !== 'live' || !canReconcile}>Reconciliar removals</button>
-        <button className="pipeline-next" onClick={() => void launchCanonicalImport()} disabled={dataMode !== 'live' || !canImport}>Importar a staging</button>
-        <button className="pipeline-refresh" onClick={() => void loadRecent()} disabled={dataMode !== 'live' || state.loading}>Actualizar jobs</button>
+        <button className="pipeline-primary" onClick={launchFull} disabled={isBusy}>Recorrer ERP completo</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalBuild()} disabled={!canBuild}>Construir canonical</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalMerge()} disabled={!canMerge}>{job?.scope === 'screen' ? 'Fusionar pantalla' : 'Fusionar módulo'}</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalReconciliation()} disabled={!canReconcile}>Reconciliar removals</button>
+        <button className="pipeline-next" onClick={() => void launchCanonicalImport()} disabled={!canImport}>Importar a staging</button>
+        <button className="pipeline-refresh" onClick={() => void loadRecent()} disabled={state.loading}>Actualizar jobs</button>
       </div>
     </div>
 

@@ -1,8 +1,4 @@
-import { demoContexts, demoTree } from '../data/demoSnapshot'
 import type { AdminSystemStatusResponse, CanonicalBuildJobRequest, CanonicalImportJobRequest, CanonicalMergeJobRequest, CanonicalReconciliationJobRequest, CrawlJobRequest, KnowledgeTreeResponse, KnowledgeVersionPromoteRequest, KnowledgeVersionPromotionResult, PipelineJobDetail, PipelineJobListResponse, PipelineJobSummary, PromotionAssessment, RemovalReviewHistory, RemovalReviewRequest, RemovalReviewResult, RemovalReviewSet, ScreenReviewContextResponse, SemanticCorrectionRequest, SemanticInferenceJobRequest, SemanticReviewRequest, SemanticReviewResult, StructuralCorrectionRequest, StructuralPublicationApprovalResult, StructuralPublicationApproveRequest, StructuralPublicationReviewPackage, StructuralPublicationReviewSummary, StructuralPublicationScope, StructuralReviewItemDetail, StructuralReviewListResponse, StructuralReviewPackagesResponse, StructuralReviewRequest, StructuralReviewResult } from '../types/admin'
-
-export type DataMode = 'demo' | 'live'
-export const dataMode: DataMode = import.meta.env.VITE_ADMIN_API_MODE === 'live' ? 'live' : 'demo'
 
 export class AdminApiError extends Error {
   constructor(public readonly kind: 'timeout' | 'network' | 'http' | 'invalid_response' | 'not_found', message: string, public readonly status?: number) { super(message); this.name = 'AdminApiError' }
@@ -186,7 +182,6 @@ async function request<T>(path: string, validate: (value: unknown) => value is T
 }
 
 export async function getKnowledgeTree(options: { includeEmptyModules?: boolean } = {}): Promise<KnowledgeTreeResponse> {
-  if (dataMode === 'demo') return Promise.resolve(demoTree)
   const query = new URLSearchParams()
   if (options.includeEmptyModules) query.set('include_empty_modules', 'true')
   const serialized = query.toString()
@@ -195,11 +190,6 @@ export async function getKnowledgeTree(options: { includeEmptyModules?: boolean 
 }
 
 export async function getScreenReviewContext(screenId: string): Promise<ScreenReviewContextResponse> {
-  if (dataMode === 'demo') {
-    const context = demoContexts[screenId]
-    if (!context) throw new AdminApiError('not_found', 'Pantalla no encontrada en el snapshot de demostración.', 404)
-    return Promise.resolve(context)
-  }
   return request(`/api/admin/screens/${encodeURIComponent(screenId)}/review-context`, validContext)
 }
 
@@ -209,19 +199,16 @@ export async function getSystemStatus(): Promise<AdminSystemStatusResponse> {
 
 
 export async function getPipelineJobs(limit = 12, kind?: string): Promise<PipelineJobListResponse> {
-  if (dataMode !== 'live') return { items: [], total: 0, limit, offset: 0, next_offset: null }
   const query = new URLSearchParams({ limit: String(limit) })
   if (kind) query.set('kind', kind)
   return request(`/api/admin/pipeline-jobs?${query.toString()}`, validPipelineJobList)
 }
 
 export async function getPipelineJob(jobId: string): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Los jobs sólo están disponibles en modo live.', 404)
   return request(`/api/admin/pipeline-jobs/${encodeURIComponent(jobId)}`, validPipelineJobDetail)
 }
 
 export async function createCrawlJob(payload: CrawlJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'El crawler sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/crawl', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -230,7 +217,6 @@ export async function createCrawlJob(payload: CrawlJobRequest): Promise<Pipeline
 }
 
 export async function createCanonicalBuildJob(payload: CanonicalBuildJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'El Canonical Builder sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/canonical-build', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -239,7 +225,6 @@ export async function createCanonicalBuildJob(payload: CanonicalBuildJobRequest)
 }
 
 export async function createCanonicalMergeJob(payload: CanonicalMergeJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'El Canonical Merge sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/canonical-merge', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -248,7 +233,6 @@ export async function createCanonicalMergeJob(payload: CanonicalMergeJobRequest)
 }
 
 export async function createCanonicalReconciliationJob(payload: CanonicalReconciliationJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La reconciliación canónica sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/canonical-reconciliation', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -257,7 +241,6 @@ export async function createCanonicalReconciliationJob(payload: CanonicalReconci
 }
 
 export async function createCanonicalImportJob(payload: CanonicalImportJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La importación canónica sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/canonical-import', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -266,7 +249,6 @@ export async function createCanonicalImportJob(payload: CanonicalImportJobReques
 }
 
 export async function createNeo4jSyncJob(): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización con Neo4j sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/neo4j-sync', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -275,7 +257,6 @@ export async function createNeo4jSyncJob(): Promise<PipelineJobDetail> {
 }
 
 export async function createChromaSyncJob(): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización con Chroma sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/chroma-sync', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -285,7 +266,6 @@ export async function createChromaSyncJob(): Promise<PipelineJobDetail> {
 
 
 export async function createSemanticSyncJob(): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La sincronización semántica sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/semantic-sync', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -295,7 +275,6 @@ export async function createSemanticSyncJob(): Promise<PipelineJobDetail> {
 
 
 export async function createSemanticInferenceJob(payload: SemanticInferenceJobRequest): Promise<PipelineJobDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La inferencia semántica sólo puede ejecutarse en modo live.')
   return request('/api/admin/pipeline-jobs/semantic-inference', validPipelineJobDetail, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -304,7 +283,6 @@ export async function createSemanticInferenceJob(payload: SemanticInferenceJobRe
 }
 
 async function postSemanticReviewAction(semanticId: string, action: string, payload: SemanticReviewRequest | SemanticCorrectionRequest): Promise<SemanticReviewResult> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La revisión semántica sólo puede operar en modo live.')
   return request(`/api/admin/semantic-proposals/${encodeURIComponent(semanticId)}/${action}`, validSemanticReviewResult, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -326,7 +304,6 @@ export interface StructuralReviewListQuery {
 }
 
 export async function getStructuralReviewItems(queryInput: StructuralReviewListQuery): Promise<StructuralReviewListResponse> {
-  if (dataMode !== 'live') return { items: [], status_counts: {}, total: 0, limit: queryInput.limit ?? 100, offset: queryInput.offset ?? 0, next_offset: null }
   const query = new URLSearchParams({
     knowledge_version_id: queryInput.knowledgeVersionId,
     limit: String(queryInput.limit ?? 100),
@@ -340,7 +317,6 @@ export async function getStructuralReviewItems(queryInput: StructuralReviewListQ
 
 
 export async function getStructuralReviewPackages(candidateVersionId: string): Promise<StructuralReviewPackagesResponse> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Los paquetes de revisión sólo están disponibles en modo live.', 404)
   const query = new URLSearchParams({ changed_only: 'true', limit: '200', offset: '0' })
   return request(`/api/admin/knowledge-versions/${encodeURIComponent(candidateVersionId)}/review-packages?${query.toString()}`, validStructuralReviewPackages)
 }
@@ -356,13 +332,6 @@ export async function getStructuralPublicationReview(
   knowledgeVersionId: string,
   queryInput: StructuralPublicationReviewQuery = {},
 ): Promise<StructuralPublicationReviewSummary> {
-  if (dataMode !== 'live') {
-    throw new AdminApiError(
-      'not_found',
-      'La revisión de cobertura de publicación sólo está disponible en modo live.',
-      404,
-    )
-  }
   const query = new URLSearchParams({
     pending_only: String(queryInput.pendingOnly ?? false),
     limit: String(queryInput.limit ?? 50),
@@ -379,9 +348,6 @@ export async function approveStructuralPublicationPackage(
   knowledgeVersionId: string,
   payload: StructuralPublicationApproveRequest,
 ): Promise<StructuralPublicationApprovalResult> {
-  if (dataMode !== 'live') {
-    throw new AdminApiError('http', 'La revisión de cobertura de publicación sólo puede operar en modo live.')
-  }
   return request(
     `/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/publication-review-packages/approve-pending`,
     validStructuralPublicationApprovalResult,
@@ -394,12 +360,10 @@ export async function approveStructuralPublicationPackage(
 }
 
 export async function getStructuralReviewItem(itemId: string): Promise<StructuralReviewItemDetail> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'La revisión estructural sólo está disponible en modo live.', 404)
   return request(`/api/admin/structural-review/items/${encodeURIComponent(itemId)}`, validStructuralReviewDetail)
 }
 
 async function postStructuralReviewAction(itemId: string, action: string, payload: StructuralReviewRequest | StructuralCorrectionRequest): Promise<StructuralReviewResult> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'La revisión estructural sólo puede operar en modo live.')
   return request(`/api/admin/structural-review/items/${encodeURIComponent(itemId)}/${action}`, validStructuralReviewResult, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -414,7 +378,6 @@ export const correctStructuralReviewItem = (itemId: string, payload: StructuralC
 
 
 export async function prepareRemovalReview(candidateVersionId: string): Promise<RemovalReviewSet> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'Removal HITL sólo puede operar en modo live.')
   return request(`/api/admin/removal-reconciliation-reviews/${encodeURIComponent(candidateVersionId)}/prepare`, validRemovalReviewSet, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -422,12 +385,10 @@ export async function prepareRemovalReview(candidateVersionId: string): Promise<
 }
 
 export async function getRemovalReview(candidateVersionId: string): Promise<RemovalReviewSet> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Removal HITL sólo está disponible en modo live.', 404)
   return request(`/api/admin/removal-reconciliation-reviews/${encodeURIComponent(candidateVersionId)}`, validRemovalReviewSet)
 }
 
 async function postRemovalReviewAction(decisionId: string, action: string, payload: RemovalReviewRequest): Promise<RemovalReviewResult> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'Removal HITL sólo puede operar en modo live.')
   return request(`/api/admin/removal-reconciliation-reviews/decisions/${encodeURIComponent(decisionId)}/${action}`, validRemovalReviewResult, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -440,17 +401,14 @@ export const confirmRemovalRemove = (decisionId: string, payload: RemovalReviewR
 export const resetRemovalDecision = (decisionId: string, payload: RemovalReviewRequest) => postRemovalReviewAction(decisionId, 'reset', payload)
 
 export async function getRemovalReviewHistory(decisionId: string): Promise<RemovalReviewHistory> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Removal HITL sólo está disponible en modo live.', 404)
   return request(`/api/admin/removal-reconciliation-reviews/decisions/${encodeURIComponent(decisionId)}/history`, validRemovalReviewHistory)
 }
 
 export async function getPromotionAssessment(knowledgeVersionId: string): Promise<PromotionAssessment> {
-  if (dataMode !== 'live') throw new AdminApiError('not_found', 'Promotion Gate sólo está disponible en modo live.', 404)
   return request(`/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/promotion-assessment`, validPromotionAssessment)
 }
 
 export async function promoteKnowledgeVersion(knowledgeVersionId: string, payload: KnowledgeVersionPromoteRequest): Promise<KnowledgeVersionPromotionResult> {
-  if (dataMode !== 'live') throw new AdminApiError('http', 'Promotion Gate sólo puede operar en modo live.')
   return request(`/api/admin/knowledge-versions/${encodeURIComponent(knowledgeVersionId)}/promote`, validPromotionResult, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

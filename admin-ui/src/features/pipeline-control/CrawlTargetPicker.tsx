@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AdminApiError, dataMode, getKnowledgeTree } from '../../api/client'
+import { AdminApiError, getKnowledgeTree } from '../../api/client'
 import type {
   CrawlJobRequest,
   KnowledgeTreeErp,
@@ -59,14 +59,13 @@ export function CrawlTargetPicker({ disabled, onLaunch }: {
   onLaunch: (payload: CrawlJobRequest) => void
 }) {
   const [tree, setTree] = useState<KnowledgeTreeResponse | null>(null)
-  const [loading, setLoading] = useState(dataMode === 'live')
+  const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState<string | null>(null)
   const [erpId, setErpId] = useState('')
   const [moduleId, setModuleId] = useState('')
   const [screenId, setScreenId] = useState('')
 
   const loadTargets = useCallback(async () => {
-    if (dataMode !== 'live') return
     setLoading(true)
     setMessage(null)
     try {
@@ -99,7 +98,7 @@ export function CrawlTargetPicker({ disabled, onLaunch }: {
   }, [moduleId, modules, screenId, screens])
 
   const selectedScreen = screens.find((option) => option.screen.screen_id === screenId)?.screen ?? null
-  const partialDisabled = disabled || loading || !erp || dataMode !== 'live'
+  const partialDisabled = disabled || loading || !erp
 
   const launchModule = () => {
     if (!erp || !moduleId || partialDisabled) return
@@ -130,13 +129,13 @@ export function CrawlTargetPicker({ disabled, onLaunch }: {
         <h3>Seleccionar target desde PostgreSQL ACTIVE</h3>
         <p>MODULE y SCREEN se fijan a la versión activa seleccionada. El frontend no acepta rutas o IDs escritos manualmente.</p>
       </div>
-      <button className="pipeline-refresh" onClick={() => void loadTargets()} disabled={loading || dataMode !== 'live'}>
+      <button className="pipeline-refresh" onClick={() => void loadTargets()} disabled={loading}>
         {loading ? 'Cargando targets…' : 'Actualizar targets'}
       </button>
     </div>
 
     {message && <div className="pipeline-error" role="alert">{message}</div>}
-    {dataMode === 'live' && !loading && !erp && <div className="pipeline-notice">
+    {!loading && !erp && <div className="pipeline-notice">
       No existe una versión ACTIVE con módulos/pantallas publicables. Ejecuta un FULL bootstrap y promoción antes de usar crawls parciales.
     </div>}
 

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AdminApiError,
   approveStructuralReviewItem,
-  dataMode,
   getPipelineJobs,
   getStructuralReviewItem,
   getStructuralReviewPackages,
@@ -40,14 +39,13 @@ export function StructuralReviewPackagesConsole() {
   const [candidateDetail, setCandidateDetail] = useState<StructuralReviewItemDetail | null>(null)
   const [reviewerId, setReviewerId] = useState('')
   const [reason, setReason] = useState('Revisión agrupada del Screen Review Package.')
-  const [loading, setLoading] = useState(dataMode === 'live')
+  const [loading, setLoading] = useState(true)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
   const loadVersions = useCallback(async () => {
-    if (dataMode !== 'live') return
     setLoading(true)
     setMessage(null)
     try {

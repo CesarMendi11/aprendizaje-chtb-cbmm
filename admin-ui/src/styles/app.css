@@ -63,14 +63,10 @@ button{cursor:pointer}
   font-size:12px}
 .provisional{color:#bcd0d9;
   margin-right:4px}
-.mode,.source{border-radius:999px;
+.source{border-radius:999px;
   padding:7px 10px;
   font-weight:650;
   white-space:nowrap}
-.mode--demo{background:#f1d087;
-  color:#483508}
-.mode--live{background:#cce5ee;
-  color:#123d50}
 .source{background:#ffffff12;
   border:1px solid #ffffff20}
 .source i{display:inline-block;
