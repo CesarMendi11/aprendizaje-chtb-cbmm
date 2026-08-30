@@ -410,7 +410,7 @@ La auditoría del crawl post-hardening verificó:
 Herramienta de auditoría:
 
 ```bash
-python -m scripts.audit_artifact_privacy --help
+python -m scripts.audit.audit_artifact_privacy --help
 ```
 
 ### Trust boundaries
@@ -564,17 +564,17 @@ docker compose --env-file .env up -d
 
 ```bash
 python -m dotenv run -- \
-python -m scripts.database_status
+python -m scripts.status.database_status
 
 python -m dotenv run -- \
-python -m scripts.neo4j_status
+python -m scripts.status.neo4j_status
 ```
 
 ### 5. API
 
 ```bash
 python -m dotenv run -- \
-python -m scripts.run_api
+python -m scripts.runtime.run_api
 ```
 
 API local:
@@ -633,7 +633,7 @@ python -m compileall -q src scripts
 
 ```bash
 python -m dotenv run -- \
-python -m scripts.run_m3_9_conversational_matrix \
+python -m scripts.certification.run_m3_9_conversational_matrix \
   --output ~/Downloads/m3-report.json
 ```
 
@@ -649,7 +649,7 @@ failed=0
 
 ```bash
 python -m dotenv run -- \
-python -m scripts.sync_approved_to_chroma \
+python -m scripts.pipeline.sync_approved_to_chroma \
   --knowledge-version bc4fc5135e34f92e \
   --dry-run \
   --pretty
@@ -673,7 +673,16 @@ collection: erp_assistant_knowledge_v1
 ├── admin-ui/                  # Consola React/Vite de administración
 ├── configs/                   # Perfiles del ERP y políticas
 ├── data/                      # Artefactos y persistencias locales
-├── scripts/                   # Operación, auditoría y certificación
+├── scripts/                   # Entry points y herramientas CLI
+│   ├── runtime/               # Arranque de procesos
+│   ├── pipeline/              # Operaciones manuales M1/M2
+│   ├── status/                # Estado de infraestructura
+│   ├── inspect/               # Inspección y diagnóstico
+│   ├── audit/                 # Auditoría y validación
+│   ├── tools/                 # Consultas y utilidades manuales
+│   ├── operations/            # Bootstrap/operación de infraestructura
+│   ├── certification/         # Matrices y certificación
+│   └── common/                # Helpers exclusivos de CLI
 ├── src/
 │   ├── analysis/              # Safe Evidence, elegibilidad, prompts, generación
 │   ├── api/                   # FastAPI y contratos HTTP
@@ -682,7 +691,20 @@ collection: erp_assistant_knowledge_v1
 │   ├── knowledge/             # Crawl, canonicalización, validación y privacidad
 │   ├── pipeline/              # Ejecutores de PipelineJob
 │   └── vectorstore/           # Chroma y clientes Ollama
-├── tests/                     # Suite automatizada
+├── tests/                     # Suite automatizada por dominio
+│   ├── api/                   # Contratos HTTP/FastAPI
+│   ├── config/                # Settings y perfiles
+│   ├── crawler/               # Crawling, eventos, estados y evidencia
+│   ├── canonical/             # Conocimiento canónico
+│   ├── database/              # Modelos/migraciones PostgreSQL
+│   ├── governance/            # Revisión, promoción y reconciliación
+│   ├── hybrid/                # M3 / Hybrid Graph RAG
+│   ├── pipeline/              # Jobs, runner y executors
+│   ├── projections/           # Neo4j / Chroma
+│   ├── semantic/              # Inferencia y lifecycle semántico
+│   ├── scripts/               # Herramientas CLI
+│   ├── architecture/          # Fronteras y generalización
+│   └── fixtures/              # Fixtures compartidos
 ├── docker-compose.postgres.yml
 ├── docker-compose.yml
 ├── pyproject.toml

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 
-from scripts.database_common import database_engine
 from src.config.chroma_settings import ChromaSettings
 from src.config.neo4j_settings import Neo4jSettings
-from src.database.session import session_scope
+from src.database.session import database_engine, session_scope
 from src.graph.client import Neo4jClient
 from src.vectorstore import ChromaRepository, OllamaEmbeddingClient, SemanticChromaRepository
 from src.vectorstore.ollama_generation import OllamaGenerationClient

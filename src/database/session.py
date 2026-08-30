@@ -19,6 +19,10 @@ def create_engine_from_settings(
     return create_engine(url, **kwargs)
 
 
+def database_engine(settings: DatabaseSettings | None = None) -> Engine:
+    return create_engine_from_settings(settings or DatabaseSettings())
+
+
 @contextmanager
 def session_scope(engine: Engine) -> Iterator[Session]:
     factory = sessionmaker(bind=engine, expire_on_commit=False)
