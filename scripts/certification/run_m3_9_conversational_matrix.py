@@ -79,7 +79,12 @@ CANONICAL_ID_PREFIXES = (
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MATRIX_PATH = ROOT / "configs" / "m3_9_conversational_matrix.json"
+DEFAULT_MATRIX_PATH = (
+    ROOT
+    / "tests"
+    / "certification"
+    / "m3_9_conversational_matrix.json"
+)
 
 
 def load_matrix(path: Path | str) -> tuple[Scenario, ...]:
