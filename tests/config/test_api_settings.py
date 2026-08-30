@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from src.config.api_settings import ApiSettings
-from src.config.pipeline_settings import PipelineSettings
+from src.config.pipeline_settings import PROJECT_ROOT, PipelineSettings
 
 
 def test_api_settings_centralize_runtime_environment(monkeypatch):
@@ -17,5 +17,5 @@ def test_pipeline_settings_centralize_pipeline_environment(monkeypatch):
 
     settings = PipelineSettings()
 
-    assert settings.crawl_profile_path == Path("configs/custom.yaml")
-    assert settings.runs_root == Path("data/runs/custom")
+    assert settings.crawl_profile_path == (PROJECT_ROOT / Path("configs/custom.yaml")).resolve()
+    assert settings.runs_root == (PROJECT_ROOT / Path("data/runs/custom")).resolve()

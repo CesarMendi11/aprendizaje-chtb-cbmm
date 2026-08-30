@@ -543,7 +543,10 @@ Las credenciales de PostgreSQL, Neo4j, ERP y cualquier proveedor externo deben m
 ```bash
 cd ~/Desktop/aprendizaje-chtb-cbmm
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
+
+`pyproject.toml` es la fuente de verdad de dependencias Python; `requirements.txt` se conserva como entrada compatible para desarrollo local.
 
 ### 2. PostgreSQL
 
@@ -555,7 +558,8 @@ docker compose --env-file .env \
 ### 3. Neo4j
 
 ```bash
-docker compose --env-file .env up -d
+docker compose --env-file .env \
+  -f docker-compose.neo4j.yml up -d
 ```
 
 > Los dos compose files pueden reportar servicios “orphan” del otro stack. No usar `--remove-orphans` de forma automática, porque podría detener servicios que pertenecen al otro compose.
@@ -706,7 +710,7 @@ collection: erp_assistant_knowledge_v1
 │   ├── architecture/          # Fronteras y generalización
 │   └── fixtures/              # Fixtures compartidos
 ├── docker-compose.postgres.yml
-├── docker-compose.yml
+├── docker-compose.neo4j.yml
 ├── pyproject.toml
 └── README.md
 ```
