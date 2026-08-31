@@ -6,9 +6,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from src.config.profile_loader import ProfileLoader
-from src.discovery.event_candidate_discovery import EventCandidateDiscovery
-from src.policy.route_policy import RoutePolicy
+from erp_assistant.config.profile_loader import ProfileLoader
+from erp_assistant.acquisition.discovery.event_candidate_discovery import EventCandidateDiscovery
+from erp_assistant.acquisition.policy.route_policy import RoutePolicy
 
 
 def parse_args() -> argparse.Namespace:

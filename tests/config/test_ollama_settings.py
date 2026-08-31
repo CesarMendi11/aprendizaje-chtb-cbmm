@@ -1,6 +1,6 @@
 import pytest
 
-from src.config.ollama_settings import (
+from erp_assistant.config.ollama_settings import (
     OllamaConfigurationError,
     OllamaEmbeddingSettings,
 )

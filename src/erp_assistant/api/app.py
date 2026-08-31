@@ -1,0 +1,182 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from erp_assistant.api.routes import chat, health
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.config.pipeline_settings import PipelineSettings
+from erp_assistant.retrieval.conversation_store import ConversationStateStore
+from erp_assistant.retrieval.factory import HybridRetrieverFactory
+
+
+def create_app(
+    settings: ApiSettings | None = None,
+    *,
+    semantic_review_session_factory: Callable | None = None,
+    pipeline_job_dispatcher=None,
+    conversation_state_store: ConversationStateStore | None = None,
+) -> FastAPI:
+    settings = settings or ApiSettings()
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if settings.semantic_review_api_enabled:
+            from erp_assistant.orchestration.pipeline.recovery import (
+                ProjectionSyncRecoveryService,
+            )
+
+            session_factory = getattr(app.state, "semantic_review_session_factory", None)
+            if session_factory is not None:
+                try:
+                    with session_factory.begin() as session:
+                        result = ProjectionSyncRecoveryService(session).recover_orphaned_jobs()
+                    app.state.projection_sync_recovery = result.as_dict()
+                except Exception as exc:
+                    app.state.projection_sync_recovery = {
+                        "pipeline_jobs_failed": 0,
+                        "sync_jobs_failed": 0,
+                        "error": type(exc).__name__,
+                    }
+        try:
+            yield
+        finally:
+            if settings.semantic_review_api_enabled:
+                dispatcher = getattr(app.state, "pipeline_job_dispatcher", None)
+                shutdown = getattr(dispatcher, "shutdown", None)
+                if callable(shutdown):
+                    shutdown()
+
+    app = FastAPI(
+        title="ERP Assistant API",
+        version="0.1.0",
+        docs_url="/api/docs",
+        redoc_url=None,
+        lifespan=lifespan,
+    )
+    app.state.settings = settings
+    app.state.hybrid_factory = HybridRetrieverFactory()
+    app.state.conversation_state_store = (
+        conversation_state_store or ConversationStateStore()
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.cors_origins),
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+    )
+    app.include_router(health.router, prefix="/api", tags=["health"])
+    app.include_router(chat.router, prefix="/api", tags=["chat"])
+    if settings.semantic_review_api_enabled:
+        app.description = (
+            "Incluye una API administrativa local provisional de revisión semántica. "
+            "Está desactivada por defecto y reviewer_id es declarado por el cliente; "
+            "no constituye autenticación ni RBAC. Por defecto sólo acepta clientes "
+            "loopback; ERP_ASSISTANT_SEMANTIC_REVIEW_ALLOW_REMOTE=1 permite acceso remoto "
+            "únicamente para desarrollo controlado y no agrega autenticación."
+        )
+        from sqlalchemy.exc import DBAPIError
+        from sqlalchemy.orm import sessionmaker
+
+        from erp_assistant.api.routes.admin_knowledge import router as admin_knowledge_router
+        from erp_assistant.api.routes.admin_system import router as admin_system_router
+        from erp_assistant.api.routes.pipeline_jobs import router as pipeline_jobs_router
+        from erp_assistant.api.routes.removal_reconciliation_plans import (
+            router as removal_reconciliation_plans_router,
+        )
+        from erp_assistant.api.routes.removal_reconciliation_reviews import (
+            router as removal_reconciliation_reviews_router,
+        )
+        from erp_assistant.api.routes.semantic_review import (
+            AdminSemanticApiError,
+            admin_semantic_error_handler,
+            admin_validation_error_handler,
+        )
+        from erp_assistant.api.routes.semantic_review import (
+            router as semantic_review_router,
+        )
+        from erp_assistant.api.routes.structural_publication_review import (
+            router as structural_publication_review_router,
+        )
+        from erp_assistant.api.routes.structural_review import router as structural_review_router
+        from erp_assistant.api.routes.structural_review_packages import (
+            router as structural_review_packages_router,
+        )
+        from erp_assistant.api.routes.version_diff import router as version_diff_router
+        from erp_assistant.api.routes.version_promotion import router as version_promotion_router
+        from erp_assistant.config.database_settings import DatabaseSettings
+        from erp_assistant.persistence.postgres.session import create_engine_from_settings
+
+        if semantic_review_session_factory is None:
+            engine = create_engine_from_settings(DatabaseSettings())
+            semantic_review_session_factory = sessionmaker(
+                bind=engine, expire_on_commit=False
+            )
+            app.state.semantic_review_engine = engine
+        app.state.semantic_review_session_factory = semantic_review_session_factory
+
+        if pipeline_job_dispatcher is None:
+            from erp_assistant.orchestration.pipeline.dispatcher import PipelineJobDispatcher
+
+            pipeline_job_dispatcher = PipelineJobDispatcher(semantic_review_session_factory)
+        app.state.pipeline_job_dispatcher = pipeline_job_dispatcher
+
+        app.state.pipeline_crawl_profile_name = PipelineSettings().crawl_profile_path.stem
+
+        @app.middleware("http")
+        async def sanitize_admin_failures(request: Request, call_next):
+            is_admin = request.url.path.startswith("/api/admin/")
+            client_host = request.client.host if request.client is not None else None
+            if (
+                is_admin
+                and not settings.semantic_review_allow_remote
+                and client_host not in {"127.0.0.1", "::1"}
+            ):
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            try:
+                return await call_next(request)
+            except Exception as exc:
+                if not is_admin:
+                    raise
+                unavailable = isinstance(exc, DBAPIError)
+                return JSONResponse(
+                    status_code=503 if unavailable else 500,
+                    content={
+                        "ok": False,
+                        "error_class": "StorageUnavailableError"
+                        if unavailable
+                        else "UnexpectedAdminApiError",
+                        "category": "storage_unavailable" if unavailable else "internal_error",
+                        "semantic_id": request.path_params.get("semantic_id"),
+                        "current_status": None,
+                        "detail": "El almacenamiento semántico no está disponible."
+                        if unavailable
+                        else "Ocurrió un error administrativo inesperado.",
+                    },
+                )
+
+        app.add_exception_handler(AdminSemanticApiError, admin_semantic_error_handler)
+        app.add_exception_handler(RequestValidationError, admin_validation_error_handler)
+        app.include_router(
+            semantic_review_router,
+            prefix="/api/admin",
+        )
+        app.include_router(admin_knowledge_router, prefix="/api/admin")
+        app.include_router(admin_system_router, prefix="/api/admin")
+        app.include_router(pipeline_jobs_router, prefix="/api/admin")
+        app.include_router(removal_reconciliation_plans_router, prefix="/api/admin")
+        app.include_router(removal_reconciliation_reviews_router, prefix="/api/admin")
+        app.include_router(structural_publication_review_router, prefix="/api/admin")
+        app.include_router(structural_review_router, prefix="/api/admin")
+        app.include_router(structural_review_packages_router, prefix="/api/admin")
+        app.include_router(version_promotion_router, prefix="/api/admin")
+        app.include_router(version_diff_router, prefix="/api/admin")
+    return app
+
+
+app = create_app()

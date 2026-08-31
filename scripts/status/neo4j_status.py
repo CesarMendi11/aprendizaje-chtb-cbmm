@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.config.neo4j_settings import Neo4jSettings
+from erp_assistant.config.neo4j_settings import Neo4jSettings
 
 from scripts.common.database import print_json
 from scripts.common.neo4j import neo4j_client, safe_neo4j_error
@@ -10,7 +10,7 @@ def main():
     settings = Neo4jSettings()
     try:
         with neo4j_client(settings) as client:
-            from src.graph.repository import Neo4jRepository
+            from erp_assistant.projections.neo4j.repository import Neo4jRepository
 
             print_json(
                 {

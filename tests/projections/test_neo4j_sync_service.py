@@ -4,13 +4,15 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
-from src.database.base import Base
-from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
-from src.database.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
-from src.database.services import CanonicalImportService, KnowledgeReviewService, Neo4jSyncService
-from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
-from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
+import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
+from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 

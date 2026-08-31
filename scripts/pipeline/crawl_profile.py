@@ -6,9 +6,9 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from src.browser.navigator import ERPNavigator
-from src.config.profile_loader import ProfileLoader
-from src.crawler.route_crawler import RouteCrawler
+from erp_assistant.acquisition.browser.navigator import ERPNavigator
+from erp_assistant.config.profile_loader import ProfileLoader
+from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
 
 
 def parse_args() -> argparse.Namespace:

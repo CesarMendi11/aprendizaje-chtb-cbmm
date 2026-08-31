@@ -5,20 +5,20 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from src.analysis.generation.errors import (
+from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceReferenceError,
     InferenceSchemaError,
     InferenceUnsupportedActionError,
 )
-from src.analysis.generation.screen_purpose_generation import (
+from erp_assistant.semantic.generation.screen_purpose_generation import (
     GeneratedCapabilityDraft,
     ScreenPurposeGenerationDraft,
     build_deterministic_purpose_summary,
     build_screen_purpose_generation_schema,
     parse_generation_draft,
 )
-from src.analysis.schemas import ActionGroundingHint, ScreenPurposeGroundingPlan
+from erp_assistant.semantic.schemas import ActionGroundingHint, ScreenPurposeGroundingPlan
 
 
 def hint(action, refs, *, narrative_rule="direct_allowed"):

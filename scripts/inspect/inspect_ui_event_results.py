@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from src.config.profile_loader import ProfileLoader
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 TIMESTAMP_RE = re.compile(r"_(\d{8}_\d{6})_uncertainty\.json$")

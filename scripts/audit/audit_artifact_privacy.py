@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlsplit
 
-from src.knowledge.canonical.privacy import (
+from erp_assistant.structural.canonical.privacy import (
     PERSISTED_DROP_KEYS,
     PERSISTED_FORBIDDEN_KEYS,
     PERSISTED_ROUTE_KEYS,

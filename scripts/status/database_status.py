@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from sqlalchemy import func, select, text
 
-from src.database.enums import KnowledgeVersionStatus, SyncStatus
-from src.database.models import (
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, SyncJob
 )
-from src.database.session import session_scope
+from erp_assistant.persistence.postgres.session import session_scope
 
 from scripts.common.database import database_engine, print_json
 

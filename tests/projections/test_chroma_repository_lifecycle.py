@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.vectorstore import ChromaRepository
+from erp_assistant.projections.chroma.structural_repository import ChromaRepository
 
 
 class FakeCollection:

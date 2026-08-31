@@ -11,22 +11,22 @@ import sqlalchemy as sa
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from src.analysis.prompts import (
+from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
 )
-from src.analysis.schemas import (
+from erp_assistant.semantic.schemas import (
     ControlEvidence,
     GeneratedScreenPurposeCandidate,
     ModuleEvidence,
     ScreenEvidencePackage,
     ScreenPurposeInference,
 )
-from src.analysis.workflows import ScreenPurposeProposalWorkflow
-from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import (
+from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -34,9 +34,9 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.database.services.semantic_payloads import canonical_json_hash
-from src.database.services.semantic_review_service import SemanticReviewService
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
 

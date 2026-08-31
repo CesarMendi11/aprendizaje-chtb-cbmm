@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.config.chroma_settings import ChromaSettings, PROJECT_ROOT
+from erp_assistant.config.chroma_settings import ChromaSettings, PROJECT_ROOT
 
 
 def test_chroma_settings_resolve_relative_environment_path(monkeypatch):

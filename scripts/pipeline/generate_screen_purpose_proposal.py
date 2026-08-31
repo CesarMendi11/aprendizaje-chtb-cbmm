@@ -7,8 +7,8 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from erp_assistant.config.paths import PROJECT_ROOT
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -18,16 +18,16 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from src.analysis.evidence import ScreenEvidenceBuilder
-from src.analysis.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
-from src.analysis.generation.errors import ScreenPurposeGenerationError
-from src.analysis.workflows import ScreenPurposeProposalWorkflow
-from src.config.database_settings import DatabaseSettings
-from src.database.enums import KnowledgeVersionStatus
-from src.database.models import KnowledgeItem, KnowledgeVersionRecord
-from src.database.services.semantic_exceptions import SemanticDomainError
-from src.knowledge.canonical.enums import ReviewStatus
-from src.vectorstore.ollama_generation import OllamaGenerationSettings
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.semantic.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
+from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
+from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
+from erp_assistant.config.database_settings import DatabaseSettings
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.semantic.services.semantic_exceptions import SemanticDomainError
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.integrations.ollama.generation import OllamaGenerationSettings
 
 
 class CLIError(RuntimeError):

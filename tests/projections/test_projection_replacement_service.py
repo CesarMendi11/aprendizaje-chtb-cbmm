@@ -6,15 +6,18 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import (
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeVersionPromotion,
     KnowledgeVersionRecord,
 )
-from src.database.services import ProjectionReplacementError, ProjectionReplacementService
+from erp_assistant.projections.replacement_service import (
+    ProjectionReplacementError,
+    ProjectionReplacementService,
+)
 
 
 def _version(erp, *, name: str, status: KnowledgeVersionStatus):

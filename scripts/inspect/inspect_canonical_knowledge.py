@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from src.knowledge.canonical import CanonicalKnowledgeRepository
+from erp_assistant.structural.canonical import CanonicalKnowledgeRepository
 
 ROOT=Path(__file__).resolve().parents[2]
 

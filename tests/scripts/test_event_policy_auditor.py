@@ -1,4 +1,4 @@
-from src.review.event_policy_auditor import build_event_policy_audit
+from erp_assistant.acquisition.audit.event_policy_auditor import build_event_policy_audit
 
 
 def build_profile() -> dict:

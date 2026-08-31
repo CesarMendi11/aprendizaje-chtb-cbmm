@@ -8,21 +8,22 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
-from src.config.ollama_settings import OllamaEmbeddingSettings
-from src.database.base import Base
-from src.database.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
-from src.database.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
-from src.database.services import (
-    CanonicalImportService,
+import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.config.ollama_settings import OllamaEmbeddingSettings
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.projections.chroma.structural_sync_service import (
     ChromaSyncService,
-    KnowledgeReviewService,
     SafeDocumentBuilder,
 )
-from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
-from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
-from src.vectorstore import ChromaRepository, OllamaEmbeddingClient, OllamaEmbeddingError
-from src.vectorstore.chroma_repository import collection_name, document_id
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.projections.chroma.structural_repository import ChromaRepository
+from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient, OllamaEmbeddingError
+from erp_assistant.projections.chroma.structural_repository import collection_name, document_id
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 

@@ -5,9 +5,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.config.database_settings import DatabaseSettings
-from src.database.base import Base
-import src.database.models  # noqa: F401
+import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.config.database_settings import DatabaseSettings
+from erp_assistant.persistence.postgres.base import Base
 
 config = context.config
 if config.config_file_name:

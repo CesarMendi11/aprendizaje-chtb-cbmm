@@ -12,9 +12,9 @@ from typing import Iterable
 
 import httpx
 
-from src.api.app import create_app
-from src.hybrid.conversation_store import ConversationStateStore
-from src.hybrid.factory import HybridRetrieverFactory
+from erp_assistant.api.app import create_app
+from erp_assistant.retrieval.conversation_store import ConversationStateStore
+from erp_assistant.retrieval.factory import HybridRetrieverFactory
 
 
 @dataclass(frozen=True)

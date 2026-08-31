@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.knowledge.canonical import CanonicalKnowledgeRepository, CanonicalKnowledgeValidator
+from erp_assistant.structural.canonical import CanonicalKnowledgeRepository, CanonicalKnowledgeValidator
 
 ROOT = Path(__file__).resolve().parents[2]
 

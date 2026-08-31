@@ -7,16 +7,16 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from src.analysis.prompts import (
+from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
 )
-from src.analysis.schemas import ControlEvidence, ModuleEvidence, ScreenEvidencePackage
-from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
-from src.database.models import (
+from erp_assistant.semantic.schemas import ControlEvidence, ModuleEvidence, ScreenEvidencePackage
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -24,19 +24,19 @@ from src.database.models import (
     KnowledgeVersionRecord,
     SemanticProposal,
 )
-from src.database.services.semantic_lifecycle_planner import (
+from erp_assistant.semantic.services.semantic_lifecycle_planner import (
     SemanticLifecycleDecision,
     SemanticLifecyclePlanner,
 )
-from src.database.services.semantic_payloads import (
+from erp_assistant.semantic.services.semantic_payloads import (
     canonical_json_hash,
     semantic_evidence_compatibility_hash,
     semantic_evidence_compatibility_payload,
     validated_semantic_evidence_snapshot,
 )
-from src.database.services.semantic_proposal_service import SemanticProposalService
-from src.database.services.semantic_review_service import SemanticReviewService
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
 MODEL = "llama3.2:3b"

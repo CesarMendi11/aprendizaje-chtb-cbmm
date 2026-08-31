@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from src.analysis.generation.errors import (
+from erp_assistant.semantic.generation.errors import (
     EmptyStructuredOutputError,
     OllamaBodyError,
     OllamaHTTPError,
@@ -11,11 +11,11 @@ from src.analysis.generation.errors import (
     OllamaTimeoutError,
     StructuredModeUnsupportedError,
 )
-from src.analysis.generation.ollama_structured_client import (
+from erp_assistant.semantic.generation.ollama_structured_client import (
     MAX_GENERATED_TEXT_BYTES,
     OllamaStructuredGenerationClient,
 )
-from src.vectorstore.ollama_generation import (
+from erp_assistant.integrations.ollama.generation import (
     OllamaGenerationClient,
     OllamaGenerationSettings,
 )

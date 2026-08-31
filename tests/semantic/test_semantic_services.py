@@ -8,15 +8,15 @@ import sqlalchemy as sa
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
-from src.database.base import Base
-from src.database.enums import (
+import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
     KnowledgeVersionStatus,
     SemanticLifecycleOrigin,
     SemanticType,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -24,16 +24,16 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.database.repositories import (
+from erp_assistant.persistence.postgres.repositories import (
     SemanticProposalRepository,
     SemanticReviewActionRepository,
 )
-from src.database.services import (
+from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
-    SemanticProposalService,
-    SemanticReviewService,
 )
-from src.database.services.semantic_exceptions import (
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticEntityTypeError,
     SemanticIdentityCollisionError,
     SemanticLifecycleIntegrityError,
@@ -46,8 +46,8 @@ from src.database.services.semantic_exceptions import (
     SemanticTransitionError,
     SemanticVersionMismatchError,
 )
-from src.database.services.semantic_payloads import canonical_json_hash
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH_A = "a" * 64
 HASH_B = "b" * 64

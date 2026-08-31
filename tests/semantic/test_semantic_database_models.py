@@ -9,22 +9,22 @@ from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
-from src.database.base import Base
-from src.database.enums import (
+import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
     ReviewActionType,
     SemanticLifecycleOrigin,
     SemanticType,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     KnowledgeItem,
     KnowledgeVersionRecord,
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.knowledge.canonical.enums import ReviewStatus
-from src.knowledge.canonical.models import CanonicalKnowledgeBase
-from src.knowledge.canonical.validator import SUPPORTED_SCHEMA_VERSIONS
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
+from erp_assistant.structural.canonical.validator import SUPPORTED_SCHEMA_VERSIONS
 
 HASH = "a" * 64
 
@@ -364,8 +364,8 @@ def test_canonical_and_neo4j_contracts_remain_unchanged():
         "statistics",
     }
     assert SUPPORTED_SCHEMA_VERSIONS == {"1.1.0"}
-    from src.graph.mapper import LABELS
-    from src.graph.repository import RELATIONSHIP_TYPES
+    from erp_assistant.projections.neo4j.mapper import LABELS
+    from erp_assistant.projections.neo4j.repository import RELATIONSHIP_TYPES
 
     assert "semantic_proposal" not in LABELS
     assert "HAS_SEMANTIC_KNOWLEDGE" not in RELATIONSHIP_TYPES

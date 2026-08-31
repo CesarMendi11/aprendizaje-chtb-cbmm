@@ -1,5 +1,5 @@
-from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
-from src.knowledge.canonical.validator import CanonicalKnowledgeValidator
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.validator import CanonicalKnowledgeValidator
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 

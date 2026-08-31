@@ -4,10 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
-from src.database.repositories import KnowledgeRepository
-from src.database.services import EffectiveKnowledgeService, KnowledgeReviewService
-from src.database.services.payloads import review_action_payload
-from src.database.session import session_scope
+from erp_assistant.persistence.postgres.repositories import KnowledgeRepository
+from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
+from erp_assistant.structural.services.payloads import review_action_payload
+from erp_assistant.persistence.postgres.session import session_scope
 
 from scripts.common.database import database_engine, print_json
 

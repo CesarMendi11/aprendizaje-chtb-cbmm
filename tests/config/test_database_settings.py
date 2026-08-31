@@ -1,6 +1,6 @@
 import pytest
 
-from src.config.database_settings import DatabaseConfigurationError, DatabaseSettings
+from erp_assistant.config.database_settings import DatabaseConfigurationError, DatabaseSettings
 
 
 def test_database_url_is_optional_for_api(monkeypatch):

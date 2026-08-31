@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import argparse
 
-from src.config.database_settings import DatabaseConfigurationError, DatabaseSettings
-from src.database.services import CanonicalImportService
-from src.database.session import session_scope
+from erp_assistant.config.database_settings import DatabaseConfigurationError, DatabaseSettings
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.persistence.postgres.session import session_scope
 
 from scripts.common.database import database_engine, print_json, project_path
 

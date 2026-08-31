@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 
-from src.database.services import Neo4jSubsetPlanner
-from src.database.services.neo4j_subset_planner import SCOPES
-from src.database.session import session_scope
-from src.knowledge.canonical.privacy import sanitize_text
+from erp_assistant.projections.neo4j.subset_planner import Neo4jSubsetPlanner
+from erp_assistant.projections.neo4j.subset_planner import SCOPES
+from erp_assistant.persistence.postgres.session import session_scope
+from erp_assistant.structural.canonical.privacy import sanitize_text
 
 from scripts.common.database import database_engine, print_json
 

@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from src.knowledge.crawl_execution_quality import CRAWL_EXECUTION_QUALITY_CONTRACT_VERSION
+from erp_assistant.acquisition.quality import CRAWL_EXECUTION_QUALITY_CONTRACT_VERSION
 
 
 def certified_crawl_quality(

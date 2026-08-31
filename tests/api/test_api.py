@@ -6,9 +6,8 @@ from dataclasses import replace
 import httpx
 import pytest
 
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.knowledge.text_normalizer import normalize_text
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
 
 
 @pytest.fixture
@@ -77,7 +76,7 @@ def test_dependency_health_without_admin_reports_unprobed(settings):
 
 
 def test_governed_dependency_health_reports_runtime_services(settings, monkeypatch):
-    from src.api import admin_system_service
+    from erp_assistant.api import admin_system_service
 
     monkeypatch.setattr(
         admin_system_service,
@@ -128,10 +127,6 @@ def test_local_cors(client):
         headers={"Origin": "https://example.com", "Access-Control-Request-Method": "POST"},
     )
     assert "access-control-allow-origin" not in denied.headers
-
-
-def test_accent_and_case_normalization():
-    assert normalize_text("  RETENCIÓN,   MÓDULO  ") == "retencion modulo"
 
 
 def test_hybrid_chat_uses_hybrid_runtime(settings):
@@ -311,8 +306,8 @@ def test_chat_returns_hybrid_clarification_without_legacy_fallback(settings):
 def test_hybrid_api_persists_governed_state_by_conversation_id(settings):
     from contextlib import contextmanager
 
-    from src.hybrid.conversation_context import ConversationEntity, ConversationState
-    from src.hybrid.conversation_store import ConversationStateStore
+    from erp_assistant.retrieval.conversation_context import ConversationEntity, ConversationState
+    from erp_assistant.retrieval.conversation_store import ConversationStateStore
 
     calls = []
 
@@ -382,8 +377,8 @@ def test_hybrid_api_persists_governed_state_by_conversation_id(settings):
 def test_hybrid_api_generates_conversation_id_when_missing(settings):
     from contextlib import contextmanager
 
-    from src.hybrid.conversation_context import ConversationState
-    from src.hybrid.conversation_store import ConversationStateStore
+    from erp_assistant.retrieval.conversation_context import ConversationState
+    from erp_assistant.retrieval.conversation_store import ConversationStateStore
 
     class Retriever:
         def ask(self, question, *, generate=True, conversation_state=None):
@@ -443,7 +438,7 @@ def test_client_cannot_submit_conversation_state(settings):
 def test_blank_conversation_id_is_replaced_server_side(settings):
     from contextlib import contextmanager
 
-    from src.hybrid.conversation_store import ConversationStateStore
+    from erp_assistant.retrieval.conversation_store import ConversationStateStore
 
     class Retriever:
         def ask(self, question, *, generate=True, conversation_state=None):

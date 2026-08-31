@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.vectorstore.semantic_chroma_repository import (
+from erp_assistant.projections.chroma.semantic_repository import (
     SemanticChromaRepository,
     semantic_collection_name,
     semantic_document_id,

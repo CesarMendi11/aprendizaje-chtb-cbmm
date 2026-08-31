@@ -10,19 +10,19 @@ import sqlalchemy as sa
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
 
-from src.database.enums import (
+from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
     KnowledgeVersionStatus,
     SemanticType,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
     KnowledgeVersionRecord,
     SemanticProposal,
 )
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH_A = "a" * 64
 HASH_B = "b" * 64

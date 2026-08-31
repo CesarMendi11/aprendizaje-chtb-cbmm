@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from src.config.neo4j_settings import Neo4jSettings
-from src.graph.client import Neo4jClient
-from src.graph.repository import Neo4jRepository
-from src.knowledge.canonical.privacy import sanitize_text
+from erp_assistant.config.neo4j_settings import Neo4jSettings
+from erp_assistant.projections.neo4j.client import Neo4jClient
+from erp_assistant.projections.neo4j.repository import Neo4jRepository
+from erp_assistant.structural.canonical.privacy import sanitize_text
 
 
 def neo4j_client(settings: Neo4jSettings | None = None):

@@ -6,12 +6,13 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
+import erp_assistant.persistence.postgres.models  # noqa: F401
 from scripts.audit.audit_generalization import audit
-from src.database.base import Base
-from src.database.models import KnowledgeItem, SyncJob
-from src.database.services import CanonicalImportService, Neo4jSubsetPlanner
-from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.models import KnowledgeItem, SyncJob
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.projections.neo4j.subset_planner import Neo4jSubsetPlanner
+from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
 from tests.fixtures.neo4j_generalization import NOVA_ROUTE, nova_retail_knowledge
 
 
@@ -71,7 +72,7 @@ def test_nova_retail_screen_complete_selects_only_connected_local_knowledge(
     def forbidden_connection(*_args, **_kwargs):
         raise AssertionError("Neo4j no debe ser contactado")
 
-    monkeypatch.setattr("src.graph.client.Neo4jClient.__init__", forbidden_connection)
+    monkeypatch.setattr("erp_assistant.projections.neo4j.client.Neo4jClient.__init__", forbidden_connection)
     report = Neo4jSubsetPlanner(nova_session).plan(NOVA_ROUTE, scope="screen-complete")
     selected_ids = {item["canonical_id"] for item in report["selected_items"]}
     omitted = {item["canonical_id"]: item["reason_code"] for item in report["omitted_items"]}

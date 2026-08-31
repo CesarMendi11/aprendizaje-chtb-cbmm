@@ -1,9 +1,9 @@
 from types import SimpleNamespace
 
-from src.database.services.semantic_retrieval_authorization_service import (
+from erp_assistant.semantic.services.semantic_retrieval_authorization_service import (
     SemanticRetrievalAuthorizationService,
 )
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 
 class ProposalRepo:

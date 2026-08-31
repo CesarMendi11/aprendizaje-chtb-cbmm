@@ -5,7 +5,7 @@ import json
 import pytest
 
 from scripts.pipeline import generate_screen_purpose_proposal as cli
-from src.analysis.generation.errors import InferenceGroundingError
+from erp_assistant.semantic.generation.errors import InferenceGroundingError
 
 
 class Result:

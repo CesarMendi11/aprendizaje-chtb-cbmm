@@ -1,6 +1,6 @@
 from scripts.pipeline.import_canonical_to_postgres import build_parser as import_parser
 from scripts.pipeline.review_knowledge_item import build_parser as review_parser
-from src.database.services.payloads import review_action_payload
+from erp_assistant.structural.services.payloads import review_action_payload
 
 
 def test_import_cli_parsing():

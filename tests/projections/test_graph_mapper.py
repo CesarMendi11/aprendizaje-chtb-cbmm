@@ -1,7 +1,7 @@
 import pytest
 
-from src.graph.mapper import LABELS, GraphMapper, GraphMappingError
-from src.graph.projection_service import GraphProjectionService
+from erp_assistant.projections.neo4j.mapper import LABELS, GraphMapper, GraphMappingError
+from erp_assistant.projections.neo4j.projection_service import GraphProjectionService
 
 PAYLOADS = {
     "erp_system": {

@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import sync_playwright
 
-from src.config.profile_loader import ProfileLoader
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def parse_args() -> argparse.Namespace:

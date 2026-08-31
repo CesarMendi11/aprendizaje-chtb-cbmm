@@ -1,0 +1,484 @@
+from __future__ import annotations
+
+import uuid
+from collections import Counter
+from dataclasses import dataclass
+from enum import StrEnum
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from erp_assistant.persistence.postgres.enums import (
+    KnowledgeVersionStatus,
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
+from erp_assistant.structural.canonical.ids import content_hash
+from erp_assistant.acquisition.quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
+
+from .payloads import structural_review_hash
+
+
+class VersionDiffError(ValueError):
+    """The candidate cannot be proven to be a governed FULL snapshot."""
+
+
+class VersionDiffChangeType(StrEnum):
+    UNCHANGED = "unchanged"
+    MODIFIED = "modified"
+    NEW = "new"
+    REMOVED = "removed"
+
+
+class VersionDiffCandidateOrigin(StrEnum):
+    FULL_CANONICAL = "full_canonical"
+    PARTIAL_MODULE_MERGE = "partial_module_merge"
+    PARTIAL_SCREEN_MERGE = "partial_screen_merge"
+    RECONCILED_FULL = "reconciled_full"
+
+
+@dataclass(frozen=True)
+class VersionDiffItem:
+    change_type: VersionDiffChangeType
+    entity_type: str
+    canonical_id: str
+    active_item_id: str | None
+    candidate_item_id: str | None
+    active_content_hash: str | None
+    candidate_content_hash: str | None
+    active_review_status: str | None
+    candidate_review_status: str | None
+    active_title: str | None
+    candidate_title: str | None
+    active_route: str | None
+    candidate_route: str | None
+
+
+@dataclass(frozen=True)
+class VersionDiff:
+    active_version_id: str
+    active_knowledge_version: str
+    candidate_version_id: str
+    candidate_knowledge_version: str
+    erp_id: str
+    candidate_origin: str
+    totals: dict[str, int]
+    counts_by_entity_type: dict[str, dict[str, int]]
+    items: tuple[VersionDiffItem, ...]
+
+
+class VersionDiffService:
+    """Deterministic, read-only structural diff of ACTIVE against a governed FULL candidate."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def compare(
+        self,
+        candidate_version_id: uuid.UUID | str,
+        *,
+        change_type: VersionDiffChangeType | str | None = None,
+        entity_type: str | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> VersionDiff:
+        candidate_id = self._uuid(candidate_version_id)
+        candidate = self.session.get(KnowledgeVersionRecord, candidate_id)
+        if candidate is None:
+            raise LookupError("KnowledgeVersion no encontrada")
+        if candidate.status != KnowledgeVersionStatus.IMPORTED:
+            raise VersionDiffError("El candidate debe tener status IMPORTED.")
+
+        active_versions = list(
+            self.session.scalars(
+                select(KnowledgeVersionRecord).where(
+                    KnowledgeVersionRecord.erp_id == candidate.erp_id,
+                    KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE,
+                )
+            )
+        )
+        if len(active_versions) != 1:
+            raise VersionDiffError(
+                "Debe existir exactamente una KnowledgeVersion ACTIVE para el ERP."
+            )
+        active = active_versions[0]
+        if active.id == candidate.id:
+            raise VersionDiffError("ACTIVE y candidate deben ser versiones distintas.")
+
+        candidate_origin = self._validate_governed_full_provenance(candidate, active)
+        all_items = self._items(active, candidate)
+        totals, by_type = self._counts(all_items)
+        try:
+            requested_type = VersionDiffChangeType(change_type) if change_type is not None else None
+        except ValueError as exc:
+            raise VersionDiffError("change_type inválido") from exc
+        filtered = tuple(
+            item
+            for item in all_items
+            if (
+                (requested_type is None or item.change_type == requested_type)
+                and (entity_type is None or item.entity_type == entity_type)
+            )
+        )
+        start = max(offset, 0)
+        page = filtered[start:] if limit is None else filtered[start : start + limit]
+        return VersionDiff(
+            active_version_id=str(active.id),
+            active_knowledge_version=active.knowledge_version,
+            candidate_version_id=str(candidate.id),
+            candidate_knowledge_version=candidate.knowledge_version,
+            erp_id=candidate.erp_id,
+            candidate_origin=candidate_origin.value,
+            totals=totals,
+            counts_by_entity_type=by_type,
+            items=page,
+        )
+
+    def _validate_governed_full_provenance(
+        self,
+        candidate: KnowledgeVersionRecord,
+        active: KnowledgeVersionRecord,
+    ) -> VersionDiffCandidateOrigin:
+        import_job = self._origin_import(candidate)
+        parameters = dict(import_job.parameters or {})
+        result = dict(import_job.result_payload or {})
+        if (
+            import_job.erp_id != candidate.erp_id
+            or import_job.target is not None
+            or parameters.get("activation_mode") != "staging_only"
+            or result.get("staging_ready") is not True
+            or result.get("activation_performed") is not False
+            or result.get("knowledge_version") != candidate.knowledge_version
+            or str(result.get("knowledge_version_id") or "") != str(candidate.id)
+        ):
+            raise VersionDiffError(
+                "La provenance canonical_import no demuestra un candidate gobernado."
+            )
+
+        has_canonical_source = "source_canonical_job_id" in parameters
+        has_reconciliation_source = "source_reconciliation_job_id" in parameters
+        if has_canonical_source == has_reconciliation_source:
+            raise VersionDiffError(
+                "El canonical_import debe declarar exactamente una provenance fuente gobernada."
+            )
+        if has_reconciliation_source:
+            return self._validate_reconciled_provenance(
+                import_job,
+                parameters,
+                result,
+                candidate,
+                active,
+            )
+        return self._validate_canonical_provenance(
+            import_job,
+            parameters,
+            result,
+            candidate,
+        )
+
+    def _origin_import(self, candidate: KnowledgeVersionRecord) -> PipelineJob:
+        imports = list(
+            self.session.scalars(
+                select(PipelineJob).where(
+                    PipelineJob.kind == PipelineJobKind.CANONICAL_IMPORT,
+                    PipelineJob.status == PipelineJobStatus.SUCCEEDED,
+                    PipelineJob.knowledge_version_id == candidate.id,
+                )
+            )
+        )
+        origin_imports = [
+            job
+            for job in imports
+            if dict(job.result_payload or {}).get("import_result") == "imported"
+        ]
+        if len(origin_imports) != 1:
+            raise VersionDiffError("La provenance canonical_import gobernada es ausente o ambigua.")
+        return origin_imports[0]
+
+    def _validate_canonical_provenance(
+        self,
+        import_job: PipelineJob,
+        parameters: dict,
+        import_result: dict,
+        candidate: KnowledgeVersionRecord,
+    ) -> VersionDiffCandidateOrigin:
+        if import_job.scope != PipelineJobScope.FULL:
+            raise VersionDiffError(
+                "La provenance canonical_import no demuestra un candidate FULL gobernado."
+            )
+        try:
+            source_id = uuid.UUID(str(parameters.get("source_canonical_job_id")))
+        except (TypeError, ValueError) as exc:
+            raise VersionDiffError("Falta la provenance del canonical fuente.") from exc
+        source = self.session.get(PipelineJob, source_id)
+        if source is None or source.kind not in {
+            PipelineJobKind.CANONICAL_BUILD,
+            PipelineJobKind.CANONICAL_MERGE,
+        }:
+            raise VersionDiffError("La provenance del canonical fuente es inválida.")
+        source_result = dict(source.result_payload or {})
+        try:
+            execution_quality = validate_matching_certified_quality(
+                source_result.get("crawl_execution_quality"),
+                import_result.get("crawl_execution_quality"),
+                parameters.get("expected_crawl_execution_quality"),
+            )
+            validate_certified_quality_source(
+                execution_quality,
+                source_run_id=source_result.get("source_crawl_job_id"),
+                source_scope=source.scope.value,
+                source_target=source.target,
+                check_target=True,
+            )
+        except CrawlExecutionQualityError as exc:
+            raise VersionDiffError(
+                "La provenance del candidate no conserva calidad de crawl certificada."
+            ) from exc
+        if (
+            source.status != PipelineJobStatus.SUCCEEDED
+            or source_result.get("snapshot_mode") != "full"
+            or source_result.get("snapshot_scope") != "full"
+            or source_result.get("knowledge_version") != candidate.knowledge_version
+        ):
+            raise VersionDiffError(
+                "El canonical fuente no demuestra snapshot_mode=full y snapshot_scope=full."
+            )
+        if source.kind == PipelineJobKind.CANONICAL_MERGE:
+            merged_scope = str(source_result.get("merged_from_scope") or "").strip()
+            if merged_scope == "module":
+                return VersionDiffCandidateOrigin.PARTIAL_MODULE_MERGE
+            if merged_scope == "screen":
+                return VersionDiffCandidateOrigin.PARTIAL_SCREEN_MERGE
+            raise VersionDiffError("El canonical_merge fuente no conserva scope parcial válido.")
+        return VersionDiffCandidateOrigin.FULL_CANONICAL
+
+    def _validate_reconciled_provenance(
+        self,
+        import_job: PipelineJob,
+        parameters: dict,
+        import_result: dict,
+        candidate: KnowledgeVersionRecord,
+        active: KnowledgeVersionRecord,
+    ) -> VersionDiffCandidateOrigin:
+        if import_job.scope != PipelineJobScope.VERSION:
+            raise VersionDiffError(
+                "El canonical_import reconciliado debe tener scope=VERSION."
+            )
+        try:
+            source_id = uuid.UUID(str(parameters.get("source_reconciliation_job_id")))
+            raw_id = uuid.UUID(str(parameters.get("raw_candidate_version_id")))
+            base_active_id = uuid.UUID(str(parameters.get("base_active_version_id")))
+        except (TypeError, ValueError) as exc:
+            raise VersionDiffError("La provenance reconciliation del import es inválida.") from exc
+
+        expected_hash = parameters.get("expected_decision_set_hash")
+        if (
+            parameters.get("erp_id") != candidate.erp_id
+            or parameters.get("expected_knowledge_version") != candidate.knowledge_version
+            or not isinstance(expected_hash, str)
+            or not expected_hash
+            or base_active_id != active.id
+            or import_result.get("scope") != "version"
+            or import_result.get("target") is not None
+            or import_result.get("erp_id") != candidate.erp_id
+            or import_result.get("source_reconciliation_job_id") != str(source_id)
+            or import_result.get("raw_candidate_version_id") != str(raw_id)
+            or import_result.get("base_active_version_id") != str(active.id)
+            or import_result.get("base_active_knowledge_version") != active.knowledge_version
+            or import_result.get("decision_set_hash") != expected_hash
+        ):
+            raise VersionDiffError(
+                "El canonical_import reconciliado no conserva los pins gobernados."
+            )
+
+        source = self.session.get(PipelineJob, source_id)
+        if source is None:
+            raise VersionDiffError("El source reconciliation job no existe.")
+        source_parameters = dict(source.parameters or {})
+        source_result = dict(source.result_payload or {})
+        raw = self.session.get(KnowledgeVersionRecord, raw_id)
+        raw_origin = None
+        if raw is not None:
+            try:
+                raw_import = self._origin_import(raw)
+                raw_parameters = dict(raw_import.parameters or {})
+                raw_result = dict(raw_import.result_payload or {})
+                if "source_canonical_job_id" not in raw_parameters:
+                    raise VersionDiffError(
+                        "El RAW candidate reconciliado no conserva provenance canonical."
+                    )
+                raw_origin = self._validate_canonical_provenance(
+                    raw_import,
+                    raw_parameters,
+                    raw_result,
+                    raw,
+                )
+            except VersionDiffError as exc:
+                raise VersionDiffError(
+                    "El RAW candidate reconciliado no conserva calidad/provenance "
+                    "canónica certificada."
+                ) from exc
+        decisions = source_result.get("decisions")
+        if (
+            source.kind != PipelineJobKind.CANONICAL_RECONCILIATION
+            or source.status != PipelineJobStatus.SUCCEEDED
+            or source.scope != PipelineJobScope.VERSION
+            or source.target is not None
+            or source.erp_id != candidate.erp_id
+            or source.knowledge_version_id != raw_id
+            or raw is None
+            or raw.id in {active.id, candidate.id}
+            or raw.status != KnowledgeVersionStatus.IMPORTED
+            or raw.erp_id != candidate.erp_id
+            or raw_origin is None
+            or source_result.get("candidate_origin") != raw_origin.value
+            or source_parameters.get("candidate_version_id") != str(raw_id)
+            or source_parameters.get("candidate_knowledge_version") != raw.knowledge_version
+            or source_parameters.get("active_version_id") != str(active.id)
+            or source_parameters.get("active_knowledge_version") != active.knowledge_version
+            or source_parameters.get("erp_id") != candidate.erp_id
+            or source_result.get("erp_id") != candidate.erp_id
+            or source_result.get("raw_candidate_version_id") != str(raw_id)
+            or source_result.get("raw_candidate_knowledge_version") != raw.knowledge_version
+            or import_result.get("raw_candidate_knowledge_version") != raw.knowledge_version
+            or source_result.get("base_active_version_id") != str(active.id)
+            or source_result.get("base_active_knowledge_version") != active.knowledge_version
+            or source_result.get("knowledge_version") != candidate.knowledge_version
+            or source_result.get("reconciled_knowledge_version") != candidate.knowledge_version
+            or source_result.get("snapshot_mode") != "full"
+            or source_result.get("snapshot_scope") != "full"
+            or source_result.get("unresolved_total") != 0
+            or not isinstance(decisions, list)
+            or source_result.get("decision_set_hash") != expected_hash
+            or content_hash(decisions) != expected_hash
+            or not self._resolved_removal_decisions_valid(source_result, decisions)
+        ):
+            raise VersionDiffError(
+                "El source reconciliation job no demuestra un FULL reconciliado gobernado."
+            )
+        return VersionDiffCandidateOrigin.RECONCILED_FULL
+
+    @staticmethod
+    def _resolved_removal_decisions_valid(source_result: dict, decisions: list) -> bool:
+        allowed = {"retain_from_active", "confirmed_remove"}
+        if any(
+            not isinstance(value, dict)
+            or value.get("decision") not in allowed
+            or value.get("requires_human_review") is not False
+            or not value.get("review_set_id")
+            or not value.get("review_decision_id")
+            or not value.get("review_action_id")
+            or not isinstance(value.get("review_revision"), int)
+            or value["review_revision"] <= 0
+            for value in decisions
+        ):
+            return False
+        review_set_ids = {value["review_set_id"] for value in decisions}
+        if len(review_set_ids) > 1:
+            return False
+        retained = sum(value["decision"] == "retain_from_active" for value in decisions)
+        removed = sum(value["decision"] == "confirmed_remove" for value in decisions)
+        return (
+            source_result.get("retain_from_active_total") == retained
+            and source_result.get("confirmed_removed_total") == removed
+            and len(decisions) == retained + removed
+        )
+
+    def _items(
+        self, active: KnowledgeVersionRecord, candidate: KnowledgeVersionRecord
+    ) -> tuple[VersionDiffItem, ...]:
+        active_by_key = {
+            (item.entity_type, item.canonical_id): item
+            for item in self.session.scalars(
+                select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == active.id)
+            )
+        }
+        candidate_by_key = {
+            (item.entity_type, item.canonical_id): item
+            for item in self.session.scalars(
+                select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == candidate.id)
+            )
+        }
+        result: list[VersionDiffItem] = []
+        for key in sorted(set(active_by_key) | set(candidate_by_key)):
+            active_item = active_by_key.get(key)
+            candidate_item = candidate_by_key.get(key)
+            active_review_hash = (
+                structural_review_hash(active_item.entity_type, active_item.source_payload)
+                if active_item
+                else None
+            )
+            candidate_review_hash = (
+                structural_review_hash(candidate_item.entity_type, candidate_item.source_payload)
+                if candidate_item
+                else None
+            )
+            if active_item is None:
+                kind = VersionDiffChangeType.NEW
+            elif candidate_item is None:
+                kind = VersionDiffChangeType.REMOVED
+            elif active_item.content_hash == candidate_item.content_hash:
+                kind = VersionDiffChangeType.UNCHANGED
+            elif (
+                active_item.source_payload != candidate_item.source_payload
+                and active_review_hash == candidate_review_hash
+            ):
+                # The generated payload changed only in review-irrelevant
+                # provenance/operational fields. A raw hash mismatch over the
+                # exact same source payload remains MODIFIED because that is an
+                # integrity inconsistency, not a provenance refresh.
+                kind = VersionDiffChangeType.UNCHANGED
+            else:
+                kind = VersionDiffChangeType.MODIFIED
+            result.append(
+                VersionDiffItem(
+                    change_type=kind,
+                    entity_type=key[0],
+                    canonical_id=key[1],
+                    active_item_id=str(active_item.id) if active_item else None,
+                    candidate_item_id=str(candidate_item.id) if candidate_item else None,
+                    active_content_hash=active_review_hash,
+                    candidate_content_hash=candidate_review_hash,
+                    active_review_status=(
+                        str(active_item.current_review_status) if active_item else None
+                    ),
+                    candidate_review_status=(
+                        str(candidate_item.current_review_status) if candidate_item else None
+                    ),
+                    active_title=active_item.title if active_item else None,
+                    candidate_title=candidate_item.title if candidate_item else None,
+                    active_route=active_item.route if active_item else None,
+                    candidate_route=candidate_item.route if candidate_item else None,
+                )
+            )
+        return tuple(result)
+
+    @staticmethod
+    def _counts(
+        items: tuple[VersionDiffItem, ...],
+    ) -> tuple[dict[str, int], dict[str, dict[str, int]]]:
+        totals = Counter(item.change_type.value for item in items)
+        by_type: dict[str, Counter[str]] = {}
+        for item in items:
+            by_type.setdefault(item.entity_type, Counter())[item.change_type.value] += 1
+        all_types = tuple(change.value for change in VersionDiffChangeType)
+        return (
+            {kind: totals[kind] for kind in all_types},
+            {
+                entity: {kind: counter[kind] for kind in all_types}
+                for entity, counter in sorted(by_type.items())
+            },
+        )
+
+    @staticmethod
+    def _uuid(value: uuid.UUID | str) -> uuid.UUID:
+        try:
+            return uuid.UUID(str(value))
+        except (TypeError, ValueError) as exc:
+            raise VersionDiffError("candidate_version_id inválido") from exc

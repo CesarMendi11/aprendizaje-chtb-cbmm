@@ -6,16 +6,17 @@ import pytest
 from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
-import src.database.models  # noqa: F401
+import erp_assistant.persistence.postgres.models  # noqa: F401
 from scripts.tools.plan_neo4j_subset import build_parser
-from src.database.base import Base
-from src.database.models import KnowledgeItem, SyncJob
-from src.database.services import CanonicalImportService, Neo4jSubsetPlanner
-from src.database.services.neo4j_subset_planner import SubsetPlanningError
-from src.database.services.payloads import item_content_hash
-from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
-from src.knowledge.canonical.enums import ReviewStatus
-from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.models import KnowledgeItem, SyncJob
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.projections.neo4j.subset_planner import Neo4jSubsetPlanner
+from erp_assistant.projections.neo4j.subset_planner import SubsetPlanningError
+from erp_assistant.structural.services.payloads import item_content_hash
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 ROUTE = "/app/inventory/products"
@@ -442,7 +443,7 @@ def test_planning_is_read_only_does_not_contact_neo4j_or_change_sync_jobs(
     def forbidden_connection(*_args, **_kwargs):
         raise AssertionError("Neo4j no debe ser contactado")
 
-    monkeypatch.setattr("src.graph.client.Neo4jClient.__init__", forbidden_connection)
+    monkeypatch.setattr("erp_assistant.projections.neo4j.client.Neo4jClient.__init__", forbidden_connection)
     report = Neo4jSubsetPlanner(planner_session).plan(ROUTE, scope="screen-complete")
     after_jobs = [
         (str(job.id), str(job.status), job.attempt_count, deepcopy(job.checkpoint))

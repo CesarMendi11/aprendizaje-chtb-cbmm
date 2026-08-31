@@ -1,4 +1,4 @@
-from src.api import admin_system_service
+from erp_assistant.api import admin_system_service
 
 
 def test_system_status_is_ok_when_all_dependencies_are_available(monkeypatch):

@@ -10,8 +10,8 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
-from src.database.models import (
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -19,15 +19,16 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.database.repositories import SemanticProposalRepository
-from src.database.services import SemanticProposalService, SemanticReviewService
-from src.database.services.semantic_exceptions import (
+from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticIdentityCollisionError,
     SemanticPayloadError,
     SemanticRevisionConflictError,
     SemanticVersionMismatchError,
 )
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH_A = "a" * 64
 HASH_B = "b" * 64

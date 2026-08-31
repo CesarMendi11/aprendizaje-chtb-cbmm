@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from src.config.api_settings import ApiSettings
-from src.config.pipeline_settings import PROJECT_ROOT, PipelineSettings
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.config.pipeline_settings import PROJECT_ROOT, PipelineSettings
 
 
 def test_api_settings_centralize_runtime_environment(monkeypatch):

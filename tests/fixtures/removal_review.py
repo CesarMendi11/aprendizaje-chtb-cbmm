@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from src.database.services import RemovalReconciliationReviewService
+from erp_assistant.structural.services.removal_reconciliation_review_service import (
+    RemovalReconciliationReviewService,
+)
 
 
 def resolve_all_removals(

@@ -10,12 +10,13 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.database.base import Base
-from src.database.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
-from src.database.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
-from src.database.services import CanonicalImportService, KnowledgeReviewService
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from tests.fixtures.canonical import exported_fictional_canonical
 from tests.fixtures.crawl_quality import certified_crawl_quality
 
@@ -192,7 +193,7 @@ def test_assessment_and_bootstrap_promotion(api):
 
 
 def test_api_replacement_promotion_archives_previous_active(api):
-    from tests.governance.test_version_diff_service import seed_reconciled
+    from tests.structural.governance.test_version_diff_service import seed_reconciled
 
     client, factory, tmp_path = api
     with factory() as session:

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from src.knowledge.canonical.enums import ControlType, EvidenceType
-from src.knowledge.canonical.models import (
+from erp_assistant.structural.canonical.enums import ControlType, EvidenceType
+from erp_assistant.structural.canonical.models import (
     CanonicalKnowledgeBase,
     Control,
     ERPSystem,

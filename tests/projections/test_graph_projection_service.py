@@ -1,5 +1,5 @@
-from src.graph.mapper import GraphMapper
-from src.graph.repository import Neo4jRepository
+from erp_assistant.projections.neo4j.mapper import GraphMapper
+from erp_assistant.projections.neo4j.repository import Neo4jRepository
 
 
 class FakeClient:

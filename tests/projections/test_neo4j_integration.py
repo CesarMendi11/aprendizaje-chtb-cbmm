@@ -5,10 +5,10 @@ import uuid
 
 import pytest
 
-from src.config.neo4j_settings import Neo4jSettings
-from src.graph.client import Neo4jClient
-from src.graph.mapper import GraphMapper
-from src.graph.repository import Neo4jRepository
+from erp_assistant.config.neo4j_settings import Neo4jSettings
+from erp_assistant.projections.neo4j.client import Neo4jClient
+from erp_assistant.projections.neo4j.mapper import GraphMapper
+from erp_assistant.projections.neo4j.repository import Neo4jRepository
 
 pytestmark = pytest.mark.neo4j
 

@@ -12,11 +12,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from tests.api.test_admin_knowledge_api import HASH, seed_tree
 from tests.api.test_semantic_review_api import Client
 
-from src.api.app import create_app
-from src.api.dependencies import get_admin_read_session
-from src.config.api_settings import ApiSettings
-from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import (
+from erp_assistant.api.app import create_app
+from erp_assistant.api.dependencies import get_admin_read_session
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeVersionRecord,

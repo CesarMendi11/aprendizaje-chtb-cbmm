@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from src.knowledge.canonical import ArtifactLoadError, CanonicalKnowledgeBuilder, CanonicalKnowledgeExporter, CanonicalKnowledgeValidator
+from erp_assistant.structural.canonical import ArtifactLoadError, CanonicalKnowledgeBuilder, CanonicalKnowledgeExporter, CanonicalKnowledgeValidator
 
 ROOT = Path(__file__).resolve().parents[2]
 

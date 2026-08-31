@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.config.profile_loader import ProfileLoader
-from src.review.event_policy_auditor import build_event_policy_audit
+from erp_assistant.config.profile_loader import ProfileLoader
+from erp_assistant.acquisition.audit.event_policy_auditor import build_event_policy_audit
 
 
 def parse_args() -> argparse.Namespace:

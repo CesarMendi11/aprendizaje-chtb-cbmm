@@ -1,0 +1,307 @@
+from __future__ import annotations
+
+import uuid
+from dataclasses import dataclass
+from typing import Any
+
+from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
+from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
+from erp_assistant.acquisition.scope.module_subtree_resolver import (
+    ModuleSubtreeResolutionError,
+    ModuleSubtreeResolver,
+)
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.acquisition.scope.screen_scope_resolver import (
+    ScreenScopeResolutionError,
+    ScreenScopeResolver,
+)
+from erp_assistant.orchestration.pipeline.executors.canonical_build import CanonicalBuildJobExecutor
+from erp_assistant.orchestration.pipeline.executors.canonical_import import CanonicalImportJobExecutor
+from erp_assistant.orchestration.pipeline.executors.canonical_merge import CanonicalMergeJobExecutor
+from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import (
+    CanonicalReconciliationJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.executors.chroma_sync import ChromaSyncJobExecutor
+from erp_assistant.orchestration.pipeline.executors.crawl import CrawlJobExecutor
+from erp_assistant.orchestration.pipeline.executors.neo4j_sync import Neo4jSyncJobExecutor
+from erp_assistant.orchestration.pipeline.executors.semantic_sync import SemanticChromaSyncJobExecutor
+from erp_assistant.orchestration.pipeline.executors.semantic_inference import SemanticInferenceJobExecutor
+
+
+@dataclass(frozen=True)
+class PipelineJobSpec:
+    id: uuid.UUID
+    kind: PipelineJobKind
+    scope: PipelineJobScope
+    target: str | None
+    erp_id: str | None
+    knowledge_version_id: uuid.UUID | None
+    parameters: dict[str, Any]
+
+
+class PipelineJobRunner:
+    """Consume queued jobs and persist progress in short independent transactions."""
+
+    def __init__(
+        self,
+        session_factory,
+        *,
+        crawl_executor: CrawlJobExecutor | None = None,
+        canonical_build_executor: CanonicalBuildJobExecutor | None = None,
+        canonical_import_executor: CanonicalImportJobExecutor | None = None,
+        canonical_merge_executor: CanonicalMergeJobExecutor | None = None,
+        canonical_reconciliation_executor: CanonicalReconciliationJobExecutor | None = None,
+        neo4j_sync_executor: Neo4jSyncJobExecutor | None = None,
+        chroma_sync_executor: ChromaSyncJobExecutor | None = None,
+        semantic_inference_executor: SemanticInferenceJobExecutor | None = None,
+        semantic_sync_executor: SemanticChromaSyncJobExecutor | None = None,
+    ):
+        self.session_factory = session_factory
+        self.executors = {
+            PipelineJobKind.CRAWL: crawl_executor or CrawlJobExecutor(),
+            PipelineJobKind.CANONICAL_BUILD: canonical_build_executor
+            or CanonicalBuildJobExecutor(),
+            PipelineJobKind.CANONICAL_MERGE: canonical_merge_executor
+            or CanonicalMergeJobExecutor(session_factory),
+            PipelineJobKind.CANONICAL_IMPORT: canonical_import_executor
+            or CanonicalImportJobExecutor(session_factory),
+            PipelineJobKind.CANONICAL_RECONCILIATION: canonical_reconciliation_executor
+            or CanonicalReconciliationJobExecutor(session_factory),
+            PipelineJobKind.NEO4J_SYNC: neo4j_sync_executor
+            or Neo4jSyncJobExecutor(session_factory),
+            PipelineJobKind.CHROMA_SYNC: chroma_sync_executor
+            or ChromaSyncJobExecutor(session_factory),
+            PipelineJobKind.SEMANTIC_INFERENCE: semantic_inference_executor
+            or SemanticInferenceJobExecutor(session_factory),
+            PipelineJobKind.SEMANTIC_SYNC: semantic_sync_executor
+            or SemanticChromaSyncJobExecutor(session_factory),
+        }
+
+    def run(self, job_id: uuid.UUID | str) -> None:
+        spec = self._start(job_id)
+        if spec is None:
+            return
+
+        executor = self.executors.get(spec.kind)
+        if executor is None:
+            self._fail(spec.id, RuntimeError(f"Job kind no soportado por el runner: {spec.kind}"))
+            return
+
+        try:
+            execution_parameters = self._execution_parameters(spec)
+            result = executor.execute(
+                job_id=spec.id,
+                scope=spec.scope,
+                target=spec.target,
+                parameters=execution_parameters,
+                progress=lambda stage, payload: self._checkpoint(spec.id, stage, payload),
+            )
+        except Exception as exc:
+            self._fail(spec.id, exc)
+            return
+
+        with self.session_factory.begin() as session:
+            PipelineJobService(session).succeed(
+                spec.id,
+                result_payload=result,
+                stage="completed",
+                erp_id=result.get("erp_id"),
+                knowledge_version_id=result.get("knowledge_version_id"),
+            )
+
+    def _start(self, job_id: uuid.UUID | str) -> PipelineJobSpec | None:
+        with self.session_factory.begin() as session:
+            job = PipelineJobRepository(session).get(job_id, for_update=True)
+            if job is None or job.status != PipelineJobStatus.QUEUED:
+                return None
+            PipelineJobService(session).start(job.id, stage="starting")
+            return PipelineJobSpec(
+                id=job.id,
+                kind=job.kind,
+                scope=job.scope,
+                target=job.target,
+                erp_id=job.erp_id,
+                knowledge_version_id=job.knowledge_version_id,
+                parameters=dict(job.parameters or {}),
+            )
+
+    def _execution_parameters(self, spec: PipelineJobSpec) -> dict[str, Any]:
+        parameters = dict(spec.parameters)
+        if (
+            spec.kind == PipelineJobKind.CANONICAL_IMPORT
+            and parameters.get("source_reconciliation_job_id") is not None
+        ):
+            raw_candidate_version_id = str(
+                parameters.get("raw_candidate_version_id") or ""
+            ).strip()
+            erp_id = str(parameters.get("erp_id") or "").strip()
+            if spec.scope != PipelineJobScope.VERSION or spec.target is not None:
+                raise RuntimeError(
+                    "canonical_import reconciliation requiere scope VERSION sin target"
+                )
+            if spec.knowledge_version_id is None:
+                raise RuntimeError(
+                    "canonical_import reconciliation requiere knowledge_version_id RAW fijado"
+                )
+            try:
+                raw_candidate_id = uuid.UUID(raw_candidate_version_id)
+            except ValueError as exc:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene raw_candidate_version_id inválido"
+                ) from exc
+            if spec.knowledge_version_id != raw_candidate_id:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene "
+                    "raw_candidate_version_id inconsistente"
+                )
+            if not spec.erp_id or spec.erp_id != erp_id:
+                raise RuntimeError(
+                    "canonical_import reconciliation contiene erp_id inconsistente"
+                )
+            return parameters
+        if spec.kind == PipelineJobKind.CANONICAL_RECONCILIATION:
+            candidate_version_id = str(parameters.get("candidate_version_id") or "").strip()
+            erp_id = str(parameters.get("erp_id") or "").strip()
+            if spec.knowledge_version_id is None:
+                raise RuntimeError(
+                    "canonical_reconciliation requiere knowledge_version_id RAW fijado"
+                )
+            if candidate_version_id != str(spec.knowledge_version_id):
+                raise RuntimeError(
+                    "canonical_reconciliation contiene candidate_version_id inconsistente"
+                )
+            if not spec.erp_id:
+                raise RuntimeError("canonical_reconciliation requiere ERP RAW fijado")
+            if erp_id != spec.erp_id:
+                raise RuntimeError("canonical_reconciliation contiene erp_id inconsistente")
+            return parameters
+        if spec.kind != PipelineJobKind.CRAWL or spec.scope not in {
+            PipelineJobScope.MODULE,
+            PipelineJobScope.SCREEN,
+        }:
+            return parameters
+
+        pinned_version_id = spec.knowledge_version_id or parameters.get(
+            "knowledge_version_id"
+        )
+        if pinned_version_id is None:
+            raise RuntimeError(
+                f"El job {spec.scope.value.upper()} no conserva knowledge_version_id fijado"
+            )
+        parameter_version_id = str(parameters.get("knowledge_version_id") or "").strip()
+        if parameter_version_id and parameter_version_id != str(pinned_version_id):
+            raise RuntimeError(
+                f"El job {spec.scope.value.upper()} contiene knowledge_version_id inconsistente"
+            )
+
+        if spec.scope == PipelineJobScope.MODULE:
+            target_module_id = str(
+                parameters.get("target_module_id") or spec.target or ""
+            ).strip()
+            if not target_module_id or target_module_id != str(spec.target or "").strip():
+                raise RuntimeError(
+                    "El job MODULE no conserva un target_module_id consistente"
+                )
+            try:
+                with self.session_factory() as session:
+                    subtree = ModuleSubtreeResolver(session).resolve(
+                        target_module_id,
+                        knowledge_version_id=pinned_version_id,
+                    )
+            except ModuleSubtreeResolutionError as exc:
+                raise RuntimeError(
+                    f"No fue posible validar el scope MODULE fijado: {exc}"
+                ) from exc
+            if spec.erp_id and spec.erp_id != subtree.erp_id:
+                raise RuntimeError("El job MODULE pertenece a un ERP distinto del fijado")
+            parameter_erp_id = str(parameters.get("erp_id") or "").strip()
+            if parameter_erp_id and parameter_erp_id != subtree.erp_id:
+                raise RuntimeError("El job MODULE contiene erp_id inconsistente")
+            parameter_version = str(parameters.get("knowledge_version") or "").strip()
+            if parameter_version and parameter_version != subtree.knowledge_version:
+                raise RuntimeError("El job MODULE contiene knowledge_version inconsistente")
+            parameters.update(
+                {
+                    "target_module_id": subtree.root_module_id,
+                    "knowledge_version_id": str(subtree.knowledge_version_id),
+                    "knowledge_version": subtree.knowledge_version,
+                    "erp_id": subtree.erp_id,
+                    "module_scope": {
+                        "root_module_id": subtree.root_module_id,
+                        "root_module_name": subtree.root_module_name,
+                        "ancestor_module_ids": list(subtree.ancestor_module_ids),
+                        "module_ids": list(subtree.module_ids),
+                        "known_screen_ids": list(subtree.known_screen_ids),
+                        "known_screen_routes": list(subtree.known_screen_routes),
+                        "unroutable_screen_ids": list(subtree.unroutable_screen_ids),
+                        "navigation_path": list(subtree.navigation_path),
+                        "navigation_origin_path": list(subtree.navigation_origin_path),
+                    },
+                }
+            )
+            return parameters
+
+        route = str(spec.target or "").strip()
+        try:
+            with self.session_factory() as session:
+                screen = ScreenScopeResolver(session).resolve(
+                    route,
+                    knowledge_version_id=pinned_version_id,
+                )
+        except ScreenScopeResolutionError as exc:
+            raise RuntimeError(
+                f"No fue posible validar el scope SCREEN fijado: {exc}"
+            ) from exc
+        expected_screen_id = str(parameters.get("target_screen_id") or "").strip()
+        if expected_screen_id and expected_screen_id != screen.screen_id:
+            raise RuntimeError("El job SCREEN contiene target_screen_id inconsistente")
+        if spec.erp_id and spec.erp_id != screen.erp_id:
+            raise RuntimeError("El job SCREEN pertenece a un ERP distinto del fijado")
+        parameter_erp_id = str(parameters.get("erp_id") or "").strip()
+        if parameter_erp_id and parameter_erp_id != screen.erp_id:
+            raise RuntimeError("El job SCREEN contiene erp_id inconsistente")
+        parameter_version = str(parameters.get("knowledge_version") or "").strip()
+        if parameter_version and parameter_version != screen.knowledge_version:
+            raise RuntimeError("El job SCREEN contiene knowledge_version inconsistente")
+        parameters.update(
+            {
+                "target_screen_id": screen.screen_id,
+                "knowledge_version_id": str(screen.knowledge_version_id),
+                "knowledge_version": screen.knowledge_version,
+                "erp_id": screen.erp_id,
+            }
+        )
+        return parameters
+
+    def _checkpoint(self, job_id: uuid.UUID, stage: str, payload: dict[str, Any]) -> None:
+        current = int(payload.get("work_units", 0) or 0)
+        total_value = payload.get("progress_total")
+        total = int(total_value) if total_value is not None else None
+        checkpoint = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"work_units", "progress_total"}
+        }
+        with self.session_factory.begin() as session:
+            job = PipelineJobRepository(session).get(job_id)
+            if job is None or job.status != PipelineJobStatus.RUNNING:
+                return
+            PipelineJobService(session).checkpoint(
+                job_id,
+                stage=stage,
+                progress_current=max(0, current),
+                progress_total=total,
+                checkpoint=checkpoint,
+            )
+
+    def _fail(self, job_id: uuid.UUID, error: Exception) -> None:
+        try:
+            with self.session_factory.begin() as session:
+                job = PipelineJobRepository(session).get(job_id)
+                if job is None or job.status != PipelineJobStatus.RUNNING:
+                    return
+                PipelineJobService(session).fail(job_id, error)
+        except Exception:
+            # El executor puede haber producido artefactos aislados si alcanzó a iniciar.
+            # No se expone un error secundario del worker al hilo de la API.
+            return

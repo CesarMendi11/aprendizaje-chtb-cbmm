@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import uvicorn
 
-from src.config.api_settings import ApiSettings
+from erp_assistant.config.api_settings import ApiSettings
 
 
 def main() -> None:
     settings = ApiSettings()
     uvicorn.run(
-        "src.api.app:app",
+        "erp_assistant.api.app:app",
         host=settings.host,
         port=settings.port,
         reload=settings.reload,

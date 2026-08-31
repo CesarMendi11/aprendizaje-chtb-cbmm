@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +10,7 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from src.analysis.generation.errors import (
+from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceJSONError,
     InferenceNarrativeQualityError,
@@ -20,15 +21,15 @@ from src.analysis.generation.errors import (
     InferenceSensitiveContentError,
     InferenceUnsupportedActionError,
 )
-from src.analysis.generation.ollama_structured_client import StructuredGenerationResponse
-from src.analysis.generation.screen_purpose_service import ScreenPurposeInferenceService
-from src.analysis.prompts import (
+from erp_assistant.semantic.generation.ollama_structured_client import StructuredGenerationResponse
+from erp_assistant.semantic.generation.screen_purpose_service import ScreenPurposeInferenceService
+from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
     build_user_prompt,
 )
-from src.analysis.schemas import (
+from erp_assistant.semantic.schemas import (
     ActionGroundingHint,
     CapabilityClaim,
     ColumnEvidence,
@@ -44,22 +45,22 @@ from src.analysis.schemas import (
     TableEvidence,
     TransitionEvidence,
 )
-from src.analysis.validators import build_grounding_plan, validate_capability_grounding
-from src.database.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.validators import build_grounding_plan, validate_capability_grounding
+from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 
 
 @pytest.mark.parametrize(
     "code",
     [
-        "import src.analysis.validators",
-        "import src.analysis.validators.screen_purpose_grounding_plan",
+        "import erp_assistant.semantic.validators",
+        "import erp_assistant.semantic.validators.screen_purpose_grounding_plan",
         (
-            "from src.analysis.generation import ScreenPurposeInferenceService; "
+            "from erp_assistant.semantic.generation import ScreenPurposeInferenceService; "
             "assert ScreenPurposeInferenceService.__name__ == 'ScreenPurposeInferenceService'"
         ),
         (
-            "from src.analysis.schemas import ScreenEvidencePackage; "
-            "from src.analysis.schemas.screen_purpose_prompt_evidence "
+            "from erp_assistant.semantic.schemas import ScreenEvidencePackage; "
+            "from erp_assistant.semantic.schemas.screen_purpose_prompt_evidence "
             "import ScreenPurposePromptEvidence; "
             "package = ScreenEvidencePackage.model_validate({"
             "'erp_id': 'erp:test', "
@@ -79,9 +80,12 @@ from src.database.services.semantic_payloads import canonical_json_hash
 )
 def test_analysis_import_contract_is_order_independent_in_clean_process(code):
     project_root = Path(__file__).resolve().parents[2]
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(project_root / "src")
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=project_root,
+        env=env,
         capture_output=True,
         text=True,
         check=False,

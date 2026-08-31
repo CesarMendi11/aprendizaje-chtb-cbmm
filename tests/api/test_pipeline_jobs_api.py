@@ -10,28 +10,28 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.database.base import Base
-from src.database.enums import (
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
     KnowledgeVersionStatus,
     SyncStatus,
     SyncTarget,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
     KnowledgeVersionRecord,
     SyncJob,
 )
-from src.database.services import PipelineJobService
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.structural.canonical.enums import ReviewStatus
 from tests.fixtures.crawl_quality import certified_crawl_quality, source_crawl_result
 from tests.fixtures.removal_review import resolve_all_removals
-from tests.governance.test_removal_reconciliation_plan_service import partial_candidate
-from tests.governance.test_version_diff_service import seed as seed_version_diff
+from tests.structural.governance.test_removal_reconciliation_plan_service import partial_candidate
+from tests.structural.governance.test_version_diff_service import seed as seed_version_diff
 
 
 def pinned_source_crawl_result(run_id, *, scope, target):

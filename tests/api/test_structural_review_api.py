@@ -9,12 +9,12 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus
-from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, ReviewAction
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, ReviewAction
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
 

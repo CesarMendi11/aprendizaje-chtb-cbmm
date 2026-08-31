@@ -13,17 +13,21 @@ def test_semantic_import_boundaries_are_acyclic_from_fresh_process():
 import importlib
 
 for name in (
-    'src.analysis.evidence',
-    'src.database.services.semantic_chroma_sync_service',
-    'src.database.services.semantic_retrieval_authorization_service',
-    'src.database.services',
+    'erp_assistant.semantic.evidence',
+    'erp_assistant.projections.chroma.semantic_sync_service',
+    'erp_assistant.semantic.services.semantic_retrieval_authorization_service',
+    'erp_assistant.semantic.services.semantic_proposal_service',
 ):
     importlib.import_module(name)
 """
 
+    env = dict(__import__("os").environ)
+    env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
+
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
+        env=env,
         capture_output=True,
         text=True,
         check=False,

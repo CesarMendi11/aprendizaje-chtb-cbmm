@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import argparse
 
-from src.config.chroma_settings import ChromaSettings
-from src.database.services import ChromaSyncService
-from src.database.session import session_scope
-from src.vectorstore import ChromaRepository, OllamaEmbeddingClient
+from erp_assistant.config.chroma_settings import ChromaSettings
+from erp_assistant.projections.chroma.structural_sync_service import ChromaSyncService
+from erp_assistant.persistence.postgres.session import session_scope
+from erp_assistant.projections.chroma.structural_repository import ChromaRepository
+from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient
 
 from scripts.common.database import database_engine, print_json
 

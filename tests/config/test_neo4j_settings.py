@@ -1,6 +1,6 @@
 import pytest
 
-from src.config.neo4j_settings import Neo4jConfigurationError, Neo4jSettings
+from erp_assistant.config.neo4j_settings import Neo4jConfigurationError, Neo4jSettings
 
 
 def test_missing_neo4j_configuration_is_controlled(monkeypatch):

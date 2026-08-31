@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from src.analysis.eligibility import evaluate_screen_semantic_eligibility
-from src.analysis.schemas import (
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.semantic.schemas import (
     ControlEvidence,
     ModuleEvidence,
     NetworkTraceEvidence,
     ScreenEvidencePackage,
 )
-from src.database.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 
 
 def package(*, primary=True, functional=True):

@@ -22,7 +22,7 @@
 - [¿Qué es Chat-CBMM?](#-qué-es-chat-cbmm)
 - [Principios de diseño](#-principios-de-diseño)
 - [Arquitectura](#-arquitectura)
-- [Capas funcionales: M1, M2 y M3](#-capas-funcionales-m1-m2-y-m3)
+- [Etapas funcionales: M1, M2 y M3](#-etapas-funcionales-m1-m2-y-m3)
 - [Estado certificado del RC1](#-estado-certificado-del-rc1)
 - [Privacidad y límites de confianza](#-privacidad-y-límites-de-confianza)
 - [Admin UI y frontend Angular](#-admin-ui-y-frontend-angular)
@@ -165,7 +165,7 @@ flowchart TD
 
 ---
 
-## 🧠 Capas funcionales: M1, M2 y M3
+## 🧠 Etapas funcionales: M1, M2 y M3
 
 ### M1 — Conocimiento estructural gobernado
 
@@ -617,6 +617,37 @@ El perfil `local` usa `/api` y el proxy de desarrollo apunta al backend local.
 http://localhost:4200
 ```
 
+### 8. Reset local de laboratorio (destructivo)
+
+Para volver a un estado sin conocimiento, jobs ni proyecciones y reconstruir todo desde cero, primero detener ambos stacks:
+
+```bash
+docker compose --env-file .env -f docker-compose.postgres.yml down -v
+docker compose --env-file .env -f docker-compose.neo4j.yml down
+```
+
+Luego eliminar únicamente persistencia regenerable local:
+
+```bash
+rm -rf data
+rm -rf docker/neo4j/data docker/neo4j/logs docker/neo4j/import
+mkdir -p data docker/neo4j/data docker/neo4j/logs docker/neo4j/import
+```
+
+No se elimina `docker/neo4j/plugins/`: contiene infraestructura/plugin software, no conocimiento gobernado.
+
+Después del reset, levantar bases vacías y reconstruir su esquema base:
+
+```bash
+docker compose --env-file .env -f docker-compose.postgres.yml up -d
+docker compose --env-file .env -f docker-compose.neo4j.yml up -d
+
+python -m dotenv run -- alembic upgrade head
+python -m dotenv run -- python -m scripts.operations.bootstrap_neo4j
+```
+
+En ese punto PostgreSQL conserva solo el esquema vacío, Neo4j solo sus constraints/base técnica, y Chroma/data de pipeline todavía no existen. El primer crawl y las posteriores promociones/sincronizaciones vuelven a generar los datos observables paso a paso.
+
 ---
 
 ## 🧪 Pruebas y certificación
@@ -672,48 +703,81 @@ collection: erp_assistant_knowledge_v1
 
 ## 🗂️ Estructura del repositorio
 
+El código productivo usa un `src` layout estándar: `src/` es el directorio fuente y el paquete Python real es `erp_assistant`.
+
 ```text
 .
-├── admin-ui/                  # Consola React/Vite de administración
-├── configs/                   # Perfiles del ERP y políticas
-├── data/                      # Artefactos y persistencias locales
-├── scripts/                   # Entry points y herramientas CLI
-│   ├── runtime/               # Arranque de procesos
-│   ├── pipeline/              # Operaciones manuales M1/M2
-│   ├── status/                # Estado de infraestructura
-│   ├── inspect/               # Inspección y diagnóstico
-│   ├── audit/                 # Auditoría y validación
-│   ├── tools/                 # Consultas y utilidades manuales
-│   ├── operations/            # Bootstrap/operación de infraestructura
-│   ├── certification/         # Matrices y certificación
-│   └── common/                # Helpers exclusivos de CLI
+├── admin-ui/                         # Consola React/Vite de administración
+├── configs/                          # Perfil operativo del ERP
+├── data/                             # Artefactos/runtime local (regenerable)
+├── migrations/                       # Evolución del esquema PostgreSQL (Alembic)
+├── scripts/                          # Entry points y herramientas CLI
+│   ├── runtime/                      # Arranque de procesos
+│   ├── pipeline/                     # Operaciones manuales M1/M2
+│   ├── status/                       # Estado de infraestructura
+│   ├── inspect/                      # Inspección y diagnóstico
+│   ├── audit/                        # Auditoría y validación
+│   ├── tools/                        # Consultas/utilidades manuales
+│   ├── operations/                   # Bootstrap/operación de infraestructura
+│   ├── certification/                # Runners de certificación
+│   └── common/                       # Helpers exclusivos de CLI
 ├── src/
-│   ├── analysis/              # Safe Evidence, elegibilidad, prompts, generación
-│   ├── api/                   # FastAPI y contratos HTTP
-│   ├── database/              # Modelos, repositorios, servicios y lifecycle
-│   ├── hybrid/                # Hybrid Graph RAG
-│   ├── knowledge/             # Crawl, canonicalización, validación y privacidad
-│   ├── pipeline/              # Ejecutores de PipelineJob
-│   └── vectorstore/           # Chroma y clientes Ollama
-├── tests/                     # Suite automatizada por dominio
-│   ├── api/                   # Contratos HTTP/FastAPI
-│   ├── config/                # Settings y perfiles
-│   ├── crawler/               # Crawling, eventos, estados y evidencia
-│   ├── canonical/             # Conocimiento canónico
-│   ├── database/              # Modelos/migraciones PostgreSQL
-│   ├── governance/            # Revisión, promoción y reconciliación
-│   ├── hybrid/                # M3 / Hybrid Graph RAG
-│   ├── pipeline/              # Jobs, runner y executors
-│   ├── projections/           # Neo4j / Chroma
-│   ├── semantic/              # Inferencia y lifecycle semántico
-│   ├── scripts/               # Herramientas CLI
-│   ├── architecture/          # Fronteras y generalización
-│   └── fixtures/              # Fixtures compartidos
+│   └── erp_assistant/
+│       ├── acquisition/              # M1: observar/adquirir evidencia del ERP
+│       │   ├── auth/
+│       │   ├── browser/
+│       │   ├── discovery/
+│       │   ├── extraction/
+│       │   ├── crawling/
+│       │   ├── policy/
+│       │   ├── models/
+│       │   ├── artifacts/
+│       │   ├── scope/
+│       │   └── audit/
+│       ├── structural/               # M1: canonical + gobierno estructural
+│       │   ├── canonical/
+│       │   └── services/
+│       ├── semantic/                 # M2: evidencia, inferencia y gobierno semántico
+│       │   ├── eligibility/
+│       │   ├── evidence/
+│       │   ├── prompts/
+│       │   ├── generation/
+│       │   ├── schemas/
+│       │   ├── validators/
+│       │   ├── workflows/
+│       │   └── services/
+│       ├── retrieval/                # M3: Hybrid Graph RAG y conversación
+│       ├── orchestration/            # PipelineJob, dispatcher, runner y executors
+│       ├── persistence/postgres/     # Autoridad PostgreSQL: modelos/repositorios
+│       ├── projections/              # Proyecciones derivadas
+│       │   ├── neo4j/
+│       │   └── chroma/
+│       ├── integrations/ollama/      # Clientes externos de embeddings/generación
+│       ├── api/                      # FastAPI y contratos HTTP
+│       └── config/                   # Settings y carga de perfiles
+├── tests/
+│   ├── acquisition/
+│   ├── structural/
+│   │   ├── canonical/
+│   │   └── governance/
+│   ├── semantic/
+│   ├── retrieval/
+│   ├── orchestration/
+│   ├── persistence/
+│   ├── projections/
+│   ├── api/
+│   ├── config/
+│   ├── scripts/
+│   ├── architecture/
+│   ├── fixtures/
+│   └── certification/
 ├── docker-compose.postgres.yml
 ├── docker-compose.neo4j.yml
 ├── pyproject.toml
 └── README.md
 ```
+
+Las etiquetas M1/M2/M3 describen etapas funcionales; `orchestration`, `persistence`, `projections`, `api`, `integrations` y `config` son responsabilidades transversales y por eso no se fuerzan dentro de una sola etapa.
 
 ---
 

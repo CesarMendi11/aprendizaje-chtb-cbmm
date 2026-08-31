@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from src.config.profile_loader import ProfileLoader
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def test_profile_loader_loads_cbmm_profile():

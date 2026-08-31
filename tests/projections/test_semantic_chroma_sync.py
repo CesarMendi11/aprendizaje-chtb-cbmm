@@ -7,18 +7,18 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.analysis.schemas import ScreenEvidencePackage
-from src.database.base import Base
-from src.database.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
-from src.database.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
-from src.database.services.semantic_chroma_sync_service import SemanticChromaSyncService
-from src.database.services.semantic_payloads import (
+from erp_assistant.semantic.schemas import ScreenEvidencePackage
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
+from erp_assistant.semantic.services.semantic_payloads import (
     canonical_json_hash,
     validated_semantic_evidence_snapshot,
 )
-from src.database.services.semantic_proposal_service import SemanticProposalService
-from src.database.services.semantic_review_service import SemanticReviewService
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 
 class FakeEvidenceBuilder:

@@ -10,10 +10,10 @@ from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from tests.api.test_semantic_review_api import Client, action_body, seed
 
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.database.models import SemanticProposal, SemanticReviewAction
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.models import SemanticProposal, SemanticReviewAction
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 
 def _test_url() -> str:

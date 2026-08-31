@@ -6,9 +6,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from src.database.session import database_engine
+from erp_assistant.config.paths import PROJECT_ROOT
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from erp_assistant.persistence.postgres.session import database_engine
+
 
 
 def project_path(value: str | Path) -> Path:

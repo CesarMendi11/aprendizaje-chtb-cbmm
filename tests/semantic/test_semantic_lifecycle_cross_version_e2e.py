@@ -7,27 +7,27 @@ import uuid
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
-from src.analysis.prompts import (
+from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
 )
-from src.analysis.schemas import (
+from erp_assistant.semantic.schemas import (
     ControlEvidence,
     GeneratedScreenPurposeCandidate,
     ModuleEvidence,
     ScreenEvidencePackage,
     ScreenPurposeInference,
 )
-from src.database.base import Base
-from src.database.enums import (
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
     KnowledgeVersionStatus,
     SemanticLifecycleOrigin,
     SemanticType,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -36,22 +36,22 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.database.services.semantic_chroma_sync_service import SemanticChromaSyncService
-from src.database.services.semantic_effective_payload_service import (
+from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
+from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
-from src.database.services.semantic_payloads import (
+from erp_assistant.semantic.services.semantic_payloads import (
     canonical_json_hash,
     validated_semantic_evidence_snapshot,
 )
-from src.database.services.semantic_proposal_service import SemanticProposalService
-from src.database.services.semantic_retrieval_authorization_service import (
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_retrieval_authorization_service import (
     SemanticRetrievalAuthorizationService,
 )
-from src.database.services.semantic_review_service import SemanticReviewService
-from src.knowledge.canonical.enums import ReviewStatus
-from src.pipeline.semantic_inference_job_executor import SemanticInferenceJobExecutor
-from src.vectorstore.semantic_chroma_repository import SemanticChromaRepository
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.orchestration.pipeline.executors.semantic_inference import SemanticInferenceJobExecutor
+from erp_assistant.projections.chroma.semantic_repository import SemanticChromaRepository
 
 HASH = "a" * 64
 ERP_ID = "erp:semantic-lifecycle-e2e"

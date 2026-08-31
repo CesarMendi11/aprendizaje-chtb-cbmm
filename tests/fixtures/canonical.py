@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.knowledge.canonical.builder import CanonicalKnowledgeBuilder
-from src.knowledge.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
 
 
 def fictional_profile():

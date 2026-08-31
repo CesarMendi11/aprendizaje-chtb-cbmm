@@ -10,17 +10,17 @@ from sqlalchemy import create_engine, event, func, select, update
 from sqlalchemy.orm import sessionmaker
 from tests.api.test_semantic_review_api import Client
 
-from src.api.admin_knowledge_serializers import semantic_projection
-from src.api.app import create_app
-from src.config.api_settings import ApiSettings
-from src.database.base import Base
-from src.database.enums import (
+from erp_assistant.api.admin_knowledge_serializers import semantic_projection
+from erp_assistant.api.app import create_app
+from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
     KnowledgeVersionStatus,
     SemanticLifecycleOrigin,
     SemanticType,
 )
-from src.database.models import (
+from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
     KnowledgeItem,
@@ -29,8 +29,8 @@ from src.database.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
-from src.database.services.semantic_payloads import canonical_json_hash
-from src.knowledge.canonical.enums import ReviewStatus
+from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
 
@@ -384,9 +384,9 @@ def test_screen_list_pagination_and_review_context(admin_api):
 
 
 def test_comparable_structure_hash_is_order_independent():
-    from src.analysis.schemas import ColumnEvidence, ControlEvidence, FieldEvidence, TableEvidence
-    from src.api.admin_knowledge_serializers import comparable_structure_hash
-    from src.api.schemas.admin_knowledge import ComparableScreenStructure
+    from erp_assistant.semantic.schemas import ColumnEvidence, ControlEvidence, FieldEvidence, TableEvidence
+    from erp_assistant.api.admin_knowledge_serializers import comparable_structure_hash
+    from erp_assistant.api.schemas.admin_knowledge import ComparableScreenStructure
 
     field_a = FieldEvidence(field_id="field:a", label="A", required=False, readonly=False)
     field_b = FieldEvidence(field_id="field:b", label="B", required=False, readonly=False)
@@ -435,14 +435,14 @@ def test_comparable_structure_hash_is_order_independent():
 
 
 def test_current_comparable_uses_safe_evidence_projection():
-    from src.analysis.schemas import (
+    from erp_assistant.semantic.schemas import (
         ControlEvidence,
         EventEvidence,
         TransitionEvidence,
         UIStateEvidence,
     )
-    from src.api.admin_knowledge_serializers import comparable_from_current
-    from src.api.schemas.admin_knowledge import AdminEvidence
+    from erp_assistant.api.admin_knowledge_serializers import comparable_from_current
+    from erp_assistant.api.schemas.admin_knowledge import AdminEvidence
 
     evidence = AdminEvidence(
         evidence_available=True,
