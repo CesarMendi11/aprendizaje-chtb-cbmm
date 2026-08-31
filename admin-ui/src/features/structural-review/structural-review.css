@@ -67,10 +67,9 @@
 }
 .structural-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1.25fr) minmax(130px, 0.7fr) minmax(
-      130px,
-      0.7fr
-    ) minmax(220px, 1.3fr);
+  grid-template-columns:
+    minmax(220px, 1.25fr) minmax(130px, 0.7fr) minmax(130px, 0.7fr)
+    minmax(220px, 1.3fr);
   gap: 10px;
   padding: 16px 24px 10px;
 }
