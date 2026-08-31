@@ -11,6 +11,7 @@ EXPECTED_GROUPS = {
     "audit",
     "certification",
     "common",
+    "experiments",
     "inspect",
     "operations",
     "pipeline",

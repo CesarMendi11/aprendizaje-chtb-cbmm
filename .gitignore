@@ -82,3 +82,7 @@ docker/neo4j/plugins/
 
 # Isolated admin pipeline runs
 data/runs/
+
+# Generated scientific experiment results (may contain institutional evidence)
+experiments/results/*
+!experiments/results/.gitkeep
