@@ -5,6 +5,8 @@ import {
   getScreenReviewContext,
 } from "./api/client";
 import { AdminLayout, type AdminSection } from "./layout/AdminLayout";
+import { PageHeader } from "./components/PageHeader";
+import { StructuralReviewConsole } from "./features/structural-review/StructuralReviewConsole";
 import { OverviewPage } from "./pages/OverviewPage";
 import { StructuralKnowledgePage } from "./pages/StructuralKnowledgePage";
 import { SemanticKnowledgePage } from "./pages/SemanticKnowledgePage";
@@ -127,6 +129,8 @@ export default function App() {
               setSection("pipeline");
             }}
           />
+        ) : tree.status === "ready" ? (
+          <StructuralBootstrapReviewPage />
         ) : (
           <KnowledgeUnavailable state={tree} retry={loadTree} />
         ))}
@@ -151,6 +155,19 @@ export default function App() {
         <PipelinePage focusJobId={pipelineFocusJobId} />
       )}
     </AdminLayout>
+  );
+}
+
+function StructuralBootstrapReviewPage() {
+  return (
+    <section className="admin-page">
+      <PageHeader
+        eyebrow="Conocimiento"
+        title="Revisión estructural inicial"
+        description="Todavía no existe una versión ACTIVE. Revisa el candidate importado requerido por el Promotion Gate para completar el bootstrap gobernado."
+      />
+      <StructuralReviewConsole />
+    </section>
   );
 }
 
