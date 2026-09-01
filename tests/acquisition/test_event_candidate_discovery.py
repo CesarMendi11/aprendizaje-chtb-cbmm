@@ -130,6 +130,59 @@ def test_event_candidate_discovery_detects_collapsable_custom_element():
     assert candidate.dangerous is False
 
 
+def test_collapsable_consultar_prefers_menu_semantics_over_search_label():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "Consultar",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": (
+                    "fuse-vertical-navigation-collapsable-item:nth-of-type(5) "
+                    "> div:nth-of-type(2) "
+                    "> fuse-vertical-navigation-collapsable-item"
+                ),
+                "role": None,
+                "aria_expanded": None,
+                "onclick": False,
+                "region": "global_navigation",
+            }
+        ],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.action_kind == "expand_or_collapse"
+    assert candidate.event_category == "expand_menu"
+    assert candidate.decision == "allow"
+
+
+def test_local_consultar_button_remains_search_submit():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "Consultar",
+                "tag": "button",
+                "type": "button",
+                "selector": "main > button.consultar",
+                "region": "main_content",
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidate = discovery.discover_candidates(screen_data)[0]
+
+    assert candidate.event_category == "submit_search"
+    assert candidate.decision == "allow"
+
+
 def test_event_candidate_discovery_ignores_giant_menu_container():
     discovery = build_discovery()
 

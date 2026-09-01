@@ -673,6 +673,13 @@ class EventCandidateDiscovery:
         ):
             return UIEventType.CHANGE_PAGINATION
 
+        # La semántica estructural del componente debe tener precedencia sobre
+        # palabras ambiguas de la etiqueta. Un submenú llamado "Consultar" es
+        # navegación expandible, no un submit de búsqueda. Los botones locales
+        # con esa misma etiqueta siguen cayendo en SUBMIT_SEARCH más abajo.
+        if self._looks_like_collapsable(tag, selector, aria_expanded):
+            return UIEventType.EXPAND_MENU
+
         if label_words.intersection(self.SEARCH_WORDS):
             return UIEventType.SUBMIT_SEARCH
 
