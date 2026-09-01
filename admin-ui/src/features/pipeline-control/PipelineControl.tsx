@@ -87,6 +87,11 @@ const asNumber = (value: unknown) => (typeof value === "number" ? value : 0);
 const asString = (value: unknown) => (typeof value === "string" ? value : null);
 const asBoolean = (value: unknown) =>
   typeof value === "boolean" ? value : false;
+const isImportableCanonicalSource = (job: PipelineJobDetail) => {
+  if (job.kind === "canonical_reconciliation") return true;
+  if (!["canonical_build", "canonical_merge"].includes(job.kind)) return false;
+  return asString(job.result_payload?.snapshot_mode) === "full";
+};
 const formatTime = (value: string | null) =>
   value ? new Date(value).toLocaleTimeString() : "—";
 
@@ -335,14 +340,7 @@ export function PipelineControl({
   const launchCanonicalImport = async () => {
     const source = state.active;
     if (isBusy || !source || source.status !== "succeeded") return;
-    if (
-      ![
-        "canonical_build",
-        "canonical_merge",
-        "canonical_reconciliation",
-      ].includes(source.kind)
-    )
-      return;
+    if (!isImportableCanonicalSource(source)) return;
     setState((old) => ({ ...old, launching: true, message: null }));
     try {
       const payload =
@@ -463,12 +461,9 @@ export function PipelineControl({
   );
   const canImport = Boolean(
     job &&
-    ["canonical_build", "canonical_merge", "canonical_reconciliation"].includes(
-      job.kind,
-    ) &&
     job.status === "succeeded" &&
     !isBusy &&
-    !(job.kind === "canonical_build" && job.scope === "module"),
+    isImportableCanonicalSource(job),
   );
   const canReconcile = Boolean(
     job &&
