@@ -28,7 +28,8 @@ STRUCTURAL_REVIEW_PROVENANCE_KEYS = {
 }
 STRUCTURAL_REVIEW_ENTITY_IGNORED_KEYS = {
     "evidence": {"artifact_path", "artifact_hash", "captured_at"},
-    "ui_state": {"exact_fingerprint", "observed_path", "restore_path"},
+    "ui_state": {"depth", "exact_fingerprint", "observed_path", "restore_path"},
+    "transition": {"depth"},
 }
 
 

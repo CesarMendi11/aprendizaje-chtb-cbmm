@@ -98,6 +98,7 @@ def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_ch
         "id": "ui_state:1",
         "screen_id": "screen:1",
         "route": "/facturas",
+        "depth": 1,
         "title": "Facturas",
         "structural_fingerprint": "structural",
         "exact_fingerprint": "exact-a",
@@ -106,6 +107,7 @@ def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_ch
     }
     refreshed_state = {
         **state,
+        "depth": 0,
         "exact_fingerprint": "exact-b",
         "observed_path": [{"selector": "new"}],
         "restore_path": [{"selector": "new"}],
@@ -115,6 +117,29 @@ def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_ch
     )
     assert structural_review_hash("ui_state", state) != structural_review_hash(
         "ui_state", {**refreshed_state, "structural_fingerprint": "changed"}
+    )
+
+    transition = {
+        "id": "transition:1",
+        "source_state_id": "ui_state:1",
+        "target_state_id": "ui_state:1",
+        "event_id": "event:1",
+        "category": "change_pagination",
+        "changed": True,
+        "effect": "CONTENT_CHANGE",
+        "route_changed": False,
+        "restore_strategy": "already_current",
+        "depth": 1,
+        "observed": True,
+    }
+    refreshed_transition = {**transition, "depth": 0}
+    assert structural_review_hash(
+        "transition", transition
+    ) == structural_review_hash("transition", refreshed_transition)
+    assert structural_review_hash(
+        "transition", transition
+    ) != structural_review_hash(
+        "transition", {**refreshed_transition, "effect": "STRUCTURAL_CHANGE"}
     )
 
 
