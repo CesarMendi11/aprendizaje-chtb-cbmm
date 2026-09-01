@@ -98,6 +98,40 @@ def test_quality_contract_counts_ui_and_dynamic_restore_failures(tmp_path):
         validate_crawl_execution_quality(quality)
 
 
+def test_quality_contract_counts_persisted_interaction_failure_outcome(tmp_path):
+    run_id = uuid.uuid4()
+    structural, review, result = _quality(tmp_path, run_id)
+    (review / "home_ui_events_state_uncertainty.json").write_text(
+        json.dumps(
+            {
+                "route": "/admin/home",
+                "results": [
+                    {
+                        "error": "",
+                        "outcome": "interaction_failed",
+                        "interaction_succeeded": False,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    quality = build_crawl_execution_quality(
+        review_dir=review,
+        structural_dir=structural,
+        source_crawl_result=result,
+        expected_run_id=str(run_id),
+        expected_scope="full",
+        expected_target=None,
+    )
+
+    assert quality["events_evaluated"] == 1
+    assert quality["other_error_events"] == 1
+    assert quality["blocking_failures"] == 0
+    assert quality["gate_passed"] is True
+
+
 @pytest.mark.parametrize(
     ("reason", "field"),
     [

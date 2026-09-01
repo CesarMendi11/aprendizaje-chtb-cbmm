@@ -208,9 +208,10 @@ def build_crawl_execution_quality(
                 )
             events_evaluated += 1
             error = result.get("error")
-            if error == "state_restore_failed":
+            outcome = result.get("outcome")
+            if error == "state_restore_failed" or outcome == "restore_failed":
                 ui_event_state_restore_failures += 1
-            elif error:
+            elif outcome in {"interaction_failed", "execution_error"} or error:
                 other_error_events += 1
 
     blocker_counts = {
