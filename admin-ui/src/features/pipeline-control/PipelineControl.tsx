@@ -135,13 +135,23 @@ function Counter({ label, value }: { label: string; value: number | string }) {
   );
 }
 
+const serviceStateLabel = (status: string) =>
+  ({
+    online: "Online",
+    ready: "Ready",
+    initializable: "Sin inicializar",
+    offline: "Offline",
+    unavailable: "No disponible",
+    error: "Error",
+  })[status] ?? status;
+
 function ServiceState({ status }: { status: string }) {
   return (
     <span
       className={`projection-service-state projection-service-state--${status}`}
     >
       <i aria-hidden="true" />
-      {status}
+      {serviceStateLabel(status)}
     </span>
   );
 }
@@ -473,7 +483,10 @@ export function PipelineControl({
   const activeVersion = system?.knowledge.active_version ?? null;
   const postgresqlOnline = system?.services.postgresql.status === "online";
   const neo4jOnline = system?.services.neo4j.status === "online";
-  const chromaReady = system?.services.chroma.status === "ready";
+  const chromaStatus = system?.services.chroma.status;
+  const chromaReady = chromaStatus === "ready";
+  const chromaSyncable =
+    chromaStatus === "ready" || chromaStatus === "initializable";
   const ollamaReady =
     system?.services.ollama.status === "online" &&
     system.services.ollama.configured_embedding_model_available === true;
@@ -482,9 +495,9 @@ export function PipelineControl({
   );
   const semanticChromaReady =
     system?.services.semantic_chroma?.status === "ready" ||
-    system?.services.semantic_chroma?.status === "unavailable";
+    system?.services.semantic_chroma?.status === "initializable";
   const canSyncChroma = Boolean(
-    !isBusy && activeVersion && postgresqlOnline && chromaReady && ollamaReady,
+    !isBusy && activeVersion && postgresqlOnline && chromaSyncable && ollamaReady,
   );
   const canSyncSemantic = Boolean(
     !isBusy &&

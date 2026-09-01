@@ -21,6 +21,7 @@ const messageOf = (error: unknown) =>
 const stateLabel = (status: string) => {
   if (status === "online") return "Online";
   if (status === "ready") return "Ready";
+  if (status === "initializable") return "Sin inicializar";
   if (status === "offline") return "Offline";
   if (status === "unavailable") return "No disponible";
   if (status === "succeeded") return "Sucedido";

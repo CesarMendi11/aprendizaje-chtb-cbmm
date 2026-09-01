@@ -100,3 +100,31 @@ def test_system_status_keeps_partial_results_when_one_dependency_is_offline(
     assert result["services"]["chroma"]["status"] == "ready"
     assert result["services"]["semantic_chroma"]["status"] == "ready"
     assert result["services"]["ollama"]["status"] == "online"
+
+
+def test_chroma_probe_marks_missing_storage_as_initializable(monkeypatch, tmp_path):
+    class Settings:
+        path = tmp_path / "missing-chroma"
+
+    monkeypatch.setattr(admin_system_service, "ChromaSettings", lambda: Settings())
+
+    result = admin_system_service.probe_chroma()
+
+    assert result["status"] == "initializable"
+    assert result["documents"] == 0
+    assert result["collection"] == admin_system_service.collection_name()
+
+
+def test_semantic_chroma_probe_marks_missing_storage_as_initializable(
+    monkeypatch, tmp_path
+):
+    class Settings:
+        path = tmp_path / "missing-chroma"
+
+    monkeypatch.setattr(admin_system_service, "ChromaSettings", lambda: Settings())
+
+    result = admin_system_service.probe_semantic_chroma()
+
+    assert result["status"] == "initializable"
+    assert result["documents"] == 0
+    assert result["collection"] == admin_system_service.semantic_collection_name()

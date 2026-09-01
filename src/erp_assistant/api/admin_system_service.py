@@ -178,16 +178,35 @@ def probe_chroma() -> dict[str, Any]:
 
     if not location.exists():
         return {
-            "status": "unavailable",
+            "status": "initializable",
             "collection": collection_name(),
             "documents": 0,
-            "detail": "No existe el almacenamiento local de Chroma.",
+            "detail": (
+                "Chroma aún no está inicializado; la primera sincronización "
+                "puede crear el almacenamiento y la colección."
+            ),
         }
 
     try:
         import chromadb
 
         client = chromadb.PersistentClient(path=str(location))
+        collections = client.list_collections()
+        names = {
+            str(getattr(collection, "name", collection))
+            for collection in collections
+        }
+        if collection_name() not in names:
+            return {
+                "status": "initializable",
+                "collection": collection_name(),
+                "documents": 0,
+                "detail": (
+                    "La colección estructural de Chroma aún no existe; "
+                    "la primera sincronización puede crearla."
+                ),
+            }
+
         collection = client.get_collection(collection_name())
 
         return {
@@ -210,16 +229,35 @@ def probe_semantic_chroma() -> dict[str, Any]:
 
     if not location.exists():
         return {
-            "status": "unavailable",
+            "status": "initializable",
             "collection": semantic_collection_name(),
             "documents": 0,
-            "detail": "No existe el almacenamiento local de Chroma.",
+            "detail": (
+                "Chroma aún no está inicializado; la colección semántica "
+                "podrá crearse cuando corresponda sincronizarla."
+            ),
         }
 
     try:
         import chromadb
 
         client = chromadb.PersistentClient(path=str(location))
+        collections = client.list_collections()
+        names = {
+            str(getattr(collection, "name", collection))
+            for collection in collections
+        }
+        if semantic_collection_name() not in names:
+            return {
+                "status": "initializable",
+                "collection": semantic_collection_name(),
+                "documents": 0,
+                "detail": (
+                    "La colección semántica de Chroma aún no existe; "
+                    "puede crearse en su primera sincronización."
+                ),
+            }
+
         collection = client.get_collection(semantic_collection_name())
         return {
             "status": "ready",

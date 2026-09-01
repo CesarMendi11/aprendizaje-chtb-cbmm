@@ -532,6 +532,11 @@
   color: #047857;
 }
 
+.projection-service-state--initializable {
+  background: #fffbeb;
+  color: #b45309;
+}
+
 .projection-service-state--offline,
 .projection-service-state--error {
   background: #fef2f2;
