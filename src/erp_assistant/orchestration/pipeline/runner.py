@@ -255,6 +255,11 @@ class PipelineJobRunner:
         expected_screen_id = str(parameters.get("target_screen_id") or "").strip()
         if expected_screen_id and expected_screen_id != screen.screen_id:
             raise RuntimeError("El job SCREEN contiene target_screen_id inconsistente")
+        expected_screen_title = str(
+            parameters.get("target_screen_title") or ""
+        ).strip()
+        if expected_screen_title and expected_screen_title != screen.screen_title:
+            raise RuntimeError("El job SCREEN contiene target_screen_title inconsistente")
         if spec.erp_id and spec.erp_id != screen.erp_id:
             raise RuntimeError("El job SCREEN pertenece a un ERP distinto del fijado")
         parameter_erp_id = str(parameters.get("erp_id") or "").strip()
@@ -266,6 +271,7 @@ class PipelineJobRunner:
         parameters.update(
             {
                 "target_screen_id": screen.screen_id,
+                "target_screen_title": screen.screen_title,
                 "knowledge_version_id": str(screen.knowledge_version_id),
                 "knowledge_version": screen.knowledge_version,
                 "erp_id": screen.erp_id,

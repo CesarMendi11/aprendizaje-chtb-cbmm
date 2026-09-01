@@ -4,6 +4,9 @@ from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
 
 
 class FakePolicy:
+    def normalize_href(self, route):
+        return str(route or "").split("#", 1)[0].split("?", 1)[0]
+
     def is_allowed_route(self, route):
         return bool(route and str(route).startswith("/admin/"))
 
@@ -56,3 +59,43 @@ def test_progress_callback_is_optional_for_legacy_object_new_tests():
     )()
     crawler._unavailable_routes = set()
     crawler._emit_progress("test")
+
+
+def test_direct_screen_crawl_forwards_pinned_canonical_title_to_initial_capture():
+    route = "/admin/permisos/consultar/aprobados/3"
+    crawler = object.__new__(RouteCrawler)
+    crawler.policy = FakePolicy()
+    crawler.route_scope = {route}
+    crawler.page_wait_ms = 0
+    crawler.navigator = type(
+        "Navigator",
+        (),
+        {
+            "goto_path": lambda self, value: None,
+            "current_path": lambda self: route,
+        },
+    )()
+    crawler._emit_progress = lambda *args, **kwargs: None
+    crawler._checkpoint_outputs = lambda: None
+    crawler._crawl_until_fixed_point = lambda: None
+    sentinel = object()
+    crawler._save_outputs = lambda: sentinel
+    captured = {}
+
+    def capture(**kwargs):
+        captured.update(kwargs)
+
+    crawler._capture_current_screen = capture
+
+    result = crawler.crawl_screen(
+        route,
+        canonical_title="Permisos Espectáculo Público",
+    )
+
+    assert result is sentinel
+    assert captured == {
+        "source": "screen_scope",
+        "depth": 0,
+        "reason": "screen_scope_target",
+        "canonical_title": "Permisos Espectáculo Público",
+    }

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.persistence.postgres.repositories import ReviewRepository
 
 
 class ScreenScopeResolutionError(ValueError):
@@ -20,6 +21,7 @@ class ScreenCrawlTarget:
     knowledge_version: str
     erp_id: str
     screen_id: str
+    screen_title: str
     route: str
     module_id: str | None
 
@@ -77,11 +79,25 @@ class ScreenScopeResolver:
 
         version, screen = matches[0]
         module_id = str(screen.parent_canonical_id or "").strip() or None
+        correction = ReviewRepository(self.session).latest_correction(screen.id)
+        effective_payload = dict(
+            correction.corrected_payload
+            if correction is not None and correction.corrected_payload is not None
+            else screen.source_payload or {}
+        )
+        screen_title = str(
+            effective_payload.get("title") or screen.title or ""
+        ).strip()
+        if not screen_title:
+            raise ScreenScopeResolutionError(
+                "La pantalla objetivo no conserva un título canónico utilizable"
+            )
         return ScreenCrawlTarget(
             knowledge_version_id=version.id,
             knowledge_version=version.knowledge_version,
             erp_id=version.erp_id,
             screen_id=screen.canonical_id,
+            screen_title=screen_title,
             route=clean_route,
             module_id=module_id,
         )

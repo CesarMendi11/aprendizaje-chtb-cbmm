@@ -426,7 +426,12 @@ class RouteCrawler:
 
         return current_state, current_node_id
 
-    def crawl_screen(self, route: str) -> CrawlSummary:
+    def crawl_screen(
+        self,
+        route: str,
+        *,
+        canonical_title: str | None = None,
+    ) -> CrawlSummary:
         """Explora una sola ruta funcional y sus estados UI seguros.
 
         El alcance es exacto por pathname: los href descubiertos hacia otras
@@ -456,6 +461,7 @@ class RouteCrawler:
                 source="screen_scope",
                 depth=0,
                 reason="screen_scope_target",
+                canonical_title=canonical_title,
             )
             self._checkpoint_outputs()
             self._crawl_until_fixed_point()
@@ -595,8 +601,12 @@ class RouteCrawler:
         depth: int,
         reason: str,
         title_hint: str = "",
+        canonical_title: str | None = None,
     ) -> None:
-        observation = self._observe_screen(title_hint=title_hint)
+        observation = self._observe_screen(
+            title_hint=title_hint,
+            canonical_title=canonical_title,
+        )
         screen_data = observation.screen_data
 
         route = screen_data.get("path") or self.navigator.current_path()

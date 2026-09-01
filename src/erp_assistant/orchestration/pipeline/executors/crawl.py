@@ -161,7 +161,13 @@ class CrawlJobExecutor:
                     progress_callback=emit,
                 )
                 if normalized_scope == PipelineJobScope.SCREEN:
-                    summary = crawler.crawl_screen(target_value)
+                    canonical_title = str(
+                        params.get("target_screen_title") or ""
+                    ).strip() or None
+                    summary = crawler.crawl_screen(
+                        target_value,
+                        canonical_title=canonical_title,
+                    )
                 elif normalized_scope == PipelineJobScope.MODULE:
                     assert module_boundary is not None
                     summary = crawler.crawl_module(module_boundary)

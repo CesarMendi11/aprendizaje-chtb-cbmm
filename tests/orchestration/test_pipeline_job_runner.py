@@ -353,6 +353,7 @@ def test_runner_executes_queued_crawl_and_persists_progress_and_result():
         assert stored.result_payload["functional_screens"] == 1
         assert stored.finished_at is not None
     assert len(executor.calls) == 1
+    assert executor.calls[0][3]["target_screen_title"] == "Tracking list"
     engine.dispose()
 
 

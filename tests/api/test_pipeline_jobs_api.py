@@ -170,6 +170,7 @@ def test_create_crawl_job_queues_controlled_worker(api):
         "slow_mo": 120,
         "active_only": True,
         "target_screen_id": screen_id,
+        "target_screen_title": "Retenciones",
         "knowledge_version_id": version_id,
         "knowledge_version": "active-v1",
         "erp_id": erp_id,

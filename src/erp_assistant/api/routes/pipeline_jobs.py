@@ -204,6 +204,7 @@ def create_crawl_job(
             {
                 "active_only": True,
                 "target_screen_id": screen.screen_id,
+                "target_screen_title": screen.screen_title,
                 "knowledge_version_id": str(screen.knowledge_version_id),
                 "knowledge_version": screen.knowledge_version,
                 "erp_id": screen.erp_id,
