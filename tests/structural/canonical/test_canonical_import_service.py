@@ -58,11 +58,13 @@ def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_ch
         "id": "screen:1",
         "title": "Facturas",
         "route": "/facturas",
+        "title_source": "discovery_hint",
         "source_refs": ["screen_index.json"],
         "evidence_ids": ["evidence:old"],
     }
     refreshed_screen = {
         **screen,
+        "title_source": "state_registry",
         "source_refs": ["screen_index.json", "network_evidence.json"],
         "evidence_ids": ["evidence:old", "evidence:network"],
     }
@@ -147,17 +149,20 @@ def test_rebase_structural_correction_keeps_human_fields_and_refreshes_provenanc
     corrected = {
         "id": "screen:1",
         "title": "Título corregido",
+        "title_source": "discovery_hint",
         "source_refs": ["screen_index.json"],
         "evidence_ids": ["evidence:old"],
     }
     current = {
         "id": "screen:1",
         "title": "Título generado",
+        "title_source": "state_registry",
         "source_refs": ["screen_index.json", "network_evidence.json"],
         "evidence_ids": ["evidence:new", "evidence:network"],
     }
     rebased = rebase_structural_correction("screen", corrected, current)
     assert rebased["title"] == "Título corregido"
+    assert rebased["title_source"] == "state_registry"
     assert rebased["source_refs"] == current["source_refs"]
     assert rebased["evidence_ids"] == current["evidence_ids"]
 
