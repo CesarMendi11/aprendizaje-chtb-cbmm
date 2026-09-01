@@ -606,6 +606,12 @@ def test_runner_revalidates_pinned_module_scope_before_dispatch():
         stored = PipelineJobRepository(session).get(job_id)
         assert stored is not None
         assert stored.status == PipelineJobStatus.SUCCEEDED
+        assert stored.parameters["module_scope"] == parameters["module_scope"]
+        assert stored.parameters["module_scope"]["root_module_id"] == "module:tracking"
+        assert stored.parameters["module_scope"]["navigation_origin_path"] == [
+            "#sales",
+            "#tracking",
+        ]
     engine.dispose()
 
 

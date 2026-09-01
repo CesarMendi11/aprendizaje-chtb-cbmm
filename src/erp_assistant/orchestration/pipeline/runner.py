@@ -89,6 +89,7 @@ class PipelineJobRunner:
 
         try:
             execution_parameters = self._execution_parameters(spec)
+            self._persist_execution_parameters(spec, execution_parameters)
             result = executor.execute(
                 job_id=spec.id,
                 scope=spec.scope,
@@ -278,6 +279,19 @@ class PipelineJobRunner:
             }
         )
         return parameters
+
+    def _persist_execution_parameters(
+        self,
+        spec: PipelineJobSpec,
+        parameters: dict[str, Any],
+    ) -> None:
+        if parameters == spec.parameters:
+            return
+        with self.session_factory.begin() as session:
+            PipelineJobService(session).persist_execution_parameters(
+                spec.id,
+                parameters=parameters,
+            )
 
     def _checkpoint(self, job_id: uuid.UUID, stage: str, payload: dict[str, Any]) -> None:
         current = int(payload.get("work_units", 0) or 0)

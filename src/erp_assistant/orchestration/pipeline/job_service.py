@@ -91,6 +91,17 @@ class PipelineJobService:
         job.checkpoint = dict(checkpoint or {})
         return self._save(job)
 
+    def persist_execution_parameters(
+        self,
+        job_id: uuid.UUID | str,
+        *,
+        parameters: dict[str, Any],
+    ) -> PipelineJob:
+        job = self._locked(job_id)
+        self._require(job, {PipelineJobStatus.RUNNING}, PipelineJobStatus.RUNNING)
+        job.parameters = dict(parameters)
+        return self._save(job)
+
     def checkpoint(
         self,
         job_id: uuid.UUID | str,
