@@ -241,6 +241,7 @@ class ChromaSyncService:
         job.checkpoint = {
             "eligible_items": summary["eligible_items"],
             "documents": summary["documents"],
+            "embedding_model": getattr(self.embeddings, "model", None),
             "phase": "prepared",
         }
         self.session.flush()
@@ -280,6 +281,7 @@ class ChromaSyncService:
                 for key in (
                     "eligible_items",
                     "documents",
+                    "embedding_model",
                     "embedding_dimensions",
                     "inserted_or_updated",
                     "removed_stale",

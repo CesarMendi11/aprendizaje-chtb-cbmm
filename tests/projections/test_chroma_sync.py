@@ -260,7 +260,14 @@ def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path)
     result = ChromaSyncService(chroma_session, repository=repo, embeddings=FakeEmbeddings()).run()
     jobs_after = {job.target: job.attempt_count for job in chroma_session.scalars(select(SyncJob))}
     assert result.status == "succeeded" and repo.collection.count() == 2
+    assert result.summary["embedding_model"] == "fake-embedding"
     assert result.summary["embedding_dimensions"] == 3
+    chroma_job = chroma_session.scalar(
+        select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB)
+    )
+    assert chroma_job is not None
+    assert chroma_job.checkpoint["embedding_model"] == "fake-embedding"
+    assert chroma_job.checkpoint["embedding_dimensions"] == 3
     assert jobs_after[SyncTarget.CHROMADB] == jobs_before[SyncTarget.CHROMADB] + 1
     assert jobs_after[SyncTarget.NEO4J] == jobs_before[SyncTarget.NEO4J]
 
