@@ -19,7 +19,9 @@ HTML = """
     <button class="open-menu" onclick="
       document.getElementById('panel').style.display='block';
     ">Abrir panel</button>
-    <div id="panel" style="display:none">Panel abierto</div>
+    <div id="panel" style="display:none">
+      <button id="panel-accion">Ver detalle</button>
+    </div>
   </body>
 </html>
 """
@@ -176,10 +178,13 @@ def test_state_restorer_reuses_canonical_registered_title_on_direct_route():
         },
     ).state
 
+    # El estado actual debe diferenciarse ESTRUCTURALMENTE del objetivo; un
+    # texto distinto ya no basta para ser otro estado.
     current_data = {
         **target_data,
         "functional_title": "Facturacion",
         "visible_text": "Otro estado abierto",
+        "dialogs": [{"title": "Detalle", "role": "dialog", "open": True}],
     }
     restored_data = {
         **target_data,
@@ -543,9 +548,11 @@ def test_state_restorer_waits_for_expected_root_fingerprint_after_stable_partial
     assert result.attempts == 1
     assert navigator.paths == [ROUTE]
     assert result.observation["samples_count"] == 5
+    # El observador decide estabilidad de renderizado, no identidad: las
+    # muestras se comparan con la firma de render, no con la estructural.
     assert result.observation["observed_fingerprints"][:3] == [
-        builder.build(partial_data).structural_fingerprint,
+        builder.build(partial_data).render_fingerprint,
     ] * 3
     assert result.observation["observed_fingerprints"][-2:] == [
-        target.structural_signature,
+        builder.build(target_data).render_fingerprint,
     ] * 2

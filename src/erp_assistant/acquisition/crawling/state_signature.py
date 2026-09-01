@@ -11,11 +11,22 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 @dataclass(frozen=True)
 class StateSignature:
     """
-    Firmas exacta y estructural de un estado UI.
+    Tres vistas de un estado UI, con propósitos distintos.
 
-    ``fingerprint`` se mantiene como alias de la firma estructural para conservar
-    compatibilidad con el crawler existente. La firma estructural ignora ruido
-    volátil; la exacta permite auditar cambios de contenido.
+    ``structural_fingerprint`` define la IDENTIDAD del estado. Su preimagen es
+    durable: sobrevive a la frontera de privacidad y puede re-hashearse desde
+    los artefactos persistidos. No depende de contenido transaccional.
+
+    ``exact_fingerprint`` detecta CAMBIO DE CONTENIDO. Conserva los valores
+    observados y permite distinguir "misma pantalla, otros datos".
+
+    ``render_fingerprint`` sirve para decidir ESTABILIDAD DE RENDERIZADO
+    durante la observación. Incluye el texto visible con los patrones volátiles
+    normalizados, de modo que un reloj o una fecha no impidan estabilizar.
+    Es transitorio: nunca define identidad ni se persiste como tal.
+
+    ``fingerprint`` se mantiene como alias de la firma estructural para
+    conservar compatibilidad con el crawler existente.
     """
 
     fingerprint: str
@@ -25,12 +36,20 @@ class StateSignature:
     title: str
     summary: dict[str, Any]
     exact_summary: dict[str, Any]
+    render_fingerprint: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.render_fingerprint:
+            object.__setattr__(
+                self, "render_fingerprint", self.structural_fingerprint
+            )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "fingerprint": self.fingerprint,
             "exact_fingerprint": self.exact_fingerprint,
             "structural_fingerprint": self.structural_fingerprint,
+            "render_fingerprint": self.render_fingerprint,
             "route": self.route,
             "title": self.title,
             "summary": self.summary,
@@ -129,6 +148,13 @@ class StateSignatureBuilder:
         exact_summary = self._build_summary(screen_data, structural=False)
         structural_summary = self._build_summary(screen_data, structural=True)
 
+        # Vista de renderizado: estructura + texto visible sin volátiles.
+        # Sólo se usa para decidir si la pantalla dejó de moverse.
+        render_summary = dict(structural_summary)
+        render_summary["visible_text"] = self._normalize_structural_text(
+            self._raw_visible_text(screen_data)
+        )
+
         exact_fingerprint = self._hash(exact_summary)
         structural_fingerprint = self._hash(structural_summary)
 
@@ -137,11 +163,24 @@ class StateSignatureBuilder:
             fingerprint=structural_fingerprint,
             exact_fingerprint=exact_fingerprint,
             structural_fingerprint=structural_fingerprint,
+            render_fingerprint=self._hash(render_summary),
             route=route,
             title=title,
             summary=structural_summary,
             exact_summary=exact_summary,
         )
+
+    def _raw_visible_text(self, screen_data: dict[str, Any]) -> str:
+        if screen_data.get("regions"):
+            text = (
+                screen_data.get("main_visible_text")
+                or screen_data.get("regions", {})
+                .get("main_content", {})
+                .get("visible_text", "")
+            )
+        else:
+            text = screen_data.get("visible_text") or ""
+        return text[: self.visible_text_limit]
 
     def has_changed(
         self,
@@ -184,21 +223,21 @@ class StateSignatureBuilder:
             tables = screen_data.get("tables", [])
             interactives = screen_data.get("custom_interactives", [])
 
-        if structural:
-            visible_text = self._normalize_structural_text(visible_text)
-        else:
-            visible_text = self._normalize_text(visible_text)
+        raw_title = (
+            screen_data.get("functional_title")
+            or screen_data.get("title")
+        )
 
         summary = {
             "route": self._normalize_route(
                 screen_data.get("path") or "",
                 structural=structural,
             ),
-            "title": self._normalize_text(
-                screen_data.get("functional_title")
-                or screen_data.get("title")
+            "title": (
+                self._normalize_structural_text(raw_title)
+                if structural
+                else self._normalize_text(raw_title)
             ),
-            "visible_text": visible_text,
             "links": self._normalize_links(links, structural=structural),
             "buttons": self._normalize_buttons(buttons),
             "inputs": self._normalize_inputs(inputs),
@@ -208,6 +247,12 @@ class StateSignatureBuilder:
             ),
             "dialogs": self._normalize_dialogs(screen_data.get("dialogs", [])),
         }
+
+        if not structural:
+            # El contenido observado sólo pertenece a la vista exacta. La
+            # identidad estructural no puede depender de texto que la frontera
+            # de privacidad elimina antes de persistir.
+            summary["visible_text"] = self._normalize_text(visible_text)
 
         if structural and has_regions:
             if self._should_include_navigation_state(screen_data.get("path") or ""):

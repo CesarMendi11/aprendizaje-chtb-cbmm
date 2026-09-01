@@ -19,6 +19,16 @@ PROJECTION_JOB_KINDS = {
     PipelineJobKind.CHROMA_SYNC,
     PipelineJobKind.SEMANTIC_SYNC,
 }
+# Todo trabajo in-process puede quedar huérfano si el proceso API muere.
+# Un CRAWL colgado en RUNNING bloquea la cola y miente en el Admin UI.
+RECOVERABLE_JOB_KINDS = PROJECTION_JOB_KINDS | {
+    PipelineJobKind.CRAWL,
+    PipelineJobKind.CANONICAL_BUILD,
+    PipelineJobKind.CANONICAL_MERGE,
+    PipelineJobKind.CANONICAL_IMPORT,
+    PipelineJobKind.CANONICAL_RECONCILIATION,
+    PipelineJobKind.SEMANTIC_INFERENCE,
+}
 STRUCTURAL_SYNC_TARGETS = {
     PipelineJobKind.NEO4J_SYNC: SyncTarget.NEO4J,
     PipelineJobKind.CHROMA_SYNC: SyncTarget.CHROMADB,
@@ -54,7 +64,7 @@ class ProjectionSyncRecoveryService:
             self.session.scalars(
                 select(PipelineJob)
                 .where(
-                    PipelineJob.kind.in_(sorted(PROJECTION_JOB_KINDS)),
+                    PipelineJob.kind.in_(sorted(RECOVERABLE_JOB_KINDS)),
                     PipelineJob.status.in_(
                         [PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]
                     ),

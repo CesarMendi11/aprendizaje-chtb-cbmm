@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any
 
 from playwright.sync_api import Page
@@ -9,7 +10,7 @@ from erp_assistant.acquisition.browser.interaction_executor import BrowserIntera
 
 from erp_assistant.acquisition.crawling.state_observer import StableStateObserver
 from erp_assistant.acquisition.crawling.state_restorer import RestoreResult, StateRestorer
-from erp_assistant.acquisition.crawling.state_signature import StateSignatureBuilder
+from erp_assistant.acquisition.crawling.state_signature import StateSignature, StateSignatureBuilder
 from erp_assistant.acquisition.discovery.event_candidate_discovery import (
     EventCandidate,
     EventCandidateDiscovery,
@@ -19,6 +20,42 @@ from erp_assistant.acquisition.models.ui_event import UIEvent
 from erp_assistant.acquisition.models.ui_state import UIState
 
 
+class EventEffect(StrEnum):
+    """Qué produjo realmente una interacción autorizada.
+
+    Distinguir estos casos es lo que permite conservar el conocimiento de que
+    una acción existe y funciona, sin inventar un estado funcional nuevo por
+    cada grupo de registros observado.
+    """
+
+    NO_EFFECT = "NO_EFFECT"
+    CONTENT_CHANGE = "CONTENT_CHANGE"
+    STRUCTURAL_CHANGE = "STRUCTURAL_CHANGE"
+    ROUTE_CHANGE = "ROUTE_CHANGE"
+
+    @property
+    def creates_state(self) -> bool:
+        """Sólo un cambio estructural o de ruta justifica un UIState nuevo."""
+        return self in {EventEffect.STRUCTURAL_CHANGE, EventEffect.ROUTE_CHANGE}
+
+
+def classify_event_effect(
+    *,
+    before_route: str,
+    before_structural_fingerprint: str,
+    before_exact_fingerprint: str,
+    after: StateSignature,
+) -> EventEffect:
+    """Clasifica el resultado observable de una interacción."""
+    if before_route != after.route:
+        return EventEffect.ROUTE_CHANGE
+    if before_structural_fingerprint != after.structural_fingerprint:
+        return EventEffect.STRUCTURAL_CHANGE
+    if before_exact_fingerprint != after.exact_fingerprint:
+        return EventEffect.CONTENT_CHANGE
+    return EventEffect.NO_EFFECT
+
+
 @dataclass
 class UIEventResult:
     """Resultado de ejecutar de forma controlada un candidato UI."""
@@ -26,6 +63,7 @@ class UIEventResult:
     event: UIEvent
     candidate: dict[str, Any]
     changed: bool
+    effect: EventEffect = field(default=EventEffect.NO_EFFECT, kw_only=True)
     before_fingerprint: str
     after_fingerprint: str
     before_exact_fingerprint: str
@@ -53,6 +91,7 @@ class UIEventResult:
             "event": self.event.to_dict(),
             "candidate": self.candidate,
             "changed": self.changed,
+            "effect": str(self.effect),
             "before_fingerprint": self.before_fingerprint,
             "after_fingerprint": self.after_fingerprint,
             "before_exact_fingerprint": self.before_exact_fingerprint,
@@ -85,7 +124,7 @@ class UIEventResult:
         if self.error:
             return "execution_error"
         if self.changed:
-            return "changed"
+            return str(self.effect)
         return "unchanged"
 
 
@@ -406,12 +445,15 @@ class UIEventExplorer:
 
             after_screen_data = observation.screen_data
             after_signature = observation.signature
-            changed = (
-                before_fingerprint
-                != after_signature.structural_fingerprint
+            effect = classify_event_effect(
+                before_route=before_route,
+                before_structural_fingerprint=before_fingerprint,
+                before_exact_fingerprint=before_exact_fingerprint,
+                after=after_signature,
             )
+            changed = effect is not EventEffect.NO_EFFECT
 
-            if changed:
+            if effect.creates_state:
                 after_html, after_screenshot, artifact_error = (
                     self._capture_result_artifacts()
                 )
@@ -426,6 +468,7 @@ class UIEventExplorer:
                 event=event,
                 candidate=candidate.to_dict(),
                 changed=changed,
+                effect=effect,
                 before_fingerprint=before_fingerprint,
                 after_fingerprint=after_signature.structural_fingerprint,
                 before_exact_fingerprint=before_exact_fingerprint,

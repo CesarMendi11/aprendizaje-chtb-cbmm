@@ -24,8 +24,8 @@ HTML = """
     <button class="menu-b" onclick="
       document.getElementById('panel-b').style.display='block';
     ">Abrir menú B</button>
-    <div id="panel-a" style="display:none">Contenido A</div>
-    <div id="panel-b" style="display:none">Contenido B</div>
+    <div id="panel-a" style="display:none"><button id="accion-a">Contenido A</button></div>
+    <div id="panel-b" style="display:none"><button id="accion-b">Contenido B</button></div>
   </body>
 </html>
 """
@@ -184,8 +184,8 @@ def test_ui_event_explorer_retries_animated_root_modules_independently():
         <button class="module menu-b" onclick="
           document.getElementById('panel-b').style.display='block';
         ">Abrir menú B</button>
-        <div id="panel-a" style="display:none">Contenido A</div>
-        <div id="panel-b" style="display:none">Contenido B</div>
+        <div id="panel-a" style="display:none"><button id="accion-a">Contenido A</button></div>
+        <div id="panel-b" style="display:none"><button id="accion-b">Contenido B</button></div>
       </body>
     </html>
     """

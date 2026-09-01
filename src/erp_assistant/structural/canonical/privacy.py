@@ -360,6 +360,7 @@ def _is_technical_persistence_key(key: Any) -> bool:
         return True
     return name.endswith(
         (
+            "_state_id",
             "_hash",
             "_sha256",
             "_fingerprint",

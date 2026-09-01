@@ -118,8 +118,10 @@ def collect_chroma_state() -> dict[str, Any]:
 
 
 def collect_file_hashes() -> dict[str, str | None]:
+    # El perfil activo se resuelve por configuración: si el experimento corre
+    # con otro ERP, el manifiesto debe hashear ESE perfil, no uno fijo.
     candidates = (
-        PROJECT_ROOT / "configs" / "cbmm.yaml",
+        PipelineSettings().crawl_profile_path,
         PROJECT_ROOT / "pyproject.toml",
         PROJECT_ROOT / "requirements.txt",
         PROJECT_ROOT / "admin-ui" / "package-lock.json",

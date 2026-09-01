@@ -134,7 +134,7 @@ PAGES = {
                 document.getElementById('extra').style.display='block';
               ">Ver información adicional</button>
             </section>
-            <div id="extra" style="display:none">Información adicional visible</div>
+            <div id="extra" style="display:none"><button id="extra-accion">Información adicional visible</button></div>
           </main>
         </body></html>
     """,

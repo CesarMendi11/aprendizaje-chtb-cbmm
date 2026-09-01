@@ -218,7 +218,14 @@ class CanonicalKnowledgeBuilder:
                 events.append(Event(id=event_id, screen_id=source.screen_id, source_state_id=source.id, label=label, normalized_label=normalize_text(label), category=category, policy_decision=str(event_raw.get("decision") or "unknown"), mutative=category == "mutative_action", selector=self._clean_optional(event_raw.get("selector")), region=region, source_refs=["state_flow_graph.json"], evidence_ids=[]))
             metadata = raw.get("metadata") or {}
             route_changed = bool(raw.get("changed_route", raw.get("route_changed", source.route != target.route)))
-            transitions.append(Transition(id=stable_id("transition", source.id, event_id, target.id), source_state_id=source.id, target_state_id=target.id, event_id=event_id, category=category, changed=source.id != target.id, route_changed=route_changed, restore_strategy=metadata.get("restore_strategy"), depth=target.depth, observed=bool(raw.get("observed", True)), source_refs=["state_flow_graph.json"], evidence_ids=[]))
+            # Un self-loop CONTENT_CHANGE sí produjo efecto observable: `changed`
+            # debe reflejar el resultado del evento, no la igualdad de IDs.
+            effect = str(
+                metadata.get("effect")
+                or ("ROUTE_CHANGE" if route_changed else None)
+                or ("STRUCTURAL_CHANGE" if source.id != target.id else "CONTENT_CHANGE")
+            )
+            transitions.append(Transition(id=stable_id("transition", source.id, event_id, target.id), source_state_id=source.id, target_state_id=target.id, event_id=event_id, category=category, changed=effect != "NO_EFFECT", effect=effect, route_changed=route_changed, restore_strategy=metadata.get("restore_strategy"), depth=target.depth, observed=bool(raw.get("observed", True)), source_refs=["state_flow_graph.json"], evidence_ids=[]))
 
         entity_lists = {"modules": modules, "screens": screens, "ui_states": states, "fields": fields, "controls": controls, "tables": tables, "table_columns": columns, "links": links, "events": events, "transitions": transitions, "evidence": evidence}
         stats = {name: len(items) for name, items in entity_lists.items()}

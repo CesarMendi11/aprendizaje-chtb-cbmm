@@ -155,7 +155,9 @@ def test_state_signature_truncates_visible_text():
 
     signature = builder.build(screen_data)
 
-    assert signature.summary["visible_text"] == "aaaaaaaaaa"
+    # El contenido observado vive en la vista exacta; la estructural no lo usa.
+    assert signature.exact_summary["visible_text"] == "aaaaaaaaaa"
+    assert "visible_text" not in signature.summary
 
 
 def test_state_signature_removes_duplicate_buttons():
@@ -222,13 +224,14 @@ def test_state_signature_separates_exact_and_structural_changes():
     assert builder.has_changed(first, second, mode="exact")
 
 
-def test_state_signature_ignores_weekday_when_it_belongs_to_a_date():
+def test_state_signature_ignores_volatile_dates_in_the_functional_title():
+    """Un título que embebe una fecha no debe crear un estado nuevo cada día."""
     builder = StateSignatureBuilder()
 
     first_data = {
         "path": "/admin/home",
-        "title": "Dashboard",
-        "visible_text": "miércoles 19/8/2026",
+        "title": "Cierre miércoles 19/8/2026",
+        "visible_text": "Panel principal",
         "links": [],
         "buttons": [],
         "inputs": [],
@@ -237,7 +240,7 @@ def test_state_signature_ignores_weekday_when_it_belongs_to_a_date():
     }
     second_data = {
         **first_data,
-        "visible_text": "viernes 21/8/2026",
+        "title": "Cierre viernes 21/8/2026",
     }
 
     first = builder.build(first_data)
@@ -245,11 +248,37 @@ def test_state_signature_ignores_weekday_when_it_belongs_to_a_date():
 
     assert first.exact_fingerprint != second.exact_fingerprint
     assert first.structural_fingerprint == second.structural_fingerprint
-    assert first.summary["visible_text"] == "<volatile>"
-    assert second.summary["visible_text"] == "<volatile>"
+    assert first.summary["title"] == "cierre <volatile>"
 
 
-def test_state_signature_keeps_standalone_weekday_as_functional_text():
+def test_state_signature_keeps_standalone_weekday_in_the_title():
+    """Un día suelto puede ser una etiqueta funcional real, no una fecha."""
+    builder = StateSignatureBuilder()
+
+    first_data = {
+        "path": "/admin/agenda",
+        "title": "Agenda: miércoles",
+        "visible_text": "Agenda",
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "custom_interactives": [],
+    }
+    second_data = {
+        **first_data,
+        "title": "Agenda: viernes",
+    }
+
+    first = builder.build(first_data)
+    second = builder.build(second_data)
+
+    assert first.structural_fingerprint != second.structural_fingerprint
+    assert builder.has_changed(first, second)
+
+
+def test_row_content_alone_does_not_change_the_structural_state():
+    """Contenido de filas != estado funcional. Sostiene el modelo v2."""
     builder = StateSignatureBuilder()
 
     first_data = {
@@ -270,8 +299,10 @@ def test_state_signature_keeps_standalone_weekday_as_functional_text():
     first = builder.build(first_data)
     second = builder.build(second_data)
 
-    assert first.structural_fingerprint != second.structural_fingerprint
-    assert builder.has_changed(first, second)
+    assert first.structural_fingerprint == second.structural_fingerprint
+    assert first.exact_fingerprint != second.exact_fingerprint
+    assert not builder.has_changed(first, second)
+    assert builder.has_changed(first, second, mode="exact")
 
 
 def test_state_signature_detects_active_tab_change():

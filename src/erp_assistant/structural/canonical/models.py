@@ -164,6 +164,7 @@ class Transition(Reviewable):
     event_id: str | None = None
     category: str
     changed: bool
+    effect: str = "STRUCTURAL_CHANGE"
     route_changed: bool
     restore_strategy: str | None = None
     depth: int = 0

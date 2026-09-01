@@ -910,7 +910,7 @@ class RouteCrawler:
             allowed_categories=allowed_categories,
         )
 
-        changed_results = [
+        effective_results = [
             result
             for result in results
             if result.changed
@@ -922,7 +922,30 @@ class RouteCrawler:
             self.state_frontier.mark_explored(source_state.state_id)
             return
 
-        for result in changed_results:
+        for result in effective_results:
+            if not result.effect.creates_state:
+                # CONTENT_CHANGE: la acción produce efecto observable pero la
+                # pantalla sigue siendo el mismo estado funcional. Se conserva
+                # el evento como self-loop y no se fabrica un estado nuevo por
+                # cada grupo de registros.
+                self.state_flow_graph.add_state(source_state)
+                self.state_flow_graph.add_transition(
+                    Transition(
+                        source_state_id=source_state.state_id,
+                        target_state_id=source_state.state_id,
+                        event=result.event,
+                        changed_route=False,
+                        metadata={
+                            "candidate": result.candidate,
+                            "restored_before": result.restored_before,
+                            "restore_strategy": result.restore_strategy,
+                            "effect": str(result.effect),
+                        },
+                    )
+                )
+                result.target_state_id = source_state.state_id
+                continue
+
             target_signature = self.state_signature_builder.build(
                 result.after_screen_data
             )
@@ -966,6 +989,7 @@ class RouteCrawler:
                         "candidate": result.candidate,
                         "restored_before": result.restored_before,
                         "restore_strategy": result.restore_strategy,
+                        "effect": str(result.effect),
                     },
                 )
             )

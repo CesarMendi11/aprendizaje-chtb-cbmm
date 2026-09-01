@@ -128,7 +128,7 @@ def _seed(session: Session):
     return neo_sync.id, chroma_sync.id, [job.id for job in jobs]
 
 
-def test_recovery_fails_only_orphaned_projection_jobs_and_running_structural_sync():
+def test_recovery_fails_every_orphaned_in_process_job_and_running_structural_sync():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
     with Session(engine, expire_on_commit=False) as session:
@@ -138,15 +138,17 @@ def test_recovery_fails_only_orphaned_projection_jobs_and_running_structural_syn
         with session.begin():
             result = ProjectionSyncRecoveryService(session).recover_orphaned_jobs()
 
-        assert result.pipeline_jobs_failed == 3
+        assert result.pipeline_jobs_failed == 4
         assert result.sync_jobs_failed == 1
 
+        # Todo trabajo in-process huérfano se cierra, incluido el CRAWL: la
+        # cola vive en memoria, así que un RUNNING que sobrevive a un reinicio
+        # ya no puede estar ejecutándose y mentiría en el Admin UI.
         jobs = {job.id: job for job in session.scalars(select(PipelineJob))}
-        for job_id in job_ids[:3]:
+        for job_id in job_ids:
             assert jobs[job_id].status == PipelineJobStatus.FAILED
             assert jobs[job_id].stage == "recovered_after_restart"
             assert "reinició" in (jobs[job_id].error_summary or "")
-        assert jobs[job_ids[3]].status == PipelineJobStatus.RUNNING
 
         neo_sync = session.get(SyncJob, neo_sync_id)
         chroma_sync = session.get(SyncJob, chroma_sync_id)
@@ -168,7 +170,7 @@ def test_recovery_is_idempotent_after_projection_jobs_are_failed():
         with session.begin():
             second = ProjectionSyncRecoveryService(session).recover_orphaned_jobs()
 
-        assert first.pipeline_jobs_failed == 3
+        assert first.pipeline_jobs_failed == 4
         assert second.pipeline_jobs_failed == 0
         assert second.sync_jobs_failed == 0
 
@@ -210,7 +212,7 @@ def test_app_lifespan_recovers_projection_jobs_and_shuts_down_dispatcher(tmp_pat
     async def run_lifespan():
         async with app.router.lifespan_context(app):
             assert app.state.projection_sync_recovery == {
-                "pipeline_jobs_failed": 3,
+                "pipeline_jobs_failed": 4,
                 "sync_jobs_failed": 1,
             }
             with factory() as session:
@@ -218,7 +220,7 @@ def test_app_lifespan_recovers_projection_jobs_and_shuts_down_dispatcher(tmp_pat
                 assert jobs[job_ids[0]].status == PipelineJobStatus.FAILED
                 assert jobs[job_ids[1]].status == PipelineJobStatus.FAILED
                 assert jobs[job_ids[2]].status == PipelineJobStatus.FAILED
-                assert jobs[job_ids[3]].status == PipelineJobStatus.RUNNING
+                assert jobs[job_ids[3]].status == PipelineJobStatus.FAILED
                 assert session.get(SyncJob, chroma_sync_id).status == SyncStatus.FAILED
 
     asyncio.run(run_lifespan())

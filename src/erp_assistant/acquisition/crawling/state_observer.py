@@ -85,14 +85,14 @@ class StableStateObserver:
             signature = self.signature_builder.build(screen_data)
 
             samples_count += 1
-            fingerprints.append(signature.structural_fingerprint)
+            fingerprints.append(signature.render_fingerprint)
             last_screen_data = screen_data
             last_signature = signature
 
-            if signature.structural_fingerprint == previous_fingerprint:
+            if signature.render_fingerprint == previous_fingerprint:
                 consecutive += 1
             else:
-                previous_fingerprint = signature.structural_fingerprint
+                previous_fingerprint = signature.render_fingerprint
                 consecutive = 1
 
             if not self.enabled:

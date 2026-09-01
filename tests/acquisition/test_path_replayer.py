@@ -19,7 +19,7 @@ HTML = """
       document.getElementById('submenu').style.display='block';
     ">Abrir menú</button>
     <div id="submenu" style="display:none">
-      <span>Facturas</span>
+      <a href="/admin/facturas">Facturas</a>
     </div>
   </body>
 </html>
