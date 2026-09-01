@@ -65,6 +65,32 @@ const when = (value: string) => new Date(value).toLocaleString();
 const stringify = (value: Record<string, unknown>) =>
   JSON.stringify(value, null, 2);
 
+const CORRECTION_FORBIDDEN_KEYS = new Set([
+  "generated_at",
+  "reviewed_at",
+  "reviewed_by",
+  "review_notes",
+  "created_at",
+  "updated_at",
+  "imported_at",
+  "review_status",
+  "review_revision",
+]);
+
+const correctionSafeValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(correctionSafeValue);
+  if (typeof value !== "object" || value === null) return value;
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !CORRECTION_FORBIDDEN_KEYS.has(key.toLowerCase()))
+      .map(([key, item]) => [key, correctionSafeValue(item)]),
+  );
+};
+
+const stringifyCorrection = (value: Record<string, unknown>) =>
+  JSON.stringify(correctionSafeValue(value), null, 2);
+
 function Count({
   label,
   value,
@@ -189,7 +215,7 @@ export function StructuralReviewConsole() {
       const detail = await getStructuralReviewItem(itemId);
       setState((old) => ({ ...old, detail, loadingDetail: false }));
       setReason("");
-      setCorrectionText(stringify(detail.effective_payload));
+      setCorrectionText(stringifyCorrection(detail.effective_payload));
       setShowCorrection(false);
     } catch (error: unknown) {
       setState((old) => ({
@@ -263,7 +289,7 @@ export function StructuralReviewConsole() {
         submitting: false,
         message: null,
       }));
-      setCorrectionText(stringify(updated.effective_payload));
+      setCorrectionText(stringifyCorrection(updated.effective_payload));
       setReason("");
       setShowCorrection(false);
       await loadItems(state.versionId, true);
@@ -534,7 +560,8 @@ export function StructuralReviewConsole() {
                     />
                     <small>
                       Debe conservar el canonical ID y las relaciones críticas.
-                      El backend vuelve a validar el modelo canónico.
+                      Los campos operativos de revisión se omiten automáticamente;
+                      el backend vuelve a validar el modelo canónico.
                     </small>
                   </label>
                 )}
