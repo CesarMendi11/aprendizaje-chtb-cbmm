@@ -119,6 +119,50 @@ def test_ids_collection_and_synthetic_erp_are_deterministic(chroma_session):
     assert "Northwind Operations" in docs_a[0].text
 
 
+def test_safe_document_builder_distinguishes_deliberate_evidence_skip_from_missing_label():
+    builder = SafeDocumentBuilder()
+    erp = type("ERP", (), {"id": "erp:one", "name": "ERP Uno"})()
+    entries = [
+        {
+            "canonical_id": "evidence:a",
+            "entity_type": "evidence",
+            "parent_canonical_id": "screen:a",
+            "route": None,
+            "content_hash": "a" * 64,
+            "review_status": "approved",
+            "payload": {
+                "id": "evidence:a",
+                "evidence_type": "network",
+                "source_entity_type": "screen",
+            },
+        },
+        {
+            "canonical_id": "table:a",
+            "entity_type": "table",
+            "parent_canonical_id": "screen:a",
+            "route": None,
+            "content_hash": "b" * 64,
+            "review_status": "approved",
+            "payload": {"id": "table:a", "name": ""},
+        },
+    ]
+
+    documents, reasons, by_type, details = builder.build(
+        entries, erp=erp, knowledge_version="v1"
+    )
+
+    assert documents == []
+    assert reasons == {
+        "missing_safe_label": 1,
+        "not_projected_by_design": 1,
+    }
+    assert by_type == {"evidence": 1, "table": 1}
+    assert details == {
+        "evidence": {"not_projected_by_design": 1},
+        "table": {"missing_safe_label": 1},
+    }
+
+
 def test_chroma_upsert_idempotent_stale_scope_and_search_order(tmp_path):
     client = chromadb.PersistentClient(path=str(tmp_path / "chroma"))
     repo = ChromaRepository(client=client)
@@ -135,7 +179,7 @@ def test_chroma_upsert_idempotent_stale_scope_and_search_order(tmp_path):
             "payload": {"id": "screen:a", "title": "Consulta"},
         }
     ]
-    docs, _ = builder.build(entries, erp=erp, knowledge_version="v1")
+    docs, _, _, _ = builder.build(entries, erp=erp, knowledge_version="v1")
     repo.sync(docs, [[1.0, 0.0]], erp_id="erp:one", knowledge_version="v1")
     repo.sync(docs, [[1.0, 0.0]], erp_id="erp:one", knowledge_version="v1")
     other = type(docs[0])(

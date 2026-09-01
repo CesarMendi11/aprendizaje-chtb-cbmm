@@ -30,6 +30,8 @@ TYPE_NAMES = {
     "event": "Evento",
     "transition": "Transición",
 }
+NON_DOCUMENT_ENTITY_TYPES = {"evidence"}
+
 LABEL_KEYS = {
     "erp_system": ("name",),
     "module": ("name",),
@@ -62,17 +64,34 @@ class SafeDocumentBuilder:
     def build(self, entries, *, erp, knowledge_version):
         payloads = {entry["canonical_id"]: entry["payload"] for entry in entries}
         types = {entry["canonical_id"]: entry["entity_type"] for entry in entries}
-        documents, skipped = [], Counter()
+        documents = []
+        skipped_reasons = Counter()
+        skipped_by_entity_type = Counter()
+        skipped_details: dict[str, Counter[str]] = {}
         for entry in entries:
             try:
                 documents.append(self._one(entry, payloads, types, erp, knowledge_version))
             except ValueError as exc:
-                skipped[str(exc)] += 1
-        return documents, dict(sorted(skipped.items()))
+                reason = str(exc)
+                entity_type = str(entry.get("entity_type") or "unknown")
+                skipped_reasons[reason] += 1
+                skipped_by_entity_type[entity_type] += 1
+                skipped_details.setdefault(entity_type, Counter())[reason] += 1
+        return (
+            documents,
+            dict(sorted(skipped_reasons.items())),
+            dict(sorted(skipped_by_entity_type.items())),
+            {
+                entity_type: dict(sorted(reasons.items()))
+                for entity_type, reasons in sorted(skipped_details.items())
+            },
+        )
 
     def _one(self, entry, payloads, types, erp, knowledge_version):
         payload = entry["payload"]
         entity_type = entry["entity_type"]
+        if entity_type in NON_DOCUMENT_ENTITY_TYPES:
+            raise ValueError("not_projected_by_design")
         label = self._label(entity_type, payload)
         if not label:
             raise ValueError("missing_safe_label")
@@ -187,10 +206,17 @@ class ChromaSyncService:
                     "payload": self.effective.describe(item.id)["effective_payload"],
                 }
             )
-        documents, reasons = self.builder.build(
+        documents, reasons, skipped_by_entity_type, skipped_details = self.builder.build(
             entries, erp=erp, knowledge_version=version.knowledge_version
         )
-        return version, documents, self._summary(version, items, documents, reasons)
+        return version, documents, self._summary(
+            version,
+            items,
+            documents,
+            reasons,
+            skipped_by_entity_type,
+            skipped_details,
+        )
 
     def run(self, *, erp_id=None, knowledge_version=None):
         version = self._version(erp_id, knowledge_version, for_update=True)
@@ -302,7 +328,14 @@ class ChromaSyncService:
         return version
 
     @staticmethod
-    def _summary(version, items, documents, reasons):
+    def _summary(
+        version,
+        items,
+        documents,
+        reasons,
+        skipped_by_entity_type,
+        skipped_details,
+    ):
         return {
             "erp_id": version.erp_id,
             "knowledge_version": version.knowledge_version,
@@ -321,6 +354,8 @@ class ChromaSyncService:
             "removed_previous_version": 0,
             "skipped": sum(reasons.values()),
             "skipped_reasons": reasons,
+            "skipped_by_entity_type": skipped_by_entity_type,
+            "skipped_details": skipped_details,
         }
 
     @staticmethod
