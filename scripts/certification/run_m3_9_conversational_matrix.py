@@ -6,7 +6,7 @@ import json
 import math
 import statistics
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 

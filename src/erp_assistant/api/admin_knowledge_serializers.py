@@ -23,7 +23,6 @@ from erp_assistant.semantic.schemas import (
     FieldEvidence,
     ModuleEvidence,
     ScreenEvidencePackage,
-    ScreenPurposeInference,
     TableEvidence,
     TransitionEvidence,
     UIStateEvidence,

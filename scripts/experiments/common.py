@@ -60,7 +60,7 @@ def redact_sensitive(value: Any) -> Any:
         return project_relative(value)
     if isinstance(value, datetime):
         return value.isoformat()
-    if hasattr(value, "value") and isinstance(getattr(value, "value"), str):
+    if hasattr(value, "value") and isinstance(value.value, str):
         return value.value
     return value
 

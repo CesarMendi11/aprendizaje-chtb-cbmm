@@ -117,7 +117,6 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
             "screen_route": screen.route,
             "module": {"module_id": "module:cxp", "name": "Cuentas por cobrar"},
             "fields": [],
-            "controls": [],
             "tables": [],
             "ui_states": [],
             "events": [],

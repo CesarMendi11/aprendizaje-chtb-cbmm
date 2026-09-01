@@ -5,7 +5,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 from .enums import ControlType, EvidenceType
 from .ids import content_hash, normalize_route, normalize_text, stable_id
@@ -756,7 +755,7 @@ class CanonicalKnowledgeBuilder:
     def _common_prefix(routes):
         if not routes: return None
         parts=[route.strip("/").split("/") for route in routes]; common=[]
-        for values in zip(*parts):
+        for values in zip(*parts, strict=False):
             if len(set(values)) != 1: break
             common.append(values[0])
         return "/"+"/".join(common) if common else None

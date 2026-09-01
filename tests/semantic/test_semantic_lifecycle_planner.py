@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
-    GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
 )

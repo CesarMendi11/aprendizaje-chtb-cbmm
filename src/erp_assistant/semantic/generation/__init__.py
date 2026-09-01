@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 from .errors import *  # noqa: F403
 from .ollama_structured_client import (
     OllamaStructuredGenerationClient,
     StructuredGenerationResponse,
 )
+
+if TYPE_CHECKING:
+    from .screen_purpose_service import ScreenPurposeInferenceService
 
 __all__ = [
     "OllamaStructuredGenerationClient",

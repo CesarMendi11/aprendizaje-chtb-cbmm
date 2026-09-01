@@ -14,7 +14,6 @@ from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceJSONError,
     InferenceNarrativeQualityError,
-    InferencePurposeGroundingError,
     InferenceReferenceError,
     InferenceSchemaError,
     InferenceScreenMismatchError,

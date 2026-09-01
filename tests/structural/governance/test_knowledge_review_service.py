@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import create_engine, event, func, select
+from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.base import Base

@@ -8,7 +8,7 @@ from typing import Any
 
 from erp_assistant.config.paths import PROJECT_ROOT
 
-from erp_assistant.persistence.postgres.session import database_engine
+from erp_assistant.persistence.postgres.session import database_engine as database_engine
 
 
 

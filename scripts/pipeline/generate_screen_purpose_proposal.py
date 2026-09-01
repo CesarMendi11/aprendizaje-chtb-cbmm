@@ -6,7 +6,6 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
-from pathlib import Path
 from erp_assistant.config.paths import PROJECT_ROOT
 
 if str(PROJECT_ROOT) not in sys.path:

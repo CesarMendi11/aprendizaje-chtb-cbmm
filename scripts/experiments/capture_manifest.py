@@ -5,7 +5,6 @@ import importlib.metadata
 import os
 import platform
 import subprocess
-from pathlib import Path
 from typing import Any
 
 from erp_assistant.config.chroma_settings import ChromaSettings

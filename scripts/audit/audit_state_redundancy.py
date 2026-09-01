@@ -169,7 +169,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(reports if len(reports) > 1 else reports[0], indent=2, ensure_ascii=False))
     else:
-        for run, report in zip(args.runs, reports):
+        for run, report in zip(args.runs, reports, strict=True):
             render(report, label=f"— {run.name[:20]}")
 
         if len(reports) == 2:
