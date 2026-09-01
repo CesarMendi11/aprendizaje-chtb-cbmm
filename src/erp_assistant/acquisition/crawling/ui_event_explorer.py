@@ -7,7 +7,6 @@ from typing import Any
 from playwright.sync_api import Page
 
 from erp_assistant.acquisition.browser.interaction_executor import BrowserInteractionExecutor
-
 from erp_assistant.acquisition.crawling.state_observer import StableStateObserver
 from erp_assistant.acquisition.crawling.state_restorer import RestoreResult, StateRestorer
 from erp_assistant.acquisition.crawling.state_signature import StateSignature, StateSignatureBuilder
@@ -156,16 +155,12 @@ class UIEventExplorer:
         ui_events = profile.get("ui_events", {})
         candidate_limits = ui_events.get("candidate_limits", {})
         exploration_budget = ui_events.get("exploration_budget", {}) or {}
-        self.home_route = str(
-            profile.get("navigation", {}).get("home_url") or ""
-        )
+        self.home_route = str(profile.get("navigation", {}).get("home_url") or "")
 
         self.enabled = ui_events.get("enabled", True)
         self.event_wait_ms = ui_events.get("event_wait_ms", 800)
         self.click_timeout_ms = ui_events.get("click_timeout_ms", 2500)
-        self.max_events_per_state = int(
-            candidate_limits.get("max_events_per_state", 25)
-        )
+        self.max_events_per_state = int(candidate_limits.get("max_events_per_state", 25))
         self.home_max_events_per_state = int(
             exploration_budget.get(
                 "home_max_events_per_state",
@@ -173,18 +168,10 @@ class UIEventExplorer:
             )
         )
         self.skip_link_navigation = ui_events.get("skip_link_navigation", True)
-        self.restore_after_exploration = ui_events.get(
-            "restore_after_exploration", True
-        )
-        self.capture_event_artifacts = ui_events.get(
-            "capture_event_artifacts", False
-        )
-        self.artifact_timeout_ms = ui_events.get(
-            "artifact_timeout_ms", 3000
-        )
-        self.artifact_full_page = bool(
-            ui_events.get("artifact_full_page", False)
-        )
+        self.restore_after_exploration = ui_events.get("restore_after_exploration", True)
+        self.capture_event_artifacts = ui_events.get("capture_event_artifacts", False)
+        self.artifact_timeout_ms = ui_events.get("artifact_timeout_ms", 3000)
+        self.artifact_full_page = bool(ui_events.get("artifact_full_page", False))
         self.interaction_executor = BrowserInteractionExecutor(
             page=page,
             profile=profile,
@@ -204,13 +191,9 @@ class UIEventExplorer:
             return []
 
         current_screen_data = screen_data or self.extractor.extract()
-        current_signature = self.state_signature_builder.build(
-            current_screen_data
-        )
+        current_signature = self.state_signature_builder.build(current_screen_data)
 
-        candidates = self.candidate_discovery.discover_exploration_candidates(
-            current_screen_data
-        )
+        candidates = self.candidate_discovery.discover_exploration_candidates(current_screen_data)
         candidates = self._filter_candidates_for_ui_events(
             candidates,
             allowed_categories=allowed_categories,
@@ -246,9 +229,7 @@ class UIEventExplorer:
                 before_screen_data = restore_result.screen_data
                 before_signature = restore_result.signature
                 if before_signature is None:
-                    before_signature = self.state_signature_builder.build(
-                        before_screen_data
-                    )
+                    before_signature = self.state_signature_builder.build(before_screen_data)
             else:
                 before_screen_data = current_screen_data
                 before_signature = current_signature
@@ -268,9 +249,7 @@ class UIEventExplorer:
             # dispone de un restaurador. El modo aislado nunca acumula estados.
             if result.changed and not isolated:
                 current_screen_data = result.after_screen_data
-                current_signature = self.state_signature_builder.build(
-                    current_screen_data
-                )
+                current_signature = self.state_signature_builder.build(current_screen_data)
 
         if isolated and self.restore_after_exploration:
             self.state_restorer.restore(source_state)
@@ -305,12 +284,9 @@ class UIEventExplorer:
             if candidate.event_category in {"expand_menu", "collapse_menu"}:
                 if candidate.selector in traversed_menu_selectors:
                     continue
-                if (
-                    last_traversed_menu_selector
-                    and not self._selector_is_descendant(
-                        candidate.selector,
-                        last_traversed_menu_selector,
-                    )
+                if last_traversed_menu_selector and not self._selector_is_descendant(
+                    candidate.selector,
+                    last_traversed_menu_selector,
                 ):
                     continue
             filtered.append(candidate)
@@ -329,26 +305,23 @@ class UIEventExplorer:
             and step.event.event_type.value in {"expand_menu", "collapse_menu"}
         }
 
-
     def _last_traversed_menu_selector(self, source_state: UIState | None) -> str:
         """Devuelve el último menú de la rama usada para alcanzar el estado."""
         if source_state is None or source_state.path is None:
             return ""
 
         for step in reversed(source_state.path.steps):
-            if (
-                step.event.selector
-                and step.event.event_type.value in {"expand_menu", "collapse_menu"}
-            ):
+            if step.event.selector and step.event.event_type.value in {
+                "expand_menu",
+                "collapse_menu",
+            }:
                 return step.event.selector
         return ""
 
     @staticmethod
     def _selector_segments(selector: str) -> tuple[str, ...]:
         return tuple(
-            segment.strip().lower()
-            for segment in str(selector or "").split(">")
-            if segment.strip()
+            segment.strip().lower() for segment in str(selector or "").split(">") if segment.strip()
         )
 
     @classmethod
@@ -454,9 +427,7 @@ class UIEventExplorer:
             changed = effect is not EventEffect.NO_EFFECT
 
             if effect.creates_state:
-                after_html, after_screenshot, artifact_error = (
-                    self._capture_result_artifacts()
-                )
+                after_html, after_screenshot, artifact_error = self._capture_result_artifacts()
             else:
                 after_html, after_screenshot, artifact_error = (
                     None,
@@ -479,18 +450,14 @@ class UIEventExplorer:
                 error=None,
                 source_state_id=source_state_id,
                 restored_before=restore_result is not None,
-                restore_strategy=(
-                    restore_result.strategy if restore_result else None
-                ),
+                restore_strategy=(restore_result.strategy if restore_result else None),
                 artifact_error=artifact_error,
                 after_html=after_html,
                 after_screenshot=after_screenshot,
                 interaction_attempts=interaction.attempts,
                 interaction_strategy=interaction.strategy,
                 interaction_succeeded=True,
-                restore_diagnostics=(
-                    restore_result.diagnostics() if restore_result else {}
-                ),
+                restore_diagnostics=(restore_result.diagnostics() if restore_result else {}),
                 after_observation=observation.diagnostics(),
             )
 
@@ -592,8 +559,6 @@ class UIEventExplorer:
             interaction_attempts=interaction_attempts,
             interaction_strategy=interaction_strategy,
             interaction_succeeded=interaction_succeeded,
-            restore_diagnostics=(
-                restore_result.diagnostics() if restore_result else {}
-            ),
+            restore_diagnostics=(restore_result.diagnostics() if restore_result else {}),
             after_observation=after_observation or {},
         )

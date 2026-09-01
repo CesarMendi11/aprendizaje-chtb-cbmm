@@ -51,12 +51,8 @@ class ScreenExtractor:
         self.profile = profile
 
         extraction_config = profile.get("extraction", {})
-        self.max_visible_text_chars = int(
-            extraction_config.get("max_visible_text_chars", 8000)
-        )
-        self.max_region_text_chars = int(
-            extraction_config.get("max_region_text_chars", 5000)
-        )
+        self.max_visible_text_chars = int(extraction_config.get("max_visible_text_chars", 8000))
+        self.max_region_text_chars = int(extraction_config.get("max_region_text_chars", 5000))
         self.region_selectors = self._build_region_selectors(extraction_config)
         self.title_resolver = ScreenTitleResolver(profile)
 
@@ -71,9 +67,7 @@ class ScreenExtractor:
 
         visible_text = data.get("visible_text") or ""
         data["visible_text"] = visible_text[: self.max_visible_text_chars]
-        data["visible_text_truncated"] = (
-            len(visible_text) > self.max_visible_text_chars
-        )
+        data["visible_text_truncated"] = len(visible_text) > self.max_visible_text_chars
 
         resolved = self.title_resolver.resolve(data, title_hint=title_hint)
         data["functional_title"] = resolved.title
@@ -81,20 +75,14 @@ class ScreenExtractor:
         data["title_confidence"] = resolved.confidence
 
         data["main_visible_text"] = (
-            data.get("regions", {})
-            .get("main_content", {})
-            .get("visible_text", "")
+            data.get("regions", {}).get("main_content", {}).get("visible_text", "")
         )
-        data["global_links"] = self._items_in_region(
-            data.get("links", []), "global_navigation"
-        )
+        data["global_links"] = self._items_in_region(data.get("links", []), "global_navigation")
         data["local_links"] = self._local_items(data.get("links", []))
         data["global_interactives"] = self._items_in_region(
             data.get("custom_interactives", []), "global_navigation"
         )
-        data["local_interactives"] = self._local_items(
-            data.get("custom_interactives", [])
-        )
+        data["local_interactives"] = self._local_items(data.get("custom_interactives", []))
 
         return data
 
@@ -108,11 +96,7 @@ class ScreenExtractor:
             values = configured.get(region, defaults)
             if values is None:
                 values = []
-            result[region] = [
-                str(value).strip()
-                for value in values
-                if str(value).strip()
-            ]
+            result[region] = [str(value).strip() for value in values if str(value).strip()]
         return result
 
     def _items_in_region(
@@ -129,8 +113,7 @@ class ScreenExtractor:
         return [
             item
             for item in items
-            if item.get("region")
-            not in {"global_navigation", "header", "footer", "volatile"}
+            if item.get("region") not in {"global_navigation", "header", "footer", "volatile"}
         ]
 
     def _evaluation_script(self) -> str:

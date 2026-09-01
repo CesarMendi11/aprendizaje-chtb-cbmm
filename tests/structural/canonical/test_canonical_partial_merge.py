@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 
 import pytest
 
-from erp_assistant.structural.canonical.merge import CanonicalPartialMergeError, CanonicalPartialMerger
+from erp_assistant.structural.canonical.merge import (
+    CanonicalPartialMergeError,
+    CanonicalPartialMerger,
+)
 from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
 from erp_assistant.structural.canonical.snapshot import CanonicalSnapshotContext
 
@@ -349,8 +352,7 @@ def test_screen_partial_drops_route_without_module_warning_after_module_restore(
     tracking = next(item for item in merged.screens if item.id == "screen:tracking")
     assert tracking.module_id == "module:tracking"
     assert not any(
-        warning.code == "route_without_module"
-        and warning.entity_id == "screen:tracking"
+        warning.code == "route_without_module" and warning.entity_id == "screen:tracking"
         for warning in merged.build_warnings
     )
 
@@ -371,9 +373,7 @@ def test_screen_partial_preserves_and_deduplicates_unrelated_warnings():
 
     merged, _ = CanonicalPartialMerger().merge(base, partial, _screen_snapshot())
 
-    matching = [
-        item for item in merged.build_warnings if item.code == "synthetic_warning"
-    ]
+    matching = [item for item in merged.build_warnings if item.code == "synthetic_warning"]
     assert len(matching) == 1
     assert matching[0].count == 2
 
@@ -516,9 +516,7 @@ def test_partial_route_fallback_does_not_replace_stronger_active_title(snapshot)
     partial_screen = next(
         item for item in partial_payload["screens"] if item["id"] == "screen:tracking"
     )
-    partial_screen["main_content_text"] = (
-        "7 | Primera página | InspInformeRiesgo | Etiqueta nueva"
-    )
+    partial_screen["main_content_text"] = "7 | Primera página | InspInformeRiesgo | Etiqueta nueva"
     partial = CanonicalKnowledgeBase.model_validate(partial_payload)
 
     merged, _ = CanonicalPartialMerger().merge(base, partial, snapshot)
@@ -527,9 +525,7 @@ def test_partial_route_fallback_does_not_replace_stronger_active_title(snapshot)
     assert tracking.title == "InspInformeRiesgo"
     assert tracking.normalized_title == "inspinformeriesgo"
     assert tracking.title_source == "discovery_hint"
-    assert tracking.main_content_text == (
-        "InspInformeRiesgo | Primera página | Etiqueta nueva"
-    )
+    assert tracking.main_content_text == ("InspInformeRiesgo | Primera página | Etiqueta nueva")
 
 
 @pytest.mark.parametrize("snapshot", [_snapshot(), _screen_snapshot()])
@@ -602,11 +598,5 @@ def test_merge_preserves_distinct_base_and_partial_profile_fingerprints():
     merged, _ = CanonicalPartialMerger().merge(base, partial, _snapshot())
 
     assert merged.source_profile == "configs/base.yaml"
-    assert (
-        merged.source_artifact_hashes["base:profile:configs/base.yaml"]
-        == "a" * 64
-    )
-    assert (
-        merged.source_artifact_hashes["partial:profile:configs/partial.yaml"]
-        == "b" * 64
-    )
+    assert merged.source_artifact_hashes["base:profile:configs/base.yaml"] == "a" * 64
+    assert merged.source_artifact_hashes["partial:profile:configs/partial.yaml"] == "b" * 64

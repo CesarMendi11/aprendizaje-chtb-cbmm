@@ -24,9 +24,7 @@ class EvidenceSelection:
             "reason": self.reason,
             "focal_canonical_ids": list(self.focal_canonical_ids),
             "source_ids": [
-                row.get("canonical_id")
-                for row in self.sources
-                if row.get("canonical_id")
+                row.get("canonical_id") for row in self.sources if row.get("canonical_id")
             ],
             "relation_types": [
                 row.get("relationship_type")
@@ -34,9 +32,7 @@ class EvidenceSelection:
                 if row.get("relationship_type")
             ],
             "semantic_ids": [
-                row.get("semantic_id")
-                for row in self.approved_semantics
-                if row.get("semantic_id")
+                row.get("semantic_id") for row in self.approved_semantics if row.get("semantic_id")
             ],
             "clarification_candidates": [dict(row) for row in self.clarification_candidates],
             "counts": {
@@ -91,9 +87,7 @@ class EvidenceSelector:
             )
 
         source_by_id = {
-            str(row.get("canonical_id")): row
-            for row in sources
-            if row.get("canonical_id")
+            str(row.get("canonical_id")): row for row in sources if row.get("canonical_id")
         }
         focal_ids = self._focal_ids(
             query_plan,
@@ -105,11 +99,7 @@ class EvidenceSelector:
 
         if query_plan.intent == QueryIntent.SCREEN_PURPOSE:
             semantics = self._purpose_semantics(focal_ids, approved_semantics)
-            selected_ids = {
-                str(row.get("screen_id"))
-                for row in semantics
-                if row.get("screen_id")
-            }
+            selected_ids = {str(row.get("screen_id")) for row in semantics if row.get("screen_id")}
             selected_sources = self._ordered_sources(
                 sources,
                 selected_ids or set(focal_ids),
@@ -252,9 +242,7 @@ class EvidenceSelector:
         # without passing the whole retrieval neighborhood to the model.
         generic_sources = tuple(sources[: self.generic_source_limit])
         generic_ids = {
-            str(row.get("canonical_id"))
-            for row in generic_sources
-            if row.get("canonical_id")
+            str(row.get("canonical_id")) for row in generic_sources if row.get("canonical_id")
         }
         generic_relations = tuple(
             row
@@ -296,7 +284,6 @@ class EvidenceSelector:
             semantics=(),
         )
 
-
     @staticmethod
     def _navigation_relations(query_plan, focal_ids, relations):
         """Prefer one explicit governed navigation affordance.
@@ -334,18 +321,13 @@ class EvidenceSelector:
                 return False
             if label in normalized_question:
                 return True
-            tokens = {
-                token
-                for token in label.split()
-                if token not in generic_navigation_tokens
-            }
+            tokens = {token for token in label.split() if token not in generic_navigation_tokens}
             return bool(tokens) and tokens.issubset(question_tokens)
 
         named = [
             row
             for row in relations
-            if row.get("relationship_type") in {"HAS_EVENT", "HAS_CONTROL"}
-            and label_matches(row)
+            if row.get("relationship_type") in {"HAS_EVENT", "HAS_CONTROL"} and label_matches(row)
         ]
         if named:
             named.sort(
@@ -372,11 +354,7 @@ class EvidenceSelector:
 
     @staticmethod
     def _ordered_sources(sources, selected_ids):
-        return tuple(
-            row
-            for row in sources
-            if row.get("canonical_id") in selected_ids
-        )
+        return tuple(row for row in sources if row.get("canonical_id") in selected_ids)
 
     @staticmethod
     def _relation_ids(relations: Iterable[Mapping[str, object]]) -> set[str]:
@@ -424,11 +402,7 @@ class EvidenceSelector:
     @staticmethod
     def _purpose_semantics(focal_ids, approved_semantics):
         focal = set(focal_ids)
-        matches = tuple(
-            row
-            for row in approved_semantics
-            if row.get("screen_id") in focal
-        )
+        matches = tuple(row for row in approved_semantics if row.get("screen_id") in focal)
         return matches[:2]
 
     @staticmethod
@@ -451,17 +425,10 @@ class EvidenceSelector:
             row
             for row in relations
             if row.get("relationship_type") == "HAS_FIELD"
-            and (
-                row.get("target_canonical_id") in focal
-                or not focal
-            )
+            and (row.get("target_canonical_id") in focal or not focal)
         ]
         if not fields:
-            fields = [
-                row
-                for row in relations
-                if row.get("relationship_type") == "HAS_FIELD"
-            ][:1]
+            fields = [row for row in relations if row.get("relationship_type") == "HAS_FIELD"][:1]
         selected = list(fields)
         screen_ids = {row.get("source_canonical_id") for row in fields}
         selected.extend(
@@ -484,9 +451,7 @@ class EvidenceSelector:
         if matches:
             return tuple(matches)
         return tuple(
-            row
-            for row in relations
-            if row.get("relationship_type") in relationship_types
+            row for row in relations if row.get("relationship_type") in relationship_types
         )[:1]
 
     @staticmethod
@@ -550,7 +515,9 @@ class EvidenceSelector:
                 )
             ]
             if not controls:
-                controls = [row for row in rows if row.get("relationship_type") == "HAS_CONTROL"][:1]
+                controls = [row for row in rows if row.get("relationship_type") == "HAS_CONTROL"][
+                    :1
+                ]
             rows = fields + controls
         elif control_limit is not None:
             fields = [row for row in rows if row.get("relationship_type") == "HAS_FIELD"]

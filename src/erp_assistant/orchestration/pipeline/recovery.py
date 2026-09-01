@@ -65,9 +65,7 @@ class ProjectionSyncRecoveryService:
                 select(PipelineJob)
                 .where(
                     PipelineJob.kind.in_(sorted(RECOVERABLE_JOB_KINDS)),
-                    PipelineJob.status.in_(
-                        [PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]
-                    ),
+                    PipelineJob.status.in_([PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]),
                 )
                 .order_by(PipelineJob.requested_at, PipelineJob.id)
             )

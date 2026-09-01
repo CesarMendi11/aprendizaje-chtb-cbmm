@@ -9,9 +9,9 @@ from difflib import SequenceMatcher
 from sqlalchemy import Float, cast, func, literal, literal_column, or_, select
 
 from erp_assistant.persistence.postgres.models import KnowledgeItem
-from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
+from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 
 from .query_plan import QueryPlan
 
@@ -107,8 +107,7 @@ class EntityResolutionCandidate:
             "channels": list(self.channels),
             "matched_terms": list(self.matched_terms),
             "channel_scores": {
-                channel: round(float(score), 6)
-                for channel, score in self.channel_scores
+                channel: round(float(score), 6) for channel, score in self.channel_scores
             },
         }
 
@@ -165,8 +164,7 @@ class EntityResolution:
         return tuple(
             candidate.canonical_id
             for candidate in self.candidates
-            if f"{candidate.entity_type}:{normalize_entity_text(candidate.safe_label)}"
-            in ambiguous
+            if f"{candidate.entity_type}:{normalize_entity_text(candidate.safe_label)}" in ambiguous
         )
 
     def ranking(self, channel: str) -> tuple[tuple[str, float], ...]:
@@ -175,9 +173,7 @@ class EntityResolution:
             rows = []
             for candidate in self.candidates:
                 scores = [
-                    score
-                    for current, score in candidate.channel_scores
-                    if current in accepted
+                    score for current, score in candidate.channel_scores if current in accepted
                 ]
                 if not scores and any(current in accepted for current in candidate.channels):
                     scores = [candidate.score]
@@ -187,9 +183,7 @@ class EntityResolution:
             rows = []
             for candidate in self.candidates:
                 scores = [
-                    score
-                    for current, score in candidate.channel_scores
-                    if current == channel
+                    score for current, score in candidate.channel_scores if current == channel
                 ]
                 if not scores and channel in candidate.channels:
                     scores = [candidate.score]
@@ -343,9 +337,7 @@ class CanonicalEntityResolver:
             return resolution
 
         candidate_ids = tuple(
-            candidate.canonical_id
-            for candidate in resolution.candidates
-            if candidate.canonical_id
+            candidate.canonical_id for candidate in resolution.candidates if candidate.canonical_id
         )
         items = self._scope_items(
             candidate_ids,
@@ -369,8 +361,7 @@ class CanonicalEntityResolver:
                 if not (
                     candidate.entity_type == "ui_state"
                     and candidate.canonical_id != screen_id
-                    and normalize_entity_text(candidate.safe_label)
-                    == normalized_context_label
+                    and normalize_entity_text(candidate.safe_label) == normalized_context_label
                 )
             )
 
@@ -417,9 +408,7 @@ class CanonicalEntityResolver:
             item = items.get(current)
             if item is None:
                 return False
-            current = str(
-                getattr(item, "parent_canonical_id", None) or ""
-            ).strip()
+            current = str(getattr(item, "parent_canonical_id", None) or "").strip()
         return False
 
     def _candidate_rows(
@@ -682,11 +671,11 @@ def normalize_entity_text(value: str) -> str:
     return " ".join(re.sub(r"[^\w\s]", " ", text).split())
 
 
-
 def contains_normalized_phrase(normalized_query: str, normalized_label: str) -> bool:
     if not normalized_query or not normalized_label:
         return False
     return f" {normalized_label} " in f" {normalized_query} "
+
 
 def singularize_token(token: str) -> str:
     if len(token) >= 5 and token.endswith("es"):

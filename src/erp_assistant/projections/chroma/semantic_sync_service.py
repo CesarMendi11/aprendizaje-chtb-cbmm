@@ -7,21 +7,22 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from erp_assistant.semantic.evidence.screen_evidence_builder import (
-    ScreenEvidenceBuilder,
-    ScreenEvidenceError,
-)
-from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord, SemanticProposal
-from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.structural.canonical.privacy import sanitize_text
 from erp_assistant.projections.chroma.semantic_repository import (
     semantic_collection_name,
     semantic_document_id,
 )
-
-from erp_assistant.semantic.services.semantic_effective_payload_service import SemanticEffectivePayloadService
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.semantic.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
+from erp_assistant.semantic.services.semantic_effective_payload_service import (
+    SemanticEffectivePayloadService,
+)
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.privacy import sanitize_text
 
 PUBLISHABLE = {ReviewStatus.APPROVED, ReviewStatus.CORRECTED}
 
@@ -164,10 +165,9 @@ class SemanticChromaSyncService:
             if not evaluate_screen_semantic_eligibility(package).eligible:
                 skipped["current_evidence_ineligible"] += 1
                 continue
-            if (
-                proposal.evidence_hash != package.evidence_hash
-                or list(proposal.evidence_ids) != list(package.evidence_ids)
-            ):
+            if proposal.evidence_hash != package.evidence_hash or list(
+                proposal.evidence_ids
+            ) != list(package.evidence_ids):
                 skipped["stale_evidence"] += 1
                 continue
             payload = self.effective.publishable_payload(proposal.id)
@@ -254,10 +254,7 @@ class SemanticChromaSyncService:
             erp_id=erp_id,
             knowledge_version=knowledge_version,
         )
-        if (
-            current_version.id != knowledge_version_id
-            or current_documents != prepared_documents
-        ):
+        if current_version.id != knowledge_version_id or current_documents != prepared_documents:
             raise ValueError("semantic_projection_changed_during_sync")
 
         changed, removed = self.repository.sync(
@@ -285,5 +282,7 @@ class SemanticChromaSyncService:
         query = query.where(KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE)
         candidates = list(self.session.scalars(query))
         if len(candidates) != 1:
-            raise ValueError("Se requiere exactamente una versión ACTIVE para sincronizar semántica")
+            raise ValueError(
+                "Se requiere exactamente una versión ACTIVE para sincronizar semántica"
+            )
         return candidates[0]

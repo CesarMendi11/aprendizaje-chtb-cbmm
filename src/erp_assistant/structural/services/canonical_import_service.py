@@ -195,9 +195,13 @@ class CanonicalImportService:
             )
             self.session.add(item)
             self.session.flush()
-            if old and review_unchanged and (
-                old.current_review_status != ReviewStatus.PENDING_REVIEW
-                or ReviewRepository(self.session).latest_correction(old.id)
+            if (
+                old
+                and review_unchanged
+                and (
+                    old.current_review_status != ReviewStatus.PENDING_REVIEW
+                    or ReviewRepository(self.session).latest_correction(old.id)
+                )
             ):
                 correction = ReviewRepository(self.session).latest_correction(old.id)
                 corrected_payload = correction.corrected_payload if correction else None
@@ -220,8 +224,7 @@ class CanonicalImportService:
                         new_status=status,
                         corrected_payload=corrected_payload,
                         review_notes=(
-                            "Revisión arrastrada sin cambios estructurales; "
-                            "provenance actualizada"
+                            "Revisión arrastrada sin cambios estructurales; provenance actualizada"
                             if not raw_unchanged
                             else "Revisión arrastrada sin cambios funcionales"
                         ),
@@ -266,9 +269,7 @@ class CanonicalImportService:
         if errors:
             raise ValueError(f"Conocimiento canónico inválido: {len(errors)} errores")
         manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-        report = (
-            json.loads(Path(report_path).read_text(encoding="utf-8")) if report_path else {}
-        )
+        report = json.loads(Path(report_path).read_text(encoding="utf-8")) if report_path else {}
         if manifest.get("knowledge_version") != knowledge.knowledge_version:
             raise ValueError("manifest.json no corresponde a knowledge.json")
         calculated = repository.document_hash

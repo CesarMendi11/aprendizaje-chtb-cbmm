@@ -5,28 +5,27 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from erp_assistant.config.paths import PROJECT_ROOT
-
 from sqlalchemy import select
 
-from erp_assistant.config.pipeline_settings import PipelineSettings
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
-from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.structural.services.canonical_materialization_service import (
-    CanonicalKnowledgeMaterializationError,
-    CanonicalKnowledgeMaterializer,
-)
 from erp_assistant.acquisition.quality import (
     CrawlExecutionQualityError,
     validate_certified_quality_source,
     validate_matching_certified_quality,
 )
+from erp_assistant.config.paths import PROJECT_ROOT
+from erp_assistant.config.pipeline_settings import PipelineSettings
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
+from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
 from erp_assistant.structural.canonical import (
     CanonicalKnowledgeExporter,
     CanonicalKnowledgeRepository,
     CanonicalPartialMergeError,
     CanonicalPartialMerger,
     CanonicalSnapshotContext,
+)
+from erp_assistant.structural.services.canonical_materialization_service import (
+    CanonicalKnowledgeMaterializationError,
+    CanonicalKnowledgeMaterializer,
 )
 
 ProgressCallback = Callable[[str, dict[str, Any]], None]
@@ -204,9 +203,7 @@ class CanonicalMergeJobExecutor:
                         "La KnowledgeVersion base fijada ya no está ACTIVE"
                     )
                 if version.knowledge_version != base_version_name:
-                    raise CanonicalMergeJobExecutionError(
-                        "La knowledge_version base fijada cambió"
-                    )
+                    raise CanonicalMergeJobExecutionError("La knowledge_version base fijada cambió")
                 if version.erp_id != erp_id:
                     raise CanonicalMergeJobExecutionError(
                         "La KnowledgeVersion base pertenece a otro ERP"
@@ -317,9 +314,7 @@ class CanonicalMergeJobExecutor:
 
     def _artifact(self, raw: Any, run_root: Path, expected_name: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():
-            raise CanonicalMergeJobExecutionError(
-                f"canonical_merge requiere {expected_name}"
-            )
+            raise CanonicalMergeJobExecutionError(f"canonical_merge requiere {expected_name}")
         path = _project_path(self.project_root, raw.strip()).resolve()
         try:
             path.relative_to(run_root)

@@ -16,7 +16,9 @@ from erp_assistant.structural.services.removal_reconciliation_plan_service impor
     RemovalReconciliationPlanError,
     RemovalReconciliationPlanService,
 )
-from erp_assistant.structural.services.structural_review_package_service import StructuralReviewPackageError
+from erp_assistant.structural.services.structural_review_package_service import (
+    StructuralReviewPackageError,
+)
 from erp_assistant.structural.services.version_diff_service import VersionDiffError
 
 router = APIRouter(prefix="/removal-reconciliation-plans", tags=["removal reconciliation plans"])

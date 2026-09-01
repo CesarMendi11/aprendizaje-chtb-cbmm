@@ -13,8 +13,17 @@ from sqlalchemy.orm import sessionmaker
 from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
 from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
+from erp_assistant.persistence.postgres.enums import (
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    PipelineJob,
+    SyncJob,
+)
 from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from tests.fixtures.canonical import exported_fictional_canonical
@@ -32,6 +41,7 @@ class Client:
                 base_url="http://test",
             ) as client:
                 return await client.request(method, path, **kwargs)
+
         return asyncio.run(send())
 
     def get(self, path, **kwargs):
@@ -154,21 +164,16 @@ def test_assessment_and_bootstrap_promotion(api):
     client, factory, tmp_path = api
     version_id, knowledge_version = seed(factory, tmp_path)
 
-    pending = client.get(
-        f"/api/admin/knowledge-versions/{version_id}/promotion-assessment"
-    )
+    pending = client.get(f"/api/admin/knowledge-versions/{version_id}/promotion-assessment")
     assert pending.status_code == 200, pending.text
     assert pending.json()["promotable"] is False
     assert any(
-        blocker["code"] == "required_pending_review"
-        for blocker in pending.json()["blockers"]
+        blocker["code"] == "required_pending_review" for blocker in pending.json()["blockers"]
     )
 
     approve_required(factory, version_id)
 
-    ready = client.get(
-        f"/api/admin/knowledge-versions/{version_id}/promotion-assessment"
-    )
+    ready = client.get(f"/api/admin/knowledge-versions/{version_id}/promotion-assessment")
     assert ready.status_code == 200, ready.text
     assert ready.json()["promotable"] is True
 
@@ -199,9 +204,7 @@ def test_api_replacement_promotion_archives_previous_active(api):
     with factory() as session:
         active_id, _, candidate_id, _, _ = seed_reconciled(session, tmp_path)
 
-    assessment = client.get(
-        f"/api/admin/knowledge-versions/{candidate_id}/promotion-assessment"
-    )
+    assessment = client.get(f"/api/admin/knowledge-versions/{candidate_id}/promotion-assessment")
     assert assessment.status_code == 200, assessment.text
     body = assessment.json()
     assert body["promotion_mode"] == "replacement"

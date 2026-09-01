@@ -77,8 +77,11 @@ class ChromaRepository:
             safe_label = metadata.get("safe_label")
             if not safe_label:
                 safe_label = next(
-                    (line.split(":", 1)[1].strip() for line in document.splitlines()
-                     if line.startswith("Nombre:") and ":" in line),
+                    (
+                        line.split(":", 1)[1].strip()
+                        for line in document.splitlines()
+                        if line.startswith("Nombre:") and ":" in line
+                    ),
                     "Entidad de conocimiento",
                 )
             rows.append(

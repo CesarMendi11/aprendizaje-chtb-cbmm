@@ -26,15 +26,16 @@ PATTERNS = (
     re.compile(r"(?<![\w.-])\d{7,}(?![\w.-])"),
     re.compile(r"(?<!\w)(?:USD\s*)?[$€£]\s*\d[\d.,]*(?!\w)", re.I),
     re.compile(r"(?<![\w.])\d{1,3}(?:[.,]\d{3})*[.,]\d{2}(?![\w.])"),
-    re.compile(r"\b\d{1,2}\s+(?:ene|feb|mar|abr|may|jun|jul|ago|sep|sept|oct|nov|dic)(?:\.|iembre|ubre|osto|io|ayo|il|zo|ero)?\s+\d{4}\b", re.I),
+    re.compile(
+        r"\b\d{1,2}\s+(?:ene|feb|mar|abr|may|jun|jul|ago|sep|sept|oct|nov|dic)(?:\.|iembre|ubre|osto|io|ayo|il|zo|ero)?\s+\d{4}\b",
+        re.I,
+    ),
     re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),
     re.compile(r"(?<!\w)\+\d(?:[\s().-]*\d){7,14}(?!\w)"),
     re.compile(r"(?<![\w-])(?:\d[\s.-]*){7,10}(?![\w-])"),
 )
 STRUCTURAL_CSS_SEGMENT = r"[A-Za-z][A-Za-z0-9-]{0,127}(?::(?:nth|nth-of-type)\([1-9]\d{0,3}\))?"
-STRUCTURAL_CSS_PATH = re.compile(
-    rf"^{STRUCTURAL_CSS_SEGMENT}(?:\s*>\s*{STRUCTURAL_CSS_SEGMENT})*$"
-)
+STRUCTURAL_CSS_PATH = re.compile(rf"^{STRUCTURAL_CSS_SEGMENT}(?:\s*>\s*{STRUCTURAL_CSS_SEGMENT})*$")
 NAVIGATION_SELECTOR_MAX_LENGTH = 2_000
 NAVIGATION_PATH_MAX_LENGTH = 32_000
 NAVIGATION_PATH_MAX_DEPTH = 64
@@ -145,9 +146,7 @@ def _safe_navigation_selector(value: Any) -> bool:
     # element names can resemble opaque tokens to the generic privacy filter,
     # but the selector grammar itself cannot carry arbitrary values. Requiring
     # a structural marker prevents a plain long token from being whitelisted.
-    has_structural_marker = (
-        ">" in text or ":nth(" in text or ":nth-of-type(" in text
-    )
+    has_structural_marker = ">" in text or ":nth(" in text or ":nth-of-type(" in text
     if not has_structural_marker or not STRUCTURAL_CSS_PATH.fullmatch(text):
         return False
     # Standard HTML tags are short; long generated tag names are expected to
@@ -265,15 +264,8 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
 
     if isinstance(value, dict):
         metadata = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
-        region = str(
-            value.get("region")
-            or metadata.get("region")
-            or ""
-        ).casefold()
-        within_table = bool(
-            value.get("within_table")
-            or metadata.get("within_table")
-        )
+        region = str(value.get("region") or metadata.get("region") or "").casefold()
+        within_table = bool(value.get("within_table") or metadata.get("within_table"))
         cleaned: dict[str, Any] = {}
         for raw_name, item in value.items():
             name = str(raw_name)
@@ -286,10 +278,7 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
 
             # Header/session/volatile regions are excluded from canonical
             # knowledge already. Do not persist their free-text labels either.
-            if (
-                lowered in PERSISTED_TEXT_KEYS
-                and region in SENSITIVE_REGIONS
-            ):
+            if lowered in PERSISTED_TEXT_KEYS and region in SENSITIVE_REGIONS:
                 continue
 
             # Per-row controls can carry customer/person names or record
@@ -297,9 +286,7 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
             # but their free-text/selector data is not needed for the persisted
             # structural model.
             if within_table and lowered in (
-                PERSISTED_TEXT_KEYS
-                | PERSISTED_ROUTE_KEYS
-                | PERSISTED_SELECTOR_KEYS
+                PERSISTED_TEXT_KEYS | PERSISTED_ROUTE_KEYS | PERSISTED_SELECTOR_KEYS
             ):
                 continue
 
@@ -335,14 +322,10 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
     return clean
 
 
-
 def _is_safe_technical_token(key: Any, value: Any) -> bool:
     name = str(key or "").casefold()
     text = str(value or "")
-    return (
-        name in PERSISTED_TECHNICAL_TOKEN_KEYS
-        and bool(TECHNICAL_TOKEN.fullmatch(text))
-    )
+    return name in PERSISTED_TECHNICAL_TOKEN_KEYS and bool(TECHNICAL_TOKEN.fullmatch(text))
 
 
 def _is_technical_persistence_key(key: Any) -> bool:
@@ -396,9 +379,7 @@ def _sanitize_persisted_route(value: Any) -> str:
     )
     query = urlencode([(item, "*") for item in query_keys])
     fragment = (
-        parsed.fragment
-        if PERSISTED_INTERNAL_STATE_FRAGMENT.fullmatch(parsed.fragment)
-        else ""
+        parsed.fragment if PERSISTED_INTERNAL_STATE_FRAGMENT.fullmatch(parsed.fragment) else ""
     )
     # Origins are operational deployment details and can expose internal
     # addresses. Persist only the ERP-relative path plus query-key names.
@@ -415,9 +396,7 @@ def _sanitize_persisted_selector(key: str, value: Any) -> str:
         return text
 
     metadata_key = (
-        key
-        if key in {"navigation_origin", "navigation_origin_path"}
-        else "navigation_origin"
+        key if key in {"navigation_origin", "navigation_origin_path"} else "navigation_origin"
     )
     if is_safe_navigation_metadata(metadata_key, text):
         return text

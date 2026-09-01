@@ -127,11 +127,7 @@ def render_clarification(
     resolution; user-facing text contains only safe labels/routes.
     """
 
-    rows = [
-        row
-        for row in candidates
-        if str(row.get("safe_label") or "").strip()
-    ]
+    rows = [row for row in candidates if str(row.get("safe_label") or "").strip()]
     labels: list[str] = []
     for row in rows:
         label = str(row.get("safe_label") or "").strip()

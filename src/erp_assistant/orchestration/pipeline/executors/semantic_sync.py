@@ -3,11 +3,11 @@ from __future__ import annotations
 import uuid
 
 from erp_assistant.config.chroma_settings import ChromaSettings
+from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
-from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient
 from erp_assistant.projections.chroma.semantic_repository import SemanticChromaRepository
+from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
 
 
 class SemanticChromaSyncJobExecutionError(RuntimeError):
@@ -28,7 +28,9 @@ class SemanticChromaSyncJobExecutor:
         self.session_factory = session_factory
         self.repository_factory = repository_factory or self._default_repository
         self.embeddings_factory = embeddings_factory or OllamaEmbeddingClient
-        self.service_factory = service_factory or (lambda session, **kwargs: SemanticChromaSyncService(session, **kwargs))
+        self.service_factory = service_factory or (
+            lambda session, **kwargs: SemanticChromaSyncService(session, **kwargs)
+        )
 
     @staticmethod
     def _default_repository():
@@ -128,9 +130,8 @@ class SemanticChromaSyncJobExecutor:
             raise SemanticChromaSyncJobExecutionError(
                 "La versión capturada dejó de ser ACTIVE antes de sincronizar"
             )
-        if (
-            version.knowledge_version != parameters.get("knowledge_version")
-            or version.erp_id != parameters.get("erp_id")
-        ):
+        if version.knowledge_version != parameters.get(
+            "knowledge_version"
+        ) or version.erp_id != parameters.get("erp_id"):
             raise SemanticChromaSyncJobExecutionError("La identidad de la versión activa cambió")
         return version

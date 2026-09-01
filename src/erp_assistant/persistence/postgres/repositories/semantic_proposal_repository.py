@@ -86,9 +86,7 @@ class SemanticProposalRepository:
             .join(SemanticProposal.screen_knowledge_item)
             .where(*filters)
         )
-        total = self.session.scalar(
-            select(func.count()).select_from(base.subquery())
-        ) or 0
+        total = self.session.scalar(select(func.count()).select_from(base.subquery())) or 0
         action_counts = (
             select(
                 SemanticReviewAction.semantic_proposal_id.label("proposal_id"),

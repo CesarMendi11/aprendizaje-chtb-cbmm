@@ -10,11 +10,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncTarget
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+)
 from erp_assistant.persistence.postgres.repositories import SyncJobRepository
 from erp_assistant.projections.neo4j.mapper import GraphMapper, GraphMappingError
 from erp_assistant.structural.canonical.privacy import contains_sensitive, sanitize_text
-
 from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 
 SAFE_LABEL_FIELDS = ("name", "title", "label", "normalized_name", "normalized_title", "route")
@@ -205,9 +208,7 @@ class Neo4jSubsetPlanner:
             "missing_dependencies": sorted(set(missing)),
             "privacy_errors": dict(sorted(privacy_errors.items())),
             "mapper_errors": dict(sorted(mapper_errors.items())),
-            "already_eligible_items": sum(
-                status_counts[status] for status in ELIGIBLE_STATUSES
-            ),
+            "already_eligible_items": sum(status_counts[status] for status in ELIGIBLE_STATUSES),
             "pending_review_items": status_counts["pending_review"],
             "current_sync_job": {
                 "id": str(job.id),

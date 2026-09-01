@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 
 @dataclass(frozen=True)

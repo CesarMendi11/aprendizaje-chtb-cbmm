@@ -21,8 +21,7 @@ async def dependency_health(request: Request):
             request.app.state.semantic_review_session_factory
         )
         dependencies = {
-            name: service["status"]
-            for name, service in system_status["services"].items()
+            name: service["status"] for name, service in system_status["services"].items()
         }
         return {
             "status": "ok" if system_status["ok"] else "degraded",

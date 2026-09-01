@@ -7,14 +7,12 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.prompts import (
-    GENERATION_PARAMETERS,
-    PROMPT_HASH,
-    PROMPT_VERSION,
-)
-from erp_assistant.semantic.schemas import ControlEvidence, ModuleEvidence, ScreenEvidencePackage
 from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticType,
+)
 from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
@@ -23,6 +21,12 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
     SemanticProposal,
 )
+from erp_assistant.semantic.prompts import (
+    GENERATION_PARAMETERS,
+    PROMPT_HASH,
+    PROMPT_VERSION,
+)
+from erp_assistant.semantic.schemas import ControlEvidence, ModuleEvidence, ScreenEvidencePackage
 from erp_assistant.semantic.services.semantic_lifecycle_planner import (
     SemanticLifecycleDecision,
     SemanticLifecyclePlanner,
@@ -248,9 +252,7 @@ def test_compatibility_hash_excludes_only_knowledge_version_identity(session):
     changed = target.model_copy(
         update={"main_content_text": target.main_content_text + "\nDetalle adicional"}
     )
-    changed_digest = canonical_json_hash(
-        changed.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    changed_digest = canonical_json_hash(changed.model_dump(mode="json", exclude={"evidence_hash"}))
     changed = changed.model_copy(update={"evidence_hash": changed_digest})
     assert semantic_evidence_compatibility_hash(source) != semantic_evidence_compatibility_hash(
         changed

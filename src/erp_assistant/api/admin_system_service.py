@@ -16,10 +16,10 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
     SyncJob,
 )
+from erp_assistant.projections.chroma.semantic_repository import semantic_collection_name
+from erp_assistant.projections.chroma.structural_repository import collection_name
 from erp_assistant.projections.neo4j.client import Neo4jClient
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
-from erp_assistant.projections.chroma.structural_repository import collection_name
-from erp_assistant.projections.chroma.semantic_repository import semantic_collection_name
 
 
 def _enum_value(value: Any) -> str:
@@ -58,9 +58,7 @@ def probe_postgresql(session_factory) -> tuple[dict[str, Any], dict[str, Any]]:
         )
 
         latest_import = session.scalar(
-            select(ImportRun)
-            .order_by(ImportRun.started_at.desc())
-            .limit(1)
+            select(ImportRun).order_by(ImportRun.started_at.desc()).limit(1)
         )
 
         if latest_import is not None:
@@ -83,10 +81,7 @@ def probe_postgresql(session_factory) -> tuple[dict[str, Any], dict[str, Any]]:
                 .group_by(KnowledgeItem.current_review_status)
             ).all()
 
-            counts = {
-                _enum_value(review_status): int(count)
-                for review_status, count in rows
-            }
+            counts = {_enum_value(review_status): int(count) for review_status, count in rows}
 
             jobs = list(
                 session.scalars(
@@ -191,10 +186,7 @@ def probe_chroma() -> dict[str, Any]:
 
         client = chromadb.PersistentClient(path=str(location))
         collections = client.list_collections()
-        names = {
-            str(getattr(collection, "name", collection))
-            for collection in collections
-        }
+        names = {str(getattr(collection, "name", collection)) for collection in collections}
         if collection_name() not in names:
             return {
                 "status": "initializable",
@@ -242,10 +234,7 @@ def probe_semantic_chroma() -> dict[str, Any]:
 
         client = chromadb.PersistentClient(path=str(location))
         collections = client.list_collections()
-        names = {
-            str(getattr(collection, "name", collection))
-            for collection in collections
-        }
+        names = {str(getattr(collection, "name", collection)) for collection in collections}
         if semantic_collection_name() not in names:
             return {
                 "status": "initializable",
@@ -288,8 +277,7 @@ def probe_ollama() -> dict[str, Any]:
             {
                 str(model.get("name") or model.get("model"))
                 for model in raw_models
-                if isinstance(model, dict)
-                and (model.get("name") or model.get("model"))
+                if isinstance(model, dict) and (model.get("name") or model.get("model"))
             }
         )
 

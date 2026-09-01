@@ -9,7 +9,6 @@ from typing import Any
 from erp_assistant.config.paths import PROJECT_ROOT
 from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
 from erp_assistant.persistence.postgres.session import session_scope
-
 from scripts.common.database import database_engine
 from scripts.experiments.common import (
     project_relative,
@@ -99,10 +98,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("job_id", help="UUID del PipelineJob a capturar.")
     parser.add_argument(
         "--output",
-        help=(
-            "Ruta JSON de salida. Por defecto: "
-            "experiments/results/jobs/<job-id>.json"
-        ),
+        help=("Ruta JSON de salida. Por defecto: experiments/results/jobs/<job-id>.json"),
     )
     return parser.parse_args()
 

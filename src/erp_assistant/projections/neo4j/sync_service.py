@@ -7,13 +7,16 @@ from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.persistence.postgres.repositories import ERPRepository, KnowledgeRepository, SyncJobRepository
+from erp_assistant.persistence.postgres.repositories import (
+    ERPRepository,
+    KnowledgeRepository,
+    SyncJobRepository,
+)
 from erp_assistant.persistence.postgres.types import utcnow
 from erp_assistant.projections.neo4j.projection_service import GraphProjectionService
-from erp_assistant.structural.canonical.privacy import sanitize_text
-
-from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.projections.replacement_service import ProjectionReplacementService
+from erp_assistant.structural.canonical.privacy import sanitize_text
+from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 
 
 @dataclass(frozen=True)
@@ -139,9 +142,7 @@ class Neo4jSyncService:
         else:
             query = query.where(KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE)
             if knowledge_version is not None:
-                query = query.where(
-                    KnowledgeVersionRecord.knowledge_version == knowledge_version
-                )
+                query = query.where(KnowledgeVersionRecord.knowledge_version == knowledge_version)
         if for_update:
             query = query.with_for_update()
         versions = list(self.session.scalars(query))
@@ -188,11 +189,7 @@ class Neo4jSyncService:
         }
         checkpoint = dict(job.checkpoint or {})
         summary["previous_version_id"] = checkpoint.get("previous_version_id")
-        summary["previous_knowledge_version"] = checkpoint.get(
-            "previous_knowledge_version"
-        )
-        summary["removed_previous_version"] = int(
-            checkpoint.get("removed_previous_version") or 0
-        )
+        summary["previous_knowledge_version"] = checkpoint.get("previous_knowledge_version")
+        summary["removed_previous_version"] = int(checkpoint.get("removed_previous_version") or 0)
         summary["job_status"] = str(job.status)
         return summary

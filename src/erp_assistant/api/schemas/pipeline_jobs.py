@@ -6,7 +6,11 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
+from erp_assistant.persistence.postgres.enums import (
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
 
 
 class PipelineJobSummary(BaseModel):

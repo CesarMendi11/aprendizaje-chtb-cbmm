@@ -6,12 +6,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.structural.canonical import CanonicalKnowledgeExporter, CanonicalSnapshotContext
+from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
 from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.structural.services.canonical_materialization_service import (
     CanonicalKnowledgeMaterializer,
 )
-from erp_assistant.structural.canonical import CanonicalKnowledgeExporter, CanonicalSnapshotContext
-from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
 
 
 def _knowledge() -> CanonicalKnowledgeBase:
@@ -153,10 +153,7 @@ def test_materialization_recovers_exact_profile_path_from_persisted_fingerprint(
         )
 
     assert materialized.source_profile == "configs/test.yaml"
-    assert (
-        materialized.source_artifact_hashes["profile:configs/test.yaml"]
-        == "a" * 64
-    )
+    assert materialized.source_artifact_hashes["profile:configs/test.yaml"] == "a" * 64
     engine.dispose()
 
 
@@ -167,7 +164,4 @@ def test_materializer_recovers_base_profile_from_merged_provenance():
         "partial:profile:configs/new-partial.yaml": "c" * 64,
     }
 
-    assert (
-        CanonicalKnowledgeMaterializer._source_profile(hashes)
-        == "configs/base.yaml"
-    )
+    assert CanonicalKnowledgeMaterializer._source_profile(hashes) == "configs/base.yaml"

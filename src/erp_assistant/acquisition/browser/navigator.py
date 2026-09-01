@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from urllib.parse import urljoin
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from erp_assistant.acquisition.auth.auth_manager import AuthManager
 

@@ -2,7 +2,6 @@ from playwright.sync_api import sync_playwright
 
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 
-
 TEST_URL = "http://localhost:8080/admin/home"
 
 

@@ -5,11 +5,10 @@ import json
 from pathlib import Path
 
 from erp_assistant.persistence.postgres.repositories import KnowledgeRepository
+from erp_assistant.persistence.postgres.session import session_scope
 from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from erp_assistant.structural.services.payloads import review_action_payload
-from erp_assistant.persistence.postgres.session import session_scope
-
 from scripts.common.database import database_engine, print_json
 
 MAX_FILE_SIZE = 256_000
@@ -81,31 +80,51 @@ def main(argv=None):
         with session_scope(database_engine()) as session:
             service = KnowledgeReviewService(session)
             if args.command == "list":
-                print_json([_summary(x) for x in service.list_items(
-                    status=args.status, entity_type=args.entity_type, route=args.route,
-                    limit=args.limit, offset=args.offset
-                )], pretty=True)
+                print_json(
+                    [
+                        _summary(x)
+                        for x in service.list_items(
+                            status=args.status,
+                            entity_type=args.entity_type,
+                            route=args.route,
+                            limit=args.limit,
+                            offset=args.offset,
+                        )
+                    ],
+                    pretty=True,
+                )
                 return 0
             item = _item(session, args)
             if args.command == "show":
-                print_json({
-                    **_summary(item),
-                    **EffectiveKnowledgeService(session).describe(item.id),
-                }, pretty=True)
+                print_json(
+                    {
+                        **_summary(item),
+                        **EffectiveKnowledgeService(session).describe(item.id),
+                    },
+                    pretty=True,
+                )
                 return 0
             if args.command == "history":
-                print_json([
-                    review_action_payload(action)
-                    for action in service.get_review_history(item.id)
-                ], pretty=True)
+                print_json(
+                    [
+                        review_action_payload(action)
+                        for action in service.get_review_history(item.id)
+                    ],
+                    pretty=True,
+                )
                 return 0
             print_json({"proposed_action": args.command, "item": _summary(item)}, pretty=True)
-            if not args.yes and input("¿Confirmar? [y/N] ").strip().casefold() not in {"y", "yes", "s", "si", "sí"}:
+            if not args.yes and input("¿Confirmar? [y/N] ").strip().casefold() not in {
+                "y",
+                "yes",
+                "s",
+                "si",
+                "sí",
+            }:
                 print("Cancelado")
                 return 1
             kwargs = dict(
-                reviewer=args.reviewer, notes=args.notes,
-                expected_revision=args.expected_revision
+                reviewer=args.reviewer, notes=args.notes, expected_revision=args.expected_revision
             )
             if args.command == "approve":
                 changed = service.approve(item.id, **kwargs)

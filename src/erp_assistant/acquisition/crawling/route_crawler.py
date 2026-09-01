@@ -5,6 +5,11 @@ from typing import Any, Callable
 
 from playwright.sync_api import Page
 
+from erp_assistant.acquisition.artifacts.routes_graph_builder import RoutesGraphBuilder
+from erp_assistant.acquisition.artifacts.screen_index_builder import ScreenIndexBuilder
+from erp_assistant.acquisition.artifacts.state_flow_graph_builder import StateFlowGraphBuilder
+from erp_assistant.acquisition.artifacts.storage import ArtifactStorage, safe_slug
+from erp_assistant.acquisition.audit.event_policy_auditor import build_event_policy_audit
 from erp_assistant.acquisition.browser.navigator import ERPNavigator
 from erp_assistant.acquisition.crawling.frontier import CrawlTarget, Frontier
 from erp_assistant.acquisition.crawling.module_scope import ModuleCrawlBoundary
@@ -20,16 +25,11 @@ from erp_assistant.acquisition.crawling.ui_event_explorer import UIEventExplorer
 from erp_assistant.acquisition.discovery.event_candidate_discovery import EventCandidateDiscovery
 from erp_assistant.acquisition.discovery.link_discovery import LinkDiscovery
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
-from erp_assistant.acquisition.artifacts.routes_graph_builder import RoutesGraphBuilder
-from erp_assistant.acquisition.artifacts.screen_index_builder import ScreenIndexBuilder
-from erp_assistant.acquisition.artifacts.state_flow_graph_builder import StateFlowGraphBuilder
 from erp_assistant.acquisition.models.crawl_path import CrawlPath, CrawlPathStep
 from erp_assistant.acquisition.models.transition import Transition
 from erp_assistant.acquisition.models.ui_event import EventDecision, RiskLevel, UIEvent, UIEventType
 from erp_assistant.acquisition.models.ui_state import UIState
 from erp_assistant.acquisition.policy.route_policy import RoutePolicy
-from erp_assistant.acquisition.audit.event_policy_auditor import build_event_policy_audit
-from erp_assistant.acquisition.artifacts.storage import ArtifactStorage, safe_slug
 
 
 @dataclass
@@ -108,9 +108,7 @@ class RouteCrawler:
         self.state_registry = StateRegistry()
         self.state_frontier = StateFrontier()
         self.state_flow_graph = StateFlowGraphBuilder()
-        self.state_replay_enabled = bool(
-            profile.get("state_replay", {}).get("enabled", True)
-        )
+        self.state_replay_enabled = bool(profile.get("state_replay", {}).get("enabled", True))
         self.path_replayer = PathReplayer(
             page=page,
             profile=profile,
@@ -133,9 +131,7 @@ class RouteCrawler:
             extractor=self.extractor,
             candidate_discovery=self.candidate_discovery,
             state_signature_builder=self.state_signature_builder,
-            state_restorer=(
-                self.state_restorer if self.state_replay_enabled else None
-            ),
+            state_restorer=(self.state_restorer if self.state_replay_enabled else None),
         )
 
         exploration = profile.get("exploration", {})
@@ -148,18 +144,10 @@ class RouteCrawler:
         ui_events = profile.get("ui_events", {})
         self.ui_events_enabled = ui_events.get("enabled", True)
         self.max_event_depth = max(0, int(ui_events.get("max_event_depth", 0)))
-        self.home_navigation_enabled = bool(
-            ui_events.get("home_navigation_enabled", True)
-        )
-        self.explore_local_route_roots = bool(
-            ui_events.get("explore_local_route_roots", True)
-        )
-        self.recursive_state_exploration = bool(
-            ui_events.get("recursive_state_exploration", True)
-        )
-        self.home_event_categories = set(
-            ui_events.get("home_event_categories", ["expand_menu"])
-        )
+        self.home_navigation_enabled = bool(ui_events.get("home_navigation_enabled", True))
+        self.explore_local_route_roots = bool(ui_events.get("explore_local_route_roots", True))
+        self.recursive_state_exploration = bool(ui_events.get("recursive_state_exploration", True))
+        self.home_event_categories = set(ui_events.get("home_event_categories", ["expand_menu"]))
         self.local_event_categories = set(
             ui_events.get(
                 "local_event_categories",
@@ -214,10 +202,7 @@ class RouteCrawler:
         La ampliación dinámica a rutas nuevas se habilitará separadamente, con
         procedencia estructural explícita.
         """
-        expected_scope = {
-            self._route_identity(route)
-            for route in boundary.known_screen_routes
-        }
+        expected_scope = {self._route_identity(route) for route in boundary.known_screen_routes}
         if self.route_scope is None:
             self.route_scope = expected_scope
         elif self.route_scope != expected_scope:
@@ -239,9 +224,7 @@ class RouteCrawler:
 
             for route in boundary.known_screen_routes:
                 if not self._is_allowed_route(route):
-                    raise ValueError(
-                        f"Ruta fijada fuera de la política del perfil: {route}"
-                    )
+                    raise ValueError(f"Ruta fijada fuera de la política del perfil: {route}")
                 self.frontier.push(
                     CrawlTarget(
                         route=route,
@@ -278,9 +261,7 @@ class RouteCrawler:
             raise RuntimeError("home_url quedó fuera de la política durante MODULE")
 
         root_signature = observation.signature
-        root_state_id = self.state_registry.build_state_id(
-            root_signature.structural_fingerprint
-        )
+        root_state_id = self.state_registry.build_state_id(root_signature.structural_fingerprint)
         root_path = CrawlPath(
             root_state_id=root_state_id,
             metadata={
@@ -318,8 +299,7 @@ class RouteCrawler:
             interaction = self.ui_event_explorer.interaction_executor.click(step.selector)
             if not interaction.success:
                 raise RuntimeError(
-                    "No se pudo reproducir la rama MODULE en "
-                    f"{step.label!r}: {interaction.error}"
+                    f"No se pudo reproducir la rama MODULE en {step.label!r}: {interaction.error}"
                 )
             if self.ui_event_explorer.event_wait_ms:
                 self.page.wait_for_timeout(self.ui_event_explorer.event_wait_ms)
@@ -342,9 +322,7 @@ class RouteCrawler:
                     "navigation_depth": step.depth,
                 },
             )
-            source_path = current_state.path or CrawlPath(
-                root_state_id=current_state.state_id
-            )
+            source_path = current_state.path or CrawlPath(root_state_id=current_state.state_id)
             target_path = source_path.append(
                 CrawlPathStep(
                     source_state_id=current_state.state_id,
@@ -380,9 +358,7 @@ class RouteCrawler:
                 )
             )
 
-            event_node_id = (
-                f"{home_route}#state:{next_signature.structural_fingerprint[:12]}"
-            )
+            event_node_id = f"{home_route}#state:{next_signature.structural_fingerprint[:12]}"
             self.routes_graph.add_screen(
                 route=event_node_id,
                 title=next_signature.title or step.label,
@@ -508,8 +484,7 @@ class RouteCrawler:
         """
         while True:
             can_process_routes = (
-                self.frontier.has_pending()
-                and self.frontier.visited_count() < self.max_pages_total
+                self.frontier.has_pending() and self.frontier.visited_count() < self.max_pages_total
             )
             can_process_states = self.state_frontier.has_pending()
 
@@ -667,9 +642,7 @@ class RouteCrawler:
             return
 
         signature = observation.signature
-        state_id = self.state_registry.build_state_id(
-            signature.structural_fingerprint
-        )
+        state_id = self.state_registry.build_state_id(signature.structural_fingerprint)
         root_path = CrawlPath(root_state_id=state_id)
         source_state = self.state_registry.register_signature(
             signature=signature,
@@ -736,7 +709,6 @@ class RouteCrawler:
 
         self._checkpoint_outputs()
         self._emit_progress("screen_captured", current_route=route)
-
 
     def _observe_screen(
         self,
@@ -817,10 +789,7 @@ class RouteCrawler:
     ) -> None:
         self.routes_graph.add_screen(
             route=route,
-            title=(
-                screen_data.get("functional_title")
-                or screen_data.get("title", "")
-            ),
+            title=(screen_data.get("functional_title") or screen_data.get("title", "")),
             source_module=source,
             status="discovered",
             metadata={
@@ -956,15 +925,11 @@ class RouteCrawler:
                 result.target_state_id = source_state.state_id
                 continue
 
-            target_signature = self.state_signature_builder.build(
-                result.after_screen_data
-            )
+            target_signature = self.state_signature_builder.build(result.after_screen_data)
             target_state_id = self.state_registry.build_state_id(
                 target_signature.structural_fingerprint
             )
-            source_path = source_state.path or CrawlPath(
-                root_state_id=source_state.state_id
-            )
+            source_path = source_state.path or CrawlPath(root_state_id=source_state.state_id)
             target_path = source_path.append(
                 CrawlPathStep(
                     source_state_id=source_state.state_id,
@@ -992,9 +957,7 @@ class RouteCrawler:
                     source_state_id=source_state.state_id,
                     target_state_id=target_state.state_id,
                     event=result.event,
-                    changed_route=(
-                        result.before_route != result.after_route
-                    ),
+                    changed_route=(result.before_route != result.after_route),
                     metadata={
                         "candidate": result.candidate,
                         "restored_before": result.restored_before,
@@ -1051,10 +1014,7 @@ class RouteCrawler:
             if html_path is not None:
                 artifacts["html"] = str(html_path)
 
-        if (
-            result.after_screenshot is not None
-            and self.storage.persist_screenshots
-        ):
+        if result.after_screenshot is not None and self.storage.persist_screenshots:
             screenshot_path = self.storage.save_screenshot_bytes(
                 content=result.after_screenshot,
                 prefix=event_prefix,
@@ -1068,9 +1028,7 @@ class RouteCrawler:
             "route": after_screen_data.get("path") or route,
             "source": route,
             "depth": depth,
-            "event_depth": (
-                target_state.path.depth if target_state.path else 0
-            ),
+            "event_depth": (target_state.path.depth if target_state.path else 0),
             "reason": "ui_event_state_change",
             "status": "discovered",
             "source_state_id": source_state.state_id,
@@ -1117,11 +1075,7 @@ class RouteCrawler:
                 "before_fingerprint": result.before_fingerprint,
                 "after_fingerprint": result.after_fingerprint,
                 "candidate": result.candidate,
-                "path": (
-                    target_state.path.to_dict()
-                    if target_state.path
-                    else None
-                ),
+                "path": (target_state.path.to_dict() if target_state.path else None),
             },
         )
 
@@ -1359,10 +1313,7 @@ class RouteCrawler:
 
         self.storage.save_uncertainty_json(
             data=payload,
-            prefix=(
-                f"{route}_ui_events_"
-                f"{safe_slug(source_state_id, fallback='state')[-24:]}"
-            ),
+            prefix=(f"{route}_ui_events_{safe_slug(source_state_id, fallback='state')[-24:]}"),
         )
 
     def _detect_and_store_uncertainty(
@@ -1383,18 +1334,14 @@ class RouteCrawler:
             )
 
         if len(custom_interactives) >= 10:
-            reasons.append(
-                "La pantalla contiene muchos elementos interactivos personalizados."
-            )
+            reasons.append("La pantalla contiene muchos elementos interactivos personalizados.")
 
         event_candidates = self.candidate_discovery.discover_candidates(screen_data)
         denied_candidates = [
-            candidate for candidate in event_candidates
-            if candidate.decision == "deny"
+            candidate for candidate in event_candidates if candidate.decision == "deny"
         ]
         review_candidates = [
-            candidate for candidate in event_candidates
-            if candidate.decision == "review"
+            candidate for candidate in event_candidates if candidate.decision == "review"
         ]
 
         dangerous_buttons = [
@@ -1404,19 +1351,14 @@ class RouteCrawler:
         ]
 
         if dangerous_buttons or denied_candidates:
-            reasons.append(
-                "La pantalla contiene acciones bloqueadas por la política de seguridad."
-            )
+            reasons.append("La pantalla contiene acciones bloqueadas por la política de seguridad.")
 
         if review_candidates:
-            reasons.append(
-                "La pantalla contiene acciones ambiguas pendientes de revisión humana."
-            )
+            reasons.append("La pantalla contiene acciones ambiguas pendientes de revisión humana.")
 
         if inputs and buttons and not discovered_links:
             reasons.append(
-                "La pantalla parece depender de formularios o búsqueda "
-                "para mostrar nuevos estados."
+                "La pantalla parece depender de formularios o búsqueda para mostrar nuevos estados."
             )
 
         if not reasons:
@@ -1427,10 +1369,7 @@ class RouteCrawler:
             reason="uncertain_screen",
             extra={
                 "reasons": reasons,
-                "title": (
-                    screen_data.get("functional_title")
-                    or screen_data.get("title", "")
-                ),
+                "title": (screen_data.get("functional_title") or screen_data.get("title", "")),
                 "url": screen_data.get("url", ""),
                 "buttons": buttons,
                 "inputs": inputs,
@@ -1470,9 +1409,8 @@ class RouteCrawler:
         return self.explore_local_route_roots and self.max_event_depth >= 1
 
     def _categories_for_state(self, state: UIState) -> set[str]:
-        is_home_root = (
-            state.route == self.home_route
-            and (state.path is None or state.path.depth == 0)
+        is_home_root = state.route == self.home_route and (
+            state.path is None or state.path.depth == 0
         )
         if is_home_root:
             return set(self.home_event_categories)
@@ -1617,9 +1555,7 @@ class RouteCrawler:
 
     def _is_allowed_route(self, route: str | None) -> bool:
         return bool(
-            route
-            and self.policy.is_allowed_route(route)
-            and self._is_route_in_scope(route)
+            route and self.policy.is_allowed_route(route) and self._is_route_in_scope(route)
         )
 
     def _emit_progress(self, stage: str, **extra: Any) -> None:
@@ -1639,9 +1575,7 @@ class RouteCrawler:
             "ui_transitions": self.state_flow_graph.transition_count(),
             **extra,
         }
-        payload["work_units"] = (
-            payload["routes_visited"] + payload["states_explored"]
-        )
+        payload["work_units"] = payload["routes_visited"] + payload["states_explored"]
         callback(stage, payload)
 
     def _save_outputs(self) -> CrawlSummary:

@@ -5,7 +5,6 @@ from pathlib import Path
 
 from erp_assistant.config.chroma_settings import ChromaSettings
 
-
 SEMANTIC_COLLECTION = "erp_assistant_semantic_v1"
 
 

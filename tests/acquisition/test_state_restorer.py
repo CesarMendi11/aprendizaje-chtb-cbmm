@@ -8,7 +8,6 @@ from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtracto
 from erp_assistant.acquisition.models.crawl_path import CrawlPath, CrawlPathStep
 from erp_assistant.acquisition.models.ui_event import EventDecision, RiskLevel, UIEvent, UIEventType
 
-
 ROUTE = "/admin/home"
 HTML = """
 <!DOCTYPE html>
@@ -86,9 +85,7 @@ def setup_components(page):
         decision=EventDecision.ALLOW,
         risk_level=RiskLevel.LOW,
     )
-    target_path = root_path.append(
-        CrawlPathStep(root.state_id, event, target_id)
-    )
+    target_path = root_path.append(CrawlPathStep(root.state_id, event, target_id))
     target = registry.register_signature(
         target_signature,
         path=target_path,
@@ -232,7 +229,6 @@ def test_state_restorer_reuses_canonical_registered_title_on_direct_route():
     assert navigator.paths == ["/admin/facturacion"]
 
 
-
 def test_state_restorer_reports_safe_summary_diff_for_navigation_only_mismatch():
     cfg = {
         "navigation": {"home_url": ROUTE},
@@ -320,8 +316,7 @@ def test_state_restorer_reports_safe_summary_diff_for_navigation_only_mismatch()
 
     assert result.success is False
     assert result.error == (
-        "La navegación directa llegó a una firma estructural diferente "
-        "de la esperada."
+        "La navegación directa llegó a una firma estructural diferente de la esperada."
     )
     assert result.summary_comparison == {
         "different_top_level_keys": ["navigation_state"],
@@ -514,9 +509,7 @@ def test_state_restorer_waits_for_expected_root_fingerprint_after_stable_partial
         def extract(self, title_hint=""):
             if self.phase == "current":
                 return dict(current_data)
-            value = self.restore_values[
-                min(self.restore_index, len(self.restore_values) - 1)
-            ]
+            value = self.restore_values[min(self.restore_index, len(self.restore_values) - 1)]
             self.restore_index += 1
             return dict(value)
 
@@ -550,9 +543,17 @@ def test_state_restorer_waits_for_expected_root_fingerprint_after_stable_partial
     assert result.observation["samples_count"] == 5
     # El observador decide estabilidad de renderizado, no identidad: las
     # muestras se comparan con la firma de render, no con la estructural.
-    assert result.observation["observed_fingerprints"][:3] == [
-        builder.build(partial_data).render_fingerprint,
-    ] * 3
-    assert result.observation["observed_fingerprints"][-2:] == [
-        builder.build(target_data).render_fingerprint,
-    ] * 2
+    assert (
+        result.observation["observed_fingerprints"][:3]
+        == [
+            builder.build(partial_data).render_fingerprint,
+        ]
+        * 3
+    )
+    assert (
+        result.observation["observed_fingerprints"][-2:]
+        == [
+            builder.build(target_data).render_fingerprint,
+        ]
+        * 2
+    )

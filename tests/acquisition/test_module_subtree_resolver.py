@@ -6,12 +6,17 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
 from erp_assistant.acquisition.scope.module_subtree_resolver import (
     ModuleSubtreeResolutionError,
     ModuleSubtreeResolver,
+)
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
 

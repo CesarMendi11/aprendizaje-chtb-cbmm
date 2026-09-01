@@ -7,7 +7,6 @@ from erp_assistant.persistence.postgres.enums import SyncTarget
 from erp_assistant.persistence.postgres.repositories import KnowledgeRepository, SyncJobRepository
 from erp_assistant.persistence.postgres.session import session_scope
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
-
 from scripts.common.database import database_engine, print_json
 from scripts.common.neo4j import neo4j_client, safe_neo4j_error
 

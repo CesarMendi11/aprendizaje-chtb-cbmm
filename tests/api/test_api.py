@@ -302,7 +302,6 @@ def test_chat_returns_hybrid_clarification_without_legacy_fallback(settings):
     assert "RUC" in payload["answer"]
 
 
-
 def test_hybrid_api_persists_governed_state_by_conversation_id(settings):
     from contextlib import contextmanager
 

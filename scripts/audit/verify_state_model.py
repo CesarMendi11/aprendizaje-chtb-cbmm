@@ -31,9 +31,7 @@ def load(run_dir: Path, name: str) -> Any:
     direct = run_dir / "processed" / "structural" / name
     if direct.exists():
         return json.loads(direct.read_text(encoding="utf-8"))
-    matches = [
-        m for m in run_dir.rglob(name) if not m.name.endswith(".partial.json")
-    ]
+    matches = [m for m in run_dir.rglob(name) if not m.name.endswith(".partial.json")]
     if not matches:
         raise FileNotFoundError(f"No se encontró {name} bajo {run_dir}")
     return json.loads(matches[0].read_text(encoding="utf-8"))
@@ -71,9 +69,7 @@ def check_restore_failures(run_dir: Path) -> tuple[bool, list[str]]:
             continue
         reason = str(payload.get("reason") or "")
         if "restore_failed" in reason:
-            failures.append(
-                f"   ! {payload.get('route')} :: {reason}"
-            )
+            failures.append(f"   ! {payload.get('route')} :: {reason}")
 
     lines = [f"fallos de restore      {len(failures)}"] + failures
     return not failures, lines
@@ -85,10 +81,7 @@ def check_self_loops(run_dir: Path) -> tuple[bool, list[str]]:
     if isinstance(transitions, int):
         return False, ["state_flow_graph.json no expone la lista de transiciones"]
 
-    self_loops = [
-        t for t in transitions
-        if t.get("source_state_id") == t.get("target_state_id")
-    ]
+    self_loops = [t for t in transitions if t.get("source_state_id") == t.get("target_state_id")]
     by_effect = collections.Counter(
         (t.get("metadata") or {}).get("effect", "sin_effect") for t in transitions
     )
@@ -97,16 +90,14 @@ def check_self_loops(run_dir: Path) -> tuple[bool, list[str]]:
     )
 
     content_events = [
-        t for t in transitions
+        t
+        for t in transitions
         if any(
             hint in str((t.get("event") or {}).get("event_type", ""))
             for hint in CONTENT_EVENT_HINTS
         )
     ]
-    preserved = [
-        t for t in content_events
-        if t.get("source_state_id") == t.get("target_state_id")
-    ]
+    preserved = [t for t in content_events if t.get("source_state_id") == t.get("target_state_id")]
 
     lines = [
         f"transiciones totales   {len(transitions)}",
@@ -118,7 +109,7 @@ def check_self_loops(run_dir: Path) -> tuple[bool, list[str]]:
         lines.append(f"self-loops por evento  {dict(by_event)}")
 
     lost = [
-        f"   ! {t.get('source_state_id','')[-12:]} "
+        f"   ! {t.get('source_state_id', '')[-12:]} "
         f"{(t.get('event') or {}).get('event_type')} NO es self-loop"
         for t in content_events
         if t.get("source_state_id") != t.get("target_state_id")

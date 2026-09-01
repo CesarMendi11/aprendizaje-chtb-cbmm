@@ -8,7 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import ReviewSource
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, ReviewAction
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    ReviewAction,
+)
 
 from .structural_ownership import StructuralOwnershipResolver
 from .version_diff_service import (

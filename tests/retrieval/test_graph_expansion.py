@@ -208,7 +208,7 @@ def test_list_columns_prefers_strong_screen_over_same_label_column_seed():
 
 def test_navigation_event_prefers_explicit_event_over_contextual_screen_seed():
     query_plan = QueryPlanner().plan(
-        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
         'pantalla "Comprobantes eléctronicos emitidos".'
     )
     resolution = EntityResolution(
@@ -251,7 +251,7 @@ def test_navigation_event_prefers_explicit_event_over_contextual_screen_seed():
 
 def test_navigation_event_can_anchor_screen_scoped_control_when_no_event_exists():
     query_plan = QueryPlanner().plan(
-        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
         'pantalla "Comprobantes eléctronicos emitidos".'
     )
     resolution = EntityResolution(

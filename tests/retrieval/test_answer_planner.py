@@ -97,7 +97,13 @@ def test_screen_purpose_uses_only_human_approved_semantic_payload():
 
     result = planner.plan(
         "¿Para qué sirve la pantalla Retenciones?",
-        [{"canonical_id": "screen:retenciones", "entity_type": "screen", "safe_label": "Retenciones"}],
+        [
+            {
+                "canonical_id": "screen:retenciones",
+                "entity_type": "screen",
+                "safe_label": "Retenciones",
+            }
+        ],
         [],
         [],
         approved_semantics=approved,
@@ -166,7 +172,6 @@ def test_locate_screen_recognizes_common_module_question():
     )
 
 
-
 def test_locate_screen_prefers_module_over_erp_root_relation():
     planner = StructuralAnswerPlanner()
     relations = [
@@ -202,6 +207,7 @@ def test_locate_screen_prefers_module_over_erp_root_relation():
     assert result["answer"] == (
         'La pantalla "Lista de facturas" está dentro del módulo "Cuentas por cobrar".'
     )
+
 
 def test_locate_screen_reports_erp_root_without_calling_it_a_module():
     planner = StructuralAnswerPlanner()
@@ -338,7 +344,13 @@ def test_answer_planner_consumes_explicit_query_plan_instead_of_reparsing_questi
 
     result = planner.plan(
         "texto deliberadamente neutro",
-        [{"canonical_id": "screen:retenciones", "entity_type": "screen", "safe_label": "Retenciones"}],
+        [
+            {
+                "canonical_id": "screen:retenciones",
+                "entity_type": "screen",
+                "safe_label": "Retenciones",
+            }
+        ],
         relations,
         [],
         query_plan=query_plan,
@@ -443,7 +455,7 @@ def test_navigation_event_ignores_context_screen_label_on_state_edges():
     ]
 
     result = planner.plan(
-        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
         'pantalla "Comprobantes eléctronicos emitidos".',
         [
             {
@@ -497,7 +509,7 @@ def test_navigation_event_uses_matching_control_when_no_direct_event_exists():
     ]
 
     result = planner.plan(
-        '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+        "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
         'pantalla "Comprobantes eléctronicos emitidos".',
         [
             {

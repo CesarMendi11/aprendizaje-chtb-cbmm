@@ -21,12 +21,19 @@ from erp_assistant.persistence.postgres.enums import (
     PipelineJobScope,
     PipelineJobStatus,
 )
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
-from erp_assistant.structural.services.version_diff_service import VersionDiffError, VersionDiffService
-from erp_assistant.structural.services.payloads import item_content_hash
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    PipelineJob,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.ids import content_hash
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.payloads import item_content_hash
+from erp_assistant.structural.services.version_diff_service import (
+    VersionDiffError,
+    VersionDiffService,
+)
 from tests.fixtures.canonical import exported_fictional_canonical
 from tests.fixtures.crawl_quality import certified_crawl_quality
 
@@ -316,6 +323,7 @@ def _provenance(session, version, *, full=True, import_result="imported"):
         )
     )
 
+
 def _skipped_retry(session, version):
     _provenance(session, version, import_result="skipped")
 
@@ -604,7 +612,6 @@ def test_diff_recognizes_governed_screen_partial_merge_origin(session, tmp_path)
 
     result = VersionDiffService(session).compare(candidate_id)
     assert result.candidate_origin == "partial_screen_merge"
-
 
 
 def test_diff_ignores_provenance_only_refresh(session, tmp_path):

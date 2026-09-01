@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
+
 from erp_assistant.config.paths import PROJECT_ROOT
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -17,16 +18,19 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
-from erp_assistant.semantic.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
-from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
-from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
 from erp_assistant.config.database_settings import DatabaseSettings
+from erp_assistant.integrations.ollama.generation import OllamaGenerationSettings
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.semantic.generation import (
+    OllamaStructuredGenerationClient,
+    ScreenPurposeInferenceService,
+)
+from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
 from erp_assistant.semantic.services.semantic_exceptions import SemanticDomainError
+from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.integrations.ollama.generation import OllamaGenerationSettings
 
 
 class CLIError(RuntimeError):
@@ -128,9 +132,7 @@ def main() -> int:
                     ).scalar_one()
                     if read_only != "on":
                         raise CLIError("dry_run_transaction_not_read_only")
-                database_name = connection.exec_driver_sql(
-                    "SELECT current_database()"
-                ).scalar_one()
+                database_name = connection.exec_driver_sql("SELECT current_database()").scalar_one()
                 expected_database = engine.url.database
                 if not expected_database or database_name != expected_database:
                     raise CLIError("database_identity_mismatch")

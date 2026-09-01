@@ -5,7 +5,10 @@ import json
 from typing import Any
 
 from erp_assistant.structural.canonical.ids import content_hash
-from erp_assistant.structural.canonical.privacy import contains_sensitive, is_safe_navigation_metadata
+from erp_assistant.structural.canonical.privacy import (
+    contains_sensitive,
+    is_safe_navigation_metadata,
+)
 
 VOLATILE_KEYS = {
     "generated_at",

@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
+from erp_assistant.api.schemas.semantic_review import StrictResponseModel
+from erp_assistant.persistence.postgres.enums import SemanticLifecycleOrigin
 from erp_assistant.semantic.schemas import (
     ControlEvidence,
     EventEvidence,
@@ -14,9 +16,7 @@ from erp_assistant.semantic.schemas import (
     TransitionEvidence,
     UIStateEvidence,
 )
-from erp_assistant.api.schemas.semantic_review import StrictResponseModel
 from erp_assistant.semantic.services.semantic_projection import ScreenSemanticState
-from erp_assistant.persistence.postgres.enums import SemanticLifecycleOrigin
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 

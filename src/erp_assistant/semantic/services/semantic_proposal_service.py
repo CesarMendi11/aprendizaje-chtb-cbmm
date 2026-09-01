@@ -8,7 +8,10 @@ from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import SemanticLifecycleOrigin, SemanticType
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord, SemanticProposal
-from erp_assistant.persistence.postgres.repositories import KnowledgeRepository, SemanticProposalRepository
+from erp_assistant.persistence.postgres.repositories import (
+    KnowledgeRepository,
+    SemanticProposalRepository,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
@@ -206,15 +209,13 @@ class SemanticProposalService:
         )
         normalized_evidence_ids = normalize_evidence_ids(evidence_ids)
         if isinstance(evidence_payload, ValidatedSemanticEvidenceSnapshot):
-            evidence, evidence_hash, snapshot_evidence_ids = (
-                semantic_evidence_snapshot_values(evidence_payload)
+            evidence, evidence_hash, snapshot_evidence_ids = semantic_evidence_snapshot_values(
+                evidence_payload
             )
             if snapshot_evidence_ids != normalized_evidence_ids:
                 raise SemanticPayloadError("evidence_ids no coincide con el snapshot validado")
         else:
-            evidence = validate_semantic_payload(
-                evidence_payload, field="evidence_payload"
-            )
+            evidence = validate_semantic_payload(evidence_payload, field="evidence_payload")
             evidence_hash = semantic_evidence_hash(evidence, normalized_evidence_ids)
         parameters = validate_semantic_payload(
             generation_parameters,

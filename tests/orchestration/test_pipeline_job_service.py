@@ -4,13 +4,13 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import PipelineJobStatus
 from erp_assistant.orchestration.pipeline.job_service import (
     PipelineJobError,
     PipelineJobService,
     PipelineJobTransitionError,
 )
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import PipelineJobStatus
 
 
 @pytest.fixture

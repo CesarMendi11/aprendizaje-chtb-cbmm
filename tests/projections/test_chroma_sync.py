@@ -10,20 +10,23 @@ from sqlalchemy.orm import Session
 
 import erp_assistant.persistence.postgres.models  # noqa: F401
 from erp_assistant.config.ollama_settings import OllamaEmbeddingSettings
+from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient, OllamaEmbeddingError
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.projections.chroma.structural_repository import (
+    ChromaRepository,
+    collection_name,
+    document_id,
+)
 from erp_assistant.projections.chroma.structural_sync_service import (
     ChromaSyncService,
     SafeDocumentBuilder,
 )
-from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
 from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
-from erp_assistant.projections.chroma.structural_repository import ChromaRepository
-from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient, OllamaEmbeddingError
-from erp_assistant.projections.chroma.structural_repository import collection_name, document_id
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 
@@ -147,9 +150,7 @@ def test_safe_document_builder_distinguishes_deliberate_evidence_skip_from_missi
         },
     ]
 
-    documents, reasons, by_type, details = builder.build(
-        entries, erp=erp, knowledge_version="v1"
-    )
+    documents, reasons, by_type, details = builder.build(entries, erp=erp, knowledge_version="v1")
 
     assert documents == []
     assert reasons == {
@@ -231,12 +232,7 @@ def test_ollama_embedding_batches_preserve_order():
         calls.append(values)
         return httpx.Response(
             200,
-            json={
-                "embeddings": [
-                    [float(value.rsplit("-", 1)[1]), 1.0]
-                    for value in values
-                ]
-            },
+            json={"embeddings": [[float(value.rsplit("-", 1)[1]), 1.0] for value in values]},
         )
 
     transport = httpx.MockTransport(handler)
@@ -262,9 +258,7 @@ def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path)
     assert result.status == "succeeded" and repo.collection.count() == 2
     assert result.summary["embedding_model"] == "fake-embedding"
     assert result.summary["embedding_dimensions"] == 3
-    chroma_job = chroma_session.scalar(
-        select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB)
-    )
+    chroma_job = chroma_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB))
     assert chroma_job is not None
     assert chroma_job.checkpoint["embedding_model"] == "fake-embedding"
     assert chroma_job.checkpoint["embedding_dimensions"] == 3
@@ -272,16 +266,12 @@ def test_run_uses_fake_embedding_and_only_chromadb_job(chroma_session, tmp_path)
     assert jobs_after[SyncTarget.NEO4J] == jobs_before[SyncTarget.NEO4J]
 
 
-def test_run_requests_version_lock_before_embedding_and_sync(
-    chroma_session, tmp_path, monkeypatch
-):
+def test_run_requests_version_lock_before_embedding_and_sync(chroma_session, tmp_path, monkeypatch):
     _approve_correct_reject(chroma_session)
     repository = ChromaRepository(
         client=chromadb.PersistentClient(path=str(tmp_path / "locked-run"))
     )
-    service = ChromaSyncService(
-        chroma_session, repository=repository, embeddings=FakeEmbeddings()
-    )
+    service = ChromaSyncService(chroma_session, repository=repository, embeddings=FakeEmbeddings())
     original = ChromaSyncService._version
     lock_requests = []
 
@@ -311,16 +301,14 @@ def test_run_refuses_explicit_archived_version(chroma_session, tmp_path):
         client=chromadb.PersistentClient(path=str(tmp_path / "archived-run"))
     )
     with pytest.raises(ValueError, match="dejó de ser ACTIVE"):
-        ChromaSyncService(
-            chroma_session, repository=repository, embeddings=FakeEmbeddings()
-        ).run(erp_id=erp_id, knowledge_version=knowledge_version)
+        ChromaSyncService(chroma_session, repository=repository, embeddings=FakeEmbeddings()).run(
+            erp_id=erp_id, knowledge_version=knowledge_version
+        )
 
 
 def test_running_job_is_rejected_before_documents_are_prepared(chroma_session, tmp_path):
     with chroma_session.begin():
-        job = chroma_session.scalar(
-            select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB)
-        )
+        job = chroma_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.CHROMADB))
         job.status = SyncStatus.RUNNING
     service = ChromaSyncService(
         chroma_session,

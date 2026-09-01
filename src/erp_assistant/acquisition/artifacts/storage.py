@@ -55,13 +55,9 @@ class ArtifactStorage:
         )
 
         self.review_structural_dir = Path(output["review_structural_dir"])
-        self.review_semantic_dir = Path(
-            output.get("review_semantic_dir", "data/review/semantic")
-        )
+        self.review_semantic_dir = Path(output.get("review_semantic_dir", "data/review/semantic"))
 
-        self.approved_neo4j_dir = Path(
-            output.get("approved_neo4j_dir", "data/approved/neo4j")
-        )
+        self.approved_neo4j_dir = Path(output.get("approved_neo4j_dir", "data/approved/neo4j"))
         self.approved_chromadb_dir = Path(
             output.get("approved_chromadb_dir", "data/approved/chromadb")
         )
@@ -110,9 +106,7 @@ class ArtifactStorage:
         filename = f"{safe_slug(prefix)}.json"
         return self.save_json(data, self.raw_playwright_dir, filename)
 
-    def save_processed_structural_json(
-        self, data: dict[str, Any], filename: str
-    ) -> Path:
+    def save_processed_structural_json(self, data: dict[str, Any], filename: str) -> Path:
         return self.save_json(data, self.processed_structural_dir, filename)
 
     def save_uncertainty_json(self, data: dict[str, Any], prefix: str) -> Path:

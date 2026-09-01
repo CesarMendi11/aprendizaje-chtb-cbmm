@@ -60,8 +60,7 @@ class ScreenTitleResolver:
             if self._clean(title)
         }
         configured_generic = {
-            self._normalize(value)
-            for value in config.get("generic_document_titles", [])
+            self._normalize(value) for value in config.get("generic_document_titles", [])
         }
         self.generic_titles = {
             *{self._normalize(value) for value in self.DEFAULT_GENERIC_TITLES},
@@ -94,9 +93,7 @@ class ScreenTitleResolver:
         if self._is_usable(hint):
             candidates.append((85, "discovery_hint", hint))
 
-        document_title = self._clean(
-            screen_data.get("document_title") or screen_data.get("title")
-        )
+        document_title = self._clean(screen_data.get("document_title") or screen_data.get("title"))
         if self._is_usable(document_title) and not self._is_generic(document_title):
             candidates.append((55, "document_title", document_title))
 

@@ -33,4 +33,3 @@ def new_uuid() -> uuid.UUID:
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
-

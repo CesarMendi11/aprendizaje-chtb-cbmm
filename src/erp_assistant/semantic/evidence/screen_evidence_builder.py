@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
 from erp_assistant.semantic.schemas import (
     ColumnEvidence,
     ControlEvidence,
@@ -18,11 +19,10 @@ from erp_assistant.semantic.schemas import (
     TransitionEvidence,
     UIStateEvidence,
 )
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
-from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
+from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 
 from .network_trace import safe_network_trace
 
@@ -124,9 +124,7 @@ class ScreenEvidenceBuilder:
             module_evidence = ModuleEvidence(module_id=module_id, name=module_name)
         else:
             if screen.parent_canonical_id != version.erp_id:
-                raise StructuralRelationError(
-                    "La pantalla sin módulo no está anclada al ERP"
-                )
+                raise StructuralRelationError("La pantalla sin módulo no está anclada al ERP")
             effective_erp_id = self._id(screen_payload.get("erp_id"))
             if effective_erp_id != version.erp_id:
                 raise StructuralRelationError(
@@ -374,9 +372,7 @@ class ScreenEvidenceBuilder:
             *transitions,
         ]
         selected_ids = {item.canonical_id for item in selected}
-        primary_evidence_ids = self._primary_evidence_ids(
-            items, screen.canonical_id, warnings
-        )
+        primary_evidence_ids = self._primary_evidence_ids(items, screen.canonical_id, warnings)
         network_traces = self._network_traces(items, screen.canonical_id, warnings)
         evidence_ids = self._evidence_ids(selected, payloads, items, selected_ids, warnings)
         main_text = self._main_text(

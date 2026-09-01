@@ -9,12 +9,14 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
-from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
 from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticType,
+)
 from erp_assistant.persistence.postgres.models import (
     ERPSystemRecord,
     ImportRun,
@@ -23,6 +25,8 @@ from erp_assistant.persistence.postgres.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.semantic.services.semantic_payloads import (
     canonical_json_hash,
     validated_semantic_evidence_snapshot,
@@ -137,9 +141,7 @@ def seed(factory, *, suffix="one", include_module=True):
             "screen_title": screen.title,
             "screen_route": screen.route,
             "module": (
-                {"module_id": f"module:{suffix}", "name": "Synthetic"}
-                if include_module
-                else None
+                {"module_id": f"module:{suffix}", "name": "Synthetic"} if include_module else None
             ),
             "fields": [
                 {
@@ -185,12 +187,8 @@ def seed(factory, *, suffix="one", include_module=True):
             ],
             "warnings": [],
         }
-        provisional = ScreenEvidencePackage.model_validate(
-            {**raw, "evidence_hash": "0" * 64}
-        )
-        digest = canonical_json_hash(
-            provisional.model_dump(mode="json", exclude={"evidence_hash"})
-        )
+        provisional = ScreenEvidencePackage.model_validate({**raw, "evidence_hash": "0" * 64})
+        digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
         package = provisional.model_copy(update={"evidence_hash": digest})
         source = {
             "semantic_type": "screen_purpose",
@@ -239,9 +237,7 @@ def action_body(**changes):
 def test_disabled_by_default_and_absent_from_openapi(tmp_path):
     index = tmp_path / "index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    app = create_app(
-        replace(ApiSettings(), semantic_review_api_enabled=False)
-    )
+    app = create_app(replace(ApiSettings(), semantic_review_api_enabled=False))
     client = Client(app)
     assert client.get("/api/admin/semantic-proposals").status_code == 404
     assert "/api/admin/semantic-proposals" not in client.get("/openapi.json").json()["paths"]
@@ -258,9 +254,10 @@ def test_empty_list_and_openapi_notice(api):
 @pytest.mark.parametrize("host", ["127.0.0.1", "::1"])
 def test_loopback_clients_are_allowed(api, host):
     client, _ = api
-    assert Client(client.app, client=(host, 50000)).get(
-        "/api/admin/semantic-proposals"
-    ).status_code == 200
+    assert (
+        Client(client.app, client=(host, 50000)).get("/api/admin/semantic-proposals").status_code
+        == 200
+    )
 
 
 @pytest.mark.parametrize(
@@ -380,9 +377,7 @@ def test_pagination_filters_detail_and_sanitized_evidence(api):
 
 def test_root_screen_persisted_evidence_serializes_module_as_null(api):
     client, factory = api
-    semantic_id, _source, _ = seed(
-        factory, suffix="root-module-null", include_module=False
-    )
+    semantic_id, _source, _ = seed(factory, suffix="root-module-null", include_module=False)
 
     detail = client.get(f"/api/admin/semantic-proposals/{semantic_id}")
 
@@ -397,9 +392,12 @@ def test_effective_contract_for_every_review_status(api):
     approved_id, approved_source, _ = seed(factory, suffix="effective-approved")
     corrected_id, corrected_source, _ = seed(factory, suffix="effective-corrected")
     rejected_id, rejected_source, _ = seed(factory, suffix="effective-rejected")
-    assert client.post(
-        f"/api/admin/semantic-proposals/{approved_id}/approve", json=action_body()
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{approved_id}/approve", json=action_body()
+        ).status_code
+        == 200
+    )
     corrected = {
         **corrected_source,
         "purpose_summary": "Permite buscar datos por Código.",
@@ -410,13 +408,19 @@ def test_effective_contract_for_every_review_status(api):
             }
         ],
     }
-    assert client.post(
-        f"/api/admin/semantic-proposals/{corrected_id}/correct",
-        json=action_body(corrected_payload=corrected),
-    ).status_code == 200
-    assert client.post(
-        f"/api/admin/semantic-proposals/{rejected_id}/reject", json=action_body()
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{corrected_id}/correct",
+            json=action_body(corrected_payload=corrected),
+        ).status_code
+        == 200
+    )
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{rejected_id}/reject", json=action_body()
+        ).status_code
+        == 200
+    )
     cases = (
         (pending_id, pending_source, None),
         (approved_id, approved_source, approved_source),
@@ -424,9 +428,7 @@ def test_effective_contract_for_every_review_status(api):
         (rejected_id, rejected_source, None),
     )
     for semantic_id, effective, publishable in cases:
-        payload = client.get(
-            f"/api/admin/semantic-proposals/{semantic_id}/effective"
-        ).json()
+        payload = client.get(f"/api/admin/semantic-proposals/{semantic_id}/effective").json()
         assert payload["effective_payload"] == effective
         assert payload["publishable_payload"] == publishable
 
@@ -460,9 +462,12 @@ def test_approve_and_reject_use_append_only_actions(api, action, status, publish
         assert proposal.source_payload == original
         assert proposal.evidence_payload == evidence
         assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 1
-    assert client.post(
-        f"/api/admin/semantic-proposals/{semantic_id}/{action}", json=action_body()
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{semantic_id}/{action}", json=action_body()
+        ).status_code
+        == 409
+    )
 
 
 def test_valid_correction_becomes_effective_without_mutating_original(api):
@@ -484,9 +489,12 @@ def test_valid_correction_becomes_effective_without_mutating_original(api):
     )
     assert response.status_code == 200, response.text
     assert response.json()["effective_payload"] == corrected
-    assert client.get(f"/api/admin/semantic-proposals/{semantic_id}/effective").json()[
-        "publishable_payload"
-    ] == corrected
+    assert (
+        client.get(f"/api/admin/semantic-proposals/{semantic_id}/effective").json()[
+            "publishable_payload"
+        ]
+        == corrected
+    )
     with factory() as session:
         proposal = session.scalar(
             select(SemanticProposal).where(SemanticProposal.semantic_id == semantic_id)
@@ -506,9 +514,10 @@ def test_valid_correction_becomes_effective_without_mutating_original(api):
 def test_reviewer_and_reason_are_strict(api, body):
     client, factory = api
     semantic_id, _, _ = seed(factory, suffix="reviewer-safe")
-    assert client.post(
-        f"/api/admin/semantic-proposals/{semantic_id}/approve", json=body
-    ).status_code == 422
+    assert (
+        client.post(f"/api/admin/semantic-proposals/{semantic_id}/approve", json=body).status_code
+        == 422
+    )
 
 
 @pytest.mark.parametrize("mutation", ["screen", "type", "ref", "narrative", "action"])
@@ -539,9 +548,7 @@ def test_invalid_corrections_are_rejected_and_rolled_back(api, mutation):
         assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 0
 
 
-@pytest.mark.parametrize(
-    "change", [{"expected_status": "approved"}, {"expected_revision": 1}]
-)
+@pytest.mark.parametrize("change", [{"expected_status": "approved"}, {"expected_revision": 1}])
 def test_stale_preconditions_return_409_without_action(api, change):
     client, factory = api
     semantic_id, _, _ = seed(factory, suffix="stale-safe")
@@ -555,9 +562,7 @@ def test_stale_preconditions_return_409_without_action(api, change):
         assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 0
 
 
-def test_stale_current_evidence_blocks_approve_and_correct_but_allows_reject(
-    api, monkeypatch
-):
+def test_stale_current_evidence_blocks_approve_and_correct_but_allows_reject(api, monkeypatch):
     client, factory = api
     approve_id, _, _ = seed(factory, suffix="stale-current-approve")
     correct_id, correct_source, _ = seed(factory, suffix="stale-current-correct")

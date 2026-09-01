@@ -279,9 +279,7 @@ class AdminKnowledgeRepository:
             for row in self._page_rows(batch_ids):
                 projection = semantic_projection(row.proposals, row.semantic_actions)
                 state = (
-                    ScreenSemanticState.UNAVAILABLE
-                    if row.screen.diagnostic
-                    else projection.state
+                    ScreenSemanticState.UNAVAILABLE if row.screen.diagnostic else projection.state
                 )
                 if state.value == semantic_status:
                     if offset <= matched < offset + limit:

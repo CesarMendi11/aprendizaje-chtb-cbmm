@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from erp_assistant.config.neo4j_settings import Neo4jSettings
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
-
 from scripts.common.database import print_json
 from scripts.common.neo4j import neo4j_client, safe_neo4j_error
 

@@ -4,7 +4,6 @@ import re
 
 from .query_plan import QueryPlan, QueryPlanner
 
-
 ABSTAIN = "No encontré conocimiento validado suficiente para responder esa pregunta."
 
 
@@ -344,7 +343,6 @@ class StructuralAnswerPlanner:
             "confidence": "low",
         }
 
-
     @staticmethod
     def _screen_parent_type(relation):
         source_type = str(relation.get("source_type") or "").strip()
@@ -449,7 +447,6 @@ class StructuralAnswerPlanner:
     @staticmethod
     def _intent(question):
         return QueryPlanner().plan(question).intent
-
 
     @staticmethod
     def _display_label(value):

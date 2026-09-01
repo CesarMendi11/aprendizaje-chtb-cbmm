@@ -24,15 +24,11 @@ class RoutePolicy:
         self.blocked_routes: list[str] = exploration.get("blocked_routes", [])
 
         self.dangerous_keywords = [
-            keyword.lower().strip()
-            for keyword in safety.get("dangerous_keywords", [])
-            if keyword
+            keyword.lower().strip() for keyword in safety.get("dangerous_keywords", []) if keyword
         ]
 
         self.safe_keywords = [
-            keyword.lower().strip()
-            for keyword in safety.get("safe_keywords", [])
-            if keyword
+            keyword.lower().strip() for keyword in safety.get("safe_keywords", []) if keyword
         ]
 
     def normalize_href(self, href: str | None) -> str | None:

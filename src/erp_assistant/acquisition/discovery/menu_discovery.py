@@ -77,11 +77,7 @@ class MenuDiscovery:
     ) -> list[dict[str, Any]]:
         candidates = self.discover_menu_candidates(screen_data)
 
-        return [
-            candidate
-            for candidate in candidates
-            if candidate["kind"] == "collapsable_menu"
-        ]
+        return [candidate for candidate in candidates if candidate["kind"] == "collapsable_menu"]
 
     def _is_menu_tag(self, tag: str) -> bool:
         return tag in self.COLLAPSABLE_TAGS or tag in self.BASIC_TAGS

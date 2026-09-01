@@ -4,14 +4,14 @@ import pytest
 from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import Session
 
-from erp_assistant.persistence.postgres.base import Base
 import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import SyncStatus, SyncTarget
 from erp_assistant.persistence.postgres.models import KnowledgeItem, SyncJob
+from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
-from erp_assistant.structural.canonical.enums import ReviewStatus
 from tests.fixtures.canonical import exported_fictional_canonical
 
 
@@ -74,14 +74,17 @@ def test_describe_approve_and_reset_history_is_safe_and_ordered(reviewed):
         service.reset_to_pending(item.id, reviewer="synthetic-reviewer")
     description = EffectiveKnowledgeService(session).describe(item.id)
     assert [action["action"] for action in description["history"]] == [
-        "approve", "reset_to_pending"
+        "approve",
+        "reset_to_pending",
     ]
     assert [action["new_status"] for action in description["history"]] == [
-        "approved", "pending_review"
+        "approved",
+        "pending_review",
     ]
-    assert all(set(action) == {
-        "id", "action", "previous_status", "new_status", "source", "created_at"
-    } for action in description["history"])
+    assert all(
+        set(action) == {"id", "action", "previous_status", "new_status", "source", "created_at"}
+        for action in description["history"]
+    )
     assert "ReviewAction object at" not in str(description)
     assert item.current_review_status == ReviewStatus.PENDING_REVIEW
     assert item.source_payload == original
@@ -96,9 +99,7 @@ def test_describe_many_batches_review_history_without_refetching_items(reviewed)
 
     statements = []
 
-    def capture(
-        conn, cursor, statement, parameters, context, executemany
-    ):
+    def capture(conn, cursor, statement, parameters, context, executemany):
         statements.append(statement.casefold())
 
     engine = session.get_bind()
@@ -125,9 +126,7 @@ def test_invalid_transition_and_concurrent_revision(reviewed):
             service.approve(item.id)
     with pytest.raises(ValueError, match="concurrente"):
         with session.begin():
-            service.correct(
-                item.id, item.source_payload, notes="ajuste", expected_revision=0
-            )
+            service.correct(item.id, item.source_payload, notes="ajuste", expected_revision=0)
 
 
 def test_correction_preserves_source_and_effective_payload(reviewed):
@@ -150,15 +149,19 @@ def test_correction_preserves_source_and_effective_payload(reviewed):
     assert effective["effective_payload"]["description"] == "Descripción funcional revisada"
 
 
-@pytest.mark.parametrize("patch", [
-    {"id": "different"},
-    {"password": "secret"},
-    {"description": "<script>alert(1)</script>"},
-])
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"id": "different"},
+        {"password": "secret"},
+        {"description": "<script>alert(1)</script>"},
+    ],
+)
 def test_invalid_corrections_are_rejected(reviewed, patch):
     session, item = reviewed
     payload = {
-        key: value for key, value in item.source_payload.items()
+        key: value
+        for key, value in item.source_payload.items()
         if key not in {"review_status", "reviewed_at", "reviewed_by", "review_notes"}
     }
     payload.update(patch)

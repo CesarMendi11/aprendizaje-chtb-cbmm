@@ -6,16 +6,15 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from erp_assistant.config.profile_loader import ProfileLoader
 from erp_assistant.acquisition.discovery.event_candidate_discovery import EventCandidateDiscovery
 from erp_assistant.acquisition.policy.route_policy import RoutePolicy
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Muestra los eventos que el crawler intentaría ejecutar sin abrir "
-            "ni modificar el ERP."
+            "Muestra los eventos que el crawler intentaría ejecutar sin abrir ni modificar el ERP."
         )
     )
     parser.add_argument(
@@ -95,11 +94,7 @@ def build_plan(
         screens_plan.append(
             {
                 "route": route,
-                "title": (
-                    screen.get("functional_title")
-                    or screen.get("title")
-                    or route
-                ),
+                "title": (screen.get("functional_title") or screen.get("title") or route),
                 "allowed_categories": sorted(scope),
                 "selected_count": len(selected),
                 "events": [candidate.to_dict() for candidate in selected],
@@ -108,13 +103,9 @@ def build_plan(
 
     return {
         "plan_type": "safe_ui_event_execution_preview",
-        "max_event_depth": int(
-            profile.get("ui_events", {}).get("max_event_depth", 0)
-        ),
+        "max_event_depth": int(profile.get("ui_events", {}).get("max_event_depth", 0)),
         "screens_count": len(screens_plan),
-        "selected_events_count": sum(
-            item["selected_count"] for item in screens_plan
-        ),
+        "selected_events_count": sum(item["selected_count"] for item in screens_plan),
         "categories": dict(sorted(categories.items())),
         "screens": screens_plan,
     }

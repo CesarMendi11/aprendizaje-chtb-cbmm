@@ -112,10 +112,7 @@ def test_semantic_tables_columns_foreign_keys_constraints_and_indexes():
         "source_effective_content_hash",
     }
     assert all(not proposals.c[name].nullable for name in required_nonnullable)
-    assert all(
-        proposals.c[name].nullable
-        for name in required - required_nonnullable
-    )
+    assert all(proposals.c[name].nullable for name in required - required_nonnullable)
     assert actions.c.corrected_payload.nullable
     assert not actions.c.reviewer_subject.nullable
     assert {fk.target_fullname for fk in proposals.foreign_keys} == {

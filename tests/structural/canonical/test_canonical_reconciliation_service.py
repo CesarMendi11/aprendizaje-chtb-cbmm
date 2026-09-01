@@ -21,6 +21,7 @@ from erp_assistant.persistence.postgres.models import (
     ReviewAction,
     SyncJob,
 )
+from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.services.canonical_materialization_service import (
     CanonicalKnowledgeMaterializer,
 )
@@ -31,7 +32,6 @@ from erp_assistant.structural.services.canonical_reconciliation_service import (
 from erp_assistant.structural.services.removal_reconciliation_review_service import (
     RemovalReconciliationReviewService,
 )
-from erp_assistant.structural.canonical.ids import content_hash
 from tests.fixtures.removal_review import resolve_all_removals
 from tests.structural.governance.test_removal_reconciliation_plan_service import partial_candidate
 from tests.structural.governance.test_version_diff_service import seed
@@ -101,7 +101,6 @@ def _materializable_partial_candidate(session, tmp_path):
     return active_id, candidate_id, removed_items
 
 
-
 def _materializable_full_candidate(session, tmp_path):
     active_id, candidate_id, _ = seed(session, tmp_path)
     with session.begin():
@@ -156,6 +155,7 @@ def _materializable_full_candidate(session, tmp_path):
             removed_items[entity_type] = item
             session.delete(item)
     return active_id, candidate_id, removed_items
+
 
 def test_reconciliation_materializes_in_memory_and_is_read_only(session, tmp_path):
     active_id, candidate_id, removed_items = _materializable_partial_candidate(session, tmp_path)
@@ -324,7 +324,6 @@ def test_full_candidate_removals_require_explicit_human_review(session, tmp_path
         CanonicalReconciliationService(session).reconcile(candidate_id)
 
 
-
 def test_full_candidate_reconciliation_applies_explicit_human_decisions(session, tmp_path):
     _, candidate_id, removed_items = _materializable_full_candidate(session, tmp_path)
     removed_control = removed_items["control"]
@@ -345,6 +344,7 @@ def test_full_candidate_reconciliation_applies_explicit_human_decisions(session,
     assert removed_control.canonical_id not in {item.id for item in result.canonical.controls}
     assert all(not decision.requires_human_review for decision in result.plan.decisions)
     assert all(decision.review_action_id for decision in result.plan.decisions)
+
 
 def test_active_retention_identity_mismatches_fail_closed(session, tmp_path):
     active_id, _ = partial_candidate(session, tmp_path)

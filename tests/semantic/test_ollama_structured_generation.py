@@ -3,6 +3,10 @@ from __future__ import annotations
 import httpx
 import pytest
 
+from erp_assistant.integrations.ollama.generation import (
+    OllamaGenerationClient,
+    OllamaGenerationSettings,
+)
 from erp_assistant.semantic.generation.errors import (
     EmptyStructuredOutputError,
     OllamaBodyError,
@@ -14,10 +18,6 @@ from erp_assistant.semantic.generation.errors import (
 from erp_assistant.semantic.generation.ollama_structured_client import (
     MAX_GENERATED_TEXT_BYTES,
     OllamaStructuredGenerationClient,
-)
-from erp_assistant.integrations.ollama.generation import (
-    OllamaGenerationClient,
-    OllamaGenerationSettings,
 )
 
 

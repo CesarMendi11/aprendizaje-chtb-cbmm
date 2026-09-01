@@ -45,12 +45,7 @@ ACTION_TERMS: dict[RecognizedAction, frozenset[str]] = {
 
 
 def _tokens(*values: str | None) -> set[str]:
-    return {
-        token
-        for value in values
-        for token in normalize_text(value or "").split()
-        if token
-    }
+    return {token for value in values for token in normalize_text(value or "").split() if token}
 
 
 def _matches(action: RecognizedAction, *values: str | None) -> bool:
@@ -125,9 +120,7 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
     # Network evidence is supplementary only: the view action is already
     # structurally supported above. Only traces whose observed methods are
     # entirely read-only may be cited for that existing action.
-    view_refs.update(
-        trace.evidence_id for trace in package.network_traces if trace.read_only
-    )
+    view_refs.update(trace.evidence_id for trace in package.network_traces if trace.read_only)
     hints["view"] = _hint("view", "direct", view_refs)
 
     for action in ("create", "edit", "delete", "process"):
@@ -140,9 +133,7 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
                 matching.append((event.event_id, event.policy_decision or "unknown"))
         allowed = {ref for ref, decision in matching if decision.casefold() == "allow"}
         prudent = {
-            ref
-            for ref, decision in matching
-            if decision.casefold() not in {"allow", "deny"}
+            ref for ref, decision in matching if decision.casefold() not in {"allow", "deny"}
         }
         if allowed:
             hints[action] = _hint(action, "direct", allowed | prudent)

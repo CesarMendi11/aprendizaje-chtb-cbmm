@@ -103,7 +103,4 @@ def test_build_plan_applies_home_and_local_category_scopes():
         "open_readonly_view": 1,
     }
     assert plan["screens"][0]["events"][0]["event_category"] == "expand_menu"
-    assert (
-        plan["screens"][1]["events"][0]["event_category"]
-        == "open_readonly_view"
-    )
+    assert plan["screens"][1]["events"][0]["event_category"] == "open_readonly_view"

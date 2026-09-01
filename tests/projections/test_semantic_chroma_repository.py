@@ -24,9 +24,7 @@ class FakeCollection:
 
     def upsert(self, **kwargs):
         self.upserts.append(kwargs)
-        for document_id, metadata in zip(
-            kwargs["ids"], kwargs["metadatas"], strict=True
-        ):
+        for document_id, metadata in zip(kwargs["ids"], kwargs["metadatas"], strict=True):
             self.records[document_id] = dict(metadata)
 
     def get(self, *, where, include):
@@ -91,9 +89,7 @@ def test_semantic_repository_replaces_all_semantic_documents_for_same_erp_only()
 
     assert changed == 1
     assert removed == 2
-    assert client.collection.get_calls == [
-        {"where": {"erp_id": "erp:test"}, "include": []}
-    ]
+    assert client.collection.get_calls == [{"where": {"erp_id": "erp:test"}, "include": []}]
     assert client.collection.deleted == sorted([old_active_id, stale_current_id])
     assert keep.id in client.collection.records
     assert other_erp_id in client.collection.records
@@ -105,6 +101,4 @@ def test_semantic_repository_rejects_documents_outside_requested_scope():
     wrong = document("erp:other", "v2", "semantic:wrong")
 
     with pytest.raises(ValueError, match="semantic_document_scope_mismatch"):
-        repository.sync(
-            [wrong], [[1.0, 0.0]], erp_id="erp:test", knowledge_version="v2"
-        )
+        repository.sync([wrong], [[1.0, 0.0]], erp_id="erp:test", knowledge_version="v2")

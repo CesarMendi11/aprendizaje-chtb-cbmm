@@ -5,8 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from erp_assistant.semantic.schemas import ScreenPurposeInference
 from erp_assistant.persistence.postgres.enums import SemanticLifecycleOrigin
+from erp_assistant.semantic.schemas import ScreenPurposeInference
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 

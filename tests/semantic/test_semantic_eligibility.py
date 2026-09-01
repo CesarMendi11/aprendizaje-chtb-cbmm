@@ -36,12 +36,8 @@ def package(*, primary=True, functional=True):
         "evidence_ids": ["evidence:screen"] if primary else [],
         "warnings": [],
     }
-    provisional = ScreenEvidencePackage.model_validate(
-        {**values, "evidence_hash": "0" * 64}
-    )
-    digest = canonical_json_hash(
-        provisional.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    provisional = ScreenEvidencePackage.model_validate({**values, "evidence_hash": "0" * 64})
+    digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
     return provisional.model_copy(update={"evidence_hash": digest})
 
 
@@ -62,9 +58,7 @@ def test_semantic_eligibility_requires_primary_evidence_and_functional_structure
 
 
 def test_semantic_eligibility_reports_both_missing_conditions_deterministically():
-    assessment = evaluate_screen_semantic_eligibility(
-        package(primary=False, functional=False)
-    )
+    assessment = evaluate_screen_semantic_eligibility(package(primary=False, functional=False))
     assert assessment.status == "insufficient_evidence"
     assert assessment.reasons == (
         "missing_primary_evidence",

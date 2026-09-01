@@ -283,6 +283,7 @@ def test_event_candidate_discovery_deduplicates_by_selector():
 
     assert len(candidates) == 1
 
+
 def test_event_candidate_discovery_classifies_and_allows_menu_expansion():
     discovery = build_discovery()
 
@@ -377,6 +378,7 @@ def test_event_candidate_discovery_allows_search_submit_without_general_form_sub
     assert candidate.decision == "allow"
     assert candidate.dangerous is False
 
+
 def test_discovery_classifies_accented_open_menu_as_safe_expand_menu():
     profile = build_profile()
     policy = RoutePolicy(profile)
@@ -401,7 +403,6 @@ def test_discovery_classifies_accented_open_menu_as_safe_expand_menu():
     assert len(candidates) == 1
     assert candidates[0].event_category == "expand_menu"
     assert candidates[0].decision == "allow"
-
 
 
 def test_safe_candidates_prioritize_local_controls_outside_home():
@@ -619,9 +620,7 @@ def test_exploration_budget_excludes_global_navigation_outside_home():
     report = discovery.build_pipeline_report(screen_data)
 
     assert [candidate.label for candidate in selected] == ["Buscar"]
-    assert report["selection_exclusions"][
-        "global_navigation_outside_home"
-    ] == 1
+    assert report["selection_exclusions"]["global_navigation_outside_home"] == 1
 
 
 def test_exploration_budget_preserves_distinct_dropdowns_with_same_label():
@@ -683,20 +682,14 @@ def test_repeated_table_row_actions_are_deduplicated_by_selector_template():
             {
                 "text": "",
                 "tag": "button",
-                "selector": (
-                    "table > tbody > tr:nth-of-type(1) > "
-                    "td:nth-of-type(1) > button"
-                ),
+                "selector": ("table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > button"),
                 "region": "main_content",
                 "within_table": True,
             },
             {
                 "text": "",
                 "tag": "button",
-                "selector": (
-                    "table > tbody > tr:nth-of-type(2) > "
-                    "td:nth-of-type(1) > button"
-                ),
+                "selector": ("table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > button"),
                 "region": "main_content",
                 "within_table": True,
             },
@@ -722,8 +715,7 @@ def test_descendant_of_collapsable_does_not_inherit_expand_menu_semantics():
                 "text": "Año Area Cargo Funcional Estado Seguimiento Personas",
                 "tag": "div",
                 "selector": (
-                    "fuse-vertical-navigation-collapsable-item:nth-of-type(2) "
-                    "> div:nth-of-type(2)"
+                    "fuse-vertical-navigation-collapsable-item:nth-of-type(2) > div:nth-of-type(2)"
                 ),
                 "role": None,
                 "aria_expanded": None,

@@ -9,16 +9,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 import erp_assistant.persistence.postgres.models  # noqa: F401
-from erp_assistant.semantic.evidence.screen_evidence_builder import (
-    EffectiveContentIntegrityError,
-    EvidenceEntityTypeError,
-    EvidenceScreenReviewError,
-    EvidenceVersionMismatchError,
-    ScreenEvidenceBuilder,
-    StructuralRelationError,
-    UnsafeScreenRouteError,
-)
-from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
@@ -33,6 +23,16 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
     ReviewAction,
 )
+from erp_assistant.semantic.evidence.screen_evidence_builder import (
+    EffectiveContentIntegrityError,
+    EvidenceEntityTypeError,
+    EvidenceScreenReviewError,
+    EvidenceVersionMismatchError,
+    ScreenEvidenceBuilder,
+    StructuralRelationError,
+    UnsafeScreenRouteError,
+)
+from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.ids import content_hash
 
@@ -643,8 +643,7 @@ def test_same_title_states_preserve_canonical_identity_and_transition_closure(se
     assert state_ids == {state_a.canonical_id, state_b.canonical_id}
     assert len(package.transitions) == 2
     assert all(
-        transition.source_state_id in state_ids
-        and transition.target_state_id in state_ids
+        transition.source_state_id in state_ids and transition.target_state_id in state_ids
         for transition in package.transitions
     )
 
@@ -695,10 +694,7 @@ def test_transition_is_excluded_when_state_is_outside_safe_projection_limit(sess
     assert states[-1].canonical_id not in state_ids
     assert package.transitions == []
     assert "limit_exceeded:ui_states" in package.warnings
-    assert (
-        f"excluded_projection:transition:{transition.canonical_id}:state"
-        in package.warnings
-    )
+    assert f"excluded_projection:transition:{transition.canonical_id}:state" in package.warnings
 
 
 def test_states_events_transitions_and_invalid_reference_warning(session):
@@ -933,7 +929,4 @@ def test_unsafe_network_trace_is_excluded_from_semantic_projection(session):
 
     assert package.network_traces == []
     assert "evidence:network-unsafe" in package.evidence_ids
-    assert (
-        "excluded_unsafe:network_trace:evidence:network-unsafe"
-        in package.warnings
-    )
+    assert "excluded_unsafe:network_trace:evidence:network-unsafe" in package.warnings

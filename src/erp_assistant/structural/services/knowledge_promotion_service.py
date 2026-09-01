@@ -8,6 +8,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from erp_assistant.acquisition.quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
     PipelineJobKind,
@@ -25,11 +30,6 @@ from erp_assistant.persistence.postgres.models import (
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import is_safe_navigation_metadata
-from erp_assistant.acquisition.quality import (
-    CrawlExecutionQualityError,
-    validate_certified_quality_source,
-    validate_matching_certified_quality,
-)
 
 from .canonical_materialization_service import (
     CanonicalKnowledgeMaterializationError,
@@ -180,9 +180,7 @@ class KnowledgePromotionService:
         blockers.extend(self._module_crawl_readiness(version.id))
 
         existing_sync_jobs = list(
-            self.session.scalars(
-                select(SyncJob).where(SyncJob.knowledge_version_id == version.id)
-            )
+            self.session.scalars(select(SyncJob).where(SyncJob.knowledge_version_id == version.id))
         )
         if existing_sync_jobs:
             blockers.append(
@@ -473,8 +471,7 @@ class KnowledgePromotionService:
             blockers.append(
                 PromotionBlocker(
                     "crawl_quality_not_certified",
-                    "La provenance del candidate no conserva calidad de crawl "
-                    f"certificada: {exc}",
+                    f"La provenance del candidate no conserva calidad de crawl certificada: {exc}",
                 )
             )
 
@@ -531,9 +528,7 @@ class KnowledgePromotionService:
         source_result = dict(source.result_payload or {})
         decisions = list(source_result.get("decisions") or [])
         review_set_ids = {
-            str(value.get("review_set_id"))
-            for value in decisions
-            if value.get("review_set_id")
+            str(value.get("review_set_id")) for value in decisions if value.get("review_set_id")
         }
         review_set_id = next(iter(review_set_ids)) if len(review_set_ids) == 1 else None
         decision_set_hash = source_result.get("decision_set_hash")
@@ -606,9 +601,7 @@ class KnowledgePromotionService:
     ) -> tuple[dict[str, dict[str, int]], dict[str, int], list[PromotionBlocker]]:
         items = list(
             self.session.scalars(
-                select(KnowledgeItem).where(
-                    KnowledgeItem.knowledge_version_id == version_id
-                )
+                select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == version_id)
             )
         )
         all_counts = Counter(str(item.current_review_status) for item in items)
@@ -666,9 +659,7 @@ class KnowledgePromotionService:
     def _all_review_counts(self, version_id: uuid.UUID) -> dict[str, int]:
         items = list(
             self.session.scalars(
-                select(KnowledgeItem).where(
-                    KnowledgeItem.knowledge_version_id == version_id
-                )
+                select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == version_id)
             )
         )
         return dict(sorted(Counter(str(item.current_review_status) for item in items).items()))
@@ -797,9 +788,7 @@ class KnowledgePromotionService:
             )
         )
         jobs = [
-            job
-            for job in jobs
-            if dict(job.result_payload or {}).get("import_result") == "imported"
+            job for job in jobs if dict(job.result_payload or {}).get("import_result") == "imported"
         ]
         return jobs[0] if len(jobs) == 1 else None
 

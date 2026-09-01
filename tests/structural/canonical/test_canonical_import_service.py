@@ -10,7 +10,14 @@ from sqlalchemy.orm import Session
 import erp_assistant.persistence.postgres.models  # noqa: F401
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus
-from erp_assistant.persistence.postgres.models import ImportRun, KnowledgeItem, KnowledgeVersionRecord, SyncJob
+from erp_assistant.persistence.postgres.models import (
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SyncJob,
+)
+from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
@@ -19,8 +26,6 @@ from erp_assistant.structural.services.payloads import (
     rebase_structural_correction,
     structural_review_hash,
 )
-from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.structural.canonical.ids import content_hash
 from tests.fixtures.canonical import exported_fictional_canonical
 
 
@@ -135,12 +140,10 @@ def test_structural_review_hash_ignores_provenance_refresh_but_not_functional_ch
         "observed": True,
     }
     refreshed_transition = {**transition, "depth": 0}
-    assert structural_review_hash(
-        "transition", transition
-    ) == structural_review_hash("transition", refreshed_transition)
-    assert structural_review_hash(
-        "transition", transition
-    ) != structural_review_hash(
+    assert structural_review_hash("transition", transition) == structural_review_hash(
+        "transition", refreshed_transition
+    )
+    assert structural_review_hash("transition", transition) != structural_review_hash(
         "transition", {**refreshed_transition, "effect": "STRUCTURAL_CHANGE"}
     )
 
@@ -168,18 +171,13 @@ def test_rebase_structural_correction_keeps_human_fields_and_refreshes_provenanc
 
 
 def test_new_import_and_idempotency(session, canonical_dir):
-    manifest = json.loads(
-        (canonical_dir / "manifest.json").read_text(encoding="utf-8")
-    )
+    manifest = json.loads((canonical_dir / "manifest.json").read_text(encoding="utf-8"))
     expected_items = 1 + sum(manifest["entity_counts"].values())
 
     first = import_once(session, canonical_dir)
     assert first.result == "imported"
     assert first.items == expected_items
-    assert (
-        session.scalar(select(func.count()).select_from(KnowledgeItem))
-        == expected_items
-    )
+    assert session.scalar(select(func.count()).select_from(KnowledgeItem)) == expected_items
     assert session.scalar(select(func.count()).select_from(SyncJob)) == 2
     session.rollback()
     second = import_once(session, canonical_dir)
@@ -208,9 +206,7 @@ def test_invalid_manifest_rolls_back_functional_import(session, tmp_path, canoni
     bad.write_text('{"knowledge_version":"wrong","canonical_document_hash":"x"}')
     with pytest.raises(ValueError):
         with session.begin():
-            CanonicalImportService(session).import_canonical(
-                canonical_dir / "knowledge.json", bad
-            )
+            CanonicalImportService(session).import_canonical(canonical_dir / "knowledge.json", bad)
     assert session.scalar(select(func.count()).select_from(KnowledgeItem)) == 0
 
 
@@ -248,9 +244,7 @@ def _next_version(tmp_path, canonical_dir, *, change_screen=False):
 def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir):
     import_once(session, canonical_dir)
     item = session.scalar(
-        select(KnowledgeItem).where(
-            KnowledgeItem.entity_type == "screen"
-        ).limit(1)
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1)
     )
     session.rollback()
     with session.begin():
@@ -258,11 +252,13 @@ def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir)
     paths = _next_version(tmp_path, canonical_dir)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
-    carried = session.scalar(select(KnowledgeItem).where(
-        KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
-        KnowledgeItem.entity_type == item.entity_type,
-        KnowledgeItem.canonical_id == item.canonical_id,
-    ))
+    carried = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
+            KnowledgeItem.entity_type == item.entity_type,
+            KnowledgeItem.canonical_id == item.canonical_id,
+        )
+    )
     assert carried.current_review_status == ReviewStatus.APPROVED
     assert result.carried_reviews == 1
 
@@ -270,12 +266,11 @@ def test_identical_approval_is_carried_forward(session, tmp_path, canonical_dir)
 def test_identical_correction_is_carried_forward(session, tmp_path, canonical_dir):
     import_once(session, canonical_dir)
     item = session.scalar(
-        select(KnowledgeItem).where(
-            KnowledgeItem.entity_type == "screen"
-        ).limit(1)
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1)
     )
     payload = {
-        key: value for key, value in item.source_payload.items()
+        key: value
+        for key, value in item.source_payload.items()
         if key not in {"review_status", "reviewed_at", "reviewed_by", "review_notes"}
     }
     payload["description"] = "Revisión humana"
@@ -285,11 +280,13 @@ def test_identical_correction_is_carried_forward(session, tmp_path, canonical_di
     paths = _next_version(tmp_path, canonical_dir)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
-    carried = session.scalar(select(KnowledgeItem).where(
-        KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
-        KnowledgeItem.entity_type == item.entity_type,
-        KnowledgeItem.canonical_id == item.canonical_id,
-    ))
+    carried = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
+            KnowledgeItem.entity_type == item.entity_type,
+            KnowledgeItem.canonical_id == item.canonical_id,
+        )
+    )
     effective = EffectiveKnowledgeService(session).describe(carried.id)
     assert carried.current_review_status == ReviewStatus.CORRECTED
     assert effective["effective_payload"]["description"] == "Revisión humana"
@@ -298,9 +295,7 @@ def test_identical_correction_is_carried_forward(session, tmp_path, canonical_di
 def test_changed_hash_does_not_carry_review(session, tmp_path, canonical_dir):
     import_once(session, canonical_dir)
     item = session.scalar(
-        select(KnowledgeItem).where(
-            KnowledgeItem.entity_type == "screen"
-        ).limit(1)
+        select(KnowledgeItem).where(KnowledgeItem.entity_type == "screen").limit(1)
     )
     session.rollback()
     with session.begin():
@@ -308,22 +303,20 @@ def test_changed_hash_does_not_carry_review(session, tmp_path, canonical_dir):
     paths = _next_version(tmp_path, canonical_dir, change_screen=True)
     with session.begin():
         result = CanonicalImportService(session).import_canonical(*paths)
-    changed = session.scalar(select(KnowledgeItem).where(
-        KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
-        KnowledgeItem.entity_type == item.entity_type,
-        KnowledgeItem.canonical_id == item.canonical_id,
-    ))
+    changed = session.scalar(
+        select(KnowledgeItem).where(
+            KnowledgeItem.knowledge_version_id == uuid.UUID(result.version_id),
+            KnowledgeItem.entity_type == item.entity_type,
+            KnowledgeItem.canonical_id == item.canonical_id,
+        )
+    )
     assert changed.current_review_status == ReviewStatus.PENDING_REVIEW
     assert result.carried_reviews == 0
 
 
 def test_imported_child_module_keeps_canonical_module_parent(session, tmp_path, canonical_dir):
-    knowledge = json.loads(
-        (canonical_dir / "knowledge.json").read_text(encoding="utf-8")
-    )
-    manifest = json.loads(
-        (canonical_dir / "manifest.json").read_text(encoding="utf-8")
-    )
+    knowledge = json.loads((canonical_dir / "knowledge.json").read_text(encoding="utf-8"))
+    manifest = json.loads((canonical_dir / "manifest.json").read_text(encoding="utf-8"))
 
     assert len(knowledge["modules"]) >= 2
 

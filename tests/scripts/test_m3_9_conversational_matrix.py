@@ -64,7 +64,7 @@ def test_evaluate_payload_detects_cross_entity_leak_and_wrong_source_type():
         retrieval_exact=(("selected_semantics", 0),),
     )
     candidate = payload(
-        answer='No sé para qué sirve Dashboard; screen:ano no corresponde.',
+        answer="No sé para qué sirve Dashboard; screen:ano no corresponde.",
         sources=[
             {"title": "Dashboard", "route": "/admin/home", "sourceType": "screen"},
             {"title": "Año", "route": "/admin/general/anios", "sourceType": "module"},
@@ -118,7 +118,7 @@ def test_percentile_uses_nearest_rank():
 def test_load_matrix_reads_instance_expectations_from_external_config(tmp_path):
     matrix_path = tmp_path / "matrix.json"
     matrix_path.write_text(
-        '''{
+        """{
           "scenarios": [
             {
               "name": "generic",
@@ -138,7 +138,7 @@ def test_load_matrix_reads_instance_expectations_from_external_config(tmp_path):
             }
           ]
         }
-        ''',
+        """,
         encoding="utf-8",
     )
 
@@ -147,9 +147,7 @@ def test_load_matrix_reads_instance_expectations_from_external_config(tmp_path):
     assert len(scenarios) == 1
     turn = scenarios[0].turns[0]
     assert turn.question == "Where is Products?"
-    assert turn.expectation.required_sources == (
-        SourceExpectation("Products", "screen"),
-    )
+    assert turn.expectation.required_sources == (SourceExpectation("Products", "screen"),)
     assert turn.expectation.retrieval_exact == (("selected_sources", 1),)
 
 

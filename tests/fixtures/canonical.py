@@ -19,11 +19,24 @@ def fictional_profile():
 
 def fictional_artifacts():
     screens = [
-        {"route": "/app/home", "title": "Dashboard", "main_visible_text": "Welcome 10.1.2.3 owner@example.test", "regions": {}},
-        {"route": "/app/inventory/products", "title": "Products", "inputs": [{"label": "SKU", "name": "sku"}, {"label": "Secret", "region": "volatile"}], "buttons": [{"text": "Search"}], "tables": [{"name": "Products", "headers": ["SKU", "Name"]}], "local_links": [{"text": "Suppliers", "href": "/app/purchasing/suppliers"}]},
+        {
+            "route": "/app/home",
+            "title": "Dashboard",
+            "main_visible_text": "Welcome 10.1.2.3 owner@example.test",
+            "regions": {},
+        },
+        {
+            "route": "/app/inventory/products",
+            "title": "Products",
+            "inputs": [{"label": "SKU", "name": "sku"}, {"label": "Secret", "region": "volatile"}],
+            "buttons": [{"text": "Search"}],
+            "tables": [{"name": "Products", "headers": ["SKU", "Name"]}],
+            "local_links": [{"text": "Suppliers", "href": "/app/purchasing/suppliers"}],
+        },
         {"route": "/app/purchasing/suppliers", "title": "Suppliers"},
     ]
-    root = "raw:root"; product = "raw:product"
+    root = "raw:root"
+    product = "raw:product"
     inventory_state = "/app/home#state:inventory"
     purchasing_state = "/app/home#state:purchasing"
     return {
@@ -111,11 +124,41 @@ def fictional_artifacts():
                 },
             ],
         },
-        "state_registry.json": {"states": [
-            {"state_id": root, "route": "/app/home", "title": "Dashboard", "structural_signature": "root", "metadata": {"depth": 0}},
-            {"state_id": product, "route": "/app/inventory/products", "title": "Products", "structural_signature": "product", "metadata": {"depth": 0}},
-        ]},
-        "state_flow_graph.json": {"states": [], "transitions": [{"source_state_id": root, "target_state_id": product, "event": {"event_type": "navigation_link", "label": "Products", "decision": "allow", "metadata": {"region": "global_navigation"}}, "changed_route": True, "observed": True}]},
+        "state_registry.json": {
+            "states": [
+                {
+                    "state_id": root,
+                    "route": "/app/home",
+                    "title": "Dashboard",
+                    "structural_signature": "root",
+                    "metadata": {"depth": 0},
+                },
+                {
+                    "state_id": product,
+                    "route": "/app/inventory/products",
+                    "title": "Products",
+                    "structural_signature": "product",
+                    "metadata": {"depth": 0},
+                },
+            ]
+        },
+        "state_flow_graph.json": {
+            "states": [],
+            "transitions": [
+                {
+                    "source_state_id": root,
+                    "target_state_id": product,
+                    "event": {
+                        "event_type": "navigation_link",
+                        "label": "Products",
+                        "decision": "allow",
+                        "metadata": {"region": "global_navigation"},
+                    },
+                    "changed_route": True,
+                    "observed": True,
+                }
+            ],
+        },
         "event_policy_audit.json": {"screens": []},
         "ui_event_execution_audit.json": {},
     }

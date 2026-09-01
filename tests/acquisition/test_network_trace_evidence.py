@@ -60,30 +60,48 @@ def test_safe_network_trace_fails_closed_without_safety_provenance():
     missing["metadata"].pop("headers_captured")
 
     assert safe_network_trace("evidence:network", missing) is None
-    assert safe_network_trace(
-        "evidence:network",
-        payload(headers_captured=True),
-    ) is None
-    assert safe_network_trace(
-        "evidence:network",
-        payload(query_values_captured=True),
-    ) is None
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(headers_captured=True),
+        )
+        is None
+    )
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(query_values_captured=True),
+        )
+        is None
+    )
 
 
 def test_safe_network_trace_rejects_unsafe_or_unknown_aggregate_metadata():
-    assert safe_network_trace(
-        "evidence:network",
-        payload(endpoint_paths="https://example.invalid/api/retenciones"),
-    ) is None
-    assert safe_network_trace(
-        "evidence:network",
-        payload(endpoint_paths="/api/retenciones?token=secret"),
-    ) is None
-    assert safe_network_trace(
-        "evidence:network",
-        payload(methods="GET,OTHER"),
-    ) is None
-    assert safe_network_trace(
-        "evidence:network",
-        payload(origin_kinds="same_origin,unknown"),
-    ) is None
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(endpoint_paths="https://example.invalid/api/retenciones"),
+        )
+        is None
+    )
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(endpoint_paths="/api/retenciones?token=secret"),
+        )
+        is None
+    )
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(methods="GET,OTHER"),
+        )
+        is None
+    )
+    assert (
+        safe_network_trace(
+            "evidence:network",
+            payload(origin_kinds="same_origin,unknown"),
+        )
+        is None
+    )

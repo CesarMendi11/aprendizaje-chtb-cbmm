@@ -9,7 +9,6 @@ from erp_assistant.acquisition.models.ui_event import EventDecision, RiskLevel, 
 from erp_assistant.acquisition.models.ui_state import UIState
 from erp_assistant.acquisition.policy.route_policy import RoutePolicy
 
-
 BASE_URL = "http://localhost:8080"
 TEST_URL = f"{BASE_URL}/admin/home"
 
@@ -260,6 +259,7 @@ def test_ui_event_explorer_returns_error_result_for_invalid_selector():
     assert results[0].changed is False
     assert results[0].error is not None
 
+
 def test_ui_event_explorer_reports_interaction_attempts_after_animation():
     html = """
     <!DOCTYPE html>
@@ -328,25 +328,33 @@ def test_ui_event_filter_skips_menu_selector_already_used_in_state_path():
         path=path,
     )
 
-    repeated = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
-        {
-            "text": "General Año Personas",
-            "tag": "fuse-vertical-navigation-collapsable-item",
-            "selector": "nav > collapsable-item:nth-of-type(2)",
-            "region": "global_navigation",
-        }
-    ])[0]
+    repeated = EventCandidateDiscovery(
+        build_profile(), RoutePolicy(build_profile())
+    )._from_custom_interactives(
+        [
+            {
+                "text": "General Año Personas",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": "nav > collapsable-item:nth-of-type(2)",
+                "region": "global_navigation",
+            }
+        ]
+    )[0]
     repeated.event_category = "expand_menu"
     repeated.decision = "allow"
 
-    fresh = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
-        {
-            "text": "Solicitudes",
-            "tag": "fuse-vertical-navigation-collapsable-item",
-            "selector": "nav > collapsable-item:nth-of-type(2) > collapsable-item:nth-of-type(1)",
-            "region": "global_navigation",
-        }
-    ])[0]
+    fresh = EventCandidateDiscovery(
+        build_profile(), RoutePolicy(build_profile())
+    )._from_custom_interactives(
+        [
+            {
+                "text": "Solicitudes",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": "nav > collapsable-item:nth-of-type(2) > collapsable-item:nth-of-type(1)",
+                "region": "global_navigation",
+            }
+        ]
+    )[0]
     fresh.event_category = "expand_menu"
     fresh.decision = "allow"
 
@@ -367,8 +375,7 @@ def test_ui_event_filter_keeps_only_descendant_menu_on_recursive_branch():
         event_type=UIEventType.EXPAND_MENU,
         label="Transporte",
         selector=(
-            "app-root > layout > admin-layout > navigation > "
-            "collapsable-item:nth-of-type(11)"
+            "app-root > layout > admin-layout > navigation > collapsable-item:nth-of-type(11)"
         ),
         decision=EventDecision.ALLOW,
         risk_level=RiskLevel.LOW,
@@ -386,31 +393,39 @@ def test_ui_event_filter_keeps_only_descendant_menu_on_recursive_branch():
         path=path,
     )
 
-    sibling = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
-        {
-            "text": "General",
-            "tag": "fuse-vertical-navigation-collapsable-item",
-            "selector": (
-                "app-root > layout > admin-layout > navigation > "
-                "collapsable-item:nth-of-type(2)"
-            ),
-            "region": "global_navigation",
-        }
-    ])[0]
+    sibling = EventCandidateDiscovery(
+        build_profile(), RoutePolicy(build_profile())
+    )._from_custom_interactives(
+        [
+            {
+                "text": "General",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": (
+                    "app-root > layout > admin-layout > navigation > "
+                    "collapsable-item:nth-of-type(2)"
+                ),
+                "region": "global_navigation",
+            }
+        ]
+    )[0]
     sibling.event_category = "expand_menu"
     sibling.decision = "allow"
 
-    nested = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))._from_custom_interactives([
-        {
-            "text": "Solicitudes",
-            "tag": "fuse-vertical-navigation-collapsable-item",
-            "selector": (
-                "admin-layout > navigation > collapsable-item:nth-of-type(11) > "
-                "div:nth-of-type(2) > collapsable-item"
-            ),
-            "region": "global_navigation",
-        }
-    ])[0]
+    nested = EventCandidateDiscovery(
+        build_profile(), RoutePolicy(build_profile())
+    )._from_custom_interactives(
+        [
+            {
+                "text": "Solicitudes",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": (
+                    "admin-layout > navigation > collapsable-item:nth-of-type(11) > "
+                    "div:nth-of-type(2) > collapsable-item"
+                ),
+                "region": "global_navigation",
+            }
+        ]
+    )[0]
     nested.event_category = "expand_menu"
     nested.decision = "allow"
 
@@ -424,17 +439,16 @@ def test_ui_event_filter_keeps_only_descendant_menu_on_recursive_branch():
 
 
 def test_selector_descendant_accepts_shortened_equivalent_prefix():
-    ancestor = (
-        "app-root > layout > admin-layout > navigation > "
-        "collapsable-item:nth-of-type(11)"
-    )
+    ancestor = "app-root > layout > admin-layout > navigation > collapsable-item:nth-of-type(11)"
     candidate = (
-        "admin-layout > navigation > collapsable-item:nth-of-type(11) > "
-        "div > collapsable-item"
+        "admin-layout > navigation > collapsable-item:nth-of-type(11) > div > collapsable-item"
     )
 
     assert UIEventExplorer._selector_is_descendant(candidate, ancestor) is True
-    assert UIEventExplorer._selector_is_descendant(
-        "app-root > layout > admin-layout > navigation > collapsable-item:nth-of-type(2)",
-        ancestor,
-    ) is False
+    assert (
+        UIEventExplorer._selector_is_descendant(
+            "app-root > layout > admin-layout > navigation > collapsable-item:nth-of-type(2)",
+            ancestor,
+        )
+        is False
+    )

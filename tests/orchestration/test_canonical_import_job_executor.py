@@ -8,6 +8,15 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
+from erp_assistant.orchestration.pipeline.executors.canonical_import import (
+    CanonicalImportJobExecutionError,
+    CanonicalImportJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import (
+    CanonicalReconciliationJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
@@ -15,21 +24,21 @@ from erp_assistant.persistence.postgres.enums import (
     PipelineJobScope,
     PipelineJobStatus,
 )
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
-from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
-from erp_assistant.structural.canonical.ids import content_hash
-from erp_assistant.orchestration.pipeline.executors.canonical_import import (
-    CanonicalImportJobExecutionError,
-    CanonicalImportJobExecutor,
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    PipelineJob,
+    SyncJob,
 )
-from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import CanonicalReconciliationJobExecutor
-from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
+from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
+from erp_assistant.structural.canonical.ids import content_hash
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from tests.fixtures.canonical import exported_fictional_canonical
 from tests.fixtures.crawl_quality import attach_crawl_quality, certified_crawl_quality
 from tests.fixtures.removal_review import resolve_all_removals
-from tests.structural.canonical.test_canonical_reconciliation_service import _materializable_partial_candidate
+from tests.structural.canonical.test_canonical_reconciliation_service import (
+    _materializable_partial_candidate,
+)
 
 
 def _factory(tmp_path):
@@ -39,15 +48,7 @@ def _factory(tmp_path):
 
 
 def _copy_canonical(tmp_path, crawl_id: uuid.UUID):
-    target = (
-        tmp_path
-        / "data"
-        / "runs"
-        / "pipeline"
-        / str(crawl_id)
-        / "processed"
-        / "canonical"
-    )
+    target = tmp_path / "data" / "runs" / "pipeline" / str(crawl_id) / "processed" / "canonical"
     exported_fictional_canonical(target)
     attach_crawl_quality(
         target,
@@ -138,9 +139,9 @@ def test_reconciliation_source_imports_staging_and_preserves_governed_lineage(tm
     assert stored.result_payload["source_reconciliation_job_id"] == str(source_id)
     assert stored.knowledge_version_id != raw_id
     assert stored.result_payload["knowledge_version_id"] == str(stored.knowledge_version_id)
-    assert stored.result_payload["knowledge_version"] == source_result[
-        "reconciled_knowledge_version"
-    ]
+    assert (
+        stored.result_payload["knowledge_version"] == source_result["reconciled_knowledge_version"]
+    )
     assert stored.result_payload["raw_candidate_version_id"] == str(raw_id)
     assert stored.result_payload["base_active_version_id"] == str(active_id)
     assert stored.result_payload["decision_set_hash"] == source_result["decision_set_hash"]
@@ -152,16 +153,22 @@ def test_reconciliation_source_imports_staging_and_preserves_governed_lineage(tm
         assert reconciled.knowledge_version == source_result["reconciled_knowledge_version"]
         assert active.status == KnowledgeVersionStatus.ACTIVE
         assert raw.status == KnowledgeVersionStatus.IMPORTED
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeItem)
-            .where(KnowledgeItem.knowledge_version_id == reconciled.id)
-        ) == source_result["reconciled_item_total"]
-        assert session.scalar(
-            select(func.count())
-            .select_from(SyncJob)
-            .where(SyncJob.knowledge_version_id == reconciled.id)
-        ) == 0
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeItem)
+                .where(KnowledgeItem.knowledge_version_id == reconciled.id)
+            )
+            == source_result["reconciled_item_total"]
+        )
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(SyncJob)
+                .where(SyncJob.knowledge_version_id == reconciled.id)
+            )
+            == 0
+        )
         source = session.get(PipelineJob, source_id)
         assert source.knowledge_version_id == raw_id
         assert source.result_payload["base_active_version_id"] == str(active_id)
@@ -202,24 +209,26 @@ def test_reconciliation_import_has_no_fallible_progress_after_commit(tmp_path):
     with factory() as session:
         version = session.get(KnowledgeVersionRecord, uuid.UUID(result["knowledge_version_id"]))
         assert version is not None and version.status == KnowledgeVersionStatus.IMPORTED
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeItem)
-            .where(KnowledgeItem.knowledge_version_id == version.id)
-        ) == source_result["reconciled_item_total"]
         assert (
-            session.get(KnowledgeVersionRecord, active_id).status
-            == KnowledgeVersionStatus.ACTIVE
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeItem)
+                .where(KnowledgeItem.knowledge_version_id == version.id)
+            )
+            == source_result["reconciled_item_total"]
         )
         assert (
-            session.get(KnowledgeVersionRecord, raw_id).status
-            == KnowledgeVersionStatus.IMPORTED
+            session.get(KnowledgeVersionRecord, active_id).status == KnowledgeVersionStatus.ACTIVE
         )
-        assert session.scalar(
-            select(func.count())
-            .select_from(SyncJob)
-            .where(SyncJob.knowledge_version_id == version.id)
-        ) == 0
+        assert session.get(KnowledgeVersionRecord, raw_id).status == KnowledgeVersionStatus.IMPORTED
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(SyncJob)
+                .where(SyncJob.knowledge_version_id == version.id)
+            )
+            == 0
+        )
     engine.dispose()
 
 
@@ -338,8 +347,8 @@ def test_reconciliation_source_import_fails_closed_for_runtime_provenance(
 def test_runner_rejects_inconsistent_reconciliation_import_job_metadata(
     tmp_path, job_version, job_erp, match
 ):
-    engine, factory, active_id, raw_id, _source_id, source_result, params = (
-        _reconciliation_source(tmp_path)
+    engine, factory, active_id, raw_id, _source_id, source_result, params = _reconciliation_source(
+        tmp_path
     )
     with factory.begin() as session:
         job = PipelineJobService(session).create(
@@ -360,20 +369,23 @@ def test_runner_rejects_inconsistent_reconciliation_import_job_metadata(
         stored = PipelineJobRepository(session).get(job_id)
         assert stored is not None and stored.status == PipelineJobStatus.FAILED
         assert match in stored.error_summary
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeVersionRecord)
-            .where(
-                KnowledgeVersionRecord.knowledge_version
-                == source_result["reconciled_knowledge_version"]
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeVersionRecord)
+                .where(
+                    KnowledgeVersionRecord.knowledge_version
+                    == source_result["reconciled_knowledge_version"]
+                )
             )
-        ) == 0
+            == 0
+        )
     engine.dispose()
 
 
 def test_reconciliation_import_rolls_back_writes_after_post_import_failure(tmp_path, monkeypatch):
-    engine, factory, active_id, raw_id, _source_id, source_result, params = (
-        _reconciliation_source(tmp_path)
+    engine, factory, active_id, raw_id, _source_id, source_result, params = _reconciliation_source(
+        tmp_path
     )
     with factory() as session:
         sync_jobs_before = session.scalar(select(func.count()).select_from(SyncJob))
@@ -389,27 +401,29 @@ def test_reconciliation_import_rolls_back_writes_after_post_import_failure(tmp_p
             factory, project_root=tmp_path, runs_root="data/runs/pipeline"
         ).execute(job_id=uuid.uuid4(), scope="version", target=None, parameters=params)
     with factory() as session:
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeVersionRecord)
-            .where(
-                KnowledgeVersionRecord.knowledge_version
-                == source_result["reconciled_knowledge_version"]
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeVersionRecord)
+                .where(
+                    KnowledgeVersionRecord.knowledge_version
+                    == source_result["reconciled_knowledge_version"]
+                )
             )
-        ) == 0
-        assert session.scalar(
-            select(func.count())
-            .select_from(KnowledgeItem)
-            .where(KnowledgeItem.knowledge_version_id.not_in([active_id, raw_id]))
-        ) == 0
-        assert (
-            session.get(KnowledgeVersionRecord, active_id).status
-            == KnowledgeVersionStatus.ACTIVE
+            == 0
         )
         assert (
-            session.get(KnowledgeVersionRecord, raw_id).status
-            == KnowledgeVersionStatus.IMPORTED
+            session.scalar(
+                select(func.count())
+                .select_from(KnowledgeItem)
+                .where(KnowledgeItem.knowledge_version_id.not_in([active_id, raw_id]))
+            )
+            == 0
         )
+        assert (
+            session.get(KnowledgeVersionRecord, active_id).status == KnowledgeVersionStatus.ACTIVE
+        )
+        assert session.get(KnowledgeVersionRecord, raw_id).status == KnowledgeVersionStatus.IMPORTED
         assert session.scalar(select(func.count()).select_from(SyncJob)) == sync_jobs_before
     engine.dispose()
 
@@ -536,18 +550,12 @@ def test_canonical_import_executor_rejects_partial_snapshot(tmp_path):
             parameters={
                 "source_canonical_job_id": str(uuid.uuid4()),
                 "source_crawl_job_id": str(crawl_id),
-            "expected_crawl_execution_quality": certified_crawl_quality(
-                run_id=crawl_id, scope="full", target=None
-            ),
-                "knowledge_path": str(
-                    canonical_dir.relative_to(tmp_path) / "knowledge.json"
+                "expected_crawl_execution_quality": certified_crawl_quality(
+                    run_id=crawl_id, scope="full", target=None
                 ),
-                "manifest_path": str(
-                    canonical_dir.relative_to(tmp_path) / "manifest.json"
-                ),
-                "build_report_path": str(
-                    canonical_dir.relative_to(tmp_path) / "build_report.json"
-                ),
+                "knowledge_path": str(canonical_dir.relative_to(tmp_path) / "knowledge.json"),
+                "manifest_path": str(canonical_dir.relative_to(tmp_path) / "manifest.json"),
+                "build_report_path": str(canonical_dir.relative_to(tmp_path) / "build_report.json"),
             },
         )
     except CanonicalImportJobExecutionError as exc:
@@ -582,15 +590,9 @@ def test_canonical_import_executor_rejects_legacy_artifacts_without_crawl_qualit
                 "expected_crawl_execution_quality": certified_crawl_quality(
                     run_id=crawl_id, scope="full", target=None
                 ),
-                "knowledge_path": str(
-                    canonical_dir.relative_to(tmp_path) / "knowledge.json"
-                ),
-                "manifest_path": str(
-                    canonical_dir.relative_to(tmp_path) / "manifest.json"
-                ),
-                "build_report_path": str(
-                    canonical_dir.relative_to(tmp_path) / "build_report.json"
-                ),
+                "knowledge_path": str(canonical_dir.relative_to(tmp_path) / "knowledge.json"),
+                "manifest_path": str(canonical_dir.relative_to(tmp_path) / "manifest.json"),
+                "build_report_path": str(canonical_dir.relative_to(tmp_path) / "build_report.json"),
             },
         )
     engine.dispose()

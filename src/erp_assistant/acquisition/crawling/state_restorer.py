@@ -102,9 +102,7 @@ class StateRestorer:
 
         config = profile.get("state_replay", {})
         exploration = profile.get("exploration", {})
-        self.page_wait_ms = int(
-            config.get("page_wait_ms", exploration.get("page_wait_ms", 800))
-        )
+        self.page_wait_ms = int(config.get("page_wait_ms", exploration.get("page_wait_ms", 800)))
         self.max_attempts = max(1, int(config.get("restore_attempts", 2)))
 
     def restore(self, state: UIState | str) -> RestoreResult:
@@ -124,9 +122,7 @@ class StateRestorer:
         last_screen: dict[str, Any] = current.screen_data if current else {}
         last_signature: StateSignature | None = current.signature if current else None
         last_replay: ReplayResult | None = None
-        last_observation: dict[str, Any] = (
-            current.diagnostics() if current else {}
-        )
+        last_observation: dict[str, Any] = current.diagnostics() if current else {}
         attempt_history: list[dict[str, Any]] = []
 
         for attempt in range(1, self.max_attempts + 1):
@@ -153,14 +149,10 @@ class StateRestorer:
                         observation=replay.observation,
                         expected_fingerprint=target.structural_signature,
                         observed_fingerprint=(
-                            replay.signature.structural_fingerprint
-                            if replay.signature
-                            else None
+                            replay.signature.structural_fingerprint if replay.signature else None
                         ),
                         expected_title=target.title,
-                        observed_title=(
-                            replay.signature.title if replay.signature else None
-                        ),
+                        observed_title=(replay.signature.title if replay.signature else None),
                     )
                 continue
 
@@ -225,9 +217,7 @@ class StateRestorer:
                     ),
                     observation=observation.diagnostics(),
                     expected_fingerprint=target.structural_signature,
-                    observed_fingerprint=(
-                        observation.signature.structural_fingerprint
-                    ),
+                    observed_fingerprint=(observation.signature.structural_fingerprint),
                     expected_title=target.title,
                     observed_title=observation.signature.title,
                     summary_comparison=self._compare_summaries(
@@ -295,7 +285,6 @@ class StateRestorer:
     def _matches(signature: StateSignature, state: UIState) -> bool:
         return signature.structural_fingerprint == state.structural_signature
 
-
     @staticmethod
     def _attempt_diagnostic(
         attempt: int,
@@ -321,9 +310,7 @@ class StateRestorer:
         observed: dict[str, Any],
     ) -> dict[str, Any]:
         different_top_level_keys = sorted(
-            key
-            for key in set(expected) | set(observed)
-            if expected.get(key) != observed.get(key)
+            key for key in set(expected) | set(observed) if expected.get(key) != observed.get(key)
         )
 
         expected_without_navigation = dict(expected)
@@ -337,8 +324,7 @@ class StateRestorer:
                 expected_without_navigation == observed_without_navigation
             ),
             "navigation_state_changed": (
-                expected.get("navigation_state")
-                != observed.get("navigation_state")
+                expected.get("navigation_state") != observed.get("navigation_state")
             ),
         }
 

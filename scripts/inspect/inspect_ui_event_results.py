@@ -9,7 +9,6 @@ from typing import Any
 
 from erp_assistant.config.profile_loader import ProfileLoader
 
-
 TIMESTAMP_RE = re.compile(r"_(\d{8}_\d{6})_uncertainty\.json$")
 
 
@@ -114,9 +113,7 @@ def build_audit(files: list[Path]) -> dict[str, Any]:
                 errors[str(result.get("error"))] += 1
             if "interaction_succeeded" in result:
                 interaction_status = (
-                    "succeeded"
-                    if result.get("interaction_succeeded")
-                    else "not_succeeded"
+                    "succeeded" if result.get("interaction_succeeded") else "not_succeeded"
                 )
             elif outcome in {"changed", "unchanged"}:
                 interaction_status = "inferred_succeeded"
@@ -134,12 +131,8 @@ def build_audit(files: list[Path]) -> dict[str, Any]:
                     "restore_strategy": result.get("restore_strategy"),
                     "interaction_attempts": result.get("interaction_attempts", 0),
                     "interaction_strategy": result.get("interaction_strategy"),
-                    "interaction_succeeded": bool(
-                        result.get("interaction_succeeded")
-                    ),
-                    "restore_diagnostics": result.get(
-                        "restore_diagnostics", {}
-                    ),
+                    "interaction_succeeded": bool(result.get("interaction_succeeded")),
+                    "restore_diagnostics": result.get("restore_diagnostics", {}),
                     "after_observation": result.get("after_observation", {}),
                     "target_state_id": result.get("target_state_id"),
                 }
@@ -175,18 +168,14 @@ def main() -> None:
     profile = ProfileLoader(args.profile).load()
     review_dir = Path(
         args.review_dir
-        or profile.get("output", {}).get(
-            "review_structural_dir", "data/review/structural"
-        )
+        or profile.get("output", {}).get("review_structural_dir", "data/review/structural")
     )
     if not review_dir.exists():
         raise FileNotFoundError(f"No existe {review_dir}.")
 
     files = latest_result_files(review_dir)
     if not files:
-        raise FileNotFoundError(
-            "No se encontraron resultados *_ui_events_*_uncertainty.json."
-        )
+        raise FileNotFoundError("No se encontraron resultados *_ui_events_*_uncertainty.json.")
 
     audit = build_audit(files)
     output_path = Path(args.output)

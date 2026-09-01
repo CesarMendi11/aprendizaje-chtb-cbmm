@@ -6,9 +6,9 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from erp_assistant.structural.services.payloads import MAX_CORRECTION_BYTES, validate_safe_json
 from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.canonical.privacy import sanitize_text
+from erp_assistant.structural.services.payloads import MAX_CORRECTION_BYTES, validate_safe_json
 
 from .semantic_exceptions import (
     SemanticPayloadError,
@@ -91,9 +91,7 @@ def normalize_evidence_ids(values: Any) -> list[str]:
 
 def semantic_evidence_hash(evidence_payload: dict[str, Any], evidence_ids: list[str]) -> str:
     """Preserve the historical Phase 2 identity for ordinary evidence dictionaries."""
-    return canonical_json_hash(
-        {"evidence_payload": evidence_payload, "evidence_ids": evidence_ids}
-    )
+    return canonical_json_hash({"evidence_payload": evidence_payload, "evidence_ids": evidence_ids})
 
 
 def semantic_evidence_compatibility_payload(package: Any) -> dict[str, Any]:

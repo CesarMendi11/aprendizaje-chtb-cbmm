@@ -79,12 +79,7 @@ CANONICAL_ID_PREFIXES = (
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MATRIX_PATH = (
-    ROOT
-    / "tests"
-    / "certification"
-    / "m3_9_conversational_matrix.json"
-)
+DEFAULT_MATRIX_PATH = ROOT / "tests" / "certification" / "m3_9_conversational_matrix.json"
 
 
 def load_matrix(path: Path | str) -> tuple[Scenario, ...]:
@@ -103,8 +98,7 @@ def load_matrix(path: Path | str) -> tuple[Scenario, ...]:
                 for source in expectation_data.pop("required_sources", [])
             )
             retrieval_exact = tuple(
-                (str(item[0]), int(item[1]))
-                for item in expectation_data.pop("retrieval_exact", [])
+                (str(item[0]), int(item[1])) for item in expectation_data.pop("retrieval_exact", [])
             )
             expectation = TurnExpectation(
                 intent=expectation_data.get("intent"),
@@ -117,9 +111,7 @@ def load_matrix(path: Path | str) -> tuple[Scenario, ...]:
                 forbidden_source_titles=tuple(
                     expectation_data.get("forbidden_source_titles") or ()
                 ),
-                allowed_source_types=tuple(
-                    expectation_data.get("allowed_source_types") or ()
-                ),
+                allowed_source_types=tuple(expectation_data.get("allowed_source_types") or ()),
                 retrieval_exact=retrieval_exact,
                 retrieval_zero=tuple(expectation_data.get("retrieval_zero") or ()),
             )
@@ -156,21 +148,15 @@ def evaluate_payload(payload: dict[str, object], expectation: TurnExpectation) -
         errors.append("answerDecision must be an object")
 
     if expectation.intent is not None and payload.get("intent") != expectation.intent:
-        errors.append(
-            f"intent expected {expectation.intent!r}, got {payload.get('intent')!r}"
-        )
+        errors.append(f"intent expected {expectation.intent!r}, got {payload.get('intent')!r}")
     if expectation.decision is not None and decision.get("decision") != expectation.decision:
         errors.append(
             f"decision expected {expectation.decision!r}, got {decision.get('decision')!r}"
         )
     if expectation.reason is not None and decision.get("reason") != expectation.reason:
-        errors.append(
-            f"reason expected {expectation.reason!r}, got {decision.get('reason')!r}"
-        )
+        errors.append(f"reason expected {expectation.reason!r}, got {decision.get('reason')!r}")
     if expectation.status is not None and payload.get("status") != expectation.status:
-        errors.append(
-            f"status expected {expectation.status!r}, got {payload.get('status')!r}"
-        )
+        errors.append(f"status expected {expectation.status!r}, got {payload.get('status')!r}")
 
     answer = str(payload.get("answer") or "")
     answer_folded = answer.casefold()
@@ -196,32 +182,23 @@ def evaluate_payload(payload: dict[str, object], expectation: TurnExpectation) -
 
     for required in expectation.required_sources:
         if (required.title, required.source_type) not in source_pairs:
-            errors.append(
-                "missing source "
-                f"{required.title!r} with type {required.source_type!r}"
-            )
+            errors.append(f"missing source {required.title!r} with type {required.source_type!r}")
     for title in expectation.forbidden_source_titles:
         if title in source_titles:
             errors.append(f"forbidden source title present: {title!r}")
     if expectation.allowed_source_types:
         invalid_types = sorted(source_types - set(expectation.allowed_source_types))
         if invalid_types:
-            errors.append(
-                f"unexpected source types: {', '.join(invalid_types)}"
-            )
+            errors.append(f"unexpected source types: {', '.join(invalid_types)}")
 
     retrieval = payload.get("retrieval")
     retrieval = retrieval if isinstance(retrieval, dict) else {}
     for key, expected in expectation.retrieval_exact:
         if retrieval.get(key) != expected:
-            errors.append(
-                f"retrieval.{key} expected {expected!r}, got {retrieval.get(key)!r}"
-            )
+            errors.append(f"retrieval.{key} expected {expected!r}, got {retrieval.get(key)!r}")
     for key in expectation.retrieval_zero:
         if retrieval.get(key) != 0:
-            errors.append(
-                f"retrieval.{key} expected 0, got {retrieval.get(key)!r}"
-            )
+            errors.append(f"retrieval.{key} expected 0, got {retrieval.get(key)!r}")
 
     return errors
 

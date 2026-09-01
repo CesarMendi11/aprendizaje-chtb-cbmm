@@ -21,9 +21,7 @@ def parse_args() -> argparse.Namespace:
 
 def load_graph(path: Path) -> dict[str, Any]:
     if not path.exists():
-        raise FileNotFoundError(
-            f"No existe {path}. Ejecuta primero el crawler estructural."
-        )
+        raise FileNotFoundError(f"No existe {path}. Ejecuta primero el crawler estructural.")
     with path.open("r", encoding="utf-8") as file:
         payload = json.load(file)
     if not isinstance(payload, dict):
@@ -38,33 +36,17 @@ def main() -> None:
 
     states = graph.get("states", [])
     transitions = graph.get("transitions", [])
-    roots = [
-        state
-        for state in states
-        if (state.get("path") or {}).get("depth", 0) == 0
-    ]
-    dynamic = [
-        state
-        for state in states
-        if (state.get("path") or {}).get("depth", 0) > 0
-    ]
+    roots = [state for state in states if (state.get("path") or {}).get("depth", 0) == 0]
+    dynamic = [state for state in states if (state.get("path") or {}).get("depth", 0) > 0]
     categories = Counter(
-        (transition.get("event") or {}).get("event_type", "unknown")
-        for transition in transitions
+        (transition.get("event") or {}).get("event_type", "unknown") for transition in transitions
     )
     restoration = Counter(
-        (transition.get("metadata") or {}).get(
-            "restore_strategy", "not_recorded"
-        )
+        (transition.get("metadata") or {}).get("restore_strategy", "not_recorded")
         for transition in transitions
     )
-    depths = Counter(
-        (state.get("path") or {}).get("depth", 0)
-        for state in states
-    )
-    changed_routes = sum(
-        1 for transition in transitions if transition.get("changed_route")
-    )
+    depths = Counter((state.get("path") or {}).get("depth", 0) for state in states)
+    changed_routes = sum(1 for transition in transitions if transition.get("changed_route"))
 
     summary_path = path.with_name("state_exploration_summary.json")
     exploration_summary = {}
@@ -82,10 +64,7 @@ def main() -> None:
     print(f"Restauración: {dict(sorted(restoration.items()))}")
     print(f"Transiciones con cambio de ruta: {changed_routes}")
     if exploration_summary:
-        print(
-            "Profundidad máxima configurada: "
-            f"{exploration_summary.get('max_event_depth')}"
-        )
+        print(f"Profundidad máxima configurada: {exploration_summary.get('max_event_depth')}")
         print(
             "Estados fuente explorados/pendientes: "
             f"{exploration_summary.get('frontier_explored_count', 0)}/"

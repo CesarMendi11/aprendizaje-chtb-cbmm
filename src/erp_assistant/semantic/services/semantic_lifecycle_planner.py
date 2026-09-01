@@ -7,24 +7,28 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SemanticProposal,
+)
+from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
+from erp_assistant.projections.replacement_service import (
+    ProjectionReplacementError,
+    ProjectionReplacementService,
+)
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
 from erp_assistant.semantic.evidence.screen_evidence_builder import ScreenEvidenceError
-from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
     PROMPT_VERSION,
 )
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SemanticType
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SemanticProposal
-from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
-from erp_assistant.projections.replacement_service import (
-    ProjectionReplacementError,
-    ProjectionReplacementService,
-)
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
 from .semantic_exceptions import (
     SemanticHistoryIntegrityError,
@@ -57,9 +61,7 @@ class SemanticLifecyclePlan(BaseModel):
     source_knowledge_version_id: uuid.UUID | None = None
     source_review_status: ReviewStatus | None = None
     source_review_revision: int | None = Field(default=None, ge=0)
-    source_effective_content_hash: str | None = Field(
-        default=None, pattern=r"^[0-9a-f]{64}$"
-    )
+    source_effective_content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     source_evidence_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     source_compatibility_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 

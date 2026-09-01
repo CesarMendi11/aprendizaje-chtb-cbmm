@@ -96,9 +96,7 @@ class ProfileLoader:
         if not profile["login"].get("submit_selector") and not profile["login"].get(
             "submit_role_name"
         ):
-            raise ValueError(
-                "Debes definir login.submit_selector o login.submit_role_name."
-            )
+            raise ValueError("Debes definir login.submit_selector o login.submit_role_name.")
 
         if "home_url" not in profile["navigation"]:
             raise ValueError("Falta navigation.home_url")
@@ -127,9 +125,7 @@ class ProfileLoader:
         safety = profile.get("safety", {})
         default_decision = safety.get("default_decision", "deny")
         if default_decision not in {"allow", "review", "deny"}:
-            raise ValueError(
-                "safety.default_decision debe ser allow, review o deny."
-            )
+            raise ValueError("safety.default_decision debe ser allow, review o deny.")
 
         category_fields = [
             "allowed_event_categories",
@@ -144,10 +140,7 @@ class ProfileLoader:
             if isinstance(value, list):
                 unknown = sorted(set(value) - valid_event_categories)
                 if unknown:
-                    raise ValueError(
-                        f"safety.{field} contiene categorías desconocidas: {unknown}"
-                    )
-
+                    raise ValueError(f"safety.{field} contiene categorías desconocidas: {unknown}")
 
         ui_events = profile.get("ui_events", {})
 
@@ -155,9 +148,7 @@ class ProfileLoader:
         if max_event_depth is not None and (
             not isinstance(max_event_depth, int) or max_event_depth < 0
         ):
-            raise ValueError(
-                "ui_events.max_event_depth debe ser un entero no negativo."
-            )
+            raise ValueError("ui_events.max_event_depth debe ser un entero no negativo.")
 
         for field in [
             "home_navigation_enabled",
@@ -176,32 +167,23 @@ class ProfileLoader:
                 unknown = sorted(set(value) - valid_event_categories)
                 if unknown:
                     raise ValueError(
-                        f"ui_events.{field} contiene categorías desconocidas: "
-                        f"{unknown}"
+                        f"ui_events.{field} contiene categorías desconocidas: {unknown}"
                     )
 
         exploration_budget = ui_events.get("exploration_budget", {})
         if exploration_budget and not isinstance(exploration_budget, dict):
             raise ValueError("ui_events.exploration_budget debe ser un objeto.")
 
-        exclude_global = exploration_budget.get(
-            "exclude_global_navigation_outside_home"
-        )
+        exclude_global = exploration_budget.get("exclude_global_navigation_outside_home")
         if exclude_global is not None and not isinstance(exclude_global, bool):
             raise ValueError(
                 "ui_events.exploration_budget."
                 "exclude_global_navigation_outside_home debe ser booleano."
             )
 
-        home_max_events = exploration_budget.get(
-            "home_max_events_per_state"
-        )
-        if (
-            home_max_events is not None
-            and (
-                not isinstance(home_max_events, int)
-                or home_max_events < 0
-            )
+        home_max_events = exploration_budget.get("home_max_events_per_state")
+        if home_max_events is not None and (
+            not isinstance(home_max_events, int) or home_max_events < 0
         ):
             raise ValueError(
                 "ui_events.exploration_budget."
@@ -211,9 +193,7 @@ class ProfileLoader:
         for field in ["category_limits", "home_category_limits"]:
             limits = exploration_budget.get(field, {})
             if limits and not isinstance(limits, dict):
-                raise ValueError(
-                    f"ui_events.exploration_budget.{field} debe ser un objeto."
-                )
+                raise ValueError(f"ui_events.exploration_budget.{field} debe ser un objeto.")
             if isinstance(limits, dict):
                 unknown = sorted(set(limits) - valid_event_categories)
                 if unknown:
@@ -228,8 +208,7 @@ class ProfileLoader:
                 }
                 if invalid_limits:
                     raise ValueError(
-                        f"ui_events.exploration_budget.{field} solo admite "
-                        "enteros no negativos."
+                        f"ui_events.exploration_budget.{field} solo admite enteros no negativos."
                     )
 
         screen_availability = profile.get("screen_availability", {})
@@ -254,31 +233,23 @@ class ProfileLoader:
         if min_pattern_matches is not None and (
             not isinstance(min_pattern_matches, int) or min_pattern_matches < 1
         ):
-            raise ValueError(
-                "screen_availability.min_pattern_matches debe ser un entero positivo."
-            )
+            raise ValueError("screen_availability.min_pattern_matches debe ser un entero positivo.")
 
         unavailable_status = screen_availability.get("unavailable_status")
         if unavailable_status is not None and (
             not isinstance(unavailable_status, str) or not unavailable_status.strip()
         ):
-            raise ValueError(
-                "screen_availability.unavailable_status debe ser texto no vacío."
-            )
+            raise ValueError("screen_availability.unavailable_status debe ser texto no vacío.")
 
         state_detection = profile.get("state_detection", {})
         volatile_patterns = state_detection.get("volatile_text_patterns")
         if volatile_patterns is not None and not isinstance(volatile_patterns, list):
-            raise ValueError(
-                "state_detection.volatile_text_patterns debe ser una lista."
-            )
+            raise ValueError("state_detection.volatile_text_patterns debe ser una lista.")
 
         navigation_state_routes = state_detection.get("navigation_state_routes")
         if navigation_state_routes is not None:
             if not isinstance(navigation_state_routes, list):
-                raise ValueError(
-                    "state_detection.navigation_state_routes debe ser una lista."
-                )
+                raise ValueError("state_detection.navigation_state_routes debe ser una lista.")
             if not all(isinstance(route, str) for route in navigation_state_routes):
                 raise ValueError(
                     "state_detection.navigation_state_routes solo admite rutas de texto."
@@ -307,7 +278,6 @@ class ProfileLoader:
                 "state_detection.stability.required_consecutive_samples debe ser mayor que cero."
             )
 
-
         extraction = profile.get("extraction", {})
         regions = extraction.get("regions", {})
         if regions and not isinstance(regions, dict):
@@ -315,9 +285,7 @@ class ProfileLoader:
 
         for region_name, selectors in regions.items():
             if not isinstance(selectors, list):
-                raise ValueError(
-                    f"extraction.regions.{region_name} debe ser una lista."
-                )
+                raise ValueError(f"extraction.regions.{region_name} debe ser una lista.")
             if not all(isinstance(selector, str) for selector in selectors):
                 raise ValueError(
                     f"extraction.regions.{region_name} solo admite selectores de texto."
@@ -329,9 +297,7 @@ class ProfileLoader:
 
         route_titles = title_resolution.get("route_titles", {})
         if route_titles and not isinstance(route_titles, dict):
-            raise ValueError(
-                "extraction.title_resolution.route_titles debe ser un objeto."
-            )
+            raise ValueError("extraction.title_resolution.route_titles debe ser un objeto.")
 
         generic_titles = title_resolution.get("generic_document_titles", [])
         if generic_titles and not isinstance(generic_titles, list):

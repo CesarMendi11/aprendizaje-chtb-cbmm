@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from types import SimpleNamespace
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import create_engine, event, func, select, update
 from sqlalchemy.orm import sessionmaker
-from tests.api.test_semantic_review_api import Client
 
 from erp_assistant.api.admin_knowledge_serializers import semantic_projection
 from erp_assistant.api.app import create_app
@@ -31,6 +30,7 @@ from erp_assistant.persistence.postgres.models import (
 )
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 from erp_assistant.structural.canonical.enums import ReviewStatus
+from tests.api.test_semantic_review_api import Client
 
 HASH = "a" * 64
 
@@ -384,9 +384,14 @@ def test_screen_list_pagination_and_review_context(admin_api):
 
 
 def test_comparable_structure_hash_is_order_independent():
-    from erp_assistant.semantic.schemas import ColumnEvidence, ControlEvidence, FieldEvidence, TableEvidence
     from erp_assistant.api.admin_knowledge_serializers import comparable_structure_hash
     from erp_assistant.api.schemas.admin_knowledge import ComparableScreenStructure
+    from erp_assistant.semantic.schemas import (
+        ColumnEvidence,
+        ControlEvidence,
+        FieldEvidence,
+        TableEvidence,
+    )
 
     field_a = FieldEvidence(field_id="field:a", label="A", required=False, readonly=False)
     field_b = FieldEvidence(field_id="field:b", label="B", required=False, readonly=False)
@@ -435,14 +440,14 @@ def test_comparable_structure_hash_is_order_independent():
 
 
 def test_current_comparable_uses_safe_evidence_projection():
+    from erp_assistant.api.admin_knowledge_serializers import comparable_from_current
+    from erp_assistant.api.schemas.admin_knowledge import AdminEvidence
     from erp_assistant.semantic.schemas import (
         ControlEvidence,
         EventEvidence,
         TransitionEvidence,
         UIStateEvidence,
     )
-    from erp_assistant.api.admin_knowledge_serializers import comparable_from_current
-    from erp_assistant.api.schemas.admin_knowledge import AdminEvidence
 
     evidence = AdminEvidence(
         evidence_available=True,
@@ -539,10 +544,7 @@ def test_stale_hash_excludes_pending_evidence_from_current_comparable(admin_api)
     assert proposal["evidence_matches_current_structure"] is True
     assert proposal["historical_structure_hash"] == proposal["current_structure_hash"]
     assert "evidence:pending" in body["structural_evidence"]["evidence_ids"]
-    assert any(
-        "evidence:pending" in warning
-        for warning in body["structural_evidence"]["warnings"]
-    )
+    assert any("evidence:pending" in warning for warning in body["structural_evidence"]["warnings"])
 
 
 def test_comparable_structure_matches_naturally_and_ignores_warnings(admin_api):
@@ -761,6 +763,7 @@ def test_carried_forward_corrected_projection_uses_provenance_without_fake_local
     assert invalid.state == "unavailable"
     assert invalid.payload is None
     assert "provenance" in invalid.diagnostic
+
 
 def test_corrected_effective_payload_and_capabilities(admin_api):
     client, factory, _ = admin_api

@@ -346,10 +346,7 @@ def _validate_view_scope(statement, refs, location):
     reference_tokens = set()
     for reference in refs:
         reference_tokens |= _tokens(
-            " ".join(
-                str(reference.get(key) or "")
-                for key in ("label", "category", "type")
-            )
+            " ".join(str(reference.get(key) or "") for key in ("label", "category", "type"))
         )
 
     if reference_tokens.intersection(VIEW_DETAIL_TERMS):
@@ -373,10 +370,7 @@ def _supported_actions(refs, tokens):
         supported.add("view")
     if any(ref["type"] in {"screen", "table", "field", "column"} for ref in refs):
         supported.add("view")
-    if any(
-        ref["type"] == "network_evidence" and ref.get("read_only")
-        for ref in refs
-    ):
+    if any(ref["type"] == "network_evidence" and ref.get("read_only") for ref in refs):
         supported.add("view")
     for action in MUTATIVE_ACTIONS:
         if tokens & ACTION_WORDS[action]:

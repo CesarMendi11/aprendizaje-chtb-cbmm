@@ -5,7 +5,11 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
+from erp_assistant.persistence.postgres.enums import (
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
 from erp_assistant.persistence.postgres.models import PipelineJob
 from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
 from erp_assistant.persistence.postgres.types import utcnow
@@ -44,7 +48,10 @@ class PipelineJobService:
         normalized_kind = PipelineJobKind(kind)
         normalized_scope = PipelineJobScope(scope)
         clean_target = target.strip() if target else None
-        if normalized_scope in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN} and not clean_target:
+        if (
+            normalized_scope in {PipelineJobScope.MODULE, PipelineJobScope.SCREEN}
+            and not clean_target
+        ):
             raise PipelineJobError(f"scope={normalized_scope.value} requiere target")
         clean_source = request_source.strip()
         if not clean_source:
@@ -167,9 +174,7 @@ class PipelineJobService:
         job.error_summary = clean or "Error del pipeline sanitizado"
         return self._save(job)
 
-    def cancel(
-        self, job_id: uuid.UUID | str, *, stage: str = "cancelled"
-    ) -> PipelineJob:
+    def cancel(self, job_id: uuid.UUID | str, *, stage: str = "cancelled") -> PipelineJob:
         job = self._locked(job_id)
         self._require(
             job,
@@ -192,9 +197,7 @@ class PipelineJobService:
         job: PipelineJob, allowed: set[PipelineJobStatus], target: PipelineJobStatus
     ) -> None:
         if job.status not in allowed:
-            raise PipelineJobTransitionError(
-                f"Transición {job.status} -> {target} no permitida"
-            )
+            raise PipelineJobTransitionError(f"Transición {job.status} -> {target} no permitida")
 
     @staticmethod
     def _stage(value: str) -> str:

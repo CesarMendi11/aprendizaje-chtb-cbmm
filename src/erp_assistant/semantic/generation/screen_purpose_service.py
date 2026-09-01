@@ -17,8 +17,8 @@ from erp_assistant.semantic.schemas import (
     ScreenEvidencePackage,
     ScreenPurposePromptEvidence,
 )
-from erp_assistant.semantic.validators import parse_and_validate, validate_capability_grounding
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.validators import parse_and_validate, validate_capability_grounding
 from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.canonical.privacy import contains_sensitive
 

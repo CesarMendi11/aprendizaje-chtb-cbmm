@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
@@ -19,9 +21,7 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
 )
 from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
 
 
 class FakeCrawlExecutor:
@@ -68,9 +68,6 @@ class FakeCanonicalBuildExecutor:
             "knowledge_version": "canonical-test",
             "source_crawl_job_id": parameters["source_crawl_job_id"],
         }
-
-
-
 
 
 class FakeCanonicalMergeExecutor:
@@ -150,7 +147,6 @@ class FakeProjectionSyncExecutor:
             "knowledge_version_id": parameters["knowledge_version_id"],
             "eligible_items": 21,
         }
-
 
 
 class FakeSemanticInferenceExecutor:
@@ -256,9 +252,7 @@ def seed_active_module_tree(factory):
                 "name": "Tracking",
                 "depth": 1,
                 "navigation_path": ["Sales", "Tracking"],
-                "metadata": {
-                    "navigation_origin_path": "#sales || #tracking"
-                },
+                "metadata": {"navigation_origin_path": "#sales || #tracking"},
             },
         )
         integrations = item(
@@ -270,11 +264,7 @@ def seed_active_module_tree(factory):
                 "name": "Integrations",
                 "depth": 2,
                 "navigation_path": ["Sales", "Tracking", "Integrations"],
-                "metadata": {
-                    "navigation_origin_path": (
-                        "#sales || #tracking || #integrations"
-                    )
-                },
+                "metadata": {"navigation_origin_path": ("#sales || #tracking || #integrations")},
             },
         )
         orders = item(
@@ -286,9 +276,7 @@ def seed_active_module_tree(factory):
                 "name": "Orders",
                 "depth": 1,
                 "navigation_path": ["Sales", "Orders"],
-                "metadata": {
-                    "navigation_origin_path": "#sales || #orders"
-                },
+                "metadata": {"navigation_origin_path": "#sales || #orders"},
             },
         )
         screens = [
@@ -387,9 +375,7 @@ def test_runner_dispatches_canonical_build_and_persists_total_progress():
         job_id = job.id
 
     executor = FakeCanonicalBuildExecutor()
-    PipelineJobRunner(
-        factory, canonical_build_executor=executor
-    ).run(job_id)
+    PipelineJobRunner(factory, canonical_build_executor=executor).run(job_id)
 
     with factory() as session:
         stored = PipelineJobRepository(session).get(job_id)
@@ -401,8 +387,6 @@ def test_runner_dispatches_canonical_build_and_persists_total_progress():
         assert stored.checkpoint["knowledge_version"] == "canonical-test"
     assert len(executor.calls) == 1
     engine.dispose()
-
-
 
 
 def test_runner_dispatches_canonical_merge_executor():
@@ -483,7 +467,6 @@ def test_runner_dispatches_canonical_import_executor():
     engine.dispose()
 
 
-
 def test_runner_dispatches_projection_sync_executors():
     engine, factory = build_factory()
     version_id = "00000000-0000-0000-0000-000000000555"
@@ -526,7 +509,6 @@ def test_runner_dispatches_projection_sync_executors():
     assert len(chroma.calls) == 1
     assert len(semantic.calls) == 1
     engine.dispose()
-
 
 
 def test_runner_dispatches_semantic_inference_executor():

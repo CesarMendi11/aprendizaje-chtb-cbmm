@@ -57,9 +57,7 @@ class StableStateObserver:
         self.enabled = bool(config.get("enabled", False))
         self.timeout_ms = max(0, int(config.get("timeout_ms", 3000)))
         self.interval_ms = max(0, int(config.get("interval_ms", 250)))
-        self.minimum_observation_ms = max(
-            0, int(config.get("minimum_observation_ms", 0))
-        )
+        self.minimum_observation_ms = max(0, int(config.get("minimum_observation_ms", 0)))
         self.required_consecutive_samples = max(
             1,
             int(config.get("required_consecutive_samples", 2)),
@@ -103,8 +101,7 @@ class StableStateObserver:
             )
             if stable_enough and (
                 expected_structural_fingerprint is None
-                or signature.structural_fingerprint
-                == expected_structural_fingerprint
+                or signature.structural_fingerprint == expected_structural_fingerprint
             ):
                 break
             if elapsed_ms >= self.timeout_ms:
@@ -118,10 +115,7 @@ class StableStateObserver:
         if last_screen_data is None or last_signature is None:
             raise RuntimeError("No se pudo observar ninguna muestra de pantalla.")
 
-        stable = (
-            not self.enabled
-            or consecutive >= self.required_consecutive_samples
-        )
+        stable = not self.enabled or consecutive >= self.required_consecutive_samples
         observation = StateObservation(
             screen_data=last_screen_data,
             signature=last_signature,
@@ -151,13 +145,9 @@ class StableStateObserver:
             return
 
         screen_data["observed_functional_title"] = (
-            screen_data.get("functional_title")
-            or screen_data.get("title")
-            or ""
+            screen_data.get("functional_title") or screen_data.get("title") or ""
         )
-        screen_data["observed_title_source"] = screen_data.get(
-            "title_source", ""
-        )
+        screen_data["observed_title_source"] = screen_data.get("title_source", "")
         screen_data["functional_title"] = canonical_title
         screen_data["title_source"] = "state_registry"
         screen_data["title_confidence"] = 1.0

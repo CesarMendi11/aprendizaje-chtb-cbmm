@@ -4,19 +4,18 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
-from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
-from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
 from erp_assistant.acquisition.scope.module_subtree_resolver import (
     ModuleSubtreeResolutionError,
     ModuleSubtreeResolver,
 )
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
 from erp_assistant.acquisition.scope.screen_scope_resolver import (
     ScreenScopeResolutionError,
     ScreenScopeResolver,
 )
 from erp_assistant.orchestration.pipeline.executors.canonical_build import CanonicalBuildJobExecutor
-from erp_assistant.orchestration.pipeline.executors.canonical_import import CanonicalImportJobExecutor
+from erp_assistant.orchestration.pipeline.executors.canonical_import import (
+    CanonicalImportJobExecutor,
+)
 from erp_assistant.orchestration.pipeline.executors.canonical_merge import CanonicalMergeJobExecutor
 from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import (
     CanonicalReconciliationJobExecutor,
@@ -24,8 +23,19 @@ from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation imp
 from erp_assistant.orchestration.pipeline.executors.chroma_sync import ChromaSyncJobExecutor
 from erp_assistant.orchestration.pipeline.executors.crawl import CrawlJobExecutor
 from erp_assistant.orchestration.pipeline.executors.neo4j_sync import Neo4jSyncJobExecutor
-from erp_assistant.orchestration.pipeline.executors.semantic_sync import SemanticChromaSyncJobExecutor
-from erp_assistant.orchestration.pipeline.executors.semantic_inference import SemanticInferenceJobExecutor
+from erp_assistant.orchestration.pipeline.executors.semantic_inference import (
+    SemanticInferenceJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.executors.semantic_sync import (
+    SemanticChromaSyncJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.persistence.postgres.enums import (
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
+from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
 
 
 @dataclass(frozen=True)
@@ -132,9 +142,7 @@ class PipelineJobRunner:
             spec.kind == PipelineJobKind.CANONICAL_IMPORT
             and parameters.get("source_reconciliation_job_id") is not None
         ):
-            raw_candidate_version_id = str(
-                parameters.get("raw_candidate_version_id") or ""
-            ).strip()
+            raw_candidate_version_id = str(parameters.get("raw_candidate_version_id") or "").strip()
             erp_id = str(parameters.get("erp_id") or "").strip()
             if spec.scope != PipelineJobScope.VERSION or spec.target is not None:
                 raise RuntimeError(
@@ -156,9 +164,7 @@ class PipelineJobRunner:
                     "raw_candidate_version_id inconsistente"
                 )
             if not spec.erp_id or spec.erp_id != erp_id:
-                raise RuntimeError(
-                    "canonical_import reconciliation contiene erp_id inconsistente"
-                )
+                raise RuntimeError("canonical_import reconciliation contiene erp_id inconsistente")
             return parameters
         if spec.kind == PipelineJobKind.CANONICAL_RECONCILIATION:
             candidate_version_id = str(parameters.get("candidate_version_id") or "").strip()
@@ -182,9 +188,7 @@ class PipelineJobRunner:
         }:
             return parameters
 
-        pinned_version_id = spec.knowledge_version_id or parameters.get(
-            "knowledge_version_id"
-        )
+        pinned_version_id = spec.knowledge_version_id or parameters.get("knowledge_version_id")
         if pinned_version_id is None:
             raise RuntimeError(
                 f"El job {spec.scope.value.upper()} no conserva knowledge_version_id fijado"
@@ -196,13 +200,9 @@ class PipelineJobRunner:
             )
 
         if spec.scope == PipelineJobScope.MODULE:
-            target_module_id = str(
-                parameters.get("target_module_id") or spec.target or ""
-            ).strip()
+            target_module_id = str(parameters.get("target_module_id") or spec.target or "").strip()
             if not target_module_id or target_module_id != str(spec.target or "").strip():
-                raise RuntimeError(
-                    "El job MODULE no conserva un target_module_id consistente"
-                )
+                raise RuntimeError("El job MODULE no conserva un target_module_id consistente")
             try:
                 with self.session_factory() as session:
                     subtree = ModuleSubtreeResolver(session).resolve(
@@ -210,9 +210,7 @@ class PipelineJobRunner:
                         knowledge_version_id=pinned_version_id,
                     )
             except ModuleSubtreeResolutionError as exc:
-                raise RuntimeError(
-                    f"No fue posible validar el scope MODULE fijado: {exc}"
-                ) from exc
+                raise RuntimeError(f"No fue posible validar el scope MODULE fijado: {exc}") from exc
             if spec.erp_id and spec.erp_id != subtree.erp_id:
                 raise RuntimeError("El job MODULE pertenece a un ERP distinto del fijado")
             parameter_erp_id = str(parameters.get("erp_id") or "").strip()
@@ -250,15 +248,11 @@ class PipelineJobRunner:
                     knowledge_version_id=pinned_version_id,
                 )
         except ScreenScopeResolutionError as exc:
-            raise RuntimeError(
-                f"No fue posible validar el scope SCREEN fijado: {exc}"
-            ) from exc
+            raise RuntimeError(f"No fue posible validar el scope SCREEN fijado: {exc}") from exc
         expected_screen_id = str(parameters.get("target_screen_id") or "").strip()
         if expected_screen_id and expected_screen_id != screen.screen_id:
             raise RuntimeError("El job SCREEN contiene target_screen_id inconsistente")
-        expected_screen_title = str(
-            parameters.get("target_screen_title") or ""
-        ).strip()
+        expected_screen_title = str(parameters.get("target_screen_title") or "").strip()
         if expected_screen_title and expected_screen_title != screen.screen_title:
             raise RuntimeError("El job SCREEN contiene target_screen_title inconsistente")
         if spec.erp_id and spec.erp_id != screen.erp_id:

@@ -3,9 +3,20 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.integrations.ollama.generation import OllamaGenerationSettings
+from erp_assistant.persistence.postgres.enums import (
+    KnowledgeVersionStatus,
+    PipelineJobScope,
+    SemanticType,
+)
+from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
-from erp_assistant.semantic.generation import OllamaStructuredGenerationClient, ScreenPurposeInferenceService
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.semantic.generation import (
+    OllamaStructuredGenerationClient,
+    ScreenPurposeInferenceService,
+)
 from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
@@ -13,11 +24,10 @@ from erp_assistant.semantic.prompts import (
     PROMPT_HASH,
     PROMPT_VERSION,
 )
-from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope, SemanticType
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
-from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
-from erp_assistant.semantic.services.semantic_exceptions import SemanticDomainError, SemanticIdentityCollisionError
+from erp_assistant.semantic.services.semantic_exceptions import (
+    SemanticDomainError,
+    SemanticIdentityCollisionError,
+)
 from erp_assistant.semantic.services.semantic_lifecycle_planner import (
     SemanticLifecycleDecision,
     SemanticLifecyclePlan,
@@ -25,9 +35,9 @@ from erp_assistant.semantic.services.semantic_lifecycle_planner import (
 )
 from erp_assistant.semantic.services.semantic_payloads import validated_semantic_evidence_snapshot
 from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
-from erp_assistant.integrations.ollama.generation import OllamaGenerationSettings
 
 
 class SemanticInferenceJobExecutionError(RuntimeError):
@@ -227,9 +237,7 @@ class SemanticInferenceJobExecutor:
                 "progress_total": 4,
                 "generation_model": model,
                 "prompt_version": PROMPT_VERSION,
-                "source_semantic_proposal_id": str(
-                    lifecycle_plan.source_semantic_proposal_id
-                ),
+                "source_semantic_proposal_id": str(lifecycle_plan.source_semantic_proposal_id),
             },
         )
         try:

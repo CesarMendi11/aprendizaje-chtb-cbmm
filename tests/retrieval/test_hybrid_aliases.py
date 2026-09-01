@@ -42,7 +42,10 @@ semantic_aliases:
         encoding="utf-8",
     )
 
-    assert semantic_aliases_for(
-        "erp:000000000000000000000000",
-        config_dir=tmp_path,
-    ) == {}
+    assert (
+        semantic_aliases_for(
+            "erp:000000000000000000000000",
+            config_dir=tmp_path,
+        )
+        == {}
+    )

@@ -4,22 +4,33 @@ from sqlalchemy import func, select
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
 from erp_assistant.persistence.postgres.models import (
-    ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, SyncJob
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SyncJob,
 )
 from erp_assistant.persistence.postgres.session import session_scope
 from erp_assistant.structural.canonical.enums import ReviewStatus
-
 from scripts.common.database import database_engine, print_json
 
 
 def inspect(session):
     def grouped(column):
-        return {str(k): v for k, v in session.execute(
-            select(column, func.count()).select_from(KnowledgeItem).group_by(column)
-        ).all()}
-    active = list(session.scalars(select(KnowledgeVersionRecord).where(
-        KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE
-    )))
+        return {
+            str(k): v
+            for k, v in session.execute(
+                select(column, func.count()).select_from(KnowledgeItem).group_by(column)
+            ).all()
+        }
+
+    active = list(
+        session.scalars(
+            select(KnowledgeVersionRecord).where(
+                KnowledgeVersionRecord.status == KnowledgeVersionStatus.ACTIVE
+            )
+        )
+    )
     return {
         "erp": [
             {"id": x.id, "slug": x.slug, "name": x.name}
@@ -33,15 +44,17 @@ def inspect(session):
         "items_by_entity_type": grouped(KnowledgeItem.entity_type),
         "items_by_review_status": grouped(KnowledgeItem.current_review_status),
         "routes_without_module": session.scalar(
-            select(func.count()).select_from(KnowledgeItem).where(
+            select(func.count())
+            .select_from(KnowledgeItem)
+            .where(
                 KnowledgeItem.entity_type == "screen",
                 KnowledgeItem.parent_canonical_id.is_(None),
             )
         ),
         "corrected_items": session.scalar(
-            select(func.count()).select_from(KnowledgeItem).where(
-                KnowledgeItem.current_review_status == ReviewStatus.CORRECTED
-            )
+            select(func.count())
+            .select_from(KnowledgeItem)
+            .where(KnowledgeItem.current_review_status == ReviewStatus.CORRECTED)
         ),
         "importations": session.scalar(select(func.count()).select_from(ImportRun)),
         "sync_jobs": session.scalar(select(func.count()).select_from(SyncJob)),

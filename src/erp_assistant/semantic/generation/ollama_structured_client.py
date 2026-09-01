@@ -41,11 +41,7 @@ class OllamaStructuredGenerationClient:
         self.settings = settings or OllamaGenerationSettings()
         self.client = client
         self.mode = mode
-        self.timeout = float(
-            self.settings.structured_timeout
-            if timeout is None
-            else timeout
-        )
+        self.timeout = float(self.settings.structured_timeout if timeout is None else timeout)
         if self.timeout <= 0:
             raise ValueError("El timeout estructurado debe ser positivo")
 

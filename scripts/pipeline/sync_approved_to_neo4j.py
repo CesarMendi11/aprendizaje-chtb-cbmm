@@ -3,10 +3,9 @@ from __future__ import annotations
 import argparse
 
 from erp_assistant.config.neo4j_settings import Neo4jSettings
-from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
 from erp_assistant.persistence.postgres.session import session_scope
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
-
+from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
 from scripts.common.database import database_engine, print_json
 from scripts.common.neo4j import neo4j_client, safe_neo4j_error
 

@@ -223,9 +223,7 @@ class RemovalReconciliationReviewService:
             )
         )
 
-    def resolved_plan(
-        self, candidate_version_id: uuid.UUID | str
-    ) -> RemovalReconciliationPlan:
+    def resolved_plan(self, candidate_version_id: uuid.UUID | str) -> RemovalReconciliationPlan:
         plan = self._plan(candidate_version_id)
         if plan.removal_total == 0:
             return plan
@@ -250,9 +248,7 @@ class RemovalReconciliationReviewService:
                     "Una decisión de removal permanece UNRESOLVED."
                 )
             action = self._validated_latest_action(record)
-            if record.requires_human_review and (
-                action is None or action.new_decision != current
-            ):
+            if record.requires_human_review and (action is None or action.new_decision != current):
                 raise RemovalReconciliationReviewError(
                     "La decisión resuelta no conserva una acción humana gobernada."
                 )

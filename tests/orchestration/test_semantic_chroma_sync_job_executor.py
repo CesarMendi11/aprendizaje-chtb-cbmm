@@ -1,19 +1,23 @@
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import uuid
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeVersionRecord
 from erp_assistant.orchestration.pipeline.executors.semantic_sync import (
     SemanticChromaSyncJobExecutionError,
     SemanticChromaSyncJobExecutor,
+)
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeVersionRecord,
 )
 
 
@@ -28,11 +32,15 @@ class FakeService:
         self.embeddings = kwargs.get("embeddings")
 
     def prepare(self, *, erp_id, knowledge_version):
-        return object(), [object()], {
-            "publishable_proposals": 1,
-            "documents": 1,
-            "skipped": 0,
-        }
+        return (
+            object(),
+            [object()],
+            {
+                "publishable_proposals": 1,
+                "documents": 1,
+                "skipped": 0,
+            },
+        )
 
     def publish_prepared(
         self,

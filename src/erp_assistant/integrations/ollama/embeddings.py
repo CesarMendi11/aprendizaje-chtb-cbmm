@@ -66,8 +66,7 @@ class OllamaEmbeddingClient:
             data: Any = response.json()
         except (httpx.HTTPError, ValueError, TypeError) as exc:
             raise OllamaEmbeddingError(
-                "No se pudieron obtener embeddings de Ollama "
-                f"(lote {batch_number}/{total_batches})"
+                f"No se pudieron obtener embeddings de Ollama (lote {batch_number}/{total_batches})"
             ) from exc
         vectors = data.get("embeddings") if isinstance(data, dict) else None
         if not isinstance(vectors, list) or len(vectors) != len(values) or not vectors:

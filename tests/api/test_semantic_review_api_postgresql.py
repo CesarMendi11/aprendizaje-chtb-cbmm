@@ -8,12 +8,12 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session, sessionmaker
-from tests.api.test_semantic_review_api import Client, action_body, seed
 
 from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
 from erp_assistant.persistence.postgres.models import SemanticProposal, SemanticReviewAction
 from erp_assistant.structural.canonical.enums import ReviewStatus
+from tests.api.test_semantic_review_api import Client, action_body, seed
 
 
 def _test_url() -> str:
@@ -48,9 +48,7 @@ def pg_api(pg_engine, tmp_path):
 
 
 @pytest.mark.postgresql
-def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(
-    pg_api, pg_engine
-):
+def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(pg_api, pg_engine):
     client, factory = pg_api
     pending_id, pending_source, pending_evidence = seed(factory, suffix="pg-pending")
     approved_id, approved_source, approved_evidence = seed(factory, suffix="pg-approved")
@@ -81,15 +79,16 @@ def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(
     assert detail["review_history"] == []
     serialized = str(detail).casefold()
     assert all(value not in serialized for value in ("password", "cookie", "raw_response"))
-    pending_effective = client.get(
-        f"/api/admin/semantic-proposals/{pending_id}/effective"
-    ).json()
+    pending_effective = client.get(f"/api/admin/semantic-proposals/{pending_id}/effective").json()
     assert pending_effective["effective_payload"] == pending_source
     assert pending_effective["publishable_payload"] is None
 
-    assert client.post(
-        f"/api/admin/semantic-proposals/{approved_id}/approve", json=action_body()
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{approved_id}/approve", json=action_body()
+        ).status_code
+        == 200
+    )
     corrected = {
         **corrected_source,
         "purpose_summary": "Permite buscar datos por Código.",
@@ -100,22 +99,34 @@ def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(
             }
         ],
     }
-    assert client.post(
-        f"/api/admin/semantic-proposals/{corrected_id}/correct",
-        json=action_body(corrected_payload=corrected),
-    ).status_code == 200
-    assert client.post(
-        f"/api/admin/semantic-proposals/{rejected_id}/reject", json=action_body()
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{corrected_id}/correct",
+            json=action_body(corrected_payload=corrected),
+        ).status_code
+        == 200
+    )
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{rejected_id}/reject", json=action_body()
+        ).status_code
+        == 200
+    )
 
-    assert client.post(
-        f"/api/admin/semantic-proposals/{pending_id}/approve",
-        json=action_body(expected_status="approved"),
-    ).status_code == 409
-    assert client.post(
-        f"/api/admin/semantic-proposals/{pending_id}/approve",
-        json=action_body(expected_revision=1),
-    ).status_code == 409
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{pending_id}/approve",
+            json=action_body(expected_status="approved"),
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{pending_id}/approve",
+            json=action_body(expected_revision=1),
+        ).status_code
+        == 409
+    )
     invalid = {
         **invalid_source,
         "purpose_summary": "Permite buscar datos por Código.",
@@ -123,10 +134,13 @@ def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(
             {"statement": "Permite buscar registros.", "evidence_refs": ["control:unknown"]}
         ],
     }
-    assert client.post(
-        f"/api/admin/semantic-proposals/{invalid_id}/correct",
-        json=action_body(corrected_payload=invalid),
-    ).status_code == 422
+    assert (
+        client.post(
+            f"/api/admin/semantic-proposals/{invalid_id}/correct",
+            json=action_body(corrected_payload=invalid),
+        ).status_code
+        == 422
+    )
 
     with Session(pg_engine) as verification:
         proposals = {
@@ -166,23 +180,20 @@ def test_postgresql_http_review_workflow_pagination_isolation_and_atomicity(
         assert action_counts[pending_id] == 0
         assert action_counts[invalid_id] == 0
 
-    approved_effective = client.get(
-        f"/api/admin/semantic-proposals/{approved_id}/effective"
-    ).json()
+    approved_effective = client.get(f"/api/admin/semantic-proposals/{approved_id}/effective").json()
     corrected_effective = client.get(
         f"/api/admin/semantic-proposals/{corrected_id}/effective"
     ).json()
-    rejected_effective = client.get(
-        f"/api/admin/semantic-proposals/{rejected_id}/effective"
-    ).json()
+    rejected_effective = client.get(f"/api/admin/semantic-proposals/{rejected_id}/effective").json()
     assert approved_effective["publishable_payload"] == approved_source
     assert corrected_effective["publishable_payload"] == corrected
     assert rejected_effective["publishable_payload"] is None
 
-    assert client.get(
-        "/api/admin/semantic-proposals?erp_id=erp:pg-pending"
-    ).json()["total"] == 1
+    assert client.get("/api/admin/semantic-proposals?erp_id=erp:pg-pending").json()["total"] == 1
     version_id = page.json()["items"][0]["knowledge_version_id"]
-    assert client.get(
-        f"/api/admin/semantic-proposals?knowledge_version_id={version_id}"
-    ).json()["total"] == 1
+    assert (
+        client.get(f"/api/admin/semantic-proposals?knowledge_version_id={version_id}").json()[
+            "total"
+        ]
+        == 1
+    )

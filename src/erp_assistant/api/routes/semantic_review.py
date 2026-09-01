@@ -11,14 +11,6 @@ from pydantic import ValidationError
 from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.evidence.screen_evidence_builder import (
-    ScreenEvidenceBuilder,
-    ScreenEvidenceError,
-)
-from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
-from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
-from erp_assistant.semantic.validators.screen_purpose_grounding import validate_capability_grounding
-from erp_assistant.semantic.validators.screen_purpose_validator import allowed_references
 from erp_assistant.api.dependencies import get_semantic_review_session
 from erp_assistant.api.schemas.semantic_review import (
     CorrectionRequest,
@@ -36,10 +28,15 @@ from erp_assistant.api.semantic_review_serializers import (
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SemanticType
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
 from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.semantic.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
+)
+from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
-from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
 from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticDomainError,
     SemanticHistoryIntegrityError,
@@ -49,6 +46,9 @@ from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticSensitiveContentError,
     SemanticTransitionError,
 )
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.semantic.validators.screen_purpose_grounding import validate_capability_grounding
+from erp_assistant.semantic.validators.screen_purpose_validator import allowed_references
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 router = APIRouter(
@@ -135,9 +135,8 @@ def _current_evidence_for_review(session: Session, proposal):
             semantic_id=proposal.semantic_id,
             current_status=proposal.current_review_status,
         )
-    if (
-        proposal.evidence_hash != package.evidence_hash
-        or list(proposal.evidence_ids) != list(package.evidence_ids)
+    if proposal.evidence_hash != package.evidence_hash or list(proposal.evidence_ids) != list(
+        package.evidence_ids
     ):
         raise AdminSemanticApiError(
             409,
@@ -197,9 +196,7 @@ def list_proposals(
 
 
 @router.get("/{semantic_id}", response_model=SemanticProposalDetailResponse)
-def get_proposal(
-    semantic_id: str, session: SessionDependency
-) -> SemanticProposalDetailResponse:
+def get_proposal(semantic_id: str, session: SessionDependency) -> SemanticProposalDetailResponse:
     try:
         return proposal_detail(_proposal(session, semantic_id), session)
     except (ValidationError, SemanticHistoryIntegrityError) as exc:
@@ -213,9 +210,7 @@ def get_proposal(
 
 
 @router.get("/{semantic_id}/effective", response_model=EffectivePayloadResponse)
-def get_effective(
-    semantic_id: str, session: SessionDependency
-) -> EffectivePayloadResponse:
+def get_effective(semantic_id: str, session: SessionDependency) -> EffectivePayloadResponse:
     proposal = _proposal(session, semantic_id)
     service = SemanticEffectivePayloadService(session)
     try:

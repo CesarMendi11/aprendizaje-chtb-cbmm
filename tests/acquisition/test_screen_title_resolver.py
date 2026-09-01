@@ -18,9 +18,7 @@ def test_title_resolver_prefers_route_override():
         {
             "path": "/admin/home",
             "title": "Dashboard",
-            "title_candidates": [
-                {"text": "Bienvenido", "source": "main_heading", "score": 100}
-            ],
+            "title_candidates": [{"text": "Bienvenido", "source": "main_heading", "score": 100}],
         }
     )
 

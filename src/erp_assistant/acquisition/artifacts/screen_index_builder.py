@@ -33,10 +33,7 @@ class ScreenIndexBuilder:
             "route": route,
             "url": screen_data.get("url"),
             "path": screen_data.get("path"),
-            "title": (
-                screen_data.get("functional_title")
-                or screen_data.get("title", "")
-            ),
+            "title": (screen_data.get("functional_title") or screen_data.get("title", "")),
             "document_title": screen_data.get("document_title", ""),
             "functional_title": screen_data.get("functional_title", ""),
             "title_source": screen_data.get("title_source", ""),

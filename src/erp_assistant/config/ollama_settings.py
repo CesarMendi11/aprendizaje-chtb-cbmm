@@ -12,22 +12,16 @@ class OllamaConfigurationError(ValueError):
 @dataclass(frozen=True)
 class OllamaEmbeddingSettings:
     url: str = field(
-        default_factory=lambda: os.getenv(
-            "ERP_ASSISTANT_OLLAMA_URL", "http://127.0.0.1:11434"
-        )
+        default_factory=lambda: os.getenv("ERP_ASSISTANT_OLLAMA_URL", "http://127.0.0.1:11434")
     )
     model: str = field(
-        default_factory=lambda: os.getenv(
-            "ERP_ASSISTANT_EMBEDDING_MODEL", "qwen3-embedding:0.6b"
-        )
+        default_factory=lambda: os.getenv("ERP_ASSISTANT_EMBEDDING_MODEL", "qwen3-embedding:0.6b")
     )
     timeout: float = field(
         default_factory=lambda: float(os.getenv("ERP_ASSISTANT_OLLAMA_TIMEOUT", "30"))
     )
     batch_size: int = field(
-        default_factory=lambda: int(
-            os.getenv("ERP_ASSISTANT_EMBEDDING_BATCH_SIZE", "32")
-        )
+        default_factory=lambda: int(os.getenv("ERP_ASSISTANT_EMBEDDING_BATCH_SIZE", "32"))
     )
 
     def __post_init__(self) -> None:

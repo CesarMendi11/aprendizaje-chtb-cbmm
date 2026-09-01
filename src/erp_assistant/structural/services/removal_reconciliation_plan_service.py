@@ -166,9 +166,7 @@ class RemovalReconciliationPlanService:
             raise RemovalReconciliationPlanError("La provenance merge fuente es inválida.") from exc
         source = self.session.get(PipelineJob, source_id)
         result = dict(source.result_payload or {}) if source else {}
-        expected_scope = (
-            "module" if candidate_origin == "partial_module_merge" else "screen"
-        )
+        expected_scope = "module" if candidate_origin == "partial_module_merge" else "screen"
         if (
             source is None
             or source.kind != PipelineJobKind.CANONICAL_MERGE

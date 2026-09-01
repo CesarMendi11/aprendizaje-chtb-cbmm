@@ -11,6 +11,20 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticType,
+)
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SemanticProposal,
+    SemanticReviewAction,
+)
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
@@ -23,20 +37,6 @@ from erp_assistant.semantic.schemas import (
     ModuleEvidence,
     ScreenEvidencePackage,
     ScreenPurposeInference,
-)
-from erp_assistant.semantic.workflows import (
-    ScreenPurposeProposalWorkflow,
-    map_candidate_to_pending_proposal,
-)
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
-from erp_assistant.persistence.postgres.models import (
-    ERPSystemRecord,
-    ImportRun,
-    KnowledgeItem,
-    KnowledgeVersionRecord,
-    SemanticProposal,
-    SemanticReviewAction,
 )
 from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticCandidateMismatchError,
@@ -56,6 +56,10 @@ from erp_assistant.semantic.services.semantic_payloads import (
 )
 from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
 from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.semantic.workflows import (
+    ScreenPurposeProposalWorkflow,
+    map_candidate_to_pending_proposal,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
@@ -267,8 +271,10 @@ def test_mapper_rejects_other_screen_and_unknown_reference(session):
             screen_knowledge_item_id=screen.id,
             expected_model="llama3.2:3b",
         )
-    bad_claim = candidate(package).inference.supported_capabilities[0].model_copy(
-        update={"evidence_refs": ["control:unknown"]}
+    bad_claim = (
+        candidate(package)
+        .inference.supported_capabilities[0]
+        .model_copy(update={"evidence_refs": ["control:unknown"]})
     )
     bad_inference = candidate(package).inference.model_copy(
         update={"supported_capabilities": [bad_claim]}
@@ -345,9 +351,10 @@ def test_reviewed_proposal_is_reused_without_generation(session, status, operati
 
 
 def test_typed_snapshot_has_no_boolean_bypass_and_is_deeply_detached(session):
-    assert "prevalidated_evidence" not in inspect.signature(
-        SemanticProposalService.create_pending_proposal
-    ).parameters
+    assert (
+        "prevalidated_evidence"
+        not in inspect.signature(SemanticProposalService.create_pending_proposal).parameters
+    )
     version, screen = seed(session)
     package = evidence(version, screen)
     snapshot = validated_semantic_evidence_snapshot(package)
@@ -414,9 +421,7 @@ def test_malformed_snapshot_becomes_sanitized_domain_error(session):
 def test_general_dictionary_with_evidence_ids_keeps_historical_identity():
     payload = {"screen_id": "screen:test", "evidence_ids": ["embedded:id"]}
     supplied_ids = ["embedded:id"]
-    historical = canonical_json_hash(
-        {"evidence_payload": payload, "evidence_ids": supplied_ids}
-    )
+    historical = canonical_json_hash({"evidence_payload": payload, "evidence_ids": supplied_ids})
     assert semantic_evidence_hash(payload, supplied_ids) == historical
     assert semantic_evidence_hash(payload, supplied_ids) != canonical_json_hash(payload)
 
@@ -495,9 +500,7 @@ def test_workflow_rejects_invalid_structural_context(session, status, entity_typ
         ({"screen_id": "screen:other"}, "screen"),
     ],
 )
-def test_workflow_rejects_cross_context_package_before_generation(
-    session, update, mismatch
-):
+def test_workflow_rejects_cross_context_package_before_generation(session, update, mismatch):
     version, screen = seed(session)
     package = evidence(version, screen).model_copy(update=update)
     service, inference, _ = workflow(session, version, screen, package=package)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
 import unicodedata
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -51,9 +51,7 @@ class ScreenAvailabilityClassifier:
         normalized_text = self._normalize(main_text or visible_text)
 
         matched = tuple(
-            pattern
-            for pattern in self.patterns
-            if self._normalize(pattern) in normalized_text
+            pattern for pattern in self.patterns if self._normalize(pattern) in normalized_text
         )
 
         if len(matched) >= self.min_pattern_matches:

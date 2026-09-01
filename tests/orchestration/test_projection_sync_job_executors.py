@@ -7,6 +7,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from erp_assistant.orchestration.pipeline.executors.chroma_sync import (
+    ChromaSyncJobExecutionError,
+    ChromaSyncJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.executors.neo4j_sync import (
+    Neo4jSyncJobExecutionError,
+    Neo4jSyncJobExecutor,
+)
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
@@ -23,14 +31,6 @@ from erp_assistant.persistence.postgres.models import (
     SyncJob,
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.orchestration.pipeline.executors.chroma_sync import (
-    ChromaSyncJobExecutionError,
-    ChromaSyncJobExecutor,
-)
-from erp_assistant.orchestration.pipeline.executors.neo4j_sync import (
-    Neo4jSyncJobExecutionError,
-    Neo4jSyncJobExecutor,
-)
 
 
 class FakeNeo4jRepository:
@@ -174,9 +174,7 @@ def test_neo4j_executor_syncs_only_captured_active_version():
     version_id, erp_id, knowledge_version = seed_active(factory)
     repository = FakeNeo4jRepository()
     progress = []
-    result = Neo4jSyncJobExecutor(
-        factory, repository_factory=lambda: repository
-    ).execute(
+    result = Neo4jSyncJobExecutor(factory, repository_factory=lambda: repository).execute(
         job_id="00000000-0000-0000-0000-000000000001",
         scope="version",
         target=knowledge_version,
@@ -202,10 +200,14 @@ def test_chroma_executor_syncs_only_captured_active_version():
     engine, factory = build_factory()
     version_id, erp_id, knowledge_version = seed_active(factory)
     with factory.begin() as session:
-        sync_job = session.query(SyncJob).filter_by(
-            knowledge_version_id=uuid.UUID(version_id),
-            target=SyncTarget.CHROMADB,
-        ).one()
+        sync_job = (
+            session.query(SyncJob)
+            .filter_by(
+                knowledge_version_id=uuid.UUID(version_id),
+                target=SyncTarget.CHROMADB,
+            )
+            .one()
+        )
         sync_job.status = SyncStatus.FAILED
         sync_job.error_summary = "old failure"
         sync_job.checkpoint = {"phase": "old"}
@@ -229,10 +231,14 @@ def test_chroma_executor_syncs_only_captured_active_version():
     assert result["embedding_dimensions"] == 3
     assert len(repository.documents) == 1
     with factory() as session:
-        sync_job = session.query(SyncJob).filter_by(
-            knowledge_version_id=uuid.UUID(version_id),
-            target=SyncTarget.CHROMADB,
-        ).one()
+        sync_job = (
+            session.query(SyncJob)
+            .filter_by(
+                knowledge_version_id=uuid.UUID(version_id),
+                target=SyncTarget.CHROMADB,
+            )
+            .one()
+        )
         assert sync_job.status == SyncStatus.SUCCEEDED
         assert sync_job.error_summary is None
         assert sync_job.checkpoint.get("phase") is None
@@ -244,9 +250,7 @@ def test_chroma_executor_syncs_only_captured_active_version():
     ("executor_factory", "error_type"),
     [
         (
-            lambda factory: Neo4jSyncJobExecutor(
-                factory, repository_factory=FakeNeo4jRepository
-            ),
+            lambda factory: Neo4jSyncJobExecutor(factory, repository_factory=FakeNeo4jRepository),
             Neo4jSyncJobExecutionError,
         ),
         (
@@ -435,9 +439,7 @@ def test_failed_projection_persists_underlying_sync_job_failure_before_pipeline_
     params = parameters(version_id, erp_id, knowledge_version)
 
     with pytest.raises(Neo4jSyncJobExecutionError):
-        Neo4jSyncJobExecutor(
-            factory, repository_factory=FailingNeo4jRepository
-        ).execute(
+        Neo4jSyncJobExecutor(factory, repository_factory=FailingNeo4jRepository).execute(
             job_id="00000000-0000-0000-0000-000000000004",
             scope="version",
             target=knowledge_version,
@@ -517,13 +519,9 @@ def test_failed_chroma_replacement_keeps_previous_projection_intact():
 
 def test_neo4j_preflight_failure_marks_previous_success_as_failed_attempt():
     engine, factory = build_factory()
-    version_id, erp_id, knowledge_version = seed_active(
-        factory, screen_title="001-001-000000001"
-    )
+    version_id, erp_id, knowledge_version = seed_active(factory, screen_title="001-001-000000001")
     with pytest.raises(Neo4jSyncJobExecutionError, match="sensible"):
-        Neo4jSyncJobExecutor(
-            factory, repository_factory=FakeNeo4jRepository
-        ).execute(
+        Neo4jSyncJobExecutor(factory, repository_factory=FakeNeo4jRepository).execute(
             job_id="00000000-0000-0000-0000-000000000010",
             scope="version",
             target=knowledge_version,
@@ -532,10 +530,14 @@ def test_neo4j_preflight_failure_marks_previous_success_as_failed_attempt():
         )
 
     with factory() as session:
-        sync_job = session.query(SyncJob).filter_by(
-            knowledge_version_id=uuid.UUID(version_id),
-            target=SyncTarget.NEO4J,
-        ).one()
+        sync_job = (
+            session.query(SyncJob)
+            .filter_by(
+                knowledge_version_id=uuid.UUID(version_id),
+                target=SyncTarget.NEO4J,
+            )
+            .one()
+        )
         assert sync_job.status == SyncStatus.FAILED
         assert sync_job.attempt_count == 2
         assert "sensible" in (sync_job.error_summary or "")
@@ -568,10 +570,14 @@ def test_chroma_preflight_failure_marks_previous_success_as_failed_attempt(monke
         )
 
     with factory() as session:
-        sync_job = session.query(SyncJob).filter_by(
-            knowledge_version_id=uuid.UUID(version_id),
-            target=SyncTarget.CHROMADB,
-        ).one()
+        sync_job = (
+            session.query(SyncJob)
+            .filter_by(
+                knowledge_version_id=uuid.UUID(version_id),
+                target=SyncTarget.CHROMADB,
+            )
+            .one()
+        )
         assert sync_job.status == SyncStatus.FAILED
         assert sync_job.attempt_count == 2
         assert "prepare failure" in (sync_job.error_summary or "")

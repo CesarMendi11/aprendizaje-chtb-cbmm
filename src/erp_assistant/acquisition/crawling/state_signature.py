@@ -40,9 +40,7 @@ class StateSignature:
 
     def __post_init__(self) -> None:
         if not self.render_fingerprint:
-            object.__setattr__(
-                self, "render_fingerprint", self.structural_fingerprint
-            )
+            object.__setattr__(self, "render_fingerprint", self.structural_fingerprint)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -131,19 +129,13 @@ class StateSignatureBuilder:
             ),
             volatile_text_patterns=config.get("volatile_text_patterns"),
             ignore_query_values=bool(config.get("ignore_query_values", True)),
-            ignore_table_row_count=bool(
-                config.get("ignore_table_row_count", True)
-            ),
+            ignore_table_row_count=bool(config.get("ignore_table_row_count", True)),
             navigation_state_routes=navigation_state_routes,
         )
 
     def build(self, screen_data: dict[str, Any]) -> StateSignature:
         route = screen_data.get("path") or ""
-        title = (
-            screen_data.get("functional_title")
-            or screen_data.get("title")
-            or ""
-        )
+        title = screen_data.get("functional_title") or screen_data.get("title") or ""
 
         exact_summary = self._build_summary(screen_data, structural=False)
         structural_summary = self._build_summary(screen_data, structural=True)
@@ -172,12 +164,9 @@ class StateSignatureBuilder:
 
     def _raw_visible_text(self, screen_data: dict[str, Any]) -> str:
         if screen_data.get("regions"):
-            text = (
-                screen_data.get("main_visible_text")
-                or screen_data.get("regions", {})
-                .get("main_content", {})
-                .get("visible_text", "")
-            )
+            text = screen_data.get("main_visible_text") or screen_data.get("regions", {}).get(
+                "main_content", {}
+            ).get("visible_text", "")
         else:
             text = screen_data.get("visible_text") or ""
         return text[: self.visible_text_limit]
@@ -202,31 +191,22 @@ class StateSignatureBuilder:
         if structural and has_regions:
             visible_text = (
                 screen_data.get("main_visible_text")
-                or screen_data.get("regions", {})
-                .get("main_content", {})
-                .get("visible_text", "")
+                or screen_data.get("regions", {}).get("main_content", {}).get("visible_text", "")
             )[: self.visible_text_limit]
             links = self._local_items(screen_data.get("links", []))
             buttons = self._local_items(screen_data.get("buttons", []))
             inputs = self._local_items(screen_data.get("inputs", []))
             tables = self._local_items(screen_data.get("tables", []))
-            interactives = self._local_items(
-                screen_data.get("custom_interactives", [])
-            )
+            interactives = self._local_items(screen_data.get("custom_interactives", []))
         else:
-            visible_text = (screen_data.get("visible_text") or "")[
-                : self.visible_text_limit
-            ]
+            visible_text = (screen_data.get("visible_text") or "")[: self.visible_text_limit]
             links = screen_data.get("links", [])
             buttons = screen_data.get("buttons", [])
             inputs = screen_data.get("inputs", [])
             tables = screen_data.get("tables", [])
             interactives = screen_data.get("custom_interactives", [])
 
-        raw_title = (
-            screen_data.get("functional_title")
-            or screen_data.get("title")
-        )
+        raw_title = screen_data.get("functional_title") or screen_data.get("title")
 
         summary = {
             "route": self._normalize_route(
@@ -242,9 +222,7 @@ class StateSignatureBuilder:
             "buttons": self._normalize_buttons(buttons),
             "inputs": self._normalize_inputs(inputs),
             "tables": self._normalize_tables(tables, structural=structural),
-            "custom_interactives": self._normalize_custom_interactives(
-                interactives
-            ),
+            "custom_interactives": self._normalize_custom_interactives(interactives),
             "dialogs": self._normalize_dialogs(screen_data.get("dialogs", [])),
         }
 
@@ -256,9 +234,7 @@ class StateSignatureBuilder:
 
         if structural and has_regions:
             if self._should_include_navigation_state(screen_data.get("path") or ""):
-                summary["navigation_state"] = self._normalize_navigation_state(
-                    screen_data
-                )
+                summary["navigation_state"] = self._normalize_navigation_state(screen_data)
             summary["regions"] = self._normalize_region_summary(screen_data)
 
         return summary
@@ -270,10 +246,8 @@ class StateSignatureBuilder:
         return [
             item
             for item in items
-            if item.get("region")
-            not in {"global_navigation", "header", "footer", "volatile"}
+            if item.get("region") not in {"global_navigation", "header", "footer", "volatile"}
         ]
-
 
     def _should_include_navigation_state(self, route: str) -> bool:
         if self.navigation_state_routes is None:
@@ -306,9 +280,7 @@ class StateSignatureBuilder:
         ]
         return {
             "links": self._normalize_links(global_links, structural=True),
-            "interactives": self._normalize_custom_interactives(
-                global_interactives
-            ),
+            "interactives": self._normalize_custom_interactives(global_interactives),
         }
 
     def _normalize_region_summary(
@@ -320,10 +292,7 @@ class StateSignatureBuilder:
         for name in ("main_content", "dialog"):
             data = regions.get(name, {})
             result[name] = {
-                "present": bool(
-                    data.get("visible_text")
-                    or int(data.get("elements_count") or 0)
-                ),
+                "present": bool(data.get("visible_text") or int(data.get("elements_count") or 0)),
             }
         return result
 
@@ -358,12 +327,8 @@ class StateSignatureBuilder:
                     "type": self._normalize_text(item.get("type")),
                     "role": self._normalize_text(item.get("role")),
                     "tag": self._normalize_text(item.get("tag")),
-                    "aria_expanded": self._normalize_text(
-                        item.get("aria_expanded")
-                    ),
-                    "aria_selected": self._normalize_text(
-                        item.get("aria_selected")
-                    ),
+                    "aria_expanded": self._normalize_text(item.get("aria_expanded")),
+                    "aria_selected": self._normalize_text(item.get("aria_selected")),
                 }
             )
 

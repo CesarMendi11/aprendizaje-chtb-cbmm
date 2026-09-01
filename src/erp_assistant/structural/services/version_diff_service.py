@@ -8,19 +8,23 @@ from enum import StrEnum
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from erp_assistant.acquisition.quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
     PipelineJobKind,
     PipelineJobScope,
     PipelineJobStatus,
 )
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob
-from erp_assistant.structural.canonical.ids import content_hash
-from erp_assistant.acquisition.quality import (
-    CrawlExecutionQualityError,
-    validate_certified_quality_source,
-    validate_matching_certified_quality,
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    PipelineJob,
 )
+from erp_assistant.structural.canonical.ids import content_hash
 
 from .payloads import structural_review_hash
 
@@ -267,9 +271,7 @@ class VersionDiffService:
         active: KnowledgeVersionRecord,
     ) -> VersionDiffCandidateOrigin:
         if import_job.scope != PipelineJobScope.VERSION:
-            raise VersionDiffError(
-                "El canonical_import reconciliado debe tener scope=VERSION."
-            )
+            raise VersionDiffError("El canonical_import reconciliado debe tener scope=VERSION.")
         try:
             source_id = uuid.UUID(str(parameters.get("source_reconciliation_job_id")))
             raw_id = uuid.UUID(str(parameters.get("raw_candidate_version_id")))

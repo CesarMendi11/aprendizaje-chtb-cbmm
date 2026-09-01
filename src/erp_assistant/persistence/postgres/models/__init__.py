@@ -294,8 +294,7 @@ class RemovalReconciliationReviewAction(TimestampMixin, Base):
             name="removal_review_previous_decision_resolved",
         ),
         CheckConstraint(
-            "new_decision IS NULL OR new_decision IN "
-            "('retain_from_active', 'confirmed_remove')",
+            "new_decision IS NULL OR new_decision IN ('retain_from_active', 'confirmed_remove')",
             name="removal_review_new_decision_resolved",
         ),
         CheckConstraint(

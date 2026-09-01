@@ -41,10 +41,7 @@ class EffectiveKnowledgeService:
     def describe_many(self, items):
         rows = list(items)
         histories = self.reviews.history_many([item.id for item in rows])
-        return {
-            item.id: self._description(item, histories.get(item.id, []))
-            for item in rows
-        }
+        return {item.id: self._description(item, histories.get(item.id, [])) for item in rows}
 
     def list_approved(self, *, version_id=None):
         result = []

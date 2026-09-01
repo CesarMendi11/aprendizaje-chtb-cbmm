@@ -86,9 +86,7 @@ def test_state_observer_applies_registered_canonical_title():
 
 
 def test_state_observer_reports_unstable_when_timeout_expires():
-    extractor = SequenceExtractor(
-        [screen("Uno"), screen("Dos"), screen("Tres"), screen("Cuatro")]
-    )
+    extractor = SequenceExtractor([screen("Uno"), screen("Dos"), screen("Tres"), screen("Cuatro")])
     observer = StableStateObserver(
         profile=profile(required_samples=2, timeout_ms=20),
         extractor=extractor,

@@ -4,14 +4,13 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from erp_assistant.config.paths import PROJECT_ROOT
-
-from erp_assistant.config.pipeline_settings import PipelineSettings
-from erp_assistant.config.profile_loader import ProfileLoader
 from erp_assistant.acquisition.quality import (
     CrawlExecutionQualityError,
     build_crawl_execution_quality,
 )
+from erp_assistant.config.paths import PROJECT_ROOT
+from erp_assistant.config.pipeline_settings import PipelineSettings
+from erp_assistant.config.profile_loader import ProfileLoader
 from erp_assistant.persistence.postgres.enums import PipelineJobScope
 from erp_assistant.structural.canonical import (
     ArtifactLoadError,
@@ -82,9 +81,7 @@ class CanonicalBuildJobExecutor:
                 "canonical_build requiere source_crawl_job_id válido"
             ) from exc
 
-        expected_profile_path, expected_profile_sha256 = self._source_profile_pin(
-            params
-        )
+        expected_profile_path, expected_profile_sha256 = self._source_profile_pin(params)
 
         emit = progress or (lambda _stage, _payload: None)
         run_root = self.runs_root / str(source_job_id)
@@ -161,9 +158,7 @@ class CanonicalBuildJobExecutor:
             raise CanonicalBuildJobExecutionError(str(exc)) from exc
 
         try:
-            network_result = CanonicalNetworkEvidenceIntegrator(
-                PROJECT_ROOT
-            ).integrate(
+            network_result = CanonicalNetworkEvidenceIntegrator(PROJECT_ROOT).integrate(
                 knowledge,
                 structural_dir / "network_evidence.json",
             )
@@ -211,14 +206,11 @@ class CanonicalBuildJobExecutor:
 
         report = builder.build_report(knowledge, issues)
         report["network_evidence"] = network_result.report()
-        report["sensitive_regions_excluded"] += (
-            network_result.sensitive_exclusions
-        )
+        report["sensitive_regions_excluded"] += network_result.sensitive_exclusions
         if network_result.omitted_observations:
             omitted = dict(report.get("omitted_entities") or {})
             omitted["network_evidence"] = (
-                omitted.get("network_evidence", 0)
-                + network_result.omitted_observations
+                omitted.get("network_evidence", 0) + network_result.omitted_observations
             )
             report["omitted_entities"] = omitted
         report["snapshot"] = snapshot_context.model_dump(mode="json")
@@ -276,11 +268,11 @@ class CanonicalBuildJobExecutor:
                 "El crawl fuente no conserva provenance de perfil utilizable"
             )
         profile_path = str(source_crawl_result.get("profile_path") or "").strip()
-        profile_sha256 = str(
-            source_crawl_result.get("profile_sha256") or ""
-        ).strip().lower()
-        if not profile_path or len(profile_sha256) != 64 or any(
-            char not in "0123456789abcdef" for char in profile_sha256
+        profile_sha256 = str(source_crawl_result.get("profile_sha256") or "").strip().lower()
+        if (
+            not profile_path
+            or len(profile_sha256) != 64
+            or any(char not in "0123456789abcdef" for char in profile_sha256)
         ):
             raise CanonicalBuildJobExecutionError(
                 "El crawl fuente no conserva profile_path/profile_sha256 fijados"
@@ -320,9 +312,7 @@ class CanonicalBuildJobExecutor:
                     mode="partial",
                     scope="screen",
                     target=target,
-                    target_screen_id=str(
-                        parameters.get("target_screen_id") or ""
-                    ).strip(),
+                    target_screen_id=str(parameters.get("target_screen_id") or "").strip(),
                     erp_id=str(parameters.get("erp_id") or "").strip(),
                     base_knowledge_version_id=str(
                         parameters.get("base_knowledge_version_id") or ""
@@ -342,9 +332,7 @@ class CanonicalBuildJobExecutor:
                     mode="partial",
                     scope="module",
                     target=target,
-                    target_module_id=str(
-                        parameters.get("target_module_id") or ""
-                    ).strip(),
+                    target_module_id=str(parameters.get("target_module_id") or "").strip(),
                     base_knowledge_version_id=str(
                         parameters.get("base_knowledge_version_id") or ""
                     ).strip(),
@@ -358,6 +346,4 @@ class CanonicalBuildJobExecutor:
                     f"El crawl MODULE no conserva provenance canónica válida: {exc}"
                 ) from exc
 
-        raise CanonicalBuildJobExecutionError(
-            f"Scope canónico no soportado: {scope.value}"
-        )
+        raise CanonicalBuildJobExecutionError(f"Scope canónico no soportado: {scope.value}")

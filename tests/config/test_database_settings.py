@@ -20,4 +20,3 @@ def test_database_url_is_sanitized():
 def test_real_database_operations_require_postgresql():
     with pytest.raises(DatabaseConfigurationError):
         DatabaseSettings(url="sqlite:///unsafe.db").require_url()
-

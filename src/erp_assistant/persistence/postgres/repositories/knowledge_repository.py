@@ -36,7 +36,9 @@ class KnowledgeRepository:
             query = query.where(KnowledgeVersionRecord.erp_id == erp_id)
         return list(self.session.scalars(query.order_by(KnowledgeVersionRecord.imported_at.desc())))
 
-    def get_item(self, item_id: uuid.UUID | str, *, for_update: bool = False) -> KnowledgeItem | None:
+    def get_item(
+        self, item_id: uuid.UUID | str, *, for_update: bool = False
+    ) -> KnowledgeItem | None:
         query = select(KnowledgeItem).where(KnowledgeItem.id == uuid.UUID(str(item_id)))
         if for_update:
             query = query.with_for_update()
@@ -80,4 +82,3 @@ class KnowledgeRepository:
             query = query.where(KnowledgeItem.route == route)
         query = query.order_by(KnowledgeItem.entity_type, KnowledgeItem.canonical_id)
         return list(self.session.scalars(query.offset(offset).limit(min(limit, 1000))))
-

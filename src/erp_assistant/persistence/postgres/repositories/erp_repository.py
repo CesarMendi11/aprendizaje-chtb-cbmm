@@ -16,4 +16,3 @@ class ERPRepository:
 
     def list(self) -> list[ERPSystemRecord]:
         return list(self.session.scalars(select(ERPSystemRecord).order_by(ERPSystemRecord.slug)))
-

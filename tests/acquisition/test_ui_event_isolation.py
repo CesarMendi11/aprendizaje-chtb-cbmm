@@ -10,7 +10,6 @@ from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtracto
 from erp_assistant.acquisition.models.crawl_path import CrawlPath
 from erp_assistant.acquisition.policy.route_policy import RoutePolicy
 
-
 ROUTE = "/admin/home"
 HTML = """
 <!DOCTYPE html>
@@ -106,9 +105,7 @@ def test_ui_event_explorer_restores_source_before_each_candidate():
         registry = StateRegistry()
 
         source_signature = builder.build(extractor.extract())
-        source_id = registry.build_state_id(
-            source_signature.structural_fingerprint
-        )
+        source_id = registry.build_state_id(source_signature.structural_fingerprint)
         source_path = CrawlPath(root_state_id=source_id)
         source_state = registry.register_signature(
             source_signature,
@@ -213,9 +210,7 @@ def test_ui_event_explorer_retries_animated_root_modules_independently():
         registry = StateRegistry()
 
         source_signature = builder.build(extractor.extract())
-        source_id = registry.build_state_id(
-            source_signature.structural_fingerprint
-        )
+        source_id = registry.build_state_id(source_signature.structural_fingerprint)
         source_path = CrawlPath(root_state_id=source_id)
         source_state = registry.register_signature(
             source_signature,

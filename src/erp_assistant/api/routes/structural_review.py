@@ -19,8 +19,8 @@ from erp_assistant.api.schemas.structural_review import (
 from erp_assistant.api.structural_review_serializers import item_detail, item_summary
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, ReviewSource
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
-from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 
 router = APIRouter(
     prefix="/structural-review/items",
@@ -69,7 +69,10 @@ def _ensure_reviewable_version(item: KnowledgeItem) -> None:
 
 
 def _ensure_expected(item: KnowledgeItem, body: StructuralReviewRequest) -> None:
-    if item.current_review_status != body.expected_status or item.review_revision != body.expected_revision:
+    if (
+        item.current_review_status != body.expected_status
+        or item.review_revision != body.expected_revision
+    ):
         raise AdminSemanticApiError(
             409,
             "StructuralRevisionConflictError",

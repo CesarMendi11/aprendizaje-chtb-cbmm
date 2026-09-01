@@ -124,22 +124,15 @@ def render(report: dict[str, Any], label: str = "") -> None:
     print(f"  estados totales          {report['total_states']}")
     print(f"  summaries distintos      {report['distinct_summaries']}")
     print(f"  grupos duplicados        {report['duplicate_groups']}")
-    print(
-        f"  ESTADOS REDUNDANTES      {report['redundant_states']}"
-        f"  ({report['redundancy_pct']}%)"
-    )
+    print(f"  ESTADOS REDUNDANTES      {report['redundant_states']}  ({report['redundancy_pct']}%)")
 
     if report["redundant_by_event"]:
         print("\n  Evento que originó cada estado redundante:")
         for event_type, count in report["redundant_by_event"].items():
             print(f"      {event_type:22s} {count}")
 
-    print(
-        f"\n  grupos de 1er orden (paginación)          {report['first_order_groups']}"
-    )
-    print(
-        f"  grupos de 2do orden (padre duplicado)     {report['second_order_groups']}"
-    )
+    print(f"\n  grupos de 1er orden (paginación)          {report['first_order_groups']}")
+    print(f"  grupos de 2do orden (padre duplicado)     {report['second_order_groups']}")
 
     if report["unexplained"]:
         print(f"\n  ⚠ NO EXPLICADOS ({len(report['unexplained'])}):")
@@ -182,9 +175,7 @@ def main() -> int:
                 f"  redundantes: {before['redundant_states']} → "
                 f"{after['redundant_states']}  ({delta:+d})"
             )
-            print(
-                f"  estados:     {before['total_states']} → {after['total_states']}"
-            )
+            print(f"  estados:     {before['total_states']} → {after['total_states']}")
             print()
 
     return 0 if all(r["passes_v2_criterion"] for r in reports) else 1

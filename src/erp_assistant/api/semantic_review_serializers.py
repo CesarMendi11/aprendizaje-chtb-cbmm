@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
-from erp_assistant.semantic.schemas import ScreenEvidencePackage, ScreenPurposeInference
 from erp_assistant.api.schemas.semantic_review import (
     GenerationTraceResponse,
     ReviewActionResponse,
@@ -12,6 +11,7 @@ from erp_assistant.api.schemas.semantic_review import (
 )
 from erp_assistant.persistence.postgres.models import SemanticProposal
 from erp_assistant.persistence.postgres.repositories import SemanticReviewActionRepository
+from erp_assistant.semantic.schemas import ScreenEvidencePackage, ScreenPurposeInference
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
@@ -72,19 +72,13 @@ def review_evidence(proposal: SemanticProposal) -> ScreenEvidenceReviewResponse:
         screen_id=package.screen_id,
         screen_title=package.screen_title,
         screen_route=package.screen_route,
-        module=(
-            package.module.model_dump(mode="json")
-            if package.module is not None
-            else None
-        ),
+        module=(package.module.model_dump(mode="json") if package.module is not None else None),
         fields=tuple(item.model_dump(mode="json") for item in package.fields),
         controls=tuple(item.model_dump(mode="json") for item in package.controls),
         tables=tuple(item.model_dump(mode="json") for item in package.tables),
         events=tuple(item.model_dump(mode="json") for item in package.events),
         transitions=tuple(item.model_dump(mode="json") for item in package.transitions),
-        network_traces=tuple(
-            item.model_dump(mode="json") for item in package.network_traces
-        ),
+        network_traces=tuple(item.model_dump(mode="json") for item in package.network_traces),
         evidence_ids=tuple(package.evidence_ids),
         warnings=tuple(package.warnings),
     )

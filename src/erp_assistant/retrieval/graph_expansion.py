@@ -221,8 +221,7 @@ class QueryAwareGraphExpansionPlanner:
             ]
             if strong and policy.seed_entity_types:
                 type_priority = {
-                    entity_type: index
-                    for index, entity_type in enumerate(policy.seed_entity_types)
+                    entity_type: index for index, entity_type in enumerate(policy.seed_entity_types)
                 }
                 best_priority = min(
                     type_priority.get(

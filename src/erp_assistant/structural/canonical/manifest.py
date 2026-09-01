@@ -19,7 +19,11 @@ def create_manifest(
         "schema_version": knowledge.schema_version,
         "knowledge_version": knowledge.knowledge_version,
         "generated_at": knowledge.generated_at.isoformat(),
-        "erp": {"id": knowledge.erp_system.id, "slug": knowledge.erp_system.slug, "name": knowledge.erp_system.name},
+        "erp": {
+            "id": knowledge.erp_system.id,
+            "slug": knowledge.erp_system.slug,
+            "name": knowledge.erp_system.name,
+        },
         "profile": knowledge.source_profile,
         "source_artifacts": knowledge.source_artifacts,
         "source_artifact_hashes": knowledge.source_artifact_hashes,

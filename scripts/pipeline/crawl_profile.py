@@ -7,14 +7,12 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 from erp_assistant.acquisition.browser.navigator import ERPNavigator
-from erp_assistant.config.profile_loader import ProfileLoader
 from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Ejecuta el descubrimiento estructural de un ERP."
-    )
+    parser = argparse.ArgumentParser(description="Ejecuta el descubrimiento estructural de un ERP.")
 
     parser.add_argument(
         "--profile",
@@ -98,33 +96,18 @@ def main() -> int:
             print("-" * 80)
             print("3. Descubrimiento finalizado.")
             print(f"   Rutas visitadas: {summary.visited_count}")
-            print(
-                "   Pantallas funcionales indexadas: "
-                f"{summary.functional_screen_count}"
-            )
+            print(f"   Pantallas funcionales indexadas: {summary.functional_screen_count}")
             print(f"   Rutas no disponibles: {summary.unavailable_count}")
             print(f"   Rutas pendientes restantes: {summary.pending_count}")
             print(f"   Nodos estructurales: {summary.nodes_count}")
             print(f"   Relaciones estructurales: {summary.edges_count}")
             print(f"   Estados UI observados: {summary.states_count}")
-            print(
-                "   Transiciones UI observadas: "
-                f"{summary.state_transitions_count}"
-            )
-            print(
-                "   Estados fuente explorados: "
-                f"{summary.state_frontier_explored_count}"
-            )
-            print(
-                "   Estados UI pendientes: "
-                f"{summary.state_frontier_pending_count}"
-            )
+            print(f"   Transiciones UI observadas: {summary.state_transitions_count}")
+            print(f"   Estados fuente explorados: {summary.state_frontier_explored_count}")
+            print(f"   Estados UI pendientes: {summary.state_frontier_pending_count}")
             print(f"   Grafo guardado en: {summary.routes_graph_path}")
             print(f"   Índice guardado en: {summary.screen_index_path}")
-            print(
-                "   State-flow graph: "
-                f"{summary.state_flow_graph_path}"
-            )
+            print(f"   State-flow graph: {summary.state_flow_graph_path}")
 
             print("=" * 80)
             print("PROCESO COMPLETADO CORRECTAMENTE")

@@ -116,14 +116,10 @@ class ScreenEvidencePackage(EvidenceModel):
                 transition.source_state_id is not None
                 and transition.source_state_id not in state_ids
             ):
-                raise ValueError(
-                    "transitions contiene source_state_id fuera de ui_states"
-                )
+                raise ValueError("transitions contiene source_state_id fuera de ui_states")
             if (
                 transition.target_state_id is not None
                 and transition.target_state_id not in state_ids
             ):
-                raise ValueError(
-                    "transitions contiene target_state_id fuera de ui_states"
-                )
+                raise ValueError("transitions contiene target_state_id fuera de ui_states")
         return self

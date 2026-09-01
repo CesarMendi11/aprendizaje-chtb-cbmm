@@ -4,10 +4,13 @@ from sqlalchemy import func, select, text
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus
 from erp_assistant.persistence.postgres.models import (
-    ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, SyncJob
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SyncJob,
 )
 from erp_assistant.persistence.postgres.session import session_scope
-
 from scripts.common.database import database_engine, print_json
 
 
@@ -28,13 +31,12 @@ def collect_status(session):
         "erp_systems": len(erps),
         "versions": len(versions),
         "active_versions": [
-            item.knowledge_version for item in versions
+            item.knowledge_version
+            for item in versions
             if item.status == KnowledgeVersionStatus.ACTIVE
         ],
         "items_by_status": {str(key): value for key, value in status_counts.items()},
-        "last_import_run": {
-            "id": str(latest.id), "status": str(latest.status)
-        } if latest else None,
+        "last_import_run": {"id": str(latest.id), "status": str(latest.status)} if latest else None,
         "pending_sync_jobs": session.scalar(
             select(func.count()).select_from(SyncJob).where(SyncJob.status == SyncStatus.PENDING)
         ),

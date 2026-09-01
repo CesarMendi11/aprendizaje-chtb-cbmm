@@ -14,6 +14,4 @@ router = APIRouter(prefix="/system", tags=["admin-system"])
 )
 def system_status(request: Request):
     """Devuelve un snapshot independiente de las dependencias del prototipo."""
-    return collect_admin_system_status(
-        request.app.state.semantic_review_session_factory
-    )
+    return collect_admin_system_status(request.app.state.semantic_review_session_factory)

@@ -9,8 +9,6 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
-from tests.api.test_admin_knowledge_api import HASH, seed_tree
-from tests.api.test_semantic_review_api import Client
 
 from erp_assistant.api.app import create_app
 from erp_assistant.api.dependencies import get_admin_read_session
@@ -24,6 +22,8 @@ from erp_assistant.persistence.postgres.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
+from tests.api.test_admin_knowledge_api import HASH, seed_tree
+from tests.api.test_semantic_review_api import Client
 
 
 def _test_url() -> str:

@@ -76,15 +76,11 @@ class CanonicalKnowledgeMaterializer:
         try:
             version_id = uuid.UUID(str(knowledge_version_id))
         except (TypeError, ValueError) as exc:
-            raise CanonicalKnowledgeMaterializationError(
-                "knowledge_version_id inválido"
-            ) from exc
+            raise CanonicalKnowledgeMaterializationError("knowledge_version_id inválido") from exc
 
         version = self.session.get(KnowledgeVersionRecord, version_id)
         if version is None:
-            raise CanonicalKnowledgeMaterializationError(
-                "KnowledgeVersion base no encontrada"
-            )
+            raise CanonicalKnowledgeMaterializationError("KnowledgeVersion base no encontrada")
         if require_active and version.status != KnowledgeVersionStatus.ACTIVE:
             raise CanonicalKnowledgeMaterializationError(
                 "La KnowledgeVersion base fijada ya no está ACTIVE"
@@ -137,8 +133,7 @@ class CanonicalKnowledgeMaterializer:
         source_hashes = dict(version.source_artifact_hashes or {})
         erp_payload = copy.deepcopy(erp_item.source_payload)
         source_profile = self._source_profile(source_hashes) or str(
-            erp_payload.get("profile_name")
-            or getattr(version.erp, "profile_name", "")
+            erp_payload.get("profile_name") or getattr(version.erp, "profile_name", "")
         )
 
         try:

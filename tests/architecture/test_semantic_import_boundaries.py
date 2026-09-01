@@ -4,7 +4,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -33,6 +32,4 @@ for name in (
         check=False,
     )
 
-    assert result.returncode == 0, (
-        result.stderr or result.stdout
-    )
+    assert result.returncode == 0, result.stderr or result.stdout

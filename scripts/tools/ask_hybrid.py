@@ -4,14 +4,13 @@ import argparse
 
 from erp_assistant.config.chroma_settings import ChromaSettings
 from erp_assistant.config.neo4j_settings import Neo4jSettings
+from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient
+from erp_assistant.integrations.ollama.generation import OllamaGenerationClient
 from erp_assistant.persistence.postgres.session import session_scope
+from erp_assistant.projections.chroma.structural_repository import ChromaRepository
 from erp_assistant.projections.neo4j.client import Neo4jClient
 from erp_assistant.retrieval import HybridKnowledgeRetriever
 from erp_assistant.retrieval.aliases import semantic_aliases_for
-from erp_assistant.projections.chroma.structural_repository import ChromaRepository
-from erp_assistant.integrations.ollama.embeddings import OllamaEmbeddingClient
-from erp_assistant.integrations.ollama.generation import OllamaGenerationClient
-
 from scripts.common.database import database_engine, print_json
 
 

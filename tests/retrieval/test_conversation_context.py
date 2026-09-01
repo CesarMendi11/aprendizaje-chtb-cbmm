@@ -8,7 +8,6 @@ from erp_assistant.retrieval.conversation_context import (
 from erp_assistant.retrieval.entity_resolver import EntityResolution, EntityResolutionCandidate
 from erp_assistant.retrieval.query_plan import QueryIntent, QueryPlanner
 
-
 SCREEN = ConversationEntity(
     canonical_id="screen:ano",
     entity_type="screen",
@@ -205,7 +204,6 @@ def test_next_state_preserves_screen_on_contextual_answer_without_module_source(
     assert next_state.current_screen == SCREEN
     assert next_state.current_module == MODULE
     assert next_state.turn_index == 2
-
 
 
 def test_next_state_clears_previous_module_when_switching_to_erp_root_screen():

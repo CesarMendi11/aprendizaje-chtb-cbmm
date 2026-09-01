@@ -5,7 +5,6 @@ from playwright.sync_api import sync_playwright
 from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 
-
 HOME = "/admin/home"
 DETAIL = "/admin/detail"
 

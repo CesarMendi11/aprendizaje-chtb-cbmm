@@ -7,7 +7,6 @@ from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtracto
 from erp_assistant.acquisition.models.crawl_path import CrawlPath, CrawlPathStep
 from erp_assistant.acquisition.models.ui_event import EventDecision, RiskLevel, UIEvent, UIEventType
 
-
 ROUTE = "/admin/home"
 HTML = """
 <!DOCTYPE html>
@@ -103,9 +102,7 @@ def test_path_replayer_reproduces_registered_dynamic_state():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
-        navigator, extractor, builder, registry, root, target = build_states(
-            page, profile
-        )
+        navigator, extractor, builder, registry, root, target = build_states(page, profile)
 
         replayer = PathReplayer(
             page=page,
@@ -133,9 +130,7 @@ def test_path_replayer_refuses_non_allowed_event():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page()
-        navigator, extractor, builder, registry, root, target = build_states(
-            page, profile
-        )
+        navigator, extractor, builder, registry, root, target = build_states(page, profile)
 
         blocked = UIEvent(
             event_type=UIEventType.MUTATIVE_ACTION,
@@ -144,9 +139,7 @@ def test_path_replayer_refuses_non_allowed_event():
             decision=EventDecision.DENY,
             risk_level=RiskLevel.HIGH,
         )
-        path = root.path.append(
-            CrawlPathStep(root.state_id, blocked, target.state_id)
-        )
+        path = root.path.append(CrawlPathStep(root.state_id, blocked, target.state_id))
 
         replayer = PathReplayer(
             page=page,

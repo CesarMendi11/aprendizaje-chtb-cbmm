@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.evidence.screen_evidence_builder import (
     ScreenEvidenceBuilder,
     ScreenEvidenceError,
 )
-from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
-from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
 
@@ -64,10 +64,9 @@ class SemanticRetrievalAuthorizationService:
                 continue
             if not evaluate_screen_semantic_eligibility(package).eligible:
                 continue
-            if (
-                proposal.evidence_hash != package.evidence_hash
-                or list(proposal.evidence_ids) != list(package.evidence_ids)
-            ):
+            if proposal.evidence_hash != package.evidence_hash or list(
+                proposal.evidence_ids
+            ) != list(package.evidence_ids):
                 continue
             payload = self.effective.publishable_payload(proposal.id)
             if not isinstance(payload, dict):

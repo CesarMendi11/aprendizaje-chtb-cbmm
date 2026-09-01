@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from erp_assistant.acquisition.crawling.module_scope import ModuleCrawlBoundary, ModuleCrawlBoundaryError
+from erp_assistant.acquisition.crawling.module_scope import (
+    ModuleCrawlBoundary,
+    ModuleCrawlBoundaryError,
+)
 
 
 def scope_payload():
@@ -45,9 +48,7 @@ def test_known_subtree_routes_are_allowed_without_dynamic_provenance():
 
     assert boundary.is_known_route("/sales/tracking?tab=detail")
     assert boundary.allows_discovered_route("/sales/tracking/")
-    assert boundary.allows_discovered_route(
-        "/sales/tracking/integrations/external?view=1"
-    )
+    assert boundary.allows_discovered_route("/sales/tracking/integrations/external?view=1")
     assert not boundary.is_known_route("/sales/orders")
 
 
@@ -79,9 +80,7 @@ def test_unknown_route_requires_expand_menu_reveal_inside_selected_branch():
 def test_sibling_branch_cannot_expand_unknown_route_scope():
     boundary = ModuleCrawlBoundary.from_payload(scope_payload())
 
-    assert boundary.is_inside_selected_branch(
-        ("#sales", "#tracking", "#integrations")
-    )
+    assert boundary.is_inside_selected_branch(("#sales", "#tracking", "#integrations"))
     assert not boundary.is_inside_selected_branch(("#sales", "#orders"))
     assert not boundary.allows_discovered_route(
         "/sales/orders/new-screen",

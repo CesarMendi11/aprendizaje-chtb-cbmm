@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
@@ -26,7 +27,6 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
     SyncJob,
 )
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from tests.fixtures.crawl_quality import certified_crawl_quality, source_crawl_result
 from tests.fixtures.removal_review import resolve_all_removals
@@ -334,9 +334,7 @@ def test_create_full_crawl_rejects_target_and_screen_requires_internal_route(api
 def test_pipeline_job_api_is_hidden_when_admin_api_is_disabled(tmp_path):
     index = tmp_path / "screen_index.json"
     index.write_text('{"screens": []}', encoding="utf-8")
-    app = create_app(
-        replace(ApiSettings(), semantic_review_api_enabled=False)
-    )
+    app = create_app(replace(ApiSettings(), semantic_review_api_enabled=False))
     client = Client(app)
     assert client.get("/api/admin/pipeline-jobs").status_code == 404
 
@@ -576,9 +574,7 @@ def test_create_canonical_build_preserves_module_base_provenance(api):
             source.id,
             result_payload={
                 "artifact_root": f"data/runs/pipeline/{source.id}",
-                **pinned_source_crawl_result(
-                    source.id, scope="module", target="module:tracking"
-                ),
+                **pinned_source_crawl_result(source.id, scope="module", target="module:tracking"),
             },
         )
 
@@ -756,9 +752,7 @@ def test_projection_sync_rejects_when_there_is_no_active_version(api):
     assert dispatcher.submitted == []
 
 
-def seed_active_screen(
-    factory, *, review=ReviewStatus.APPROVED, include_evidence=True
-):
+def seed_active_screen(factory, *, review=ReviewStatus.APPROVED, include_evidence=True):
     version_id, erp_id = seed_active_version(factory)
     with factory.begin() as session:
         module = KnowledgeItem(
@@ -960,9 +954,7 @@ def test_create_canonical_merge_pins_partial_to_exact_active_base(api):
     assert body["parameters"]["base_knowledge_version"] == "active-v1"
     assert body["parameters"]["expected_partial_knowledge_version"] == "partial-v1"
     assert body["parameters"]["expected_crawl_execution_quality"] == (
-        certified_crawl_quality(
-            run_id=crawl_id, scope="module", target="module:tracking"
-        )
+        certified_crawl_quality(run_id=crawl_id, scope="module", target="module:tracking")
     )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
@@ -1076,9 +1068,7 @@ def test_create_canonical_import_accepts_full_candidate_from_merge_and_repins_ba
     assert body["parameters"]["merged_from_scope"] == "module"
     assert body["parameters"]["merged_target_module_id"] == "module:tracking"
     assert body["parameters"]["expected_crawl_execution_quality"] == (
-        certified_crawl_quality(
-            run_id=crawl_id, scope="module", target="module:tracking"
-        )
+        certified_crawl_quality(run_id=crawl_id, scope="module", target="module:tracking")
     )
     assert str(dispatcher.submitted[-1]) == body["id"]
 
@@ -1110,7 +1100,6 @@ def test_create_canonical_reconciliation_queues_resolved_removal_hitl(api, tmp_p
     assert str(dispatcher.submitted[-1]) == body["id"]
 
 
-
 def test_create_canonical_reconciliation_accepts_resolved_full_candidate(api, tmp_path):
     client, factory, dispatcher = api
     with factory() as session:
@@ -1132,6 +1121,7 @@ def test_create_canonical_reconciliation_accepts_resolved_full_candidate(api, tm
     assert body["knowledge_version_id"] == candidate_id_text
     assert body["parameters"]["candidate_version_id"] == candidate_id_text
     assert str(dispatcher.submitted[-1]) == body["id"]
+
 
 def test_create_canonical_import_accepts_hitl_reconciliation_source(api):
     client, factory, dispatcher = api

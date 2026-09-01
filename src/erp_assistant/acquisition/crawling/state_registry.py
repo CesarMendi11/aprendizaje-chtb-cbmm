@@ -74,9 +74,7 @@ class StateRegistry:
             return StateRegistration(state=state, is_new=True)
 
         existing = self._states_by_id[existing_id]
-        self._exact_signatures.setdefault(existing_id, set()).add(
-            state.exact_signature
-        )
+        self._exact_signatures.setdefault(existing_id, set()).add(state.exact_signature)
 
         if self._is_shorter_path(state.path, existing.path):
             updated = replace(

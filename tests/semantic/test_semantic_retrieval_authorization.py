@@ -106,9 +106,7 @@ def test_authorizes_only_current_postgresql_semantic_projection():
     assert row["semantic_id"] == "semantic:retenciones-purpose"
     assert row["screen_id"] == "screen:retenciones"
     assert row["purpose_summary"] == "Permite buscar y consultar retenciones."
-    assert row["supported_capabilities"] == [
-        "Permite buscar mediante los criterios disponibles."
-    ]
+    assert row["supported_capabilities"] == ["Permite buscar mediante los criterios disponibles."]
     assert row["review_revision"] == 1
     assert row["score"] == 0.92
 

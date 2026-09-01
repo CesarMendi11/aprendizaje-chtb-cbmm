@@ -27,12 +27,12 @@ from erp_assistant.persistence.postgres.models import (
     ReviewAction,
     SyncJob,
 )
+from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.services.structural_publication_review_service import (
     StructuralPublicationReviewConflictError,
     StructuralPublicationReviewError,
     StructuralPublicationReviewService,
 )
-from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
 
@@ -310,15 +310,11 @@ def test_only_active_versions_can_use_publication_review(session):
 def test_running_projection_blocks_publication_package_review(session):
     with session.begin():
         seeded = seed(session)
-        job = session.scalar(
-            select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J)
-        )
+        job = session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J))
         job.status = SyncStatus.RUNNING
     service = StructuralPublicationReviewService(session)
     package = next(
-        item
-        for item in service.build(seeded["version"].id).packages
-        if item.scope_id == "screen:a"
+        item for item in service.build(seeded["version"].id).packages if item.scope_id == "screen:a"
     )
     session.rollback()
 

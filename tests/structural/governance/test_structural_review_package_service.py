@@ -23,10 +23,13 @@ from erp_assistant.persistence.postgres.models import (
     SyncJob,
 )
 from erp_assistant.structural.services.structural_review_package_service import (
+    StructuralReviewPackageError,
     StructuralReviewPackageService,
 )
-from erp_assistant.structural.services.structural_review_package_service import StructuralReviewPackageError
-from erp_assistant.structural.services.version_diff_service import VersionDiffChangeType, VersionDiffItem
+from erp_assistant.structural.services.version_diff_service import (
+    VersionDiffChangeType,
+    VersionDiffItem,
+)
 from tests.structural.governance.test_version_diff_service import seed, seed_reconciled
 
 
@@ -63,7 +66,6 @@ def test_packages_group_canonical_children_and_keep_partial_removals_unconfirmed
     )
 
 
-
 def test_full_candidate_removals_are_unconfirmed_and_require_review(session, tmp_path):
     _, candidate_id, _ = seed(session, tmp_path)
 
@@ -76,14 +78,13 @@ def test_full_candidate_removals_are_unconfirmed_and_require_review(session, tmp
         for package in result.packages
         for change in package.changes
         if change.change_type == "removed"
-    ] + [
-        change for change in result.unscoped_changes if change.change_type == "removed"
-    ]
+    ] + [change for change in result.unscoped_changes if change.change_type == "removed"]
     assert len(removed) == result.diff_totals["removed"]
     assert all(
         change.removal_confirmation == "unconfirmed" and change.requires_removal_review
         for change in removed
     )
+
 
 def test_unowned_change_is_unscoped_never_route_guessed(session, tmp_path):
     _, candidate_id, _ = seed(session, tmp_path)

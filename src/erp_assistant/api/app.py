@@ -23,6 +23,7 @@ def create_app(
     conversation_state_store: ConversationStateStore | None = None,
 ) -> FastAPI:
     settings = settings or ApiSettings()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         if settings.semantic_review_api_enabled:
@@ -60,9 +61,7 @@ def create_app(
     )
     app.state.settings = settings
     app.state.hybrid_factory = HybridRetrieverFactory()
-    app.state.conversation_state_store = (
-        conversation_state_store or ConversationStateStore()
-    )
+    app.state.conversation_state_store = conversation_state_store or ConversationStateStore()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),
@@ -114,9 +113,7 @@ def create_app(
 
         if semantic_review_session_factory is None:
             engine = create_engine_from_settings(DatabaseSettings())
-            semantic_review_session_factory = sessionmaker(
-                bind=engine, expire_on_commit=False
-            )
+            semantic_review_session_factory = sessionmaker(bind=engine, expire_on_commit=False)
             app.state.semantic_review_engine = engine
         app.state.semantic_review_session_factory = semantic_review_session_factory
 

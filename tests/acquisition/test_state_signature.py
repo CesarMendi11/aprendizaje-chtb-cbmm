@@ -191,6 +191,7 @@ def test_state_signature_removes_duplicate_buttons():
 
     assert len(signature.summary["buttons"]) == 1
 
+
 def test_state_signature_separates_exact_and_structural_changes():
     builder = StateSignatureBuilder()
 
@@ -371,9 +372,7 @@ def test_structural_signature_ignores_header_and_volatile_region_changes():
             "volatile": {"visible_text": "Historial 10:00 10.0.0.1", "elements_count": 1},
         },
         "links": [],
-        "buttons": [
-            {"text": "Buscar", "tag": "button", "region": "main_content"}
-        ],
+        "buttons": [{"text": "Buscar", "tag": "button", "region": "main_content"}],
         "inputs": [],
         "tables": [],
         "custom_interactives": [],

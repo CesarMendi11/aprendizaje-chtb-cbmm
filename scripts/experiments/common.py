@@ -11,7 +11,6 @@ from typing import Any
 
 from erp_assistant.config.paths import PROJECT_ROOT
 
-
 SENSITIVE_KEY_PARTS = (
     "authorization",
     "cookie",

@@ -34,8 +34,7 @@ class SemanticEffectivePayloadService:
                 payload = copy.deepcopy(proposal.source_payload)
                 if (
                     proposal.source_effective_content_hash is None
-                    or canonical_json_hash(payload)
-                    != proposal.source_effective_content_hash
+                    or canonical_json_hash(payload) != proposal.source_effective_content_hash
                 ):
                     raise SemanticHistoryIntegrityError(
                         "El carry-forward corrected no coincide con el payload efectivo source"

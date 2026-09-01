@@ -1,24 +1,14 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-import uuid
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.semantic.prompts import (
-    GENERATION_PARAMETERS,
-    GENERATION_PARAMETERS_HASH,
-    PROMPT_HASH,
-    PROMPT_VERSION,
-)
-from erp_assistant.semantic.schemas import (
-    ControlEvidence,
-    GeneratedScreenPurposeCandidate,
-    ModuleEvidence,
-    ScreenEvidencePackage,
-    ScreenPurposeInference,
+from erp_assistant.orchestration.pipeline.executors.semantic_inference import (
+    SemanticInferenceJobExecutor,
 )
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
@@ -36,7 +26,21 @@ from erp_assistant.persistence.postgres.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
+from erp_assistant.projections.chroma.semantic_repository import SemanticChromaRepository
 from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
+from erp_assistant.semantic.prompts import (
+    GENERATION_PARAMETERS,
+    GENERATION_PARAMETERS_HASH,
+    PROMPT_HASH,
+    PROMPT_VERSION,
+)
+from erp_assistant.semantic.schemas import (
+    ControlEvidence,
+    GeneratedScreenPurposeCandidate,
+    ModuleEvidence,
+    ScreenEvidencePackage,
+    ScreenPurposeInference,
+)
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
@@ -50,8 +54,6 @@ from erp_assistant.semantic.services.semantic_retrieval_authorization_service im
 )
 from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.orchestration.pipeline.executors.semantic_inference import SemanticInferenceJobExecutor
-from erp_assistant.projections.chroma.semantic_repository import SemanticChromaRepository
 
 HASH = "a" * 64
 ERP_ID = "erp:semantic-lifecycle-e2e"
@@ -199,9 +201,7 @@ def make_package(
         "warnings": [],
     }
     provisional = ScreenEvidencePackage.model_validate({**values, "evidence_hash": HASH})
-    digest = canonical_json_hash(
-        provisional.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
     return provisional.model_copy(update={"evidence_hash": digest})
 
 
@@ -223,9 +223,7 @@ def semantic_payload(package, *, summary):
 
 
 def generated_candidate(package, *, summary):
-    inference = ScreenPurposeInference.model_validate(
-        semantic_payload(package, summary=summary)
-    )
+    inference = ScreenPurposeInference.model_validate(semantic_payload(package, summary=summary))
     return GeneratedScreenPurposeCandidate.model_validate(
         {
             "inference": inference,
@@ -236,9 +234,7 @@ def generated_candidate(package, *, summary):
             "generation_parameters_hash": GENERATION_PARAMETERS_HASH,
             "evidence_hash": package.evidence_hash,
             "evidence_ids": package.evidence_ids,
-            "generated_content_hash": canonical_json_hash(
-                inference.model_dump(mode="json")
-            ),
+            "generated_content_hash": canonical_json_hash(inference.model_dump(mode="json")),
             "structured_output_mode": "json_schema",
             "warnings": package.warnings,
             "raw_response_hash": "b" * 64,
@@ -470,7 +466,9 @@ def physical_rows(repository, *, knowledge_version=None):
     if knowledge_version is not None:
         where = {"$and": [{"erp_id": ERP_ID}, {"knowledge_version": knowledge_version}]}
     result = repository.collection.get(where=where, include=["metadatas", "documents"])
-    return list(zip(result["ids"], result.get("metadatas", []), result.get("documents", []), strict=True))
+    return list(
+        zip(result["ids"], result.get("metadatas", []), result.get("documents", []), strict=True)
+    )
 
 
 def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorization_e2e():
@@ -559,8 +557,7 @@ def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorizatio
         )
         assert len(target_proposals) == 2
         by_screen = {
-            proposal.screen_knowledge_item.canonical_id: proposal
-            for proposal in target_proposals
+            proposal.screen_knowledge_item.canonical_id: proposal for proposal in target_proposals
         }
         carried = by_screen["screen:carry"]
         reinferred = by_screen["screen:reinfer"]
@@ -579,8 +576,9 @@ def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorizatio
             == 0
         )
         assert (
-            SemanticEffectivePayloadService(session)
-            .publishable_payload(carried.id)["purpose_summary"]
+            SemanticEffectivePayloadService(session).publishable_payload(carried.id)[
+                "purpose_summary"
+            ]
             == "Propósito corregido por una persona y preservado por carry-forward."
         )
         assert reinferred.lifecycle_origin == SemanticLifecycleOrigin.REINFERRED
@@ -668,8 +666,7 @@ def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorizatio
         assert reinferred_hit["review_status"] == "approved"
         assert reinferred_hit["review_revision"] == 1
         assert (
-            reinferred_hit["purpose_summary"]
-            == "Permite buscar información en Consulta cambiante."
+            reinferred_hit["purpose_summary"] == "Permite buscar información en Consulta cambiante."
         )
 
     assert physical_rows(repository, knowledge_version=SOURCE_VERSION) == []

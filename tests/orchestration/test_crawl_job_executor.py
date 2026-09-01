@@ -5,11 +5,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from erp_assistant.persistence.postgres.enums import PipelineJobScope
 from erp_assistant.orchestration.pipeline.executors.crawl import (
     CrawlJobExecutionError,
     _isolated_profile,
 )
+from erp_assistant.persistence.postgres.enums import PipelineJobScope
 
 
 def base_profile(tmp_path):
@@ -41,11 +41,14 @@ def test_screen_scope_validation_rejects_external_or_blocked_routes(tmp_path):
     executor = CrawlJobExecutor(profile_path=tmp_path / "unused.yaml", runs_root=tmp_path)
     profile = base_profile(tmp_path)
 
-    assert executor._validate_target(
-        profile,
-        PipelineJobScope.SCREEN,
-        "/admin/facturas",
-    ) == "/admin/facturas"
+    assert (
+        executor._validate_target(
+            profile,
+            PipelineJobScope.SCREEN,
+            "/admin/facturas",
+        )
+        == "/admin/facturas"
+    )
 
     with pytest.raises(CrawlJobExecutionError, match="ruta interna"):
         executor._validate_target(
@@ -70,40 +73,43 @@ def test_screen_scope_validation_rejects_external_or_blocked_routes(tmp_path):
 def test_module_scope_requires_pinned_boundary_and_matching_target(tmp_path):
     from erp_assistant.orchestration.pipeline.executors.crawl import CrawlJobExecutor
 
-    executor = CrawlJobExecutor(profile_path=tmp_path / 'unused.yaml', runs_root=tmp_path)
+    executor = CrawlJobExecutor(profile_path=tmp_path / "unused.yaml", runs_root=tmp_path)
     profile = base_profile(tmp_path)
 
-    assert executor._validate_target(
-        profile,
-        PipelineJobScope.MODULE,
-        'module:tracking',
-    ) == 'module:tracking'
+    assert (
+        executor._validate_target(
+            profile,
+            PipelineJobScope.MODULE,
+            "module:tracking",
+        )
+        == "module:tracking"
+    )
 
-    with pytest.raises(CrawlJobExecutionError, match='target_module_id canónico'):
-        executor._validate_target(profile, PipelineJobScope.MODULE, '/admin/tracking')
+    with pytest.raises(CrawlJobExecutionError, match="target_module_id canónico"):
+        executor._validate_target(profile, PipelineJobScope.MODULE, "/admin/tracking")
 
     parameters = {
-        'target_module_id': 'module:tracking',
-        'module_scope': {
-            'root_module_id': 'module:tracking',
-            'module_ids': ['module:tracking'],
-            'known_screen_routes': ['/admin/tracking'],
-            'navigation_path': ['Sales', 'Tracking'],
-            'navigation_origin_path': ['#sales', '#tracking'],
+        "target_module_id": "module:tracking",
+        "module_scope": {
+            "root_module_id": "module:tracking",
+            "module_ids": ["module:tracking"],
+            "known_screen_routes": ["/admin/tracking"],
+            "navigation_path": ["Sales", "Tracking"],
+            "navigation_origin_path": ["#sales", "#tracking"],
         },
     }
     resolved = executor._module_boundary(
         PipelineJobScope.MODULE,
-        'module:tracking',
+        "module:tracking",
         parameters,
     )
     assert resolved is not None
-    assert resolved.root_module_id == 'module:tracking'
+    assert resolved.root_module_id == "module:tracking"
 
-    with pytest.raises(CrawlJobExecutionError, match='consistente'):
+    with pytest.raises(CrawlJobExecutionError, match="consistente"):
         executor._module_boundary(
             PipelineJobScope.MODULE,
-            'module:other',
+            "module:other",
             parameters,
         )
 

@@ -6,7 +6,6 @@ from typing import Any
 from playwright.sync_api import Page
 
 from erp_assistant.acquisition.browser.interaction_executor import BrowserInteractionExecutor
-
 from erp_assistant.acquisition.browser.navigator import ERPNavigator
 from erp_assistant.acquisition.crawling.state_observer import StableStateObserver
 from erp_assistant.acquisition.crawling.state_registry import StateRegistry
@@ -72,12 +71,8 @@ class PathReplayer:
         ui_events = profile.get("ui_events", {})
         exploration = profile.get("exploration", {})
 
-        self.page_wait_ms = int(
-            config.get("page_wait_ms", exploration.get("page_wait_ms", 800))
-        )
-        self.step_wait_ms = int(
-            config.get("step_wait_ms", ui_events.get("event_wait_ms", 400))
-        )
+        self.page_wait_ms = int(config.get("page_wait_ms", exploration.get("page_wait_ms", 800)))
+        self.step_wait_ms = int(config.get("step_wait_ms", ui_events.get("event_wait_ms", 400)))
         self.click_timeout_ms = int(
             config.get(
                 "click_timeout_ms",
@@ -125,9 +120,7 @@ class PathReplayer:
                 self._wait(self.step_wait_ms)
 
                 expected_state = (
-                    self.registry.get(step.target_state_id)
-                    if step.target_state_id
-                    else None
+                    self.registry.get(step.target_state_id) if step.target_state_id else None
                 )
                 observation = self._observe(
                     title_hint=(
@@ -135,9 +128,7 @@ class PathReplayer:
                         if expected_state
                         else root_state.title
                     ),
-                    canonical_title=(
-                        expected_state.title if expected_state else root_state.title
-                    ),
+                    canonical_title=(expected_state.title if expected_state else root_state.title),
                     expected_structural_fingerprint=(
                         expected_state.structural_signature if expected_state else None
                     ),
@@ -193,7 +184,6 @@ class PathReplayer:
                 observation=observation_diagnostics,
             )
 
-
     def _observe(
         self,
         title_hint: str = "",
@@ -223,13 +213,10 @@ class PathReplayer:
             or ""
         )
 
-
     @staticmethod
     def _assert_observation_stable(observation, context: str) -> None:
         if not observation.stable:
-            raise RuntimeError(
-                f"La observación de {context} no alcanzó una firma estable."
-            )
+            raise RuntimeError(f"La observación de {context} no alcanzó una firma estable.")
 
     def _execute_event(self, event: UIEvent) -> None:
         if event.decision is not EventDecision.ALLOW:
@@ -273,9 +260,7 @@ class PathReplayer:
                 )
             return step.target_state_id
 
-        registered = self.registry.find_by_signature(
-            signature.structural_fingerprint
-        )
+        registered = self.registry.find_by_signature(signature.structural_fingerprint)
         if registered:
             return registered.state_id
         return self.registry.build_state_id(signature.structural_fingerprint)

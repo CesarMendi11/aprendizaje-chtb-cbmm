@@ -7,12 +7,12 @@ from sqlalchemy import select
 
 from erp_assistant.persistence.postgres.models import KnowledgeItem
 from erp_assistant.projections.chroma.structural_sync_service import ChromaSyncService
-from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 from erp_assistant.semantic.services.semantic_retrieval_authorization_service import (
     SemanticRetrievalAuthorizationService,
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
+from erp_assistant.structural.services.effective_knowledge_service import EffectiveKnowledgeService
 
 from .answer_decision import (
     AnswerDecisionPlanner,
@@ -110,12 +110,8 @@ class HybridKnowledgeRetriever:
         self.entity_resolver = entity_resolver
         if self.entity_resolver is None and session is not None and hasattr(session, "execute"):
             self.entity_resolver = CanonicalEntityResolver(session, aliases=aliases)
-        self.planner = planner or StructuralAnswerPlanner(
-            aliases, query_planner=self.query_planner
-        )
-        self.answer_decision_planner = (
-            answer_decision_planner or AnswerDecisionPlanner()
-        )
+        self.planner = planner or StructuralAnswerPlanner(aliases, query_planner=self.query_planner)
+        self.answer_decision_planner = answer_decision_planner or AnswerDecisionPlanner()
 
     def retrieve(
         self,
@@ -387,13 +383,9 @@ class HybridKnowledgeRetriever:
             for candidate in fused
             if candidate.canonical_id not in ambiguous_ids
         ]
-        prevalidated = {
-            item.canonical_id: item
-            for item in self._validate(fused_ids, version.id)
-        }
+        prevalidated = {item.canonical_id: item for item in self._validate(fused_ids, version.id)}
         candidate_types = {
-            canonical_id: item.entity_type
-            for canonical_id, item in prevalidated.items()
+            canonical_id: item.entity_type for canonical_id, item in prevalidated.items()
         }
         graph_plan = self.graph_planner.plan(
             query_plan,
@@ -423,8 +415,7 @@ class HybridKnowledgeRetriever:
         resolved_by_id = {candidate.canonical_id: candidate for candidate in resolution.candidates}
         fused_by_id = {candidate.canonical_id: candidate for candidate in fused}
         fused_rank_by_id = {
-            candidate.canonical_id: rank
-            for rank, candidate in enumerate(fused, start=1)
+            candidate.canonical_id: rank for rank, candidate in enumerate(fused, start=1)
         }
         graph_ids = {n["canonical_id"] for n in neighbors}
         sources = []
@@ -462,9 +453,7 @@ class HybridKnowledgeRetriever:
                         else (hit.get("score") if hit else None)
                     ),
                     "resolution_channels": (
-                        list(resolved_candidate.channels)
-                        if resolved_candidate is not None
-                        else []
+                        list(resolved_candidate.channels) if resolved_candidate is not None else []
                     ),
                     "retrieval_rank": fused_rank_by_id.get(cid),
                     "rrf_score": (
@@ -475,7 +464,9 @@ class HybridKnowledgeRetriever:
                     "retrieval_channels": (
                         list(fused_candidate.channels)
                         if fused_candidate is not None
-                        else ["graph"] if cid in graph_ids else []
+                        else ["graph"]
+                        if cid in graph_ids
+                        else []
                     ),
                 }
             )
@@ -559,10 +550,7 @@ class HybridKnowledgeRetriever:
             "rank_fusion": {
                 "algorithm": "rrf",
                 "k": self.rank_fusion.k,
-                "channel_sizes": {
-                    channel: len(rows)
-                    for channel, rows in rankings.items()
-                },
+                "channel_sizes": {channel: len(rows) for channel, rows in rankings.items()},
                 "excluded_ambiguous_canonical_ids": sorted(ambiguous_ids),
                 "candidates": [candidate.as_dict() for candidate in fused],
             },
@@ -628,11 +616,7 @@ class HybridKnowledgeRetriever:
             return result
 
         if decision.decision == AnswerDecisionType.CLARIFICATION:
-            candidates = (
-                result.get("evidence_selection", {}).get(
-                    "clarification_candidates", []
-                )
-            )
+            candidates = result.get("evidence_selection", {}).get("clarification_candidates", [])
             reason = str(result.get("answer_decision", {}).get("reason") or "")
             result["answer"] = (
                 render_missing_context_clarification(reason)
@@ -646,9 +630,7 @@ class HybridKnowledgeRetriever:
 
         if decision.decision == AnswerDecisionType.DETERMINISTIC_ANSWER:
             result["answer"] = structural_plan["answer"]
-            result["answer_mode"] = structural_plan.get(
-                "answer_mode", "deterministic_graph"
-            )
+            result["answer_mode"] = structural_plan.get("answer_mode", "deterministic_graph")
             result["evidence_ids"] = structural_plan.get("evidence_ids", [])
             result.pop("context", None)
             return finalize()
@@ -680,9 +662,7 @@ class HybridKnowledgeRetriever:
         generated_answer = self.generator.generate(prompt, system=SYSTEM_PROMPT)
         result["answer"] = generated_answer
         if self._is_abstention(generated_answer):
-            final_decision = self.answer_decision_planner.generator_abstention(
-                query_plan
-            )
+            final_decision = self.answer_decision_planner.generator_abstention(query_plan)
             result["answer_decision"] = final_decision.as_dict()
             result["confidence"] = final_decision.confidence
             result["answer_mode"] = "insufficient_evidence"
@@ -725,11 +705,7 @@ class HybridKnowledgeRetriever:
 
     @staticmethod
     def _candidate_ids(seeds, neighbors):
-        endpoint_ids = [
-            row.get("canonical_id")
-            for row in neighbors
-            if row.get("canonical_id")
-        ]
+        endpoint_ids = [row.get("canonical_id") for row in neighbors if row.get("canonical_id")]
         path_ids = [
             node_id
             for row in neighbors
@@ -740,11 +716,7 @@ class HybridKnowledgeRetriever:
             )
             if node_id
         ]
-        return list(
-            OrderedDict.fromkeys(
-                list(seeds) + endpoint_ids + path_ids
-            )
-        )
+        return list(OrderedDict.fromkeys(list(seeds) + endpoint_ids + path_ids))
 
     def _expand(
         self,
@@ -822,9 +794,7 @@ class HybridKnowledgeRetriever:
             cached = self._effective_cache.get(item_id)
             if cached is not None:
                 return cached
-        payload = ChromaSyncService(self.session).effective.describe(item_id)[
-            "effective_payload"
-        ]
+        payload = ChromaSyncService(self.session).effective.describe(item_id)["effective_payload"]
         self._effective_cache[item_id] = payload
         return payload
 

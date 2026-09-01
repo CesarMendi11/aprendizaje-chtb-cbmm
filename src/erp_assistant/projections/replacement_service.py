@@ -7,7 +7,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import KnowledgeVersionPromotion, KnowledgeVersionRecord
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeVersionPromotion,
+    KnowledgeVersionRecord,
+)
 
 
 class ProjectionReplacementError(RuntimeError):

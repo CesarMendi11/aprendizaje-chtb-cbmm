@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-
 DEFAULT_RRF_K = 60
 DEFAULT_CHANNEL_PRIORITY = (
     "canonical",
@@ -54,9 +53,7 @@ class FusedCandidate:
             "rrf_score": round(float(self.rrf_score), 9),
             "best_rank": self.best_rank,
             "channels": list(self.channels),
-            "contributions": [
-                contribution.as_dict() for contribution in self.contributions
-            ],
+            "contributions": [contribution.as_dict() for contribution in self.contributions],
         }
 
 
@@ -78,9 +75,7 @@ class ReciprocalRankFusion:
             raise ValueError("rrf_k_must_be_positive")
         self.k = int(k)
         self.channel_priority = tuple(channel_priority)
-        self._priority = {
-            channel: index for index, channel in enumerate(self.channel_priority)
-        }
+        self._priority = {channel: index for index, channel in enumerate(self.channel_priority)}
 
     def fuse(
         self,
@@ -100,18 +95,12 @@ class ReciprocalRankFusion:
                     continue
                 seen.add(canonical_id)
                 rank += 1
-                scores[canonical_id] = scores.get(canonical_id, 0.0) + (
-                    1.0 / (self.k + rank)
-                )
+                scores[canonical_id] = scores.get(canonical_id, 0.0) + (1.0 / (self.k + rank))
                 contributions.setdefault(canonical_id, []).append(
                     RankContribution(
                         channel=channel,
                         rank=rank,
-                        raw_score=(
-                            float(item.raw_score)
-                            if item.raw_score is not None
-                            else None
-                        ),
+                        raw_score=(float(item.raw_score) if item.raw_score is not None else None),
                     )
                 )
 

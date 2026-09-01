@@ -9,9 +9,9 @@ from urllib.parse import parse_qsl, urlsplit
 from erp_assistant.structural.canonical.privacy import (
     PERSISTED_DROP_KEYS,
     PERSISTED_FORBIDDEN_KEYS,
+    PERSISTED_INTERNAL_STATE_FRAGMENT,
     PERSISTED_ROUTE_KEYS,
     PERSISTED_SELECTOR_KEYS,
-    PERSISTED_INTERNAL_STATE_FRAGMENT,
     _is_safe_technical_token,
     _is_technical_persistence_key,
     contains_sensitive,
@@ -37,10 +37,7 @@ def audit_tree(root: Path) -> dict[str, Any]:
 
     scan_roots = _scan_roots(root)
     for path in sorted(
-        item
-        for scan_root in scan_roots
-        for item in scan_root.rglob("*")
-        if item.is_file()
+        item for scan_root in scan_roots for item in scan_root.rglob("*") if item.is_file()
     ):
         files += 1
         relative = path.relative_to(root).as_posix()
@@ -153,10 +150,7 @@ def _audit_value(
                 break
         if contains_sensitive(parsed.path):
             _add(violations, filename, location, "sensitive_route_segment")
-        if (
-            parsed.fragment
-            and not PERSISTED_INTERNAL_STATE_FRAGMENT.fullmatch(parsed.fragment)
-        ):
+        if parsed.fragment and not PERSISTED_INTERNAL_STATE_FRAGMENT.fullmatch(parsed.fragment):
             _add(violations, filename, location, "unsafe_route_fragment")
         return
 
@@ -208,9 +202,7 @@ def main() -> int:
     if report["violations"]:
         print("violations:")
         for item in report["violations"][:50]:
-            print(
-                f"- {item['file']} :: {item['location']} :: {item['reason']}"
-            )
+            print(f"- {item['file']} :: {item['location']} :: {item['reason']}")
         if len(report["violations"]) > 50:
             print(f"- ... {len(report['violations']) - 50} more")
     return 0 if report["status"] == "passed" else 1

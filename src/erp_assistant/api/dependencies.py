@@ -5,7 +5,6 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
-
 def get_semantic_review_session(request: Request) -> Iterator[Session]:
     factory = request.app.state.semantic_review_session_factory
     session = factory()

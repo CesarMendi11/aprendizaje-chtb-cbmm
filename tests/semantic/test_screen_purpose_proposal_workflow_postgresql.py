@@ -11,6 +11,15 @@ import sqlalchemy as sa
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SemanticProposal,
+    SemanticReviewAction,
+)
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
@@ -24,18 +33,9 @@ from erp_assistant.semantic.schemas import (
     ScreenEvidencePackage,
     ScreenPurposeInference,
 )
-from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import (
-    ERPSystemRecord,
-    ImportRun,
-    KnowledgeItem,
-    KnowledgeVersionRecord,
-    SemanticProposal,
-    SemanticReviewAction,
-)
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
+from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
@@ -225,14 +225,15 @@ def test_postgresql_pending_idempotency_and_external_rollback(pg_engine):
         assert reviewed.semantic_id == semantic_id
         assert reviewed.reused_existing and not reviewed.ollama_called
         assert inference.calls == 1
-        final_action_count = session.scalar(
-            select(func.count()).select_from(SemanticReviewAction)
-        )
+        final_action_count = session.scalar(select(func.count()).select_from(SemanticReviewAction))
         assert final_action_count == action_count
         transaction.rollback()
     with Session(pg_engine) as verification:
-        assert verification.scalar(
-            select(func.count()).select_from(SemanticProposal).where(
-                SemanticProposal.semantic_id == semantic_id
+        assert (
+            verification.scalar(
+                select(func.count())
+                .select_from(SemanticProposal)
+                .where(SemanticProposal.semantic_id == semantic_id)
             )
-        ) == 0
+            == 0
+        )

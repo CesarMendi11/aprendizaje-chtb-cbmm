@@ -36,15 +36,11 @@ def test_expected_database_tables_and_constraints():
         "source",
         "gate_snapshot",
     } <= set(promotion.c.keys())
-    assert any(
-        c.name == "uq_knowledge_version_promotions_version"
-        for c in promotion.constraints
-    )
+    assert any(c.name == "uq_knowledge_version_promotions_version" for c in promotion.constraints)
 
     removal_set = Base.metadata.tables["removal_reconciliation_review_sets"]
     assert any(
-        c.name == "uq_removal_reconciliation_review_sets_candidate"
-        for c in removal_set.constraints
+        c.name == "uq_removal_reconciliation_review_sets_candidate" for c in removal_set.constraints
     )
 
     removal_decision = Base.metadata.tables["removal_reconciliation_decisions"]

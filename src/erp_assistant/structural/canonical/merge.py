@@ -379,9 +379,7 @@ class CanonicalPartialMerger:
         if snapshot.scope == "module":
             assert snapshot.target_module_id is not None
             module_ids = self._module_subtree(knowledge, snapshot.target_module_id)
-            screen_ids = {
-                item.id for item in knowledge.screens if item.module_id in module_ids
-            }
+            screen_ids = {item.id for item in knowledge.screens if item.module_id in module_ids}
             return self._entity_scope(knowledge, module_ids, screen_ids)
 
         assert snapshot.target_screen_id is not None
@@ -398,9 +396,7 @@ class CanonicalPartialMerger:
         field_ids = {item.id for item in knowledge.fields if item.screen_id in screen_ids}
         control_ids = {item.id for item in knowledge.controls if item.screen_id in screen_ids}
         table_ids = {item.id for item in knowledge.tables if item.screen_id in screen_ids}
-        column_ids = {
-            item.id for item in knowledge.table_columns if item.table_id in table_ids
-        }
+        column_ids = {item.id for item in knowledge.table_columns if item.table_id in table_ids}
         link_ids = {item.id for item in knowledge.links if item.screen_id in screen_ids}
         event_ids = {item.id for item in knowledge.events if item.screen_id in screen_ids}
         transition_ids = {
@@ -437,8 +433,7 @@ class CanonicalPartialMerger:
         evidence_ids = {
             item.id
             for item in knowledge.evidence
-            if item.source_entity_id in owned_entity_ids
-            or item.id in referenced_evidence_ids
+            if item.source_entity_id in owned_entity_ids or item.id in referenced_evidence_ids
         }
         return {
             "modules": module_ids,
@@ -485,9 +480,7 @@ class CanonicalPartialMerger:
         partial_ids: set[str],
     ) -> list[BuildWarning]:
         kept = [item for item in base if not item.entity_id or item.entity_id not in removed_ids]
-        inserted = [
-            item for item in partial if not item.entity_id or item.entity_id in partial_ids
-        ]
+        inserted = [item for item in partial if not item.entity_id or item.entity_id in partial_ids]
         unique: dict[tuple, BuildWarning] = {}
         for item in [*kept, *inserted]:
             key = (item.code, item.message, item.entity_type, item.entity_id)
@@ -531,10 +524,7 @@ class CanonicalPartialMerger:
             *[f"partial:{item}" for item in partial.source_artifacts],
         ]
         hashes = {
-            **{
-                f"base:{key}": value
-                for key, value in sorted(base.source_artifact_hashes.items())
-            },
+            **{f"base:{key}": value for key, value in sorted(base.source_artifact_hashes.items())},
             **{
                 f"partial:{key}": value
                 for key, value in sorted(partial.source_artifact_hashes.items())

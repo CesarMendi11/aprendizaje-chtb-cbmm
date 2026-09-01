@@ -8,6 +8,12 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 import erp_assistant.persistence.postgres.models  # noqa: F401
+from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import (
+    CanonicalReconciliationJobExecutionError,
+    CanonicalReconciliationJobExecutor,
+)
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
@@ -17,17 +23,14 @@ from erp_assistant.persistence.postgres.enums import (
 )
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
 from erp_assistant.persistence.postgres.repositories import PipelineJobRepository
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.structural.canonical import (
+    CanonicalKnowledgeExporter,
+    CanonicalKnowledgeRepository,
+)
+from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.services.removal_reconciliation_review_service import (
     RemovalReconciliationReviewService,
 )
-from erp_assistant.structural.canonical import CanonicalKnowledgeExporter, CanonicalKnowledgeRepository
-from erp_assistant.structural.canonical.ids import content_hash
-from erp_assistant.orchestration.pipeline.executors.canonical_reconciliation import (
-    CanonicalReconciliationJobExecutionError,
-    CanonicalReconciliationJobExecutor,
-)
-from erp_assistant.orchestration.pipeline.runner import PipelineJobRunner
 from tests.fixtures.removal_review import resolve_all_removals
 from tests.structural.canonical.test_canonical_reconciliation_service import (
     _materializable_full_candidate,
@@ -114,10 +117,16 @@ def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(
         assert payload["base_active_version_id"] == str(active_id)
         assert payload["erp_id"] == pins["erp_id"]
         assert payload["decision_set_hash"] == result["decision_set_hash"]
-    assert manifest["snapshot"] == {"mode": "full", "scope": "full", "target": None,
-                                    "target_module_id": None, "target_screen_id": None,
-                                    "base_knowledge_version_id": None,
-                                    "base_knowledge_version": None, "erp_id": None}
+    assert manifest["snapshot"] == {
+        "mode": "full",
+        "scope": "full",
+        "target": None,
+        "target_module_id": None,
+        "target_screen_id": None,
+        "base_knowledge_version_id": None,
+        "base_knowledge_version": None,
+        "erp_id": None,
+    }
     assert report["decision_set_hash"] == result["decision_set_hash"]
     for collection, item in (
         ("controls", removed["control"]),
@@ -137,7 +146,6 @@ def test_reconciliation_executor_exports_isolated_full_artifact_with_provenance(
         }
     assert raw_after == raw_before
     engine.dispose()
-
 
 
 def test_reconciliation_executor_supports_governed_full_candidate(tmp_path):
@@ -169,6 +177,7 @@ def test_reconciliation_executor_supports_governed_full_candidate(tmp_path):
     assert all(value["review_action_id"] for value in result["decisions"])
     engine.dispose()
 
+
 def test_reconciliation_executor_fails_closed_for_pinned_context_and_unresolved(tmp_path):
     engine, factory = _factory(tmp_path)
     with factory() as session:
@@ -194,9 +203,7 @@ def test_reconciliation_executor_fails_closed_for_pinned_context_and_unresolved(
     with factory.begin() as session:
         session.get(KnowledgeVersionRecord, active_id).status = KnowledgeVersionStatus.ARCHIVED
     with pytest.raises(CanonicalReconciliationJobExecutionError, match="ACTIVE"):
-        executor.execute(
-            job_id=uuid.uuid4(), scope="version", target=None, parameters=pins
-        )
+        executor.execute(job_id=uuid.uuid4(), scope="version", target=None, parameters=pins)
     engine.dispose()
 
     unresolved_root = tmp_path / "unresolved"
@@ -212,14 +219,7 @@ def test_reconciliation_executor_fails_closed_for_pinned_context_and_unresolved(
         CanonicalReconciliationJobExecutor(
             factory, project_root=unresolved_root, runs_root="data/runs/pipeline"
         ).execute(job_id=job_id, scope="version", target=None, parameters=pins)
-    output_dir = (
-        unresolved_root
-        / "data"
-        / "runs"
-        / "pipeline"
-        / "reconciliation"
-        / str(job_id)
-    )
+    output_dir = unresolved_root / "data" / "runs" / "pipeline" / "reconciliation" / str(job_id)
     assert not output_dir.exists()
     engine.dispose()
 
@@ -270,9 +270,7 @@ def test_reconciliation_executor_hashes_the_single_resolved_review_plan(tmp_path
     executor = CanonicalReconciliationJobExecutor(
         factory, project_root=tmp_path, runs_root="data/runs/pipeline"
     )
-    result = executor.execute(
-        job_id=uuid.uuid4(), scope="version", target=None, parameters=pins
-    )
+    result = executor.execute(job_id=uuid.uuid4(), scope="version", target=None, parameters=pins)
 
     assert len(plans) == 1
     expected_decisions = executor._normalized_decisions(plans[0])
@@ -316,9 +314,10 @@ def test_runner_executes_real_canonical_reconciliation_job_end_to_end(tmp_path):
         assert stored.checkpoint["active_version_id"] == str(active_id)
         assert stored.result_payload["raw_candidate_version_id"] == str(candidate_id)
         assert "knowledge_version_id" not in stored.result_payload
-        assert stored.result_payload["raw_candidate_knowledge_version"] == pins[
-            "candidate_knowledge_version"
-        ]
+        assert (
+            stored.result_payload["raw_candidate_knowledge_version"]
+            == pins["candidate_knowledge_version"]
+        )
         assert stored.result_payload["base_active_version_id"] == str(active_id)
         assert (
             stored.result_payload["knowledge_version"]

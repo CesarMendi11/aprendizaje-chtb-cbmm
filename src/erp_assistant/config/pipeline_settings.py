@@ -17,9 +17,7 @@ class PipelineSettings:
     """Environment-backed paths shared by governed pipeline executors."""
 
     crawl_profile_path: Path = field(
-        default_factory=lambda: _path_from_env(
-            "ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml"
-        )
+        default_factory=lambda: _path_from_env("ERP_ASSISTANT_CRAWL_PROFILE", "configs/cbmm.yaml")
     )
     runs_root: Path = field(
         default_factory=lambda: _path_from_env(

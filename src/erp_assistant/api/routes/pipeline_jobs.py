@@ -7,11 +7,19 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.evidence.screen_evidence_builder import (
-    ScreenEvidenceBuilder,
-    ScreenEvidenceError,
+from erp_assistant.acquisition.quality import (
+    CrawlExecutionQualityError,
+    crawl_result_quality_pins,
+    validate_certified_quality_source,
 )
-from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.acquisition.scope.module_subtree_resolver import (
+    ModuleSubtreeResolutionError,
+    ModuleSubtreeResolver,
+)
+from erp_assistant.acquisition.scope.screen_scope_resolver import (
+    ScreenScopeResolutionError,
+    ScreenScopeResolver,
+)
 from erp_assistant.api.dependencies import get_admin_read_session, get_semantic_review_session
 from erp_assistant.api.pipeline_job_serializers import pipeline_job_detail, pipeline_job_summary
 from erp_assistant.api.schemas.pipeline_jobs import (
@@ -27,6 +35,7 @@ from erp_assistant.api.schemas.pipeline_jobs import (
     SemanticInferencePipelineJobCreateRequest,
     SemanticSyncPipelineJobCreateRequest,
 )
+from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
     PipelineJobKind,
@@ -41,25 +50,16 @@ from erp_assistant.persistence.postgres.repositories import (
     PipelineJobRepository,
     SyncJobRepository,
 )
-from erp_assistant.acquisition.scope.module_subtree_resolver import (
-    ModuleSubtreeResolutionError,
-    ModuleSubtreeResolver,
+from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.semantic.evidence.screen_evidence_builder import (
+    ScreenEvidenceBuilder,
+    ScreenEvidenceError,
 )
-from erp_assistant.orchestration.pipeline.job_service import PipelineJobService
+from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.services.removal_reconciliation_review_service import (
     RemovalReconciliationReviewError,
     RemovalReconciliationReviewNotPreparedError,
     RemovalReconciliationReviewService,
-)
-from erp_assistant.acquisition.scope.screen_scope_resolver import (
-    ScreenScopeResolutionError,
-    ScreenScopeResolver,
-)
-from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.acquisition.quality import (
-    CrawlExecutionQualityError,
-    crawl_result_quality_pins,
-    validate_certified_quality_source,
 )
 
 router = APIRouter(prefix="/pipeline-jobs", tags=["admin pipeline jobs (provisional)"])
@@ -112,9 +112,7 @@ def _queue_active_projection_job(
     request_source = "admin_api"
     sync_target = _structural_sync_target(kind)
     sync_job = (
-        SyncJobRepository(session).get(version.id, sync_target)
-        if sync_target is not None
-        else None
+        SyncJobRepository(session).get(version.id, sync_target) if sync_target is not None else None
     )
     lifecycle = {}
     if sync_job is not None:
@@ -358,9 +356,7 @@ def create_canonical_merge_job(
         "base_knowledge_version",
     ]
     target_key = (
-        "target_module_id"
-        if source.scope == PipelineJobScope.MODULE
-        else "target_screen_id"
+        "target_module_id" if source.scope == PipelineJobScope.MODULE else "target_screen_id"
     )
     required.append(target_key)
     if any(not result.get(key) for key in required):
@@ -732,9 +728,7 @@ def create_canonical_import_job(
                 status_code=409,
                 detail="El canonical_merge conserva un scope parcial inválido.",
             )
-        target_key = (
-            "target_module_id" if merged_scope == "module" else "target_screen_id"
-        )
+        target_key = "target_module_id" if merged_scope == "module" else "target_screen_id"
         if not result.get(target_key):
             raise HTTPException(
                 status_code=409,

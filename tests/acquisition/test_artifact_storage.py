@@ -23,9 +23,7 @@ def build_profile(tmp_path):
 
 
 def test_safe_slug_converts_routes_to_valid_filename():
-    assert safe_slug("/admin/Cuentas por cobrar/Facturas") == (
-        "admin_cuentas_por_cobrar_facturas"
-    )
+    assert safe_slug("/admin/Cuentas por cobrar/Facturas") == ("admin_cuentas_por_cobrar_facturas")
 
 
 def test_artifact_storage_creates_directories(tmp_path):

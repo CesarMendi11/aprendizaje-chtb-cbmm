@@ -96,10 +96,14 @@ class ConversationState:
             return tuple(rows)
 
         current_screen = ConversationEntity.from_mapping(
-            value.get("current_screen") if isinstance(value.get("current_screen"), Mapping) else None
+            value.get("current_screen")
+            if isinstance(value.get("current_screen"), Mapping)
+            else None
         )
         current_module = ConversationEntity.from_mapping(
-            value.get("current_module") if isinstance(value.get("current_module"), Mapping) else None
+            value.get("current_module")
+            if isinstance(value.get("current_module"), Mapping)
+            else None
         )
         evidence = value.get("relevant_evidence_refs")
         evidence_refs = (
@@ -282,9 +286,7 @@ class ConversationContextResolver:
         )
         unresolved = tuple(
             entity
-            for entity in (
-                ConversationEntity.from_mapping(row) for row in clarification_candidates
-            )
+            for entity in (ConversationEntity.from_mapping(row) for row in clarification_candidates)
             if entity is not None
         )
 
@@ -312,8 +314,7 @@ class ConversationContextResolver:
             and selected_screen is not None
             and (
                 previous.current_screen is None
-                or selected_screen.canonical_id
-                != previous.current_screen.canonical_id
+                or selected_screen.canonical_id != previous.current_screen.canonical_id
             )
         )
         if module is None and same_scope and not screen_changed:
@@ -372,10 +373,7 @@ class ConversationContextResolver:
 
     @staticmethod
     def _state_matches(state: ConversationState, erp_id: str, knowledge_version: str) -> bool:
-        return bool(
-            state.erp_id == erp_id
-            and state.knowledge_version == knowledge_version
-        )
+        return bool(state.erp_id == erp_id and state.knowledge_version == knowledge_version)
 
     @staticmethod
     def _references_prior_context(normalized: str) -> bool:
@@ -405,10 +403,14 @@ class ConversationContextResolver:
             "screen": "pantalla",
             "module": "módulo",
         }.get(entity.entity_type, entity.entity_type)
-        return f'{question.strip()} Referencia contextual validada: {type_name} "{entity.safe_label}".'
+        return (
+            f'{question.strip()} Referencia contextual validada: {type_name} "{entity.safe_label}".'
+        )
 
     @staticmethod
-    def _merge_entities(*groups: Sequence[ConversationEntity | None], limit: int) -> tuple[ConversationEntity, ...]:
+    def _merge_entities(
+        *groups: Sequence[ConversationEntity | None], limit: int
+    ) -> tuple[ConversationEntity, ...]:
         merged: list[ConversationEntity] = []
         seen: set[str] = set()
         for group in groups:

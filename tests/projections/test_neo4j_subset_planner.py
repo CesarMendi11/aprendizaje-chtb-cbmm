@@ -7,16 +7,15 @@ from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 
 import erp_assistant.persistence.postgres.models  # noqa: F401
-from scripts.tools.plan_neo4j_subset import build_parser
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.models import KnowledgeItem, SyncJob
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
-from erp_assistant.projections.neo4j.subset_planner import Neo4jSubsetPlanner
-from erp_assistant.projections.neo4j.subset_planner import SubsetPlanningError
-from erp_assistant.structural.services.payloads import item_content_hash
+from erp_assistant.projections.neo4j.subset_planner import Neo4jSubsetPlanner, SubsetPlanningError
 from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.payloads import item_content_hash
+from scripts.tools.plan_neo4j_subset import build_parser
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 ROUTE = "/app/inventory/products"
@@ -353,9 +352,7 @@ def test_screen_complete_selects_interactions_and_internal_dependencies(planner_
         "TO_STATE": 1,
         "TRIGGERED_BY": 1,
     }
-    assert report["expected_relationships_total"] == sum(
-        report["expected_relationships"].values()
-    )
+    assert report["expected_relationships_total"] == sum(report["expected_relationships"].values())
     assert report["skipped_relationships"] == 1
     assert report["skipped_reasons"] == {"endpoint_not_selected": 1}
 
@@ -394,12 +391,8 @@ def test_screen_complete_omits_only_exact_control_placeholders_and_root_links(pl
     assert omitted["control:synthetic-missing-label"]["reason_code"] == (
         "placeholder_control_label"
     )
-    assert omitted["control:synthetic-empty-label"]["reason_code"] == (
-        "placeholder_control_label"
-    )
-    assert omitted["control:synthetic-placeholder"]["reason_code"] == (
-        "placeholder_control_label"
-    )
+    assert omitted["control:synthetic-empty-label"]["reason_code"] == ("placeholder_control_label")
+    assert omitted["control:synthetic-placeholder"]["reason_code"] == ("placeholder_control_label")
     assert "control:synthetic-placeholder-prefix" in selected_ids
     assert "link:synthetic-root" not in selected_ids
     assert omitted["link:synthetic-root"]["reason_code"] == "root_navigation_link"
@@ -443,7 +436,9 @@ def test_planning_is_read_only_does_not_contact_neo4j_or_change_sync_jobs(
     def forbidden_connection(*_args, **_kwargs):
         raise AssertionError("Neo4j no debe ser contactado")
 
-    monkeypatch.setattr("erp_assistant.projections.neo4j.client.Neo4jClient.__init__", forbidden_connection)
+    monkeypatch.setattr(
+        "erp_assistant.projections.neo4j.client.Neo4jClient.__init__", forbidden_connection
+    )
     report = Neo4jSubsetPlanner(planner_session).plan(ROUTE, scope="screen-complete")
     after_jobs = [
         (str(job.id), str(job.status), job.attempt_count, deepcopy(job.checkpoint))
@@ -537,9 +532,7 @@ def test_missing_route_and_inconsistent_parent_fail_safely(planner_session):
 def test_subset_cli_parser():
     args = build_parser().parse_args(["--screen-route", ROUTE, "--pretty"])
     assert args.screen_route == ROUTE and args.scope == "core" and args.pretty is True
-    complete = build_parser().parse_args(
-        ["--screen-route", ROUTE, "--scope", "screen-complete"]
-    )
+    complete = build_parser().parse_args(["--screen-route", ROUTE, "--scope", "screen-complete"])
     assert complete.scope == "screen-complete"
     with pytest.raises(SystemExit):
         build_parser().parse_args(["--screen-route", ROUTE, "--scope", "unsupported"])
@@ -615,9 +608,7 @@ def test_subset_includes_full_recursive_module_ancestry(planner_session):
     planner_session.expire_all()
 
     report = Neo4jSubsetPlanner(planner_session).plan(ROUTE)
-    modules = [
-        item for item in report["selected_items"] if item["entity_type"] == "module"
-    ]
+    modules = [item for item in report["selected_items"] if item["entity_type"] == "module"]
 
     assert [item["canonical_id"] for item in modules] == [
         root_module.canonical_id,

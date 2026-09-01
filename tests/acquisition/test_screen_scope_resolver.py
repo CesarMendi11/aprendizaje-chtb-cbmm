@@ -6,12 +6,17 @@ import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
 from erp_assistant.acquisition.scope.screen_scope_resolver import (
     ScreenScopeResolutionError,
     ScreenScopeResolver,
+)
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService

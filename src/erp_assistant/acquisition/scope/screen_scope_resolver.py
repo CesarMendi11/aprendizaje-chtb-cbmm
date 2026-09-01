@@ -85,9 +85,7 @@ class ScreenScopeResolver:
             if correction is not None and correction.corrected_payload is not None
             else screen.source_payload or {}
         )
-        screen_title = str(
-            effective_payload.get("title") or screen.title or ""
-        ).strip()
+        screen_title = str(effective_payload.get("title") or screen.title or "").strip()
         if not screen_title:
             raise ScreenScopeResolutionError(
                 "La pantalla objetivo no conserva un título canónico utilizable"

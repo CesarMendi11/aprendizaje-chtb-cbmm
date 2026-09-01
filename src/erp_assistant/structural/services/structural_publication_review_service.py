@@ -209,10 +209,7 @@ class StructuralPublicationReviewService:
         query = select(KnowledgeItem).where(KnowledgeItem.knowledge_version_id == version_id)
         if for_update:
             query = query.with_for_update()
-        return {
-            (item.entity_type, item.canonical_id): item
-            for item in self.session.scalars(query)
-        }
+        return {(item.entity_type, item.canonical_id): item for item in self.session.scalars(query)}
 
     def _packages(
         self, items: dict[tuple[str, str], KnowledgeItem]
@@ -252,9 +249,7 @@ class StructuralPublicationReviewService:
         entity_counts = Counter(item.entity_type for item in selected)
         pending_count = status_counts[str(ReviewStatus.PENDING_REVIEW)]
         rejected_count = status_counts[str(ReviewStatus.REJECTED)]
-        publishable_count = sum(
-            status_counts[str(status)] for status in PUBLISHABLE
-        )
+        publishable_count = sum(status_counts[str(status)] for status in PUBLISHABLE)
         review_items = tuple(
             self._review_item(item)
             for item in sorted(selected, key=self._item_sort_key)
@@ -301,9 +296,7 @@ class StructuralPublicationReviewService:
         path, seen, current = [], set(), module_id
         while current:
             if current in seen:
-                raise StructuralPublicationReviewError(
-                    "La jerarquía de módulos contiene un ciclo."
-                )
+                raise StructuralPublicationReviewError("La jerarquía de módulos contiene un ciclo.")
             seen.add(current)
             module = items.get(("module", current))
             if module is None:

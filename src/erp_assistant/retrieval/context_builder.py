@@ -3,7 +3,6 @@ from __future__ import annotations
 from .evidence_selector import EvidenceSelection
 from .query_plan import QueryPlan
 
-
 TYPE_NAMES = {
     "erp_system": "ERP",
     "module": "módulo",
@@ -92,6 +91,6 @@ class EvidenceContextBuilder:
             )
         return (
             f'"{row.get("source_label") or "Entidad validada"}" se relaciona mediante '
-            f'{row.get("relationship_type") or "RELATION"} con '
+            f"{row.get('relationship_type') or 'RELATION'} con "
             f'"{row.get("target_label") or "Entidad validada"}".'
         )

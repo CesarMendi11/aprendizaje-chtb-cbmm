@@ -174,9 +174,7 @@ class ModuleSubtreeResolver:
                 )
             parent = modules.get(parent_id)
             if parent is None:
-                raise ModuleSubtreeResolutionError(
-                    f"Ancestro de módulo no encontrado: {parent_id}"
-                )
+                raise ModuleSubtreeResolutionError(f"Ancestro de módulo no encontrado: {parent_id}")
             ancestry.append(parent_id)
             seen.add(parent_id)
             parent_id = parent.parent_canonical_id
@@ -220,7 +218,11 @@ class ModuleSubtreeResolver:
         except (TypeError, ValueError):
             normalized_depth = 0
         navigation_path = ModuleSubtreeResolver._string_tuple(payload.get("navigation_path"))
-        return normalized_depth, tuple(value.casefold() for value in navigation_path), item.canonical_id
+        return (
+            normalized_depth,
+            tuple(value.casefold() for value in navigation_path),
+            item.canonical_id,
+        )
 
     @staticmethod
     def _screen_sort_key(item: KnowledgeItem) -> tuple[int, str, str]:
@@ -231,11 +233,7 @@ class ModuleSubtreeResolver:
     def _string_tuple(value: Any) -> tuple[str, ...]:
         if not isinstance(value, (list, tuple)):
             return ()
-        return tuple(
-            clean
-            for item in value
-            if (clean := str(item or "").strip())
-        )
+        return tuple(clean for item in value if (clean := str(item or "").strip()))
 
     @staticmethod
     def _origin_path(value: Any) -> tuple[str, ...]:

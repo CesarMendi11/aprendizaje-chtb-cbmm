@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from erp_assistant.config.profile_loader import ProfileLoader
 from erp_assistant.acquisition.audit.event_policy_auditor import build_event_policy_audit
+from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,10 +59,7 @@ def main() -> int:
     print(f"Decisiones: {audit['decision_totals']}")
     print(f"Categorías: {audit['category_totals']}")
     print(f"Pipeline: {audit.get('pipeline_totals', {})}")
-    print(
-        "Exclusiones de ejecución: "
-        f"{audit.get('selection_exclusion_totals', {})}"
-    )
+    print(f"Exclusiones de ejecución: {audit.get('selection_exclusion_totals', {})}")
     print(f"Resultado: {output_path}")
     return 0
 

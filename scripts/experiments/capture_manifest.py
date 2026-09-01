@@ -13,7 +13,6 @@ from erp_assistant.config.paths import PROJECT_ROOT
 from erp_assistant.config.pipeline_settings import PipelineSettings
 from erp_assistant.persistence.postgres.session import session_scope
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
-
 from scripts.common.database import database_engine
 from scripts.common.neo4j import neo4j_client, safe_neo4j_error
 from scripts.experiments.common import (
@@ -23,7 +22,6 @@ from scripts.experiments.common import (
     write_json_atomic,
 )
 from scripts.status.database_status import collect_status
-
 
 PACKAGE_NAMES = (
     "alembic",
@@ -126,8 +124,7 @@ def collect_file_hashes() -> dict[str, str | None]:
         PROJECT_ROOT / "admin-ui" / "package-lock.json",
     )
     return {
-        project_relative(path): sha256_file(path) if path.is_file() else None
-        for path in candidates
+        project_relative(path): sha256_file(path) if path.is_file() else None for path in candidates
     }
 
 
@@ -150,12 +147,8 @@ def build_manifest() -> dict[str, Any]:
             "file_sha256": collect_file_hashes(),
             "crawl_profile": project_relative(pipeline.crawl_profile_path),
             "pipeline_runs_root": project_relative(pipeline.runs_root),
-            "embedding_model": os.getenv(
-                "ERP_ASSISTANT_EMBEDDING_MODEL", "qwen3-embedding:0.6b"
-            ),
-            "generation_model": os.getenv(
-                "ERP_ASSISTANT_GENERATION_MODEL", "llama3.2:3b"
-            ),
+            "embedding_model": os.getenv("ERP_ASSISTANT_EMBEDDING_MODEL", "qwen3-embedding:0.6b"),
+            "generation_model": os.getenv("ERP_ASSISTANT_GENERATION_MODEL", "llama3.2:3b"),
             "ollama_endpoint_configured": bool(os.getenv("ERP_ASSISTANT_OLLAMA_URL")),
         },
         "postgresql": collect_database_state(),

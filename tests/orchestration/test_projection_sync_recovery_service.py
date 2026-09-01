@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
+from erp_assistant.orchestration.pipeline.recovery import ProjectionSyncRecoveryService
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
     ImportStatus,
@@ -26,7 +27,6 @@ from erp_assistant.persistence.postgres.models import (
     PipelineJob,
     SyncJob,
 )
-from erp_assistant.orchestration.pipeline.recovery import ProjectionSyncRecoveryService
 
 
 def _seed(session: Session):

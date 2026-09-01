@@ -7,25 +7,29 @@ from tests.structural.canonical.test_canonical_builder import build
 
 
 def codes(payload):
-    kb=CanonicalKnowledgeBase.model_validate(payload)
+    kb = CanonicalKnowledgeBase.model_validate(payload)
     return {item.code for item in CanonicalKnowledgeValidator().validate(kb)}
 
 
 def test_detects_orphan_reference():
-    payload=build().model_dump(mode="json"); payload["fields"][0]["screen_id"]="screen:missing"
+    payload = build().model_dump(mode="json")
+    payload["fields"][0]["screen_id"] = "screen:missing"
     assert "unresolved_reference" in codes(payload)
 
 
 def test_detects_duplicate_ids_and_routes():
-    payload=build().model_dump(mode="json")
-    duplicate=deepcopy(payload["screens"][0]); duplicate["id"]="screen:other"; payload["screens"].append(duplicate)
+    payload = build().model_dump(mode="json")
+    duplicate = deepcopy(payload["screens"][0])
+    duplicate["id"] = "screen:other"
+    payload["screens"].append(duplicate)
     assert "duplicate_route" in codes(payload)
-    payload["screens"][-1]["route"]="/app/other"; payload["screens"][-1]["id"]=payload["screens"][0]["id"]
+    payload["screens"][-1]["route"] = "/app/other"
+    payload["screens"][-1]["id"] = payload["screens"][0]["id"]
     assert "duplicate_id" in codes(payload)
 
 
 def test_structural_labels_are_not_sensitive():
-    payload=build().model_dump(mode="json")
+    payload = build().model_dump(mode="json")
     payload["screens"][0]["main_content_text"] = (
         "RUC | Fecha de emisión | Número de factura | Total retenido"
     )
@@ -43,10 +47,10 @@ def test_screen_and_evidence_reject_concrete_sensitive_values():
         "token=abcdefghijklmnopqrstuvwxyz1234567890",
     ]
     for sample in samples:
-        payload=build().model_dump(mode="json")
+        payload = build().model_dump(mode="json")
         payload["screens"][0]["main_content_text"] = sample
         assert "sensitive_content" in codes(payload)
-        payload=build().model_dump(mode="json")
+        payload = build().model_dump(mode="json")
         payload["evidence"][0]["observed_text"] = sample
         assert "sensitive_content" in codes(payload)
 
@@ -114,10 +118,7 @@ def test_validator_rejects_sensitive_event_label():
 
     issues = CanonicalKnowledgeValidator().validate(knowledge)
 
-    assert any(
-        item.code == "sensitive_content" and item.entity_type == "event"
-        for item in issues
-    )
+    assert any(item.code == "sensitive_content" and item.entity_type == "event" for item in issues)
 
 
 def test_schema_v1_is_rejected_after_vnext_cutover():
@@ -128,6 +129,7 @@ def test_schema_v1_is_rejected_after_vnext_cutover():
     issues = CanonicalKnowledgeValidator().validate(knowledge)
 
     assert any(item.code == "unsupported_schema" for item in issues)
+
 
 def test_safe_json_does_not_treat_numeric_runs_inside_canonical_ids_as_sensitive():
     payload = {
@@ -152,9 +154,7 @@ def test_safe_json_still_rejects_standalone_numeric_business_identifiers():
         except ValueError:
             pass
         else:
-            raise AssertionError(
-                f"El identificador concreto debía rechazarse: {value!r}"
-            )
+            raise AssertionError(f"El identificador concreto debía rechazarse: {value!r}")
 
 
 def test_safe_json_accepts_generated_structural_navigation_selector():

@@ -75,9 +75,7 @@ class ModuleCrawlBoundary:
         for route in raw_routes:
             normalized = cls.route_identity(route)
             if not normalized.startswith("/") or "://" in normalized:
-                raise ModuleCrawlBoundaryError(
-                    f"Ruta conocida inválida en module_scope: {route}"
-                )
+                raise ModuleCrawlBoundaryError(f"Ruta conocida inválida en module_scope: {route}")
             if normalized not in seen_routes:
                 seen_routes.add(normalized)
                 normalized_routes.append(normalized)
@@ -107,11 +105,7 @@ class ModuleCrawlBoundary:
 
     def is_inside_selected_branch(self, menu_selectors: Iterable[str]) -> bool:
         """Return True when a state path starts with the pinned module entry path."""
-        observed = tuple(
-            clean
-            for item in menu_selectors
-            if (clean := str(item or "").strip())
-        )
+        observed = tuple(clean for item in menu_selectors if (clean := str(item or "").strip()))
         expected = self.navigation_origin_path
         return len(observed) >= len(expected) and observed[: len(expected)] == expected
 

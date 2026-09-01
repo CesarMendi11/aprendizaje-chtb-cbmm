@@ -1,17 +1,26 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus, SemanticType
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord
+from erp_assistant.persistence.postgres.enums import (
+    ImportStatus,
+    KnowledgeVersionStatus,
+    SemanticType,
+)
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+)
 from erp_assistant.projections.chroma.semantic_sync_service import SemanticChromaSyncService
+from erp_assistant.semantic.schemas import ScreenEvidencePackage
 from erp_assistant.semantic.services.semantic_payloads import (
     canonical_json_hash,
     validated_semantic_evidence_snapshot,
@@ -134,19 +143,18 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
             "evidence_ids": ["evidence:screen"],
             "warnings": [],
         }
-        provisional = ScreenEvidencePackage.model_validate(
-            {**raw, "evidence_hash": "0" * 64}
-        )
-        digest = canonical_json_hash(
-            provisional.model_dump(mode="json", exclude={"evidence_hash"})
-        )
+        provisional = ScreenEvidencePackage.model_validate({**raw, "evidence_hash": "0" * 64})
+        digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
         package = provisional.model_copy(update={"evidence_hash": digest})
         source = {
             "semantic_type": "screen_purpose",
             "screen_id": screen.canonical_id,
             "purpose_summary": purpose,
             "supported_capabilities": [
-                {"statement": "Permite buscar mediante los criterios disponibles.", "evidence_refs": []}
+                {
+                    "statement": "Permite buscar mediante los criterios disponibles.",
+                    "evidence_refs": [],
+                }
             ],
             "limitations": [],
             "uncertainties": [],
@@ -172,7 +180,14 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
                 review_notes="Aprobada para prueba.",
             )
         session.flush()
-        return str(version.id), erp.id, version.knowledge_version, str(screen.id), str(proposal.id), package
+        return (
+            str(version.id),
+            erp.id,
+            version.knowledge_version,
+            str(screen.id),
+            str(proposal.id),
+            package,
+        )
 
 
 def test_prepare_projects_only_fresh_human_approved_semantics():
@@ -252,9 +267,7 @@ def test_prepare_excludes_semantics_when_current_structure_is_ineligible():
     engine, factory = build_factory()
     _version_id, erp_id, knowledge_version, _screen_id, _proposal_id, package = seed(factory)
     ineligible = package.model_copy(update={"primary_evidence_ids": []})
-    digest = canonical_json_hash(
-        ineligible.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    digest = canonical_json_hash(ineligible.model_dump(mode="json", exclude={"evidence_hash"}))
     ineligible = ineligible.model_copy(update={"evidence_hash": digest})
     with factory() as session:
         service = SemanticChromaSyncService(

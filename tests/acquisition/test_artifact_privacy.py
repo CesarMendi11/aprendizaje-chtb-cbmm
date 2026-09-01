@@ -114,6 +114,7 @@ def test_persisted_artifact_drops_document_title():
     assert "document_title" not in safe
     assert safe["functional_title"] == "Personas"
 
+
 def test_persisted_route_keeps_only_internal_state_fragment():
     safe = sanitize_artifact_payload(
         {

@@ -8,11 +8,11 @@ import erp_assistant.persistence.postgres.models  # noqa: F401
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SyncStatus, SyncTarget
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SyncJob
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
-from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
 from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
 from erp_assistant.structural.canonical.exporter import CanonicalKnowledgeExporter
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
 from tests.fixtures.canonical import fictional_artifacts, fictional_profile
 
 
@@ -157,16 +157,14 @@ def test_run_refuses_explicit_archived_version(graph_session):
         version.status = KnowledgeVersionStatus.ARCHIVED
 
     with pytest.raises(ValueError, match="dejó de ser ACTIVE"):
-        Neo4jSyncService(
-            graph_session, repository=FakeGraphRepository()
-        ).run(erp_id=erp_id, knowledge_version=knowledge_version, allow_empty=True)
+        Neo4jSyncService(graph_session, repository=FakeGraphRepository()).run(
+            erp_id=erp_id, knowledge_version=knowledge_version, allow_empty=True
+        )
 
 
 def test_running_job_is_rejected_before_projection_plan_is_prepared(graph_session):
     with graph_session.begin():
-        job = graph_session.scalar(
-            select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J)
-        )
+        job = graph_session.scalar(select(SyncJob).where(SyncJob.target == SyncTarget.NEO4J))
         job.status = SyncStatus.RUNNING
     service = Neo4jSyncService(graph_session, repository=FakeGraphRepository())
     service.prepare = lambda **_kwargs: pytest.fail("prepare no debe ejecutarse")

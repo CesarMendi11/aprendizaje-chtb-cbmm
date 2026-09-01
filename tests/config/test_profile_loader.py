@@ -18,6 +18,7 @@ def test_profile_loader_loads_cbmm_profile():
     assert "exploration" in profile
     assert "output" in profile
 
+
 def test_profile_loader_rejects_unknown_event_category(tmp_path):
     profile_path = tmp_path / "invalid.yaml"
     profile_path.write_text(

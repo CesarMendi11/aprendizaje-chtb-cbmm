@@ -5,6 +5,23 @@ from typing import Iterable
 
 from pydantic import ValidationError
 
+from erp_assistant.api.schemas.admin_knowledge import (
+    AdminEvidence,
+    AdminProposalSummary,
+    ComparableScreenStructure,
+    HistoricalProposalEvidence,
+    KnowledgeCounters,
+    KnowledgeTreeScreen,
+)
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    SemanticProposal,
+    SemanticReviewAction,
+)
+from erp_assistant.persistence.postgres.repositories.admin_knowledge_repository import (
+    EffectiveModule,
+    EffectiveScreen,
+)
 from erp_assistant.semantic.evidence.network_trace import safe_network_trace
 from erp_assistant.semantic.evidence.screen_evidence_builder import (
     MAX_COLUMNS_PER_TABLE,
@@ -33,19 +50,8 @@ from erp_assistant.semantic.services.semantic_projection import (
     parse_screen_purpose_payload,
     semantic_projection,
 )
-from erp_assistant.api.schemas.admin_knowledge import (
-    AdminEvidence,
-    AdminProposalSummary,
-    ComparableScreenStructure,
-    HistoricalProposalEvidence,
-    KnowledgeCounters,
-    KnowledgeTreeScreen,
-)
-from erp_assistant.persistence.postgres.models import KnowledgeItem, SemanticProposal, SemanticReviewAction
-from erp_assistant.persistence.postgres.repositories.admin_knowledge_repository import EffectiveModule, EffectiveScreen
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.models import Evidence as CanonicalEvidence
-
 
 
 def tree_screen(
@@ -197,9 +203,7 @@ def comparable_from_current(evidence: AdminEvidence) -> ComparableScreenStructur
         )[:MAX_COLUMNS_PER_TABLE]
         tables.append(table.model_copy(update={"columns": columns}))
 
-    ui_states = tuple(
-        sorted(evidence.ui_states, key=lambda state: state.state_id)[:MAX_UI_STATES]
-    )
+    ui_states = tuple(sorted(evidence.ui_states, key=lambda state: state.state_id)[:MAX_UI_STATES])
     projected_state_ids = {state.state_id for state in ui_states}
 
     events = tuple(
@@ -210,9 +214,7 @@ def comparable_from_current(evidence: AdminEvidence) -> ComparableScreenStructur
     )
 
     transitions = []
-    for transition in sorted(
-        evidence.transitions, key=lambda value: value.transition_id
-    ):
+    for transition in sorted(evidence.transitions, key=lambda value: value.transition_id):
         if (
             transition.source_state_id not in projected_state_ids
             or transition.target_state_id not in projected_state_ids
@@ -221,15 +223,11 @@ def comparable_from_current(evidence: AdminEvidence) -> ComparableScreenStructur
         trigger = transition.trigger_control_id
         if trigger is not None and trigger not in projected_control_ids:
             trigger = None
-        transitions.append(
-            transition.model_copy(update={"trigger_control_id": trigger})
-        )
+        transitions.append(transition.model_copy(update={"trigger_control_id": trigger}))
     transitions = tuple(transitions[:MAX_TRANSITIONS])
 
     network_traces = tuple(
-        sorted(evidence.network_traces, key=lambda trace: trace.evidence_id)[
-            :MAX_NETWORK_TRACES
-        ]
+        sorted(evidence.network_traces, key=lambda trace: trace.evidence_id)[:MAX_NETWORK_TRACES]
     )
 
     return ComparableScreenStructure(
@@ -294,13 +292,9 @@ def comparable_structure_hash(value: ComparableScreenStructure) -> str:
     normalized = value.model_copy(
         update={
             "fields": tuple(sorted(value.fields, key=lambda field: field.field_id)),
-            "controls": tuple(
-                sorted(value.controls, key=lambda control: control.control_id)
-            ),
+            "controls": tuple(sorted(value.controls, key=lambda control: control.control_id)),
             "tables": tables,
-            "ui_states": tuple(
-                sorted(value.ui_states, key=lambda state: state.state_id)
-            ),
+            "ui_states": tuple(sorted(value.ui_states, key=lambda state: state.state_id)),
             "events": tuple(sorted(value.events, key=lambda event: event.event_id)),
             "transitions": tuple(
                 sorted(value.transitions, key=lambda transition: transition.transition_id)
@@ -363,10 +357,9 @@ def current_structure(
 
     network_traces = []
     for evidence_item, evidence_payload in pairs:
-        if (
-            evidence_item.entity_type != "evidence"
-            or evidence_item.current_review_status
-            not in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
+        if evidence_item.entity_type != "evidence" or evidence_item.current_review_status not in (
+            ReviewStatus.APPROVED,
+            ReviewStatus.CORRECTED,
         ):
             continue
         canonical = validated_evidence.get(evidence_item.canonical_id)
@@ -515,8 +508,7 @@ def current_structure(
         evidence_item.canonical_id
         for evidence_item, _payload in pairs
         if evidence_item.entity_type == "evidence"
-        and evidence_item.current_review_status
-        in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
+        and evidence_item.current_review_status in (ReviewStatus.APPROVED, ReviewStatus.CORRECTED)
         and evidence_item.canonical_id in validated_evidence
         and validated_evidence[evidence_item.canonical_id].source_entity_id in selected_entity_ids
     }

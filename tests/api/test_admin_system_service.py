@@ -115,9 +115,7 @@ def test_chroma_probe_marks_missing_storage_as_initializable(monkeypatch, tmp_pa
     assert result["collection"] == admin_system_service.collection_name()
 
 
-def test_semantic_chroma_probe_marks_missing_storage_as_initializable(
-    monkeypatch, tmp_path
-):
+def test_semantic_chroma_probe_marks_missing_storage_as_initializable(monkeypatch, tmp_path):
     class Settings:
         path = tmp_path / "missing-chroma"
 

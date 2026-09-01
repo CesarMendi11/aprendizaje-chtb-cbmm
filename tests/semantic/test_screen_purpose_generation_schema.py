@@ -70,12 +70,8 @@ def alternatives(schema):
 
 def test_schema_is_deterministic_and_derived_only_from_supported_actions():
     grounding_plan = plan()
-    first = build_screen_purpose_generation_schema(
-        grounding_plan, screen_id="screen:test"
-    )
-    second = build_screen_purpose_generation_schema(
-        grounding_plan, screen_id="screen:test"
-    )
+    first = build_screen_purpose_generation_schema(grounding_plan, screen_id="screen:test")
+    second = build_screen_purpose_generation_schema(grounding_plan, screen_id="screen:test")
     assert first == second
     assert first["additionalProperties"] is False
     assert "purpose_summary" not in first["properties"]
@@ -182,9 +178,7 @@ def test_empty_capabilities_have_sanitized_domain_category():
 def test_valid_single_action_drafts_are_rendered_as_controlled_public_claims(
     action, statement, reference, canonical_statement
 ):
-    inference = parse(
-        {"action": action, "statement": statement, "evidence_refs": [reference]}
-    )
+    inference = parse({"action": action, "statement": statement, "evidence_refs": [reference]})
     claim = inference.supported_capabilities[0]
     assert claim.statement == canonical_statement
     assert claim.statement != statement
@@ -194,9 +188,7 @@ def test_valid_single_action_drafts_are_rendered_as_controlled_public_claims(
 
 def test_forbidden_action_is_not_representable_or_mappable():
     schema = build_screen_purpose_generation_schema(plan(), screen_id="screen:test")
-    assert "edit" not in {
-        item["properties"]["action"]["const"] for item in alternatives(schema)
-    }
+    assert "edit" not in {item["properties"]["action"]["const"] for item in alternatives(schema)}
     with pytest.raises(InferenceUnsupportedActionError):
         parse(
             {
@@ -323,8 +315,7 @@ def test_deterministic_summary_covers_canonical_direct_combinations():
     assert summary([navigate]) == "Permite navegar entre las páginas de resultados de retenciones."
     assert summary([search, view]) == "Permite buscar y consultar retenciones."
     assert summary([search, view, navigate]) == (
-        "Permite buscar y consultar retenciones, así como navegar entre las páginas "
-        "de resultados."
+        "Permite buscar y consultar retenciones, así como navegar entre las páginas de resultados."
     )
 
 

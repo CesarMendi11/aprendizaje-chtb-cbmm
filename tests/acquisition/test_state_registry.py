@@ -55,10 +55,10 @@ def test_state_registry_keeps_shortest_reproducible_path():
     state_id = registry.build_state_id(signature.structural_fingerprint)
 
     root = "ui_state:root"
-    long_path = CrawlPath(root_state_id=root).append(
-        CrawlPathStep(root, make_event("Paso 1"), "ui_state:middle")
-    ).append(
-        CrawlPathStep("ui_state:middle", make_event("Paso 2"), state_id)
+    long_path = (
+        CrawlPath(root_state_id=root)
+        .append(CrawlPathStep(root, make_event("Paso 1"), "ui_state:middle"))
+        .append(CrawlPathStep("ui_state:middle", make_event("Paso 2"), state_id))
     )
     short_path = CrawlPath(root_state_id=root).append(
         CrawlPathStep(root, make_event("Paso directo"), state_id)
@@ -82,6 +82,4 @@ def test_state_registry_serializes_observed_exact_signatures():
 
     assert payload["summary"]["states_count"] == 1
     assert payload["states"][0]["state_id"] == registered.state.state_id
-    assert payload["states"][0]["observed_exact_signatures"] == [
-        signature.exact_fingerprint
-    ]
+    assert payload["states"][0]["observed_exact_signatures"] == [signature.exact_fingerprint]

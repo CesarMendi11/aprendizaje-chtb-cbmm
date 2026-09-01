@@ -215,9 +215,7 @@ class EventCandidateDiscovery:
         self.forms_allow_submit = forms.get("allow_submit", False)
         self.home_route = profile.get("navigation", {}).get("home_url", "")
 
-        self.skip_link_navigation = bool(
-            ui_events.get("skip_link_navigation", True)
-        )
+        self.skip_link_navigation = bool(ui_events.get("skip_link_navigation", True))
         exploration_budget = ui_events.get("exploration_budget", {}) or {}
         self.exclude_global_navigation_outside_home = bool(
             exploration_budget.get(
@@ -231,9 +229,7 @@ class EventCandidateDiscovery:
         self.home_category_limits = self._parse_category_limits(
             exploration_budget.get("home_category_limits", {})
         )
-        self.max_events_per_state = int(
-            candidate_limits.get("max_events_per_state", 25)
-        )
+        self.max_events_per_state = int(candidate_limits.get("max_events_per_state", 25))
         self.home_max_events_per_state = int(
             exploration_budget.get(
                 "home_max_events_per_state",
@@ -329,9 +325,7 @@ class EventCandidateDiscovery:
             "allowed_candidates_count": len(allowed),
             "selected_for_exploration_count": len(selected),
             "selection_exclusions": dict(sorted(exclusion_reasons.items())),
-            "selected_for_exploration": [
-                candidate.to_dict() for candidate in selected
-            ],
+            "selected_for_exploration": [candidate.to_dict() for candidate in selected],
         }
 
     def discover_review_candidates(
@@ -365,9 +359,7 @@ class EventCandidateDiscovery:
         raw_candidates.extend(self._from_links(screen_data.get("links", [])))
         raw_candidates.extend(self._from_buttons(screen_data.get("buttons", [])))
         raw_candidates.extend(
-            self._from_custom_interactives(
-                screen_data.get("custom_interactives", [])
-            )
+            self._from_custom_interactives(screen_data.get("custom_interactives", []))
         )
         return raw_candidates
 
@@ -706,10 +698,7 @@ class EventCandidateDiscovery:
         if any(word in combined for word in ("dialog", "modal")):
             return UIEventType.OPEN_MODAL
 
-        if (
-            self._looks_like_collapsable(tag, selector, aria_expanded)
-            or "menu" in local_combined
-        ):
+        if self._looks_like_collapsable(tag, selector, aria_expanded) or "menu" in local_combined:
             return UIEventType.EXPAND_MENU
 
         if label_words.intersection(self.READONLY_WORDS):
@@ -851,11 +840,7 @@ class EventCandidateDiscovery:
         if is_home:
             limits.update(self.home_category_limits)
 
-        state_event_limit = (
-            self.home_max_events_per_state
-            if is_home
-            else self.max_events_per_state
-        )
+        state_event_limit = self.home_max_events_per_state if is_home else self.max_events_per_state
 
         ordered = sorted(candidates, key=self._exploration_sort_key)
         for candidate in ordered:
@@ -980,18 +965,12 @@ class EventCandidateDiscovery:
             ):
                 existing_href = str(existing.metadata.get("href") or "").strip()
                 candidate_href = str(candidate.metadata.get("href") or "").strip()
-                if (
-                    existing_href
-                    and candidate_href
-                    and existing_href != candidate_href
-                ):
+                if existing_href and candidate_href and existing_href != candidate_href:
                     key = f"{key}::href::{candidate_href.lower()}"
                     existing = best_by_key.get(key)
 
-            if (
-                existing is None
-                or self._candidate_quality(candidate)
-                > self._candidate_quality(existing)
+            if existing is None or self._candidate_quality(candidate) > self._candidate_quality(
+                existing
             ):
                 best_by_key[key] = candidate
         return list(best_by_key.values())
@@ -1000,13 +979,8 @@ class EventCandidateDiscovery:
         if self._is_table_row_context(candidate.metadata, candidate.selector):
             region = str(candidate.metadata.get("region") or "main_content")
             label = self._normalize_for_matching(candidate.label)
-            selector_template = self._normalize_table_selector(
-                candidate.selector
-            )
-            return (
-                f"table::{candidate.event_category}::{region}::"
-                f"{label}::{selector_template}"
-            )
+            selector_template = self._normalize_table_selector(candidate.selector)
+            return f"table::{candidate.event_category}::{region}::{label}::{selector_template}"
 
         semantic_categories = {
             UIEventType.NAVIGATION_LINK.value,
@@ -1028,10 +1002,7 @@ class EventCandidateDiscovery:
             else:
                 label = self._normalize_for_matching(candidate.label)
 
-            return (
-                f"semantic::{candidate.event_category}::"
-                f"{region}::{label}"
-            )
+            return f"semantic::{candidate.event_category}::{region}::{label}"
         if candidate.selector:
             return f"selector::{candidate.selector}"
         if candidate.label:

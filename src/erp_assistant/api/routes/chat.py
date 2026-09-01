@@ -9,9 +9,7 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse, response_model_by_alias=True)
 async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
     conversation_store = request.app.state.conversation_state_store
-    conversation_id = conversation_store.resolve_conversation_id(
-        payload.conversation_id
-    )
+    conversation_id = conversation_store.resolve_conversation_id(payload.conversation_id)
 
     hybrid = request.app.state.hybrid_factory
     try:

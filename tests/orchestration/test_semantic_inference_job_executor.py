@@ -1,26 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.semantic.generation.errors import InferenceGroundingError
-from erp_assistant.semantic.prompts import (
-    GENERATION_PARAMETERS,
-    GENERATION_PARAMETERS_HASH,
-    PROMPT_HASH,
-    PROMPT_VERSION,
-)
-from erp_assistant.semantic.schemas import (
-    ControlEvidence,
-    GeneratedScreenPurposeCandidate,
-    ModuleEvidence,
-    ScreenEvidencePackage,
-    ScreenPurposeInference,
+from erp_assistant.orchestration.pipeline.executors.semantic_inference import (
+    SemanticInferenceJobExecutionError,
+    SemanticInferenceJobExecutor,
 )
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import (
@@ -38,6 +28,20 @@ from erp_assistant.persistence.postgres.models import (
     SemanticProposal,
     SemanticReviewAction,
 )
+from erp_assistant.semantic.generation.errors import InferenceGroundingError
+from erp_assistant.semantic.prompts import (
+    GENERATION_PARAMETERS,
+    GENERATION_PARAMETERS_HASH,
+    PROMPT_HASH,
+    PROMPT_VERSION,
+)
+from erp_assistant.semantic.schemas import (
+    ControlEvidence,
+    GeneratedScreenPurposeCandidate,
+    ModuleEvidence,
+    ScreenEvidencePackage,
+    ScreenPurposeInference,
+)
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
@@ -48,10 +52,6 @@ from erp_assistant.semantic.services.semantic_payloads import (
 from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
 from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from erp_assistant.orchestration.pipeline.executors.semantic_inference import (
-    SemanticInferenceJobExecutionError,
-    SemanticInferenceJobExecutor,
-)
 
 HASH = "a" * 64
 
@@ -227,8 +227,6 @@ def params(version_id, screen_id, evidence):
     }
 
 
-
-
 def seed_replacement(factory):
     with factory.begin() as session:
         erp = ERPSystemRecord(
@@ -349,9 +347,7 @@ def lifecycle_package(version_id, knowledge_version, *, main_content_text=None):
         "warnings": [],
     }
     provisional = ScreenEvidencePackage.model_validate({**values, "evidence_hash": HASH})
-    digest = canonical_json_hash(
-        provisional.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
     return provisional.model_copy(update={"evidence_hash": digest})
 
 
@@ -553,12 +549,8 @@ def test_executor_fails_safe_when_captured_version_is_not_active():
 def test_executor_rejects_ineligible_package_without_calling_ollama():
     engine, factory = build_factory()
     version_id, screen_id = seed(factory)
-    evidence = package(version_id, screen_id).model_copy(
-        update={"primary_evidence_ids": []}
-    )
-    digest = canonical_json_hash(
-        evidence.model_dump(mode="json", exclude={"evidence_hash"})
-    )
+    evidence = package(version_id, screen_id).model_copy(update={"primary_evidence_ids": []})
+    digest = canonical_json_hash(evidence.model_dump(mode="json", exclude={"evidence_hash"}))
     evidence = evidence.model_copy(update={"evidence_hash": digest})
     inference = Inference(candidate(evidence))
     progress = []
@@ -677,8 +669,9 @@ def test_executor_carries_forward_without_constructing_or_calling_ollama():
             == 0
         )
         assert (
-            SemanticEffectivePayloadService(session)
-            .publishable_payload(proposal.id)["purpose_summary"]
+            SemanticEffectivePayloadService(session).publishable_payload(proposal.id)[
+                "purpose_summary"
+            ]
             == corrected_summary
         )
     engine.dispose()
@@ -695,9 +688,7 @@ def test_executor_reinfers_changed_evidence_and_requires_new_hitl():
         seeded["target_version_id"],
         seeded["target_version"],
         main_content_text=(
-            "Módulo: Cuentas por cobrar\n"
-            "Pantalla: Retenciones\n"
-            "Nueva señal funcional"
+            "Módulo: Cuentas por cobrar\nPantalla: Retenciones\nNueva señal funcional"
         ),
     )
     source_proposal_id = publish_lifecycle_source(factory, seeded, source_package)
@@ -780,9 +771,7 @@ def test_executor_fails_closed_when_lifecycle_plan_changes_during_generation():
         seeded["target_version_id"],
         seeded["target_version"],
         main_content_text=(
-            "Módulo: Cuentas por cobrar\n"
-            "Pantalla: Retenciones\n"
-            "Nueva señal funcional"
+            "Módulo: Cuentas por cobrar\nPantalla: Retenciones\nNueva señal funcional"
         ),
     )
     source_proposal_id = publish_lifecycle_source(factory, seeded, source_package)

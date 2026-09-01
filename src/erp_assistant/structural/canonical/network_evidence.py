@@ -91,9 +91,7 @@ class CanonicalNetworkEvidenceIntegrator:
                 continue
 
             attached_screens += 1
-            attached_observations += sum(
-                item["observed_count"] for item in observations
-            )
+            attached_observations += sum(item["observed_count"] for item in observations)
             evidence_id = stable_id(
                 "evidence",
                 "screen",
@@ -128,9 +126,7 @@ class CanonicalNetworkEvidenceIntegrator:
 
         attached_routes = {screen.route for screen in screens}
         omitted += sum(
-            len(values)
-            for route, values in by_route.items()
-            if route not in attached_routes
+            len(values) for route, values in by_route.items() if route not in attached_routes
         )
 
         source_artifacts = list(knowledge.source_artifacts)
@@ -163,27 +159,19 @@ class CanonicalNetworkEvidenceIntegrator:
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-            raise CanonicalNetworkEvidenceError(
-                "network_evidence.json está corrupto"
-            ) from exc
+            raise CanonicalNetworkEvidenceError("network_evidence.json está corrupto") from exc
         if not isinstance(payload, dict):
-            raise CanonicalNetworkEvidenceError(
-                "network_evidence.json debe contener un objeto"
-            )
+            raise CanonicalNetworkEvidenceError("network_evidence.json debe contener un objeto")
         observations = payload.get("observations", [])
         if not isinstance(observations, list):
-            raise CanonicalNetworkEvidenceError(
-                "network_evidence.observations debe ser una lista"
-            )
+            raise CanonicalNetworkEvidenceError("network_evidence.observations debe ser una lista")
         return payload
 
     @staticmethod
     def _validate_capture_policy(payload: dict[str, Any]) -> None:
         policy = payload.get("capture_policy")
         if not isinstance(policy, dict):
-            raise CanonicalNetworkEvidenceError(
-                "network_evidence no declara capture_policy"
-            )
+            raise CanonicalNetworkEvidenceError("network_evidence no declara capture_policy")
         forbidden_true = (
             "bodies_captured",
             "headers_captured",
@@ -208,9 +196,7 @@ class CanonicalNetworkEvidenceIntegrator:
         query_keys = [
             str(value)[:64]
             for value in (raw.get("query_keys") or [])
-            if isinstance(value, str)
-            and value.strip()
-            and not contains_sensitive(value)
+            if isinstance(value, str) and value.strip() and not contains_sensitive(value)
         ][:32]
         status_codes = [
             int(value)
@@ -252,28 +238,12 @@ class CanonicalNetworkEvidenceIntegrator:
     def _metadata(observations: list[dict[str, Any]]) -> dict[str, Any]:
         endpoints = sorted({item["endpoint_path"] for item in observations})
         methods = sorted({item["method"] for item in observations})
-        resource_types = sorted(
-            {item["resource_type"] for item in observations}
-        )
+        resource_types = sorted({item["resource_type"] for item in observations})
         origin_kinds = sorted({item["origin_kind"] for item in observations})
-        query_keys = sorted(
-            {
-                value
-                for item in observations
-                for value in item["query_keys"]
-            }
-        )
-        statuses = sorted(
-            {
-                value
-                for item in observations
-                for value in item["status_codes"]
-            }
-        )
+        query_keys = sorted({value for item in observations for value in item["query_keys"]})
+        statuses = sorted({value for item in observations for value in item["status_codes"]})
         return {
-            "observation_count": sum(
-                item["observed_count"] for item in observations
-            ),
+            "observation_count": sum(item["observed_count"] for item in observations),
             "endpoint_count": len(endpoints),
             "endpoint_paths": " | ".join(endpoints)[:2000],
             "methods": ",".join(methods)[:200],

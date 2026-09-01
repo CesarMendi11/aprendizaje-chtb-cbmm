@@ -6,8 +6,15 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SemanticType
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    SemanticProposal,
+)
+from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
 from erp_assistant.semantic.generation.screen_purpose_service import ScreenPurposeInferenceService
 from erp_assistant.semantic.prompts import (
     GENERATION_PARAMETERS,
@@ -16,10 +23,6 @@ from erp_assistant.semantic.prompts import (
     PROMPT_VERSION,
 )
 from erp_assistant.semantic.schemas import GeneratedScreenPurposeCandidate, ScreenEvidencePackage
-from erp_assistant.semantic.validators import allowed_references, validate_capability_grounding
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, SemanticType
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, SemanticProposal
-from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticCandidateMismatchError,
     SemanticEntityTypeError,
@@ -36,6 +39,7 @@ from erp_assistant.semantic.services.semantic_payloads import (
     validated_semantic_evidence_snapshot,
 )
 from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.validators import allowed_references, validate_capability_grounding
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 

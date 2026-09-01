@@ -259,9 +259,7 @@ def test_removal_review_api_prepare_review_history_and_stale_revision(tmp_path):
 
     missing = client.get(f"/api/admin/removal-reconciliation-reviews/{candidate_id}")
     assert missing.status_code == 409
-    prepared = client.post(
-        f"/api/admin/removal-reconciliation-reviews/{candidate_id}/prepare"
-    )
+    prepared = client.post(f"/api/admin/removal-reconciliation-reviews/{candidate_id}/prepare")
     assert prepared.status_code == 200, prepared.text
     data = prepared.json()
     assert data["decision_count"] == data["pending_review"] > 0

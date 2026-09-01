@@ -7,11 +7,16 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
 from erp_assistant.persistence.postgres.enums import ReviewActionType, ReviewSource
 from erp_assistant.persistence.postgres.models import ReviewAction
+from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
 from erp_assistant.structural.canonical.enums import ReviewStatus
-from tests.semantic.test_screen_evidence_builder import add_correction, add_item, seed_screen, seed_version
+from tests.semantic.test_screen_evidence_builder import (
+    add_correction,
+    add_item,
+    seed_screen,
+    seed_version,
+)
 
 
 def _test_url() -> str:

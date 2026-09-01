@@ -28,7 +28,8 @@ class CanonicalKnowledgeExporter:
         output.mkdir(parents=True, exist_ok=True)
         payload = knowledge.model_dump(mode="json")
         kwargs = {"ensure_ascii": False, "sort_keys": True}
-        if pretty: kwargs["indent"] = 2
+        if pretty:
+            kwargs["indent"] = 2
         self._write(output / "knowledge.json", payload, kwargs)
         self._write(
             output / "manifest.json",

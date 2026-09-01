@@ -115,10 +115,12 @@ def promote_knowledge_version(
             "Versión de conocimiento no encontrada.",
         ) from exc
     except KnowledgePromotionBlockedError as exc:
-        detail = "; ".join(
-            f"{blocker.code}: {blocker.message}"
-            for blocker in exc.assessment.blockers[:4]
-        ) or "La promoción fue bloqueada por el Promotion Gate."
+        detail = (
+            "; ".join(
+                f"{blocker.code}: {blocker.message}" for blocker in exc.assessment.blockers[:4]
+            )
+            or "La promoción fue bloqueada por el Promotion Gate."
+        )
         raise AdminSemanticApiError(
             409,
             type(exc).__name__,

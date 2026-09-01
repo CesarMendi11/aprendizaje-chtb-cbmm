@@ -31,8 +31,6 @@ from erp_assistant.persistence.postgres.repositories import (
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
-from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
-from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
 from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticEntityTypeError,
     SemanticIdentityCollisionError,
@@ -47,6 +45,8 @@ from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticVersionMismatchError,
 )
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
+from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH_A = "a" * 64
@@ -443,7 +443,6 @@ def test_repositories_filter_and_order_history_stably(session):
     assert history.latest_reset(first.id) is None
 
 
-
 def seed_semantic_lineage_pair(session):
     suffix = uuid.uuid4().hex[:20]
     erp = ERPSystemRecord(
@@ -574,11 +573,14 @@ def test_carried_forward_preserves_corrected_effective_truth_without_fake_review
     assert carried.source_payload == corrected
     assert carried.current_review_status == ReviewStatus.CORRECTED
     assert carried.review_revision == 0
-    assert session.scalar(
-        select(func.count())
-        .select_from(SemanticReviewAction)
-        .where(SemanticReviewAction.semantic_proposal_id == carried.id)
-    ) == 0
+    assert (
+        session.scalar(
+            select(func.count())
+            .select_from(SemanticReviewAction)
+            .where(SemanticReviewAction.semantic_proposal_id == carried.id)
+        )
+        == 0
+    )
 
     effective = SemanticEffectivePayloadService(session)
     assert effective.effective_payload(carried.id) == corrected
@@ -646,11 +648,14 @@ def test_reinferred_proposal_is_pending_and_captures_source_provenance(session):
     assert proposal.source_review_revision == 1
     assert proposal.source_effective_content_hash == canonical_json_hash(effective)
     assert SemanticEffectivePayloadService(session).publishable_payload(proposal.id) is None
-    assert session.scalar(
-        select(func.count())
-        .select_from(SemanticReviewAction)
-        .where(SemanticReviewAction.semantic_proposal_id == proposal.id)
-    ) == 0
+    assert (
+        session.scalar(
+            select(func.count())
+            .select_from(SemanticReviewAction)
+            .where(SemanticReviewAction.semantic_proposal_id == proposal.id)
+        )
+        == 0
+    )
 
 
 def test_derived_proposal_lineage_is_derived_from_source_not_caller_claims(session):

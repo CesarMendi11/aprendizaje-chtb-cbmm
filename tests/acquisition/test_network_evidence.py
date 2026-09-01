@@ -4,8 +4,8 @@ from pathlib import Path
 
 from erp_assistant.acquisition.crawling.network_evidence import NetworkEvidenceCollector
 from erp_assistant.acquisition.crawling.route_crawler import CrawlSummary
-from erp_assistant.persistence.postgres.enums import PipelineJobScope
 from erp_assistant.orchestration.pipeline.executors.crawl import CrawlJobExecutor
+from erp_assistant.persistence.postgres.enums import PipelineJobScope
 
 
 class FakePage:
@@ -131,20 +131,14 @@ def test_collector_hashes_external_origins_and_ignores_non_api_resource_types():
 
 def test_crawl_result_exposes_network_evidence_artifact(tmp_path: Path):
     run_root = tmp_path / "run"
-    network_path = (
-        run_root / "processed" / "structural" / "network_evidence.json"
-    )
+    network_path = run_root / "processed" / "structural" / "network_evidence.json"
     summary = CrawlSummary(
         visited_count=1,
         pending_count=0,
         nodes_count=1,
         edges_count=0,
-        routes_graph_path=str(
-            run_root / "processed" / "structural" / "routes_graph.json"
-        ),
-        screen_index_path=str(
-            run_root / "processed" / "structural" / "screen_index.json"
-        ),
+        routes_graph_path=str(run_root / "processed" / "structural" / "routes_graph.json"),
+        screen_index_path=str(run_root / "processed" / "structural" / "screen_index.json"),
         network_evidence_count=4,
         network_evidence_path=str(network_path),
     )

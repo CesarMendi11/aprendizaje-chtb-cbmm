@@ -366,7 +366,7 @@ def test_grounded_generator_paraphrased_abstention_stays_insufficient_evidence()
     class ParaphrasingAbstentionGenerator:
         def generate(self, prompt, *, system):
             return (
-                'No encontré conocimiento validado suficiente para determinar '
+                "No encontré conocimiento validado suficiente para determinar "
                 'los campos de la pantalla "Comprobantes electrónicos emitidos".'
             )
 
@@ -570,6 +570,7 @@ def test_list_columns_uses_query_aware_three_hop_graph_from_ui_state(monkeypatch
     column_source = next(s for s in result["sources"] if s["canonical_id"] == "column:correo")
     assert column_source["screen_route"] == "/admin/cuentasxcobrar/comprobantes"
 
+
 def test_ask_builds_one_query_plan_before_retrieval_and_exposes_it():
     from erp_assistant.retrieval.query_plan import QueryIntent, QueryPlan
 
@@ -747,9 +748,10 @@ def test_query_aware_graph_uses_strong_screen_seed_instead_of_dense_noise(monkey
     assert result["rank_fusion"]["algorithm"] == "rrf"
     assert result["rank_fusion"]["channel_sizes"]["canonical"] == 1
     assert result["rank_fusion"]["channel_sizes"]["structural_dense"] == 1
-    assert [
-        candidate["canonical_id"] for candidate in result["rank_fusion"]["candidates"][:2]
-    ] == ["screen:ano", "field:other"]
+    assert [candidate["canonical_id"] for candidate in result["rank_fusion"]["candidates"][:2]] == [
+        "screen:ano",
+        "field:other",
+    ]
     source = next(row for row in result["sources"] if row["canonical_id"] == "screen:ano")
     assert source["resolution_channels"] == ["normalized_mention"]
     assert source["retrieval_channels"] == ["canonical"]
@@ -851,15 +853,12 @@ def test_rrf_does_not_promote_legitimate_ambiguous_canonical_matches_to_graph_se
     assert result["evidence_selection"]["status"] == "clarification_required"
     assert result["evidence_selection"]["reason"] == "entity_resolution_ambiguous"
     assert {
-        row["canonical_id"]
-        for row in result["evidence_selection"]["clarification_candidates"]
+        row["canonical_id"] for row in result["evidence_selection"]["clarification_candidates"]
     } == {"field:ruc-1", "field:ruc-2"}
 
 
 def test_answer_decision_exposes_deterministic_path():
-    retriever = HybridKnowledgeRetriever(
-        None, chroma=None, neo4j=None, embeddings=None
-    )
+    retriever = HybridKnowledgeRetriever(None, chroma=None, neo4j=None, embeddings=None)
     retriever.retrieve = lambda question, **kwargs: {
         "status": "ok",
         "question": question,

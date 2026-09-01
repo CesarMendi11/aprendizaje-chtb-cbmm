@@ -186,8 +186,7 @@ def test_opening_a_dropdown_is_a_structural_change():
     )
 
     assert (
-        builder.build(closed).structural_fingerprint
-        != builder.build(opened).structural_fingerprint
+        builder.build(closed).structural_fingerprint != builder.build(opened).structural_fingerprint
     )
 
 
@@ -267,9 +266,7 @@ def test_structural_difference_creates_a_state():
     before = builder.build(PAGE_ONE)
 
     with_dialog = _screen("ACT-001 Inspeccion")
-    with_dialog["dialogs"] = [
-        {"title": "Detalle", "role": "dialog", "open": True}
-    ]
+    with_dialog["dialogs"] = [{"title": "Detalle", "role": "dialog", "open": True}]
     after = builder.build(with_dialog)
 
     effect = classify_event_effect(

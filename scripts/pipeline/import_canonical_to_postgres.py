@@ -3,9 +3,8 @@ from __future__ import annotations
 import argparse
 
 from erp_assistant.config.database_settings import DatabaseConfigurationError, DatabaseSettings
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.persistence.postgres.session import session_scope
-
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from scripts.common.database import database_engine, print_json, project_path
 
 
@@ -36,8 +35,7 @@ def main(argv=None):
             create_jobs = settings.create_sync_jobs if args.sync_jobs is None else args.sync_jobs
             with session_scope(database_engine()) as session:
                 result = CanonicalImportService(session).import_canonical(
-                    paths[0], paths[1], report,
-                    activate=args.activate, create_sync_jobs=create_jobs
+                    paths[0], paths[1], report, activate=args.activate, create_sync_jobs=create_jobs
                 )
         if args.strict and result.warnings:
             raise ValueError(f"Importación strict rechazada: {result.warnings} advertencias")

@@ -38,7 +38,9 @@ from erp_assistant.api.schemas.admin_knowledge import (
     TraceabilitySummary,
 )
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.repositories.admin_knowledge_repository import AdminKnowledgeRepository
+from erp_assistant.persistence.postgres.repositories.admin_knowledge_repository import (
+    AdminKnowledgeRepository,
+)
 
 router = APIRouter(tags=["local knowledge console (provisional)"])
 SessionDependency = Annotated[Session, Depends(get_admin_read_session)]

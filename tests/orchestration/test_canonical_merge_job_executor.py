@@ -8,16 +8,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from erp_assistant.persistence.postgres.base import Base
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
-from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
-from erp_assistant.structural.canonical import (
-    CanonicalKnowledgeExporter,
-    CanonicalKnowledgeRepository,
-    CanonicalSnapshotContext,
-)
-from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
 from erp_assistant.orchestration.pipeline.executors.canonical_import import (
     CanonicalImportJobExecutionError,
     CanonicalImportJobExecutor,
@@ -26,6 +16,16 @@ from erp_assistant.orchestration.pipeline.executors.canonical_merge import (
     CanonicalMergeJobExecutionError,
     CanonicalMergeJobExecutor,
 )
+from erp_assistant.persistence.postgres.base import Base
+from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
+from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
+from erp_assistant.structural.canonical import (
+    CanonicalKnowledgeExporter,
+    CanonicalKnowledgeRepository,
+    CanonicalSnapshotContext,
+)
+from erp_assistant.structural.canonical.models import CanonicalKnowledgeBase
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from tests.fixtures.crawl_quality import attach_crawl_quality, certified_crawl_quality
 
 
@@ -148,13 +148,7 @@ def _setup(tmp_path):
         erp_id="erp:test",
     )
     partial_dir = (
-        tmp_path
-        / "data"
-        / "runs"
-        / "pipeline"
-        / str(crawl_id)
-        / "processed"
-        / "canonical"
+        tmp_path / "data" / "runs" / "pipeline" / str(crawl_id) / "processed" / "canonical"
     )
     CanonicalKnowledgeExporter().export(
         partial,
@@ -163,9 +157,7 @@ def _setup(tmp_path):
     )
     quality = attach_crawl_quality(
         partial_dir,
-        certified_crawl_quality(
-            run_id=crawl_id, scope="module", target="module:tracking"
-        ),
+        certified_crawl_quality(run_id=crawl_id, scope="module", target="module:tracking"),
     )
     params = {
         "source_canonical_job_id": str(uuid.uuid4()),
@@ -286,9 +278,7 @@ def test_import_of_merged_candidate_rechecks_pinned_base_active(tmp_path):
                 "erp_id": "erp:test",
                 "merged_from_scope": "module",
                 "merged_target_module_id": "module:tracking",
-                "expected_crawl_execution_quality": merge_result[
-                    "crawl_execution_quality"
-                ],
+                "expected_crawl_execution_quality": merge_result["crawl_execution_quality"],
             },
         )
     engine.dispose()
@@ -328,9 +318,7 @@ def test_import_of_merged_candidate_creates_staging_while_exact_base_remains_act
             "erp_id": "erp:test",
             "merged_from_scope": "module",
             "merged_target_module_id": "module:tracking",
-            "expected_crawl_execution_quality": merge_result[
-                "crawl_execution_quality"
-            ],
+            "expected_crawl_execution_quality": merge_result["crawl_execution_quality"],
         },
     )
 
@@ -339,9 +327,7 @@ def test_import_of_merged_candidate_creates_staging_while_exact_base_remains_act
     assert result["base_knowledge_version_id"] == str(base_id)
     with factory() as session:
         base = session.get(KnowledgeVersionRecord, base_id)
-        staging = session.get(
-            KnowledgeVersionRecord, uuid.UUID(result["knowledge_version_id"])
-        )
+        staging = session.get(KnowledgeVersionRecord, uuid.UUID(result["knowledge_version_id"]))
         assert base.status == KnowledgeVersionStatus.ACTIVE
         assert staging.status == KnowledgeVersionStatus.IMPORTED
     engine.dispose()
@@ -381,13 +367,7 @@ def _setup_screen(tmp_path):
         erp_id="erp:test",
     )
     partial_dir = (
-        tmp_path
-        / "data"
-        / "runs"
-        / "pipeline"
-        / str(crawl_id)
-        / "processed"
-        / "canonical"
+        tmp_path / "data" / "runs" / "pipeline" / str(crawl_id) / "processed" / "canonical"
     )
     CanonicalKnowledgeExporter().export(
         partial,
@@ -396,9 +376,7 @@ def _setup_screen(tmp_path):
     )
     quality = attach_crawl_quality(
         partial_dir,
-        certified_crawl_quality(
-            run_id=crawl_id, scope="screen", target="/tracking"
-        ),
+        certified_crawl_quality(run_id=crawl_id, scope="screen", target="/tracking"),
     )
     params = {
         "source_canonical_job_id": str(uuid.uuid4()),
@@ -480,9 +458,7 @@ def test_screen_merged_candidate_imports_as_staging_with_exact_base_pin(tmp_path
             "erp_id": "erp:test",
             "merged_from_scope": "screen",
             "merged_target_screen_id": "screen:tracking",
-            "expected_crawl_execution_quality": merge_result[
-                "crawl_execution_quality"
-            ],
+            "expected_crawl_execution_quality": merge_result["crawl_execution_quality"],
         },
     )
 

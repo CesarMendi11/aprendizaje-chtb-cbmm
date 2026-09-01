@@ -76,9 +76,7 @@ class NetworkEvidenceCollector:
         self.max_records = max(1, int(config.get("max_records", 2_000)))
         resource_types = config.get("resource_types", ["xhr", "fetch"])
         self.resource_types = {
-            str(value).strip().casefold()
-            for value in resource_types
-            if str(value).strip()
+            str(value).strip().casefold() for value in resource_types if str(value).strip()
         }
         base = urlsplit(str((profile.get("erp") or {}).get("base_url") or ""))
         self._base_origin = self._origin_tuple(base)
@@ -161,9 +159,10 @@ class NetworkEvidenceCollector:
             origin_id = "same_origin"
         else:
             origin_kind = "external"
-            origin_id = "external:" + hashlib.sha256(
-                "|".join(origin_tuple).encode("utf-8")
-            ).hexdigest()[:16]
+            origin_id = (
+                "external:"
+                + hashlib.sha256("|".join(origin_tuple).encode("utf-8")).hexdigest()[:16]
+            )
 
         query_keys = self._query_keys(parsed.query) if self.include_query_keys else ()
         key = (

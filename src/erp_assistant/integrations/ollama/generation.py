@@ -27,9 +27,7 @@ class OllamaGenerationSettings:
         )
     )
     timeout: float = field(
-        default_factory=lambda: float(
-            os.getenv("ERP_ASSISTANT_OLLAMA_TIMEOUT", "30")
-        )
+        default_factory=lambda: float(os.getenv("ERP_ASSISTANT_OLLAMA_TIMEOUT", "30"))
     )
     structured_timeout: float = field(
         default_factory=lambda: float(
@@ -56,9 +54,7 @@ class OllamaGenerationSettings:
         if self.timeout <= 0:
             raise ValueError("ERP_ASSISTANT_OLLAMA_TIMEOUT debe ser mayor que cero")
         if self.structured_timeout <= 0:
-            raise ValueError(
-                "ERP_ASSISTANT_OLLAMA_STRUCTURED_TIMEOUT debe ser mayor que cero"
-            )
+            raise ValueError("ERP_ASSISTANT_OLLAMA_STRUCTURED_TIMEOUT debe ser mayor que cero")
 
         object.__setattr__(self, "url", url)
         object.__setattr__(self, "model", model)

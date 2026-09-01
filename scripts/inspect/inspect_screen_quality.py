@@ -21,15 +21,11 @@ def main() -> int:
     args = parse_args()
     path = Path(args.screen_index)
     if not path.exists():
-        raise FileNotFoundError(
-            f"No existe {path}. Ejecuta primero el crawler estructural."
-        )
+        raise FileNotFoundError(f"No existe {path}. Ejecuta primero el crawler estructural.")
 
     payload = json.loads(path.read_text(encoding="utf-8"))
     screens = payload.get("screens", [])
-    title_sources = Counter(
-        screen.get("title_source") or "legacy_or_unknown" for screen in screens
-    )
+    title_sources = Counter(screen.get("title_source") or "legacy_or_unknown" for screen in screens)
     document_titles = Counter(
         screen.get("document_title") or "sin_document_title" for screen in screens
     )

@@ -1,16 +1,20 @@
+from erp_assistant.structural.services.payloads import review_action_payload
 from scripts.pipeline.import_canonical_to_postgres import build_parser as import_parser
 from scripts.pipeline.review_knowledge_item import build_parser as review_parser
-from erp_assistant.structural.services.payloads import review_action_payload
 
 
 def test_import_cli_parsing():
-    args = import_parser().parse_args(["--knowledge", "k.json", "--manifest", "m.json", "--dry-run"])
+    args = import_parser().parse_args(
+        ["--knowledge", "k.json", "--manifest", "m.json", "--dry-run"]
+    )
     assert args.dry_run is True
     assert args.activate is True
 
 
 def test_review_cli_parsing():
-    args = review_parser().parse_args(["reject", "--item-id", "00000000-0000-0000-0000-000000000001", "--notes", "x", "--yes"])
+    args = review_parser().parse_args(
+        ["reject", "--item-id", "00000000-0000-0000-0000-000000000001", "--notes", "x", "--yes"]
+    )
     assert args.command == "reject"
     assert args.yes is True
 

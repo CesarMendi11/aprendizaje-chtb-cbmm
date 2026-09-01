@@ -5,7 +5,6 @@ from playwright.sync_api import sync_playwright
 from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 
-
 HOME = "/admin/home"
 
 
@@ -181,24 +180,16 @@ def test_route_crawler_builds_isolated_state_flow_graph(tmp_path):
         "transitions_count": 2,
     }
 
-    labels = {
-        transition["event"]["label"]
-        for transition in graph["transitions"]
-    }
+    labels = {transition["event"]["label"] for transition in graph["transitions"]}
     assert labels == {"Abrir menú A", "Abrir menú B"}
 
     dynamic_states = [
-        state
-        for state in graph["states"]
-        if state["path"] and state["path"]["depth"] == 1
+        state for state in graph["states"] if state["path"] and state["path"]["depth"] == 1
     ]
     assert len(dynamic_states) == 2
 
     # Persisted state summaries intentionally omit free rendered text.
     # Isolation is asserted through safe structural links instead.
-    link_sets = [
-        {link["href"] for link in state["summary"]["links"]}
-        for state in dynamic_states
-    ]
+    link_sets = [{link["href"] for link in state["summary"]["links"]} for state in dynamic_states]
     assert any("/admin/a" in links and "/admin/b" not in links for links in link_sets)
     assert any("/admin/b" in links and "/admin/a" not in links for links in link_sets)

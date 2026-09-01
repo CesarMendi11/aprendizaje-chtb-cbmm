@@ -4,7 +4,6 @@ from playwright.sync_api import sync_playwright
 
 from erp_assistant.acquisition.crawling.route_crawler import RouteCrawler
 
-
 BASE_URL = "http://localhost:8080"
 
 
@@ -184,11 +183,10 @@ def test_route_crawler_creates_uncertainty_for_dangerous_actions(tmp_path):
 
     assert uncertainty_files
 
-    content = "\n".join(
-        path.read_text(encoding="utf-8") for path in uncertainty_files
-    )
+    content = "\n".join(path.read_text(encoding="utf-8") for path in uncertainty_files)
 
     assert "acciones peligrosas" in content or "Eliminar factura" in content
+
 
 def test_route_crawler_uses_ui_events_to_discover_hidden_links(tmp_path):
     profile = build_profile(tmp_path)
@@ -294,12 +292,10 @@ def test_route_crawler_uses_ui_events_to_discover_hidden_links(tmp_path):
     assert "/admin/facturas" in routes
     assert "/admin/clientes" in routes
 
-    ui_state_nodes = [
-        node for node in graph["nodes"]
-        if "#state:" in node["route"]
-    ]
+    ui_state_nodes = [node for node in graph["nodes"] if "#state:" in node["route"]]
 
     assert ui_state_nodes
+
 
 def test_route_crawler_preserves_soft_404_evidence_but_excludes_functional_screen(tmp_path):
     profile = build_profile(tmp_path)
@@ -351,28 +347,19 @@ def test_route_crawler_preserves_soft_404_evidence_but_excludes_functional_scree
     assert summary.unavailable_count == 1
 
     graph = json.loads(
-        (tmp_path / "data/processed/structural/routes_graph.json").read_text(
-            encoding="utf-8"
-        )
+        (tmp_path / "data/processed/structural/routes_graph.json").read_text(encoding="utf-8")
     )
-    conductores = next(
-        node for node in graph["nodes"]
-        if node["route"] == "/admin/conductores"
-    )
+    conductores = next(node for node in graph["nodes"] if node["route"] == "/admin/conductores")
     assert conductores["status"] == "not_found"
     assert conductores["metadata"]["availability"]["status"] == "not_found"
 
     index = json.loads(
-        (tmp_path / "data/processed/structural/screen_index.json").read_text(
-            encoding="utf-8"
-        )
+        (tmp_path / "data/processed/structural/screen_index.json").read_text(encoding="utf-8")
     )
     assert {screen["route"] for screen in index["screens"]} == {"/admin/home"}
 
     raw = json.loads(
-        (tmp_path / "data/raw/playwright/admin_conductores.json").read_text(
-            encoding="utf-8"
-        )
+        (tmp_path / "data/raw/playwright/admin_conductores.json").read_text(encoding="utf-8")
     )
     assert raw["crawler"]["status"] == "not_found"
     assert raw["availability"]["available"] is False

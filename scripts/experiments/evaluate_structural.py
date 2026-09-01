@@ -29,9 +29,7 @@ class ReferenceItem:
 
 def _split_module_path(value: str) -> tuple[str, ...]:
     return tuple(
-        normalize_text(part)
-        for part in str(value or "").split(">")
-        if normalize_text(part)
+        normalize_text(part) for part in str(value or "").split(">") if normalize_text(part)
     )
 
 
@@ -104,11 +102,7 @@ def _canonical_module_paths(repository: CanonicalKnowledgeRepository) -> dict[st
 
 def _reference_keys(items: Iterable[ReferenceItem], dimension: str) -> set[tuple]:
     if dimension == "module":
-        return {
-            item.module_path_parts
-            for item in items
-            if item.entity_type == "module"
-        }
+        return {item.module_path_parts for item in items if item.entity_type == "module"}
     if dimension == "screen":
         return {
             (item.route, normalize_text(item.name))

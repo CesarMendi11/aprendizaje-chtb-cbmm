@@ -27,8 +27,7 @@ def build_event_policy_audit(
         decisions = Counter(candidate.decision for candidate in candidates)
         categories = Counter(candidate.event_category for candidate in candidates)
         regions = Counter(
-            str(candidate.metadata.get("region") or "unknown")
-            for candidate in candidates
+            str(candidate.metadata.get("region") or "unknown") for candidate in candidates
         )
 
         decision_totals.update(decisions)
@@ -41,9 +40,7 @@ def build_event_policy_audit(
                 if key.endswith("_count") and isinstance(value, int)
             }
         )
-        selection_exclusion_totals.update(
-            pipeline.get("selection_exclusions", {})
-        )
+        selection_exclusion_totals.update(pipeline.get("selection_exclusions", {}))
 
         screens.append(
             {
@@ -56,9 +53,7 @@ def build_event_policy_audit(
                 "categories": dict(sorted(categories.items())),
                 "regions": dict(sorted(regions.items())),
                 "denied": [
-                    candidate.to_dict()
-                    for candidate in candidates
-                    if candidate.decision == "deny"
+                    candidate.to_dict() for candidate in candidates if candidate.decision == "deny"
                 ],
                 "review": [
                     candidate.to_dict()
@@ -75,8 +70,6 @@ def build_event_policy_audit(
         "category_totals": dict(sorted(category_totals.items())),
         "region_totals": dict(sorted(region_totals.items())),
         "pipeline_totals": dict(sorted(pipeline_totals.items())),
-        "selection_exclusion_totals": dict(
-            sorted(selection_exclusion_totals.items())
-        ),
+        "selection_exclusion_totals": dict(sorted(selection_exclusion_totals.items())),
         "screens": screens,
     }

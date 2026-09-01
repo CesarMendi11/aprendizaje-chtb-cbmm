@@ -13,7 +13,13 @@ from erp_assistant.api.app import create_app
 from erp_assistant.config.api_settings import ApiSettings
 from erp_assistant.persistence.postgres.base import Base
 from erp_assistant.persistence.postgres.enums import ImportStatus, KnowledgeVersionStatus
-from erp_assistant.persistence.postgres.models import ERPSystemRecord, ImportRun, KnowledgeItem, KnowledgeVersionRecord, ReviewAction
+from erp_assistant.persistence.postgres.models import (
+    ERPSystemRecord,
+    ImportRun,
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    ReviewAction,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
@@ -30,6 +36,7 @@ class Client:
                 base_url="http://test",
             ) as client:
                 return await client.request(method, path, **kwargs)
+
         return asyncio.run(send())
 
     def get(self, path, **kwargs):
@@ -54,7 +61,9 @@ def api(tmp_path):
 
 def seed(factory, *, version_status=KnowledgeVersionStatus.IMPORTED):
     with factory.begin() as session:
-        erp = ERPSystemRecord(id="erp:test", slug="test", name="Test ERP", profile_name="test", safe_metadata={})
+        erp = ERPSystemRecord(
+            id="erp:test", slug="test", name="Test ERP", profile_name="test", safe_metadata={}
+        )
         run = ImportRun(
             erp=erp,
             source_knowledge_path="knowledge.json",
@@ -119,7 +128,9 @@ def body(**changes):
 def test_list_and_detail_include_staging_pending_items(api):
     client, factory = api
     version_id, item_id = seed(factory)
-    response = client.get(f"/api/admin/structural-review/items?knowledge_version_id={version_id}&status=pending_review")
+    response = client.get(
+        f"/api/admin/structural-review/items?knowledge_version_id={version_id}&status=pending_review"
+    )
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["total"] == 1
@@ -190,6 +201,11 @@ def test_correction_preserves_identity_and_updates_effective_payload(api):
 def test_archived_version_is_readable_but_not_mutable(api):
     client, factory = api
     version_id, item_id = seed(factory, version_status=KnowledgeVersionStatus.ARCHIVED)
-    assert client.get(f"/api/admin/structural-review/items?knowledge_version_id={version_id}").status_code == 200
+    assert (
+        client.get(
+            f"/api/admin/structural-review/items?knowledge_version_id={version_id}"
+        ).status_code
+        == 200
+    )
     response = client.post(f"/api/admin/structural-review/items/{item_id}/approve", json=body())
     assert response.status_code == 409

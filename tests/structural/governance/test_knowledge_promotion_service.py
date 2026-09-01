@@ -24,13 +24,13 @@ from erp_assistant.persistence.postgres.models import (
     PipelineJob,
     SyncJob,
 )
+from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 from erp_assistant.structural.services.knowledge_promotion_service import (
     KnowledgePromotionBlockedError,
     KnowledgePromotionService,
 )
 from erp_assistant.structural.services.knowledge_review_service import KnowledgeReviewService
-from erp_assistant.structural.canonical.enums import ReviewStatus
 from tests.fixtures.canonical import exported_fictional_canonical
 from tests.fixtures.crawl_quality import certified_crawl_quality
 
@@ -207,9 +207,7 @@ def test_bootstrap_gate_blocks_module_without_reproducible_navigation(session, s
     payload = dict(module.source_payload)
     payload["metadata"] = {}
     session.execute(
-        update(KnowledgeItem)
-        .where(KnowledgeItem.id == module.id)
-        .values(source_payload=payload)
+        update(KnowledgeItem).where(KnowledgeItem.id == module.id).values(source_payload=payload)
     )
     session.commit()
 
@@ -218,9 +216,7 @@ def test_bootstrap_gate_blocks_module_without_reproducible_navigation(session, s
 
     assert assessment.promotable is False
     blocker = next(
-        item
-        for item in assessment.blockers
-        if item.code == "module_navigation_unreproducible"
+        item for item in assessment.blockers if item.code == "module_navigation_unreproducible"
     )
     assert blocker.entity_type == "module"
     assert blocker.count == 1
@@ -343,9 +339,7 @@ def test_replacement_gate_blocks_running_projection_of_current_active(tmp_path, 
 
         assert assessment.promotable is False
         blocker = next(
-            item
-            for item in assessment.blockers
-            if item.code == "active_projection_sync_running"
+            item for item in assessment.blockers if item.code == "active_projection_sync_running"
         )
         assert blocker.count == 1
         assert target.value in blocker.message
@@ -360,9 +354,7 @@ def test_replacement_gate_blocks_running_projection_of_current_active(tmp_path, 
         (PipelineJobKind.CHROMA_SYNC, SyncTarget.CHROMADB),
     ],
 )
-def test_replacement_gate_blocks_running_projection_pipeline_job(
-    tmp_path, kind, target
-):
+def test_replacement_gate_blocks_running_projection_pipeline_job(tmp_path, kind, target):
     from tests.structural.governance.test_version_diff_service import seed_reconciled
 
     engine = create_engine("sqlite+pysqlite:///:memory:")
@@ -399,9 +391,7 @@ def test_replacement_gate_blocks_running_projection_pipeline_job(
 
         assert assessment.promotable is False
         blocker = next(
-            item
-            for item in assessment.blockers
-            if item.code == "active_projection_sync_running"
+            item for item in assessment.blockers if item.code == "active_projection_sync_running"
         )
         assert blocker.count == 1
         assert target.value in blocker.message
@@ -447,7 +437,4 @@ def test_bootstrap_gate_blocks_candidate_without_certified_crawl_quality(session
     assessment = KnowledgePromotionService(session).assess(staged)
 
     assert assessment.promotable is False
-    assert any(
-        blocker.code == "crawl_quality_not_certified"
-        for blocker in assessment.blockers
-    )
+    assert any(blocker.code == "crawl_quality_not_certified" for blocker in assessment.blockers)

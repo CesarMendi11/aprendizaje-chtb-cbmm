@@ -44,8 +44,8 @@ from erp_assistant.semantic.schemas import (
     TableEvidence,
     TransitionEvidence,
 )
-from erp_assistant.semantic.validators import build_grounding_plan, validate_capability_grounding
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
+from erp_assistant.semantic.validators import build_grounding_plan, validate_capability_grounding
 
 
 @pytest.mark.parametrize(
@@ -116,8 +116,6 @@ def package(**updates):
     return ScreenEvidencePackage.model_validate(values)
 
 
-
-
 def network_trace(
     *,
     evidence_id="evidence:network",
@@ -136,6 +134,7 @@ def network_trace(
         endpoint_count=1,
         read_only=read_only,
     )
+
 
 def valid_output(**updates):
     values = {
@@ -226,9 +225,7 @@ def test_erp_root_prompt_projection_accepts_module_none_without_weakening_ground
         module=None,
         screen_title="Dashboard",
         screen_route="/admin/home",
-        main_content_text=(
-            "Contexto estructural: pantalla raíz del ERP\nPantalla: Dashboard"
-        ),
+        main_content_text=("Contexto estructural: pantalla raíz del ERP\nPantalla: Dashboard"),
     )
     client = FakeClient(json.dumps(valid_output()))
 
@@ -366,9 +363,9 @@ def test_canonical_ids_are_rejected_from_narrative(statement):
 
 
 def test_deterministic_purpose_never_uses_canonical_ids():
-    candidate = ScreenPurposeInferenceService(
-        FakeClient(json.dumps(valid_output()))
-    ).generate(package())
+    candidate = ScreenPurposeInferenceService(FakeClient(json.dumps(valid_output()))).generate(
+        package()
+    )
     assert "screen:" not in candidate.inference.purpose_summary
 
 
@@ -604,9 +601,7 @@ def test_grounding_plan_derives_search_navigation_view_and_prudent_create():
     assert hints["navigate"].support_level == "direct"
     assert hints["navigate"].evidence_refs == ("event:next", "transition:next")
     assert hints["view"].support_level == "direct"
-    assert {"screen:test", "table:results", "column:actions"}.issubset(
-        hints["view"].evidence_refs
-    )
+    assert {"screen:test", "table:results", "column:actions"}.issubset(hints["view"].evidence_refs)
     assert hints["create"].support_level == "prudent_only"
     assert hints["create"].narrative_rule == "prudent_only"
 
@@ -653,9 +648,7 @@ def test_prompt_exposes_only_read_only_network_traces():
     )
 
     projection = ScreenPurposePromptEvidence.from_package(evidence)
-    assert [trace.evidence_id for trace in projection.network_traces] == [
-        read_trace.evidence_id
-    ]
+    assert [trace.evidence_id for trace in projection.network_traces] == [read_trace.evidence_id]
     prompt = build_user_prompt(evidence)
     assert read_trace.evidence_id in prompt
     assert write_trace.evidence_id not in prompt
@@ -774,9 +767,7 @@ def test_forbidden_edit_is_rejected_even_with_existing_irrelevant_reference():
         ],
     )
     with pytest.raises(InferenceUnsupportedActionError) as captured:
-        ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(
-            grounding_package()
-        )
+        ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(grounding_package())
     assert captured.value.category == "declared_action_not_supported"
 
 
@@ -867,8 +858,7 @@ def test_generated_view_detail_overreach_is_not_persisted_as_public_claim():
             {
                 "action": "view",
                 "statement": (
-                    "Permite visualizar detalles de retenciones "
-                    "en una pantalla de detalle."
+                    "Permite visualizar detalles de retenciones en una pantalla de detalle."
                 ),
                 "evidence_refs": ["screen:test", "table:results"],
             }
@@ -990,10 +980,10 @@ def test_prudent_mutative_option_is_not_misclassified_as_view():
     )
     assert candidate.inference.supported_capabilities[0].evidence_refs == ["control:new"]
 
+
 def test_prompt_constrains_unbacked_view_detail_semantics():
     prompt = build_user_prompt(grounding_package()).casefold()
 
     assert "no una vista de detalle" in prompt
     assert "alguna evidence_ref citada" in prompt
     assert "detalle, detalles o ficha" in prompt
-

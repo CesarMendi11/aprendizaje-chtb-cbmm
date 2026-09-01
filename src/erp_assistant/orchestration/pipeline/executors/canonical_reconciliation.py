@@ -5,23 +5,22 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from erp_assistant.config.paths import PROJECT_ROOT
-
 from sqlalchemy import select
 
+from erp_assistant.config.paths import PROJECT_ROOT
 from erp_assistant.config.pipeline_settings import PipelineSettings
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.structural.services.canonical_reconciliation_service import (
-    CanonicalReconciliationError,
-    CanonicalReconciliationService,
-)
 from erp_assistant.structural.canonical import (
     CanonicalKnowledgeExporter,
     CanonicalKnowledgeRepository,
     CanonicalSnapshotContext,
 )
 from erp_assistant.structural.canonical.ids import content_hash
+from erp_assistant.structural.services.canonical_reconciliation_service import (
+    CanonicalReconciliationError,
+    CanonicalReconciliationService,
+)
 
 ProgressCallback = Callable[[str, dict[str, Any]], None]
 
@@ -97,9 +96,7 @@ class CanonicalReconciliationJobExecutor:
 
                 decisions = self._normalized_decisions(plan)
                 decision_set_hash = content_hash(decisions)
-                reconciliation = self._reconciliation_metadata(
-                    result, decisions, decision_set_hash
-                )
+                reconciliation = self._reconciliation_metadata(result, decisions, decision_set_hash)
                 snapshot = CanonicalSnapshotContext.full()
                 emit(
                     "exporting_reconciled_canonical",
@@ -125,8 +122,7 @@ class CanonicalReconciliationJobExecutor:
                             "reconciled_item_total": result.reconciled_item_total,
                         },
                         "warnings": [
-                            item.model_dump(mode="json")
-                            for item in result.canonical.build_warnings
+                            item.model_dump(mode="json") for item in result.canonical.build_warnings
                         ],
                     },
                 )
@@ -327,9 +323,7 @@ class CanonicalReconciliationJobExecutor:
             "candidate_knowledge_version": self._required_text(
                 params, "candidate_knowledge_version"
             ),
-            "active_knowledge_version": self._required_text(
-                params, "active_knowledge_version"
-            ),
+            "active_knowledge_version": self._required_text(params, "active_knowledge_version"),
             "erp_id": self._required_text(params, "erp_id"),
         }
         return pins

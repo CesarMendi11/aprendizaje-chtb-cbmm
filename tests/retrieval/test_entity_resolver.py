@@ -123,8 +123,6 @@ def test_same_strength_candidates_remain_ambiguous_instead_of_guessing():
     ]
 
 
-
-
 def test_same_label_across_different_entity_types_is_not_false_ambiguity():
     screen = item("screen:ano", "screen", "Año", "ano")
     field = item("field:ano", "field", "Año", "ano")
@@ -267,10 +265,7 @@ def test_screen_scope_resolves_global_child_ambiguity_without_guessing():
 
     class ScopedResolver(Resolver):
         def _scope_items(self, candidate_ids, *, version_id):
-            return {
-                row.canonical_id: row
-                for row in (first, second, screen_current, screen_other)
-            }
+            return {row.canonical_id: row for row in (first, second, screen_current, screen_other)}
 
     resolver = ScopedResolver([(first, 0.0, 0.0), (second, 0.0, 0.0)])
     result = resolver.resolve(
@@ -288,9 +283,7 @@ def test_screen_scope_resolves_global_child_ambiguity_without_guessing():
 
     assert scoped.status == "resolved"
     assert scoped.primary_canonical_id == "field:ruc-current"
-    assert [candidate.canonical_id for candidate in scoped.candidates] == [
-        "field:ruc-current"
-    ]
+    assert [candidate.canonical_id for candidate in scoped.candidates] == ["field:ruc-current"]
 
 
 def test_screen_scope_follows_table_column_parent_chain():
@@ -303,10 +296,7 @@ def test_screen_scope_follows_table_column_parent_chain():
 
     class ScopedResolver(Resolver):
         def _scope_items(self, candidate_ids, *, version_id):
-            return {
-                row.canonical_id: row
-                for row in (column, table, screen)
-            }
+            return {row.canonical_id: row for row in (column, table, screen)}
 
     resolver = ScopedResolver([])
     from erp_assistant.retrieval.entity_resolver import EntityResolution
@@ -333,9 +323,7 @@ def test_screen_scope_follows_table_column_parent_chain():
         screen_id="screen:current",
     )
 
-    assert [candidate.canonical_id for candidate in scoped.candidates] == [
-        "table_column:status"
-    ]
+    assert [candidate.canonical_id for candidate in scoped.candidates] == ["table_column:status"]
 
 
 def test_screen_scope_drops_synthetic_ui_state_title_shadows_for_contextual_navigation():
@@ -369,10 +357,7 @@ def test_screen_scope_drops_synthetic_ui_state_title_shadows_for_contextual_navi
 
     class ScopedResolver(Resolver):
         def _scope_items(self, candidate_ids, *, version_id):
-            return {
-                row.canonical_id: row
-                for row in (screen, state_a, state_b, event)
-            }
+            return {row.canonical_id: row for row in (screen, state_a, state_b, event)}
 
     resolver = ScopedResolver([])
     result = EntityResolution(
@@ -425,9 +410,7 @@ def test_screen_scope_drops_synthetic_ui_state_title_shadows_for_contextual_navi
     )
 
     assert result.status == "ambiguous"
-    assert result.ambiguous_labels == (
-        "ui_state:comprobantes electronicos emitidos",
-    )
+    assert result.ambiguous_labels == ("ui_state:comprobantes electronicos emitidos",)
 
     scoped = resolver.scope_to_screen(
         result,
@@ -451,10 +434,7 @@ def test_screen_scope_keeps_real_same_label_event_ambiguity():
 
     class ScopedResolver(Resolver):
         def _scope_items(self, candidate_ids, *, version_id):
-            return {
-                row.canonical_id: row
-                for row in (event_a, event_b)
-            }
+            return {row.canonical_id: row for row in (event_a, event_b)}
 
     resolver = ScopedResolver([])
     result = EntityResolution(

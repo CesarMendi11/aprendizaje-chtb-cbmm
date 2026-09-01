@@ -135,6 +135,7 @@ def test_screen_index_builder_replaces_screen_if_added_again():
     assert screen is not None
     assert screen["title"] == "Inicio nuevo"
 
+
 def test_routes_graph_builder_updates_observed_non_discovered_status_without_downgrade():
     builder = RoutesGraphBuilder()
 
@@ -148,8 +149,7 @@ def test_routes_graph_builder_updates_observed_non_discovered_status_without_dow
     builder.add_screen(route="/admin/conductores", title="Conductores")
 
     node = next(
-        item for item in builder.to_dict()["nodes"]
-        if item["route"] == "/admin/conductores"
+        item for item in builder.to_dict()["nodes"] if item["route"] == "/admin/conductores"
     )
 
     assert node["status"] == "not_found"

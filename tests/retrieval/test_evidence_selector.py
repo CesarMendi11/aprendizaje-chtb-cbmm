@@ -1,5 +1,5 @@
-from erp_assistant.retrieval.evidence_selector import EvidenceSelector
 from erp_assistant.retrieval.entity_resolver import EntityResolution, EntityResolutionCandidate
+from erp_assistant.retrieval.evidence_selector import EvidenceSelector
 from erp_assistant.retrieval.graph_expansion import GraphExpansionPlan
 from erp_assistant.retrieval.query_plan import QueryIntent, QueryPlan
 
@@ -209,6 +209,7 @@ def test_screen_purpose_does_not_fallback_to_unrelated_single_semantic():
     assert result.approved_semantics == ()
     assert result.focal_canonical_ids == ("screen:dashboard",)
 
+
 def test_ambiguity_becomes_clarification_boundary_not_answer_context():
     selector = EvidenceSelector()
     resolution = resolved(
@@ -285,21 +286,19 @@ def test_navigation_event_prefers_focal_control_and_drops_unrelated_events():
         "screen:comp",
         "control:next",
     ]
-    assert [row["relationship_type"] for row in result.relations] == [
-        "HAS_CONTROL"
-    ]
+    assert [row["relationship_type"] for row in result.relations] == ["HAS_CONTROL"]
 
 
 def test_navigation_event_matches_named_control_when_context_screen_is_only_focal_seed():
     selector = EvidenceSelector()
     query = QueryPlan(
         question=(
-            '¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: '
+            "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
             'pantalla "Comprobantes eléctronicos emitidos".'
         ),
         normalized_question=(
-            'como avanzo a la siguiente pagina aqui referencia contextual validada '
-            'pantalla comprobantes electronicos emitidos'
+            "como avanzo a la siguiente pagina aqui referencia contextual validada "
+            "pantalla comprobantes electronicos emitidos"
         ),
         intent=QueryIntent.NAVIGATION_EVENT,
         target_entity_types=("screen", "control", "ui_state", "event", "transition"),

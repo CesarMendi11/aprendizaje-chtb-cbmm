@@ -4,11 +4,15 @@ import uuid
 from typing import Any
 
 from erp_assistant.config.neo4j_settings import Neo4jSettings
-from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus, PipelineJobScope, SyncTarget
+from erp_assistant.persistence.postgres.enums import (
+    KnowledgeVersionStatus,
+    PipelineJobScope,
+    SyncTarget,
+)
 from erp_assistant.persistence.postgres.models import KnowledgeVersionRecord
-from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
 from erp_assistant.projections.neo4j.client import Neo4jClient
 from erp_assistant.projections.neo4j.repository import Neo4jRepository
+from erp_assistant.projections.neo4j.sync_service import Neo4jSyncService
 from erp_assistant.structural.canonical.privacy import sanitize_text
 
 from ..projection_sync_state import fail_preflight_sync, sync_attempt_count
@@ -65,9 +69,7 @@ class Neo4jSyncJobExecutor:
                 error=exc,
             )
             clean, _ = sanitize_text(str(exc), 400)
-            raise Neo4jSyncJobExecutionError(
-                clean or "Error Neo4j sanitizado"
-            ) from exc
+            raise Neo4jSyncJobExecutionError(clean or "Error Neo4j sanitizado") from exc
 
         progress(
             "projection_planned",

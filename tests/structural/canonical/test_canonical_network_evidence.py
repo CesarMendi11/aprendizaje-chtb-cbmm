@@ -60,14 +60,10 @@ def test_integrator_attaches_network_trace_without_changing_knowledge_version(tm
     assert result.omitted_observations == 0
 
     products = next(
-        item
-        for item in result.knowledge.screens
-        if item.route == "/app/inventory/products"
+        item for item in result.knowledge.screens if item.route == "/app/inventory/products"
     )
     network = [
-        item
-        for item in result.knowledge.evidence
-        if item.evidence_type.value == "network_trace"
+        item for item in result.knowledge.evidence if item.evidence_type.value == "network_trace"
     ]
     assert len(network) == 1
     evidence = network[0]

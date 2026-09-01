@@ -246,25 +246,24 @@ def test_matching_quality_requires_exact_certified_provenance():
 
 def test_certified_quality_is_bound_to_crawl_identity():
     run_id = uuid.uuid4()
-    quality = certified_crawl_quality(
-        run_id=run_id, scope="screen", target="/admin/example"
-    )
+    quality = certified_crawl_quality(run_id=run_id, scope="screen", target="/admin/example")
 
-    assert validate_certified_quality_source(
-        quality,
-        source_run_id=run_id,
-        source_scope="screen",
-        source_target="/admin/example",
-        check_target=True,
-    ) == quality
+    assert (
+        validate_certified_quality_source(
+            quality,
+            source_run_id=run_id,
+            source_scope="screen",
+            source_target="/admin/example",
+            check_target=True,
+        )
+        == quality
+    )
 
     with pytest.raises(CrawlExecutionQualityError, match="source_crawl_job_id"):
         validate_certified_quality_source(quality, source_run_id=uuid.uuid4())
 
     with pytest.raises(CrawlExecutionQualityError, match="scope"):
-        validate_certified_quality_source(
-            quality, source_run_id=run_id, source_scope="module"
-        )
+        validate_certified_quality_source(quality, source_run_id=run_id, source_scope="module")
 
     with pytest.raises(CrawlExecutionQualityError, match="target"):
         validate_certified_quality_source(

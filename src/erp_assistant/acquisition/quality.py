@@ -35,9 +35,7 @@ def _load_json_object(path: Path, *, label: str) -> dict[str, Any]:
 def _nonnegative_int(payload: dict[str, Any], key: str, *, label: str) -> int:
     value = payload.get(key)
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva {key} como entero no negativo."
-        )
+        raise CrawlExecutionQualityError(f"{label} no conserva {key} como entero no negativo.")
     return value
 
 
@@ -51,40 +49,28 @@ def _validated_source_identity(
     try:
         run_id = str(uuid.UUID(raw_run_id))
     except (TypeError, ValueError) as exc:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva un run_id válido."
-        ) from exc
+        raise CrawlExecutionQualityError(f"{label} no conserva un run_id válido.") from exc
 
     scope_key = "scope" if "scope" in payload else "source_scope"
     if scope_key not in payload:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva un scope de crawl válido."
-        )
+        raise CrawlExecutionQualityError(f"{label} no conserva un scope de crawl válido.")
     scope = str(payload.get(scope_key) or "").strip()
     if scope not in _CRAWL_SCOPES:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva un scope de crawl válido."
-        )
+        raise CrawlExecutionQualityError(f"{label} no conserva un scope de crawl válido.")
 
     target_key = "target" if "target" in payload else "source_target"
     if target_key not in payload:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva el target del crawl fuente."
-        )
+        raise CrawlExecutionQualityError(f"{label} no conserva el target del crawl fuente.")
     raw_target = payload.get(target_key)
     if raw_target is None:
         target = None
     elif isinstance(raw_target, str) and raw_target.strip():
         target = raw_target.strip()
     else:
-        raise CrawlExecutionQualityError(
-            f"{label} no conserva un target de crawl válido."
-        )
+        raise CrawlExecutionQualityError(f"{label} no conserva un target de crawl válido.")
 
     if scope == "full" and target is not None:
-        raise CrawlExecutionQualityError(
-            f"{label} conserva target para un crawl FULL."
-        )
+        raise CrawlExecutionQualityError(f"{label} conserva target para un crawl FULL.")
     if scope in {"module", "screen"} and target is None:
         raise CrawlExecutionQualityError(
             f"{label} no conserva target para un crawl {scope.upper()}."
@@ -171,8 +157,7 @@ def build_crawl_execution_quality(
     )
     if artifact_state_pending != state_frontier_pending:
         raise CrawlExecutionQualityError(
-            "El resumen del crawl y state_exploration_summary.json discrepan en "
-            "states_pending."
+            "El resumen del crawl y state_exploration_summary.json discrepan en states_pending."
         )
 
     uncertainty_files = sorted(review_dir.glob("*_uncertainty.json"))
@@ -215,13 +200,10 @@ def build_crawl_execution_quality(
                 other_error_events += 1
 
     blocker_counts = {
-        field: reasons[reason]
-        for reason, field in BLOCKING_UNCERTAINTY_REASONS.items()
+        field: reasons[reason] for reason, field in BLOCKING_UNCERTAINTY_REASONS.items()
     }
     dynamic_state_restore_failures = blocker_counts["dynamic_state_restore_failures"]
-    state_restore_failures = (
-        ui_event_state_restore_failures + dynamic_state_restore_failures
-    )
+    state_restore_failures = ui_event_state_restore_failures + dynamic_state_restore_failures
     blocking_failures = (
         state_restore_failures
         + blocker_counts["dynamic_state_exploration_errors"]
@@ -242,9 +224,7 @@ def build_crawl_execution_quality(
         "ui_event_state_restore_failures": ui_event_state_restore_failures,
         "dynamic_state_restore_failures": dynamic_state_restore_failures,
         "state_restore_failures": state_restore_failures,
-        "dynamic_state_exploration_errors": blocker_counts[
-            "dynamic_state_exploration_errors"
-        ],
+        "dynamic_state_exploration_errors": blocker_counts["dynamic_state_exploration_errors"],
         "navigation_errors": blocker_counts["navigation_errors"],
         "fixed_point_stalls": blocker_counts["fixed_point_stalls"],
         "route_frontier_pending": route_frontier_pending,
@@ -314,16 +294,13 @@ def validate_crawl_execution_quality(
         raise CrawlExecutionQualityError(
             "El contrato de calidad del crawl conserva gate_passed inválido."
         )
-    if normalized["execution_evidence_present"] != (
-        normalized["ui_event_result_files"] > 0
-    ):
+    if normalized["execution_evidence_present"] != (normalized["ui_event_result_files"] > 0):
         raise CrawlExecutionQualityError(
             "El contrato de calidad del crawl es inconsistente con su evidencia UI."
         )
 
     expected_restore_failures = (
-        normalized["ui_event_state_restore_failures"]
-        + normalized["dynamic_state_restore_failures"]
+        normalized["ui_event_state_restore_failures"] + normalized["dynamic_state_restore_failures"]
     )
     if normalized["state_restore_failures"] != expected_restore_failures:
         raise CrawlExecutionQualityError(
@@ -412,8 +389,7 @@ def validate_matching_certified_quality(*payloads: Any) -> dict[str, Any]:
             "No se recibió provenance de calidad de crawl para comparar."
         )
     qualities = [
-        validate_crawl_execution_quality(payload, require_passed=True)
-        for payload in payloads
+        validate_crawl_execution_quality(payload, require_passed=True) for payload in payloads
     ]
     first = qualities[0]
     if any(value != first for value in qualities[1:]):

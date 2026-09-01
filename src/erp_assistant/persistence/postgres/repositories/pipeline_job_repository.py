@@ -5,7 +5,11 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from erp_assistant.persistence.postgres.enums import PipelineJobKind, PipelineJobScope, PipelineJobStatus
+from erp_assistant.persistence.postgres.enums import (
+    PipelineJobKind,
+    PipelineJobScope,
+    PipelineJobStatus,
+)
 from erp_assistant.persistence.postgres.models import PipelineJob
 
 
@@ -17,9 +21,7 @@ class PipelineJobRepository:
         self.session.add(job)
         return job
 
-    def get(
-        self, job_id: uuid.UUID | str, *, for_update: bool = False
-    ) -> PipelineJob | None:
+    def get(self, job_id: uuid.UUID | str, *, for_update: bool = False) -> PipelineJob | None:
         try:
             normalized = uuid.UUID(str(job_id))
         except (TypeError, ValueError):
@@ -28,7 +30,6 @@ class PipelineJobRepository:
         if for_update:
             query = query.with_for_update()
         return self.session.scalar(query)
-
 
     def find_active_projection_job(
         self,
@@ -46,9 +47,7 @@ class PipelineJobRepository:
             .where(
                 PipelineJob.kind == PipelineJobKind(kind),
                 PipelineJob.knowledge_version_id == version_id,
-                PipelineJob.status.in_(
-                    [PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]
-                ),
+                PipelineJob.status.in_([PipelineJobStatus.QUEUED, PipelineJobStatus.RUNNING]),
             )
             .order_by(PipelineJob.requested_at.desc(), PipelineJob.id.desc())
             .limit(1)
@@ -70,9 +69,9 @@ class PipelineJobRepository:
             filters.append(PipelineJob.status == PipelineJobStatus(status))
         if scope is not None:
             filters.append(PipelineJob.scope == PipelineJobScope(scope))
-        total = self.session.scalar(
-            select(func.count()).select_from(PipelineJob).where(*filters)
-        ) or 0
+        total = (
+            self.session.scalar(select(func.count()).select_from(PipelineJob).where(*filters)) or 0
+        )
         rows = list(
             self.session.scalars(
                 select(PipelineJob)

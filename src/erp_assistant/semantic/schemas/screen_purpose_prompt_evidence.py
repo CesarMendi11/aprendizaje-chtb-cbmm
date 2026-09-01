@@ -36,7 +36,9 @@ class ScreenPurposePromptEvidence(InferenceModel):
 
     @classmethod
     def from_package(cls, package):
-        from erp_assistant.semantic.validators.screen_purpose_grounding_plan import build_grounding_plan
+        from erp_assistant.semantic.validators.screen_purpose_grounding_plan import (
+            build_grounding_plan,
+        )
 
         read_only_traces = [trace for trace in package.network_traces if trace.read_only]
         excluded_network_ids = {

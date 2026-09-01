@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
-from erp_assistant.structural.canonical.ids import stable_id
 from erp_assistant.orchestration.pipeline.executors.canonical_build import (
     CanonicalBuildJobExecutionError,
     CanonicalBuildJobExecutor,
 )
+from erp_assistant.structural.canonical.builder import CanonicalKnowledgeBuilder
+from erp_assistant.structural.canonical.ids import stable_id
 from tests.fixtures.crawl_quality import (
     certified_crawl_quality,
     source_crawl_result,
@@ -181,11 +181,7 @@ def test_canonical_build_job_uses_isolated_crawl_artifacts(tmp_path):
         other_error_events=1,
     )
     knowledge = json.loads((canonical / "knowledge.json").read_text(encoding="utf-8"))
-    network = [
-        item
-        for item in knowledge["evidence"]
-        if item["evidence_type"] == "network_trace"
-    ]
+    network = [item for item in knowledge["evidence"] if item["evidence_type"] == "network_trace"]
     assert len(network) == 1
     assert network[0]["metadata"]["bodies_captured"] is False
     assert network[0]["metadata"]["headers_captured"] is False
@@ -276,9 +272,7 @@ def test_canonical_build_blocks_source_with_state_restore_failure(tmp_path, scop
             },
         )
 
-    assert not (
-        runs_root / str(source_id) / "processed" / "canonical"
-    ).exists()
+    assert not (runs_root / str(source_id) / "processed" / "canonical").exists()
 
 
 def test_canonical_build_marks_module_snapshot_with_pinned_base(tmp_path):

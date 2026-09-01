@@ -48,8 +48,6 @@ def test_screen_extractor_separates_layout_regions_and_resolves_title():
     assert data["links"][0]["region"] == "global_navigation"
     assert data["buttons"][0]["region"] == "header"
     assert data["buttons"][1]["region"] == "main_content"
-    assert data["regions"]["main_content"]["visible_text"].startswith(
-        "Consulta de facturas"
-    )
+    assert data["regions"]["main_content"]["visible_text"].startswith("Consulta de facturas")
     assert len(data["global_links"]) == 1
     assert data["local_links"] == []

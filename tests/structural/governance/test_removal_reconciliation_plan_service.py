@@ -123,7 +123,6 @@ def test_full_candidate_removals_are_unresolved_and_bad_partial_base_fails(sessi
     assert session.get(KnowledgeVersionRecord, active_id) is not None
 
 
-
 def test_full_candidate_removal_requires_unconfirmed_structural_review_state(
     session, tmp_path, monkeypatch
 ):
@@ -160,6 +159,7 @@ def test_full_candidate_removal_requires_unconfirmed_structural_review_state(
     monkeypatch.setattr(StructuralReviewPackageService, "build", missing_full_review_state)
     with pytest.raises(RemovalReconciliationPlanError, match="FULL candidate"):
         RemovalReconciliationPlanService(session).build(candidate_id)
+
 
 def test_partial_policy_applies_equally_to_removed_entity_types(session, tmp_path):
     _, candidate_id = partial_candidate(session, tmp_path)
@@ -360,7 +360,6 @@ def test_screen_partial_removed_is_retained_with_screen_specific_reason(session,
     assert plan.removal_total == plan.retain_from_active_total
     assert plan.unresolved_total == 0
     assert all(
-        item.reason == "not_observed_in_partial_screen_crawl"
-        and item.requires_human_review
+        item.reason == "not_observed_in_partial_screen_crawl" and item.requires_human_review
         for item in plan.decisions
     )

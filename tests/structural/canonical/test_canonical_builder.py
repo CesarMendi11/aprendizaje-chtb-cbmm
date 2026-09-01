@@ -40,9 +40,7 @@ def test_home_screen_without_module_is_not_reported_as_route_without_module():
 
 def test_non_home_screen_without_module_keeps_route_without_module_warning():
     artifacts = fictional_artifacts()
-    artifacts["screen_index.json"]["screens"].append(
-        {"route": "/app/orphan", "title": "Orphan"}
-    )
+    artifacts["screen_index.json"]["screens"].append({"route": "/app/orphan", "title": "Orphan"})
 
     kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
     orphan = next(item for item in kb.screens if item.route == "/app/orphan")
@@ -79,32 +77,33 @@ def test_sensitive_event_label_falls_back_to_structural_category():
     assert len(kb.events) == 1
     assert kb.events[0].label == "open_dropdown"
     assert kb.events[0].normalized_label == "open dropdown"
-    assert any(
-        warning.code == "sensitive_event_label_replaced"
-        for warning in kb.build_warnings
-    )
+    assert any(warning.code == "sensitive_event_label_replaced" for warning in kb.build_warnings)
     assert builder.sensitive_exclusions >= 2
 
 
 def test_main_content_is_only_deduplicated_structural_text():
     artifacts = fictional_artifacts()
-    artifacts["screen_index.json"]["screens"][1].update({
-        "main_visible_text": (
-            "Persona Ficticia 1799999999001 001-001-000000001 "
-            "31 dic 2025 $1,234.56 Total de registros: 47"
-        ),
-        "inputs": [
-            {"label": "RUC", "name": "tax_id", "value": "1799999999001"},
-            {"label": "RUC", "placeholder": "Buscar"},
-        ],
-        "buttons": [{"text": "Buscar"}],
-        "tables": [{
-            "name": "Resultados",
-            "headers": ["Fecha de emisión", "Número de factura", "Total retenido"],
-            "rows": [["Persona Ficticia", "001-001-000000001", "$1,234.56"]],
-            "row_count_observed": 47,
-        }],
-    })
+    artifacts["screen_index.json"]["screens"][1].update(
+        {
+            "main_visible_text": (
+                "Persona Ficticia 1799999999001 001-001-000000001 "
+                "31 dic 2025 $1,234.56 Total de registros: 47"
+            ),
+            "inputs": [
+                {"label": "RUC", "name": "tax_id", "value": "1799999999001"},
+                {"label": "RUC", "placeholder": "Buscar"},
+            ],
+            "buttons": [{"text": "Buscar"}],
+            "tables": [
+                {
+                    "name": "Resultados",
+                    "headers": ["Fecha de emisión", "Número de factura", "Total retenido"],
+                    "rows": [["Persona Ficticia", "001-001-000000001", "$1,234.56"]],
+                    "row_count_observed": 47,
+                }
+            ],
+        }
+    )
     first = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
     second = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
     screen = next(item for item in first.screens if item.route == "/app/inventory/products")
@@ -192,11 +191,13 @@ def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_pare
     root_state = "/app/home#state:root-sales"
     nested_state = "/app/home#state:nested-tracking"
     artifacts = {
-        "screen_index.json": {"screens": [
-            {"route": "/app/home", "title": "Home"},
-            {"route": "/app/sales/orders", "title": "Orders"},
-            {"route": "/app/sales/tracking/external", "title": "External tracking"},
-        ]},
+        "screen_index.json": {
+            "screens": [
+                {"route": "/app/home", "title": "Home"},
+                {"route": "/app/sales/orders", "title": "Orders"},
+                {"route": "/app/sales/tracking/external", "title": "External tracking"},
+            ]
+        },
         "routes_graph.json": {
             "nodes": [
                 {"id": "/app/home", "route": "/app/home", "source_module": "root"},
@@ -306,17 +307,17 @@ def test_nested_expand_menus_become_recursive_modules_and_use_most_specific_pare
     assert tracking.depth == 1
     assert tracking.navigation_path == ["Sales", "Tracking"]
 
-    assert next(
-        screen
-        for screen in kb.screens
-        if screen.route == "/app/sales/orders"
-    ).module_id == sales.id
+    assert (
+        next(screen for screen in kb.screens if screen.route == "/app/sales/orders").module_id
+        == sales.id
+    )
 
-    assert next(
-        screen
-        for screen in kb.screens
-        if screen.route == "/app/sales/tracking/external"
-    ).module_id == tracking.id
+    assert (
+        next(
+            screen for screen in kb.screens if screen.route == "/app/sales/tracking/external"
+        ).module_id
+        == tracking.id
+    )
 
 
 def test_case_distinct_top_level_modules_do_not_collide():
@@ -350,11 +351,13 @@ def test_case_distinct_top_level_modules_do_not_collide():
     lower = "/app/home#state:lower"
     upper = "/app/home#state:upper"
     artifacts = {
-        "screen_index.json": {"screens": [
-            {"route": "/app/home", "title": "Home"},
-            {"route": "/app/rentas/cajas", "title": "Boxes"},
-            {"route": "/app/rentas/conceptos", "title": "Concepts"},
-        ]},
+        "screen_index.json": {
+            "screens": [
+                {"route": "/app/home", "title": "Home"},
+                {"route": "/app/rentas/cajas", "title": "Boxes"},
+                {"route": "/app/rentas/conceptos", "title": "Concepts"},
+            ]
+        },
         "routes_graph.json": {
             "nodes": [
                 {"id": "/app/home", "route": "/app/home", "source_module": "root"},
@@ -406,12 +409,14 @@ def test_case_distinct_top_level_modules_do_not_collide():
     modules = {module.name: module for module in kb.modules}
     assert set(modules) == {"rentas", "Rentas"}
     assert modules["rentas"].id != modules["Rentas"].id
-    assert next(
-        screen for screen in kb.screens if screen.route == "/app/rentas/cajas"
-    ).module_id == modules["rentas"].id
-    assert next(
-        screen for screen in kb.screens if screen.route == "/app/rentas/conceptos"
-    ).module_id == modules["Rentas"].id
+    assert (
+        next(screen for screen in kb.screens if screen.route == "/app/rentas/cajas").module_id
+        == modules["rentas"].id
+    )
+    assert (
+        next(screen for screen in kb.screens if screen.route == "/app/rentas/conceptos").module_id
+        == modules["Rentas"].id
+    )
 
 
 def test_top_level_module_without_functional_screen_is_not_published():
@@ -490,9 +495,7 @@ def test_evidence_path_uses_custom_structural_artifact_directory(tmp_path):
 
     assert knowledge.evidence
     assert all(
-        item.artifact_path.startswith(
-            "data/runs/pipeline/job-123/processed/structural/"
-        )
+        item.artifact_path.startswith("data/runs/pipeline/job-123/processed/structural/")
         for item in knowledge.evidence
     )
 
@@ -543,11 +546,7 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
         "event": {
             "event_type": "expand_menu",
             "label": "Integrations",
-            "selector": (
-                "nav > menu:nth(1) "
-                "> submenu:nth(1) "
-                "> submenu:nth(1)"
-            ),
+            "selector": ("nav > menu:nth(1) > submenu:nth(1) > submenu:nth(1)"),
         }
     }
 
@@ -559,10 +558,7 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
                     "title": "Home",
                 },
                 {
-                    "route": (
-                        "/app/sales/tracking/"
-                        "integrations/external"
-                    ),
+                    "route": ("/app/sales/tracking/integrations/external"),
                     "title": "External systems",
                 },
             ]
@@ -620,14 +616,8 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
                     },
                 },
                 {
-                    "id": (
-                        "/app/sales/tracking/"
-                        "integrations/external"
-                    ),
-                    "route": (
-                        "/app/sales/tracking/"
-                        "integrations/external"
-                    ),
+                    "id": ("/app/sales/tracking/integrations/external"),
+                    "route": ("/app/sales/tracking/integrations/external"),
                 },
             ],
             "edges": [
@@ -660,10 +650,7 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
                 },
                 {
                     "source": integrations_state,
-                    "target": (
-                        "/app/sales/tracking/"
-                        "integrations/external"
-                    ),
+                    "target": ("/app/sales/tracking/integrations/external"),
                     "label": "External systems",
                     "kind": "ui_event_discovered_href",
                     "metadata": {},
@@ -692,10 +679,7 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
         artifacts,
     )
 
-    modules = {
-        module.name: module
-        for module in first.modules
-    }
+    modules = {module.name: module for module in first.modules}
 
     assert set(modules) == {
         "Sales",
@@ -731,28 +715,18 @@ def test_recursive_module_hierarchy_supports_three_levels_and_descendant_only_sc
     external = next(
         screen
         for screen in first.screens
-        if screen.route
-        == "/app/sales/tracking/integrations/external"
+        if screen.route == "/app/sales/tracking/integrations/external"
     )
 
     assert external.module_id == integrations.id
 
     # Parents without direct functional screens remain published
     # because their descendant subtree contains one.
-    assert sales.id in {
-        module.id
-        for module in first.modules
-    }
-    assert tracking.id in {
-        module.id
-        for module in first.modules
-    }
+    assert sales.id in {module.id for module in first.modules}
+    assert tracking.id in {module.id for module in first.modules}
 
     # Canonical hierarchy and IDs remain deterministic.
-    second_modules = {
-        module.name: module
-        for module in second.modules
-    }
+    second_modules = {module.name: module for module in second.modules}
 
     assert second_modules["Sales"].id == sales.id
     assert second_modules["Tracking"].id == tracking.id
@@ -897,9 +871,7 @@ def test_missing_menu_selector_is_not_persisted_as_replay_locator():
                 },
                 {"id": "/app/module/a", "route": "/app/module/a"},
             ],
-            "edges": [
-                {"source": state, "target": "/app/module/a", "metadata": {}}
-            ],
+            "edges": [{"source": state, "target": "/app/module/a", "metadata": {}}],
         },
         "state_registry.json": {"states": []},
         "state_flow_graph.json": {"states": [], "transitions": []},
@@ -963,7 +935,6 @@ def test_build_from_paths_records_profile_hash_without_changing_functional_versi
     assert from_paths.source_profile == "profile.yaml"
     assert from_paths.source_artifacts[0] == profile_ref
     assert (
-        from_paths.source_artifact_hashes[profile_ref]
-        == hashlib.sha256(profile_bytes).hexdigest()
+        from_paths.source_artifact_hashes[profile_ref] == hashlib.sha256(profile_bytes).hexdigest()
     )
     assert from_paths.knowledge_version == direct.knowledge_version

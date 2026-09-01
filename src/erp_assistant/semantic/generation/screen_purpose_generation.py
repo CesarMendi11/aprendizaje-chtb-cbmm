@@ -43,9 +43,7 @@ class GeneratedCapabilityDraft(InferenceModel):
 class ScreenPurposeGenerationDraft(InferenceModel):
     semantic_type: Literal["screen_purpose"]
     screen_id: str
-    supported_capabilities: list[GeneratedCapabilityDraft] = Field(
-        min_length=1, max_length=12
-    )
+    supported_capabilities: list[GeneratedCapabilityDraft] = Field(min_length=1, max_length=12)
     limitations: list[str] = Field(default_factory=list, max_length=0)
     uncertainties: list[str] = Field(default_factory=list, max_length=0)
 
@@ -55,6 +53,7 @@ class ScreenPurposeGenerationDraft(InferenceModel):
         if not isinstance(value, str) or not value.strip() or len(value.strip()) > 240:
             raise ValueError("screen_id inválido")
         return value.strip()
+
 
 def build_screen_purpose_generation_schema(
     grounding_plan: ScreenPurposeGroundingPlan,
@@ -146,9 +145,7 @@ def build_deterministic_capability_statement(
 ) -> str:
     """Render the public claim from action/policy, never from model-specific prose."""
     normalized_statement = normalize_text(capability.statement)
-    prudent_draft = any(
-        marker in normalized_statement for marker in PRUDENT_DRAFT_MARKERS
-    )
+    prudent_draft = any(marker in normalized_statement for marker in PRUDENT_DRAFT_MARKERS)
     if capability.action in CAPABILITY_ACTION_VERBS and (
         hint.narrative_rule == "prudent_only" or prudent_draft
     ):
@@ -281,14 +278,8 @@ def build_deterministic_purpose_summary(
     hints = {hint.action: hint for hint in grounding_plan.supported_actions}
     actions = {capability.action for capability in capabilities}
     ordered = [action for action in ACTION_ORDER if action in actions]
-    direct = [
-        action
-        for action in ordered
-        if hints[action].narrative_rule == "direct_allowed"
-    ]
-    prudent = [
-        action for action in ordered if hints[action].narrative_rule == "prudent_only"
-    ]
+    direct = [action for action in ordered if hints[action].narrative_rule == "direct_allowed"]
+    prudent = [action for action in ordered if hints[action].narrative_rule == "prudent_only"]
     sentences = []
     verbs = [DIRECT_VERBS[action] for action in direct if action != "navigate"]
     if "search" in direct and "view" in direct:
@@ -302,13 +293,10 @@ def build_deterministic_purpose_summary(
             sentence += ", así como navegar entre las páginas de resultados"
         sentences.append(sentence + ".")
     elif "navigate" in direct:
-        sentences.append(
-            f"Permite navegar entre las páginas de resultados de {subject}."
-        )
+        sentences.append(f"Permite navegar entre las páginas de resultados de {subject}.")
     for action in prudent:
         sentences.append(
-            f"La pantalla {title} presenta una opción relacionada con "
-            f"{DIRECT_VERBS[action]}."
+            f"La pantalla {title} presenta una opción relacionada con {DIRECT_VERBS[action]}."
         )
     summary = " ".join(sentences)
     return _safe_text(summary, limit=600)

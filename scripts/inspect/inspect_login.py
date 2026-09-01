@@ -10,9 +10,7 @@ from erp_assistant.config.profile_loader import ProfileLoader
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Inspecciona la pantalla de login del ERP."
-    )
+    parser = argparse.ArgumentParser(description="Inspecciona la pantalla de login del ERP.")
 
     parser.add_argument(
         "--profile",

@@ -5,10 +5,14 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable
 
-from erp_assistant.config.paths import PROJECT_ROOT
-
 from sqlalchemy import func, select
 
+from erp_assistant.acquisition.quality import (
+    CrawlExecutionQualityError,
+    validate_certified_quality_source,
+    validate_matching_certified_quality,
+)
+from erp_assistant.config.paths import PROJECT_ROOT
 from erp_assistant.config.pipeline_settings import PipelineSettings
 from erp_assistant.persistence.postgres.enums import (
     KnowledgeVersionStatus,
@@ -16,16 +20,16 @@ from erp_assistant.persistence.postgres.enums import (
     PipelineJobScope,
     PipelineJobStatus,
 )
-from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord, PipelineJob, SyncJob
-from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
+from erp_assistant.persistence.postgres.models import (
+    KnowledgeItem,
+    KnowledgeVersionRecord,
+    PipelineJob,
+    SyncJob,
+)
 from erp_assistant.structural.canonical.ids import content_hash
 from erp_assistant.structural.canonical.repository import CanonicalKnowledgeRepository
 from erp_assistant.structural.canonical.snapshot import CanonicalSnapshotContext
-from erp_assistant.acquisition.quality import (
-    CrawlExecutionQualityError,
-    validate_certified_quality_source,
-    validate_matching_certified_quality,
-)
+from erp_assistant.structural.services.canonical_import_service import CanonicalImportService
 
 ProgressCallback = Callable[[str, dict[str, Any]], None]
 
@@ -91,9 +95,7 @@ class CanonicalImportJobExecutor:
         source_crawl_job_id = self._uuid_param(params, "source_crawl_job_id")
         requires_active_base = bool(params.get("requires_active_base"))
         base_version_id = (
-            self._uuid_param(params, "base_knowledge_version_id")
-            if requires_active_base
-            else None
+            self._uuid_param(params, "base_knowledge_version_id") if requires_active_base else None
         )
         base_version_name = str(params.get("base_knowledge_version") or "").strip()
         pinned_erp_id = str(params.get("erp_id") or "").strip()
@@ -113,27 +115,19 @@ class CanonicalImportJobExecutor:
             },
         )
 
-        knowledge_path = self._artifact(
-            params.get("knowledge_path"), run_root, "knowledge.json"
-        )
-        manifest_path = self._artifact(
-            params.get("manifest_path"), run_root, "manifest.json"
-        )
+        knowledge_path = self._artifact(params.get("knowledge_path"), run_root, "knowledge.json")
+        manifest_path = self._artifact(params.get("manifest_path"), run_root, "manifest.json")
         build_report_path = self._artifact(
             params.get("build_report_path"), run_root, "build_report.json"
         )
-        if not (
-            knowledge_path.parent == manifest_path.parent == build_report_path.parent
-        ):
+        if not (knowledge_path.parent == manifest_path.parent == build_report_path.parent):
             raise CanonicalImportJobExecutionError(
                 "Los artefactos canónicos fuente no pertenecen al mismo directorio"
             )
 
         try:
             manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-            build_report_payload = json.loads(
-                build_report_path.read_text(encoding="utf-8")
-            )
+            build_report_payload = json.loads(build_report_path.read_text(encoding="utf-8"))
             knowledge = CanonicalKnowledgeRepository(knowledge_path).knowledge
             execution_quality = validate_matching_certified_quality(
                 build_report_payload.get("crawl_execution_quality"),
@@ -176,19 +170,15 @@ class CanonicalImportJobExecutor:
                 raise CanonicalImportJobExecutionError(
                     "canonical_import merged requiere merged_from_scope válido"
                 )
-            target_key = (
-                "target_module_id" if expected_scope == "module" else "target_screen_id"
-            )
+            target_key = "target_module_id" if expected_scope == "module" else "target_screen_id"
             expected_target = str(params.get(f"merged_{target_key}") or "").strip()
             if not expected_target:
                 raise CanonicalImportJobExecutionError(
                     "canonical_import merged requiere target parcial fijado"
                 )
             if not isinstance(merge_context, dict) or (
-                str(merge_context.get("base_knowledge_version_id") or "")
-                != str(base_version_id)
-                or str(merge_context.get("base_knowledge_version") or "")
-                != base_version_name
+                str(merge_context.get("base_knowledge_version_id") or "") != str(base_version_id)
+                or str(merge_context.get("base_knowledge_version") or "") != base_version_name
                 or str(merge_context.get("erp_id") or "") != pinned_erp_id
                 or str(merge_context.get("scope") or "") != expected_scope
                 or str(merge_context.get(target_key) or "") != expected_target
@@ -249,11 +239,14 @@ class CanonicalImportJobExecutor:
                     raise CanonicalImportJobExecutionError(
                         "KnowledgeVersion importada no encontrada"
                     )
-                sync_jobs = session.scalar(
-                    select(func.count())
-                    .select_from(SyncJob)
-                    .where(SyncJob.knowledge_version_id == version.id)
-                ) or 0
+                sync_jobs = (
+                    session.scalar(
+                        select(func.count())
+                        .select_from(SyncJob)
+                        .where(SyncJob.knowledge_version_id == version.id)
+                    )
+                    or 0
+                )
                 version_status = version.status
                 erp_id = version.erp_id
         except CanonicalImportJobExecutionError:
@@ -296,9 +289,7 @@ class CanonicalImportJobExecutor:
             "crawl_execution_quality": execution_quality,
             "knowledge_path": _relative_project_path(self.project_root, knowledge_path),
             "manifest_path": _relative_project_path(self.project_root, manifest_path),
-            "build_report_path": _relative_project_path(
-                self.project_root, build_report_path
-            ),
+            "build_report_path": _relative_project_path(self.project_root, build_report_path),
         }
 
     def _execute_reconciliation_source(
@@ -324,9 +315,7 @@ class CanonicalImportJobExecutor:
             "erp_id": self._required_text(params, "erp_id"),
             "knowledge_version": self._required_text(params, "expected_knowledge_version"),
             "decision_set_hash": self._required_text(params, "expected_decision_set_hash"),
-            "raw_candidate_version_id": str(
-                self._uuid_param(params, "raw_candidate_version_id")
-            ),
+            "raw_candidate_version_id": str(self._uuid_param(params, "raw_candidate_version_id")),
             "base_active_version_id": str(self._uuid_param(params, "base_active_version_id")),
         }
         emit = progress or (lambda _stage, _payload: None)
@@ -341,9 +330,7 @@ class CanonicalImportJobExecutor:
         try:
             with self.session_factory.begin() as session:
                 source = session.scalar(
-                    select(PipelineJob)
-                    .where(PipelineJob.id == source_id)
-                    .with_for_update()
+                    select(PipelineJob).where(PipelineJob.id == source_id).with_for_update()
                 )
                 result_payload = self._source_result(source)
                 self._validate_source_job(source, result_payload, source_id)
@@ -399,16 +386,22 @@ class CanonicalImportJobExecutor:
                     raise CanonicalImportJobExecutionError(
                         "La KnowledgeVersion reconciliada importada es inconsistente."
                     )
-                item_count = session.scalar(
-                    select(func.count())
-                    .select_from(KnowledgeItem)
-                    .where(KnowledgeItem.knowledge_version_id == version.id)
-                ) or 0
-                sync_jobs = session.scalar(
-                    select(func.count())
-                    .select_from(SyncJob)
-                    .where(SyncJob.knowledge_version_id == version.id)
-                ) or 0
+                item_count = (
+                    session.scalar(
+                        select(func.count())
+                        .select_from(KnowledgeItem)
+                        .where(KnowledgeItem.knowledge_version_id == version.id)
+                    )
+                    or 0
+                )
+                sync_jobs = (
+                    session.scalar(
+                        select(func.count())
+                        .select_from(SyncJob)
+                        .where(SyncJob.knowledge_version_id == version.id)
+                    )
+                    or 0
+                )
                 if item_count != result_payload["reconciled_item_total"] or sync_jobs != 0:
                     raise CanonicalImportJobExecutionError(
                         "Los items o SyncJobs reconciliados no coinciden con provenance."
@@ -469,13 +462,27 @@ class CanonicalImportJobExecutor:
 
     def _validate_source_job(self, source, payload, source_id) -> None:
         required = (
-            "erp_id", "raw_candidate_version_id", "raw_candidate_knowledge_version",
-            "base_active_version_id", "base_active_knowledge_version", "knowledge_version",
-            "reconciled_knowledge_version", "canonical_dir", "knowledge_path",
-            "manifest_path", "build_report_path", "decision_set_hash",
-            "raw_candidate_item_total", "active_item_total", "reconciled_item_total",
-            "retain_from_active_total", "confirmed_removed_total", "unresolved_total",
-            "decisions", "generator_version", "candidate_origin",
+            "erp_id",
+            "raw_candidate_version_id",
+            "raw_candidate_knowledge_version",
+            "base_active_version_id",
+            "base_active_knowledge_version",
+            "knowledge_version",
+            "reconciled_knowledge_version",
+            "canonical_dir",
+            "knowledge_path",
+            "manifest_path",
+            "build_report_path",
+            "decision_set_hash",
+            "raw_candidate_item_total",
+            "active_item_total",
+            "reconciled_item_total",
+            "retain_from_active_total",
+            "confirmed_removed_total",
+            "unresolved_total",
+            "decisions",
+            "generator_version",
+            "candidate_origin",
         )
         if (
             source.kind != PipelineJobKind.CANONICAL_RECONCILIATION
@@ -631,10 +638,16 @@ class CanonicalImportJobExecutor:
         metadata = {
             key: payload[key]
             for key in (
-                "raw_candidate_version_id", "raw_candidate_knowledge_version",
-                "base_active_version_id", "base_active_knowledge_version", "erp_id",
-                "candidate_origin", "decision_set_hash", "retain_from_active_total",
-                "confirmed_removed_total", "unresolved_total",
+                "raw_candidate_version_id",
+                "raw_candidate_knowledge_version",
+                "base_active_version_id",
+                "base_active_knowledge_version",
+                "erp_id",
+                "candidate_origin",
+                "decision_set_hash",
+                "retain_from_active_total",
+                "confirmed_removed_total",
+                "unresolved_total",
             )
         }
         if (
@@ -677,9 +690,7 @@ class CanonicalImportJobExecutor:
 
     def _artifact(self, raw: Any, run_root: Path, expected_name: str) -> Path:
         if not isinstance(raw, str) or not raw.strip():
-            raise CanonicalImportJobExecutionError(
-                f"canonical_import requiere {expected_name}"
-            )
+            raise CanonicalImportJobExecutionError(f"canonical_import requiere {expected_name}")
         path = _project_path(self.project_root, raw.strip()).resolve()
         try:
             path.relative_to(run_root)

@@ -5,17 +5,19 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Callable
 
-from erp_assistant.config.paths import PROJECT_ROOT
-
 from playwright.sync_api import sync_playwright
 
 from erp_assistant.acquisition.browser.navigator import ERPNavigator
+from erp_assistant.acquisition.crawling.module_scope import (
+    ModuleCrawlBoundary,
+    ModuleCrawlBoundaryError,
+)
+from erp_assistant.acquisition.crawling.route_crawler import CrawlSummary, RouteCrawler
+from erp_assistant.acquisition.policy.route_policy import RoutePolicy
+from erp_assistant.config.paths import PROJECT_ROOT
 from erp_assistant.config.pipeline_settings import PipelineSettings
 from erp_assistant.config.profile_loader import ProfileLoader
-from erp_assistant.acquisition.crawling.module_scope import ModuleCrawlBoundary, ModuleCrawlBoundaryError
-from erp_assistant.acquisition.crawling.route_crawler import CrawlSummary, RouteCrawler
 from erp_assistant.persistence.postgres.enums import PipelineJobScope
-from erp_assistant.acquisition.policy.route_policy import RoutePolicy
 
 ProgressCallback = Callable[[str, dict[str, Any]], None]
 
@@ -161,9 +163,7 @@ class CrawlJobExecutor:
                     progress_callback=emit,
                 )
                 if normalized_scope == PipelineJobScope.SCREEN:
-                    canonical_title = str(
-                        params.get("target_screen_title") or ""
-                    ).strip() or None
+                    canonical_title = str(params.get("target_screen_title") or "").strip() or None
                     summary = crawler.crawl_screen(
                         target_value,
                         canonical_title=canonical_title,
@@ -205,9 +205,7 @@ class CrawlJobExecutor:
         clean = (target or "").strip()
         if scope == PipelineJobScope.MODULE:
             if not clean.startswith("module:"):
-                raise CrawlJobExecutionError(
-                    "scope=module requiere un target_module_id canónico"
-                )
+                raise CrawlJobExecutionError("scope=module requiere un target_module_id canónico")
             return clean
 
         if not clean or not clean.startswith("/") or "://" in clean:
@@ -216,7 +214,6 @@ class CrawlJobExecutor:
         if normalized is None or not RoutePolicy(profile).is_allowed_route(normalized):
             raise CrawlJobExecutionError("La ruta objetivo no está permitida por el perfil")
         return normalized
-
 
     @staticmethod
     def _module_boundary(
@@ -230,9 +227,7 @@ class CrawlJobExecutor:
         try:
             boundary = ModuleCrawlBoundary.from_payload(parameters.get("module_scope"))
         except ModuleCrawlBoundaryError as exc:
-            raise CrawlJobExecutionError(
-                f"El scope MODULE fijado es inválido: {exc}"
-            ) from exc
+            raise CrawlJobExecutionError(f"El scope MODULE fijado es inválido: {exc}") from exc
 
         target_module_id = str(parameters.get("target_module_id") or "").strip()
         if target != boundary.root_module_id or target_module_id != boundary.root_module_id:

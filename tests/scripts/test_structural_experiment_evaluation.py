@@ -146,9 +146,7 @@ def test_evaluate_structural_census_reports_tp_fp_fn(tmp_path):
     assert screen["precision"] == 1.0
     assert screen["recall"] == 0.5
     assert round(screen["f1"], 6) == round(2 / 3, 6)
-    assert screen["false_negatives"] == [
-        {"route": "/admin/general/meses", "name": "mes"}
-    ]
+    assert screen["false_negatives"] == [{"route": "/admin/general/meses", "name": "mes"}]
 
     hierarchy = payload["metrics"]["screen_hierarchy"]
     assert hierarchy["tp"] == 1
