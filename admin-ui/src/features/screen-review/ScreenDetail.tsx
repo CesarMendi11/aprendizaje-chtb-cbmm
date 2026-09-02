@@ -133,10 +133,9 @@ export function ScreenDetail({
     ? proposal.evidence_matches_current_structure !== false
     : true;
   const reviewable = proposalStatus === "pending_review" && proposalFresh;
-  const inferenceAllowed =
-    ["approved", "corrected"].includes(
-      context.screen.structural_review_status,
-    ) && context.semantic_state === "no_proposal";
+  const inferenceAllowed = ["approved", "corrected"].includes(
+    context.screen.structural_review_status,
+  );
 
   useEffect(() => {
     setTab(defaultTab);
@@ -669,25 +668,31 @@ function SemanticGovernancePanel({
           <strong>No · RBAC pendiente</strong>
         </div>
       </div>
-      {!proposal && (
-        <div className="semantic-inference-launch">
-          <div>
-            <strong>Sin propuesta semántica</strong>
-            <p>
-              {inferenceAllowed
-                ? "La estructura está aprobada. El lifecycle decidirá carry-forward, reinferencia o generación sobre evidencia segura."
-                : "El lifecycle requiere estructura aprobada/corregida y versión activa."}
-            </p>
-          </div>
-          <button
-            className="semantic-button semantic-button--primary"
-            disabled={!inferenceAllowed || Boolean(inferenceRunning)}
-            onClick={onInfer}
-          >
-            {inferenceRunning ? "Ejecutando…" : "Ejecutar lifecycle semántico"}
-          </button>
+      <div className="semantic-inference-launch">
+        <div>
+          <strong>
+            {proposal ? "Reevaluar lifecycle semántico" : "Sin propuesta semántica"}
+          </strong>
+          <p>
+            {inferenceAllowed
+              ? proposal
+                ? "El executor revalida la identidad de generación y la política vigente. Reutiliza una propuesta compatible o genera una nueva propuesta pendiente cuando el contrato cambió."
+                : "La estructura está aprobada. El lifecycle decidirá carry-forward, reinferencia o generación sobre evidencia segura."
+              : "El lifecycle requiere estructura aprobada/corregida y versión activa."}
+          </p>
         </div>
-      )}
+        <button
+          className="semantic-button semantic-button--primary"
+          disabled={!inferenceAllowed || Boolean(inferenceRunning)}
+          onClick={onInfer}
+        >
+          {inferenceRunning
+            ? "Ejecutando…"
+            : proposal
+              ? "Reevaluar lifecycle"
+              : "Ejecutar lifecycle semántico"}
+        </button>
+      </div>
       {inferenceJob && (
         <div className={`semantic-job semantic-job--${inferenceJob.status}`}>
           <strong>{stageLabel(inferenceJob.stage)}</strong>
