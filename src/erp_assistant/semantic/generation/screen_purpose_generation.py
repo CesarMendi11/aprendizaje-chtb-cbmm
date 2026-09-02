@@ -76,7 +76,7 @@ def build_screen_purpose_generation_schema(
             "supported_capabilities": {
                 "type": "array",
                 "minItems": 1,
-                "maxItems": 12,
+                "maxItems": len(alternatives),
                 "uniqueItems": True,
                 "items": {"oneOf": alternatives},
             },
@@ -154,23 +154,29 @@ def parse_generation_draft(
         raise InferenceScreenMismatchError("La inferencia corresponde a otra pantalla")
     hints = {hint.action: hint for hint in grounding_plan.supported_actions}
     declared_actions = [capability.action for capability in draft.supported_capabilities]
-    if len(set(declared_actions)) != len(declared_actions):
-        raise InferenceSchemaError(
-            "La inferencia contiene acciones duplicadas",
-            stage="pydantic_validation",
-            location=("supported_capabilities",),
-            category="duplicate_declared_action",
-        )
-    claims = []
-    for position, capability in enumerate(draft.supported_capabilities):
-        hint = hints.get(capability.action)
-        if hint is None:
+    for position, action in enumerate(declared_actions):
+        if action not in hints:
             raise InferenceUnsupportedActionError(
                 "La acción declarada no pertenece al plan",
                 stage="grounding_validation",
                 location=("supported_capabilities", position, "action"),
                 category="declared_action_not_supported",
             )
+
+    # The model selects a semantic set, not an ordered multiset. Some Ollama
+    # structured-output backends do not enforce JSON Schema uniqueItems.
+    # Canonicalize representational duplicates/order deterministically while
+    # continuing to reject every action that is outside the grounding plan.
+    selected_actions = set(declared_actions)
+    canonical_capabilities = [
+        GeneratedCapabilityDraft(action=hint.action)
+        for hint in grounding_plan.supported_actions
+        if hint.action in selected_actions
+    ]
+
+    claims = []
+    for position, capability in enumerate(canonical_capabilities):
+        hint = hints[capability.action]
         if len(hint.evidence_refs) > 20:
             raise InferenceGroundingError(
                 "El plan excede el máximo de evidencia publicable por capability",
@@ -186,7 +192,7 @@ def parse_generation_draft(
         )
     purpose_summary = build_deterministic_purpose_summary(
         screen_title=screen_title,
-        capabilities=list(draft.supported_capabilities),
+        capabilities=canonical_capabilities,
         grounding_plan=grounding_plan,
     )
     return ScreenPurposeInference(

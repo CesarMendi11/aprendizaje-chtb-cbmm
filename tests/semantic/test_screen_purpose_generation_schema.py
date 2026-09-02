@@ -75,6 +75,7 @@ def test_schema_is_deterministic_and_derived_only_from_supported_actions():
     assert "purpose_summary" not in first["required"]
     assert first["properties"]["screen_id"] == {"const": "screen:test"}
     assert first["properties"]["supported_capabilities"]["minItems"] == 1
+    assert first["properties"]["supported_capabilities"]["maxItems"] == 3
     assert first["properties"]["supported_capabilities"]["uniqueItems"] is True
     assert set(first["required"]) == {"semantic_type", "screen_id", "supported_capabilities"}
     assert set(first["properties"]) == {"semantic_type", "screen_id", "supported_capabilities"}
@@ -100,6 +101,15 @@ def test_no_supported_actions_stops_before_generation():
     with pytest.raises(InferenceGroundingError) as captured:
         build_screen_purpose_generation_schema(empty, screen_id="screen:test")
     assert captured.value.category == "no_supported_generation_actions"
+
+
+def test_single_supported_action_caps_schema_array_at_one_item():
+    single = ScreenPurposeGroundingPlan(
+        supported_actions=(hint("view", ("table:results",)),),
+        forbidden_actions=("search", "navigate", "create", "edit", "delete", "process"),
+    )
+    schema = build_screen_purpose_generation_schema(single, screen_id="screen:test")
+    assert schema["properties"]["supported_capabilities"]["maxItems"] == 1
 
 
 def test_removed_generation_fields_are_rejected():
@@ -178,25 +188,33 @@ def test_model_cannot_supply_statement_or_evidence_refs():
             parse({"action": "view", **extra})
 
 
-def test_duplicate_declared_action_is_rejected_defensively():
+def test_duplicate_and_reordered_actions_are_canonicalized_to_grounding_plan_order():
     raw = json.dumps(
         {
             "semantic_type": "screen_purpose",
             "screen_id": "screen:test",
             "supported_capabilities": [
+                {"action": "view"},
                 {"action": "search"},
-                {"action": "search"},
+                {"action": "view"},
             ],
         }
     )
-    with pytest.raises(InferenceSchemaError) as captured:
-        parse_generation_draft(
-            raw,
-            screen_id="screen:test",
-            screen_title="Retenciones",
-            grounding_plan=plan(),
-        )
-    assert captured.value.category == "duplicate_declared_action"
+    inference = parse_generation_draft(
+        raw,
+        screen_id="screen:test",
+        screen_title="Retenciones",
+        grounding_plan=plan(),
+    )
+    assert [claim.statement for claim in inference.supported_capabilities] == [
+        "Permite buscar mediante los criterios disponibles.",
+        "Permite visualizar información disponible en la pantalla.",
+    ]
+    assert [claim.evidence_refs for claim in inference.supported_capabilities] == [
+        ["control:search", "field:ruc"],
+        ["table:results"],
+    ]
+    assert inference.purpose_summary == "Permite buscar y consultar retenciones."
 
 
 def test_prudent_only_public_wording_is_determined_by_grounding_plan():
