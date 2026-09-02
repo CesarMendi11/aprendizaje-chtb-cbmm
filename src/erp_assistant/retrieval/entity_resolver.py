@@ -224,6 +224,56 @@ class CanonicalEntityResolver:
         version_id,
         limit: int = 12,
     ) -> EntityResolution:
+        return self._resolve(
+            query_plan,
+            version_id=version_id,
+            limit=limit,
+            canonical_ids=None,
+        )
+
+    def resolve_in_screen(
+        self,
+        query_plan: QueryPlan,
+        *,
+        version_id,
+        screen_id: str,
+        limit: int = 12,
+    ) -> EntityResolution:
+        """Resolve candidates only inside one PostgreSQL-governed screen subtree.
+
+        Same-turn questions can explicitly name both a screen and a repeated
+        child label such as ``RUC`` or ``Siguiente página``.  Filtering at the
+        authoritative candidate query prevents global duplicates from consuming
+        the resolver limit before the requested screen is applied.
+        """
+
+        canonical_ids = self._screen_scope_canonical_ids(
+            version_id=version_id,
+            screen_id=screen_id,
+        )
+        if not canonical_ids:
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=normalize_entity_text(
+                    query_plan.normalized_question or query_plan.question
+                ),
+                candidates=(),
+            )
+        return self._resolve(
+            query_plan,
+            version_id=version_id,
+            limit=limit,
+            canonical_ids=canonical_ids,
+        )
+
+    def _resolve(
+        self,
+        query_plan: QueryPlan,
+        *,
+        version_id,
+        limit: int,
+        canonical_ids: set[str] | None,
+    ) -> EntityResolution:
         normalized_query = normalize_entity_text(
             query_plan.normalized_question or query_plan.question
         )
@@ -237,6 +287,7 @@ class CanonicalEntityResolver:
             normalized_query=normalized_query,
             query_forms=query_forms,
             alias_targets=alias_targets,
+            canonical_ids=canonical_ids,
             limit=max(limit * 4, 40),
         )
 
@@ -245,6 +296,7 @@ class CanonicalEntityResolver:
         corrected = self._corrected_items(
             version_id=version_id,
             entity_types=entity_types,
+            canonical_ids=canonical_ids,
         )
         seen_item_ids = {str(item.id) for item, _, _ in rows}
         rows.extend((item, 0.0, 0.0) for item in corrected if str(item.id) not in seen_item_ids)
@@ -371,6 +423,49 @@ class CanonicalEntityResolver:
             candidates=scoped,
         )
 
+    def _screen_scope_canonical_ids(self, *, version_id, screen_id: str) -> set[str]:
+        screen_id = str(screen_id or "").strip()
+        if not screen_id:
+            return set()
+
+        screen = self.session.scalar(
+            select(KnowledgeItem).where(
+                KnowledgeItem.knowledge_version_id == version_id,
+                KnowledgeItem.current_review_status.in_(
+                    [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
+                ),
+                KnowledgeItem.entity_type == "screen",
+                KnowledgeItem.canonical_id == screen_id,
+            )
+        )
+        if screen is None:
+            return set()
+
+        canonical_ids = {screen_id}
+        frontier = {screen_id}
+        for _ in range(5):
+            rows = list(
+                self.session.scalars(
+                    select(KnowledgeItem).where(
+                        KnowledgeItem.knowledge_version_id == version_id,
+                        KnowledgeItem.current_review_status.in_(
+                            [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
+                        ),
+                        KnowledgeItem.parent_canonical_id.in_(sorted(frontier)),
+                    )
+                )
+            )
+            next_frontier = {
+                item.canonical_id
+                for item in rows
+                if item.canonical_id and item.canonical_id not in canonical_ids
+            }
+            if not next_frontier:
+                break
+            canonical_ids.update(next_frontier)
+            frontier = next_frontier
+        return canonical_ids
+
     def _scope_items(self, candidate_ids, *, version_id):
         pending = {str(value) for value in candidate_ids if str(value).strip()}
         by_id = {}
@@ -419,6 +514,7 @@ class CanonicalEntityResolver:
         normalized_query,
         query_forms,
         alias_targets,
+        canonical_ids=None,
         limit,
     ):
         dialect = self._dialect_name()
@@ -429,6 +525,7 @@ class CanonicalEntityResolver:
                 normalized_query=normalized_query,
                 query_forms=query_forms,
                 alias_targets=alias_targets,
+                canonical_ids=canonical_ids,
                 limit=limit,
             )
         return self._portable_candidate_rows(
@@ -437,6 +534,7 @@ class CanonicalEntityResolver:
             normalized_query=normalized_query,
             query_forms=query_forms,
             alias_targets=alias_targets,
+            canonical_ids=canonical_ids,
             limit=limit,
         )
 
@@ -448,6 +546,7 @@ class CanonicalEntityResolver:
         normalized_query,
         query_forms,
         alias_targets,
+        canonical_ids=None,
         limit,
     ):
         statement = self._postgres_statement(
@@ -456,6 +555,7 @@ class CanonicalEntityResolver:
             normalized_query=normalized_query,
             query_forms=query_forms,
             alias_targets=alias_targets,
+            canonical_ids=canonical_ids,
             limit=limit,
         )
         return [
@@ -471,6 +571,7 @@ class CanonicalEntityResolver:
         normalized_query,
         query_forms,
         alias_targets,
+        canonical_ids=None,
         limit,
     ):
         empty = literal_column("''")
@@ -502,6 +603,11 @@ class CanonicalEntityResolver:
         trigram_score = func.word_similarity(label_expr, normalized_query)
         exact_values = sorted(set(query_forms) | set(alias_targets))
         exact_match = label_expr.in_(exact_values) if exact_values else literal(False)
+        scope_match = (
+            KnowledgeItem.canonical_id.in_(sorted(canonical_ids))
+            if canonical_ids
+            else literal(True)
+        )
 
         return (
             select(
@@ -515,6 +621,7 @@ class CanonicalEntityResolver:
                     [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
                 ),
                 KnowledgeItem.entity_type.in_(entity_types),
+                scope_match,
                 or_(
                     exact_match,
                     lexical_match,
@@ -539,6 +646,7 @@ class CanonicalEntityResolver:
         normalized_query,
         query_forms,
         alias_targets,
+        canonical_ids=None,
         limit,
     ):
         statement = (
@@ -549,6 +657,11 @@ class CanonicalEntityResolver:
                     [ReviewStatus.APPROVED, ReviewStatus.CORRECTED]
                 ),
                 KnowledgeItem.entity_type.in_(entity_types),
+                (
+                    KnowledgeItem.canonical_id.in_(sorted(canonical_ids))
+                    if canonical_ids
+                    else literal(True)
+                ),
             )
             .order_by(KnowledgeItem.entity_type, KnowledgeItem.canonical_id)
             .limit(5000)
@@ -573,13 +686,18 @@ class CanonicalEntityResolver:
         rows.sort(key=lambda row: (-row[1], -row[2], row[0].entity_type, row[0].canonical_id))
         return rows[:limit]
 
-    def _corrected_items(self, *, version_id, entity_types):
+    def _corrected_items(self, *, version_id, entity_types, canonical_ids=None):
         statement = (
             select(KnowledgeItem)
             .where(
                 KnowledgeItem.knowledge_version_id == version_id,
                 KnowledgeItem.current_review_status == ReviewStatus.CORRECTED,
                 KnowledgeItem.entity_type.in_(entity_types),
+                (
+                    KnowledgeItem.canonical_id.in_(sorted(canonical_ids))
+                    if canonical_ids
+                    else literal(True)
+                ),
             )
             .order_by(KnowledgeItem.entity_type, KnowledgeItem.canonical_id)
             .limit(1000)

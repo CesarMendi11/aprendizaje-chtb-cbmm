@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import OrderedDict
+from dataclasses import replace
 
 from sqlalchemy import select
 
@@ -218,6 +219,51 @@ class HybridKnowledgeRetriever:
                 "approved_semantics": [],
                 "context": "",
             }
+
+        if (
+            conversation_context.mode == ConversationContextMode.DIRECT
+            and resolution.status == "ambiguous"
+            and not query_plan.mutative_action
+            and "screen" in query_plan.target_entity_types
+            and self.entity_resolver is not None
+            and hasattr(self.entity_resolver, "resolve_in_screen")
+        ):
+            screen_plan = replace(
+                query_plan,
+                target_entity_types=("screen",),
+            )
+            screen_resolution = self.entity_resolver.resolve(
+                screen_plan,
+                version_id=version.id,
+                limit=entity_top_k,
+            )
+            screen_id = screen_resolution.primary_canonical_id
+            screen_candidate = next(
+                (
+                    candidate
+                    for candidate in screen_resolution.candidates
+                    if candidate.canonical_id == screen_id
+                ),
+                None,
+            )
+            explicit_channels = {"normalized_mention", "alias", "normalized_containment"}
+            if (
+                screen_id
+                and screen_candidate is not None
+                and explicit_channels.intersection(screen_candidate.channels)
+            ):
+                scoped_resolution = self.entity_resolver.resolve_in_screen(
+                    query_plan,
+                    version_id=version.id,
+                    screen_id=screen_id,
+                    limit=entity_top_k,
+                )
+                if scoped_resolution.candidates:
+                    resolution = scoped_resolution
+                    conversation_context = replace(
+                        conversation_context,
+                        reason="current_turn_screen_scope",
+                    )
 
         if conversation_context.mode == ConversationContextMode.CONTEXTUALIZED:
             query_plan = self.query_planner.plan(effective_question)

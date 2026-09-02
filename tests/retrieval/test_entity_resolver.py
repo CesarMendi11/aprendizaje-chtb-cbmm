@@ -471,3 +471,73 @@ def test_screen_scope_keeps_real_same_label_event_ambiguity():
 
     assert scoped.status == "ambiguous"
     assert scoped.ambiguous_labels == ("event:siguiente pagina",)
+
+
+def test_resolve_in_screen_filters_candidates_before_global_limit():
+    screen = item("screen:ret", "screen", "Retenciones", "retenciones")
+    screen.parent_canonical_id = "module:cxp"
+    current = item("field:ruc-ret", "field", "RUC", "ruc")
+    current.parent_canonical_id = "screen:ret"
+    other = item("field:ruc-other", "field", "RUC", "ruc")
+    other.parent_canonical_id = "screen:other"
+
+    class ScreenResolver(Resolver):
+        def _screen_scope_canonical_ids(self, *, version_id, screen_id):
+            assert version_id == "version-1"
+            assert screen_id == "screen:ret"
+            return {"screen:ret", "field:ruc-ret"}
+
+        def _candidate_rows(self, **kwargs):
+            canonical_ids = kwargs.get("canonical_ids")
+            rows = self.rows
+            if canonical_ids is not None:
+                rows = [row for row in rows if row[0].canonical_id in canonical_ids]
+            return rows
+
+    resolver = ScreenResolver(
+        [
+            (other, 0.0, 0.0),
+            (screen, 0.0, 0.0),
+            (current, 0.0, 0.0),
+        ]
+    )
+
+    global_result = resolver.resolve(
+        plan(
+            "¿Cómo busco por RUC en Retenciones?",
+            entity_types=("screen", "field"),
+        ),
+        version_id="version-1",
+    )
+    scoped = resolver.resolve_in_screen(
+        plan(
+            "¿Cómo busco por RUC en Retenciones?",
+            entity_types=("screen", "field"),
+        ),
+        version_id="version-1",
+        screen_id="screen:ret",
+    )
+
+    assert global_result.status == "ambiguous"
+    assert scoped.status == "resolved"
+    assert {candidate.canonical_id for candidate in scoped.candidates} == {
+        "screen:ret",
+        "field:ruc-ret",
+    }
+
+
+def test_postgres_statement_can_filter_candidates_to_governed_screen_scope():
+    statement = CanonicalEntityResolver._postgres_statement(
+        version_id="00000000-0000-0000-0000-000000000001",
+        entity_types=("screen", "field", "control"),
+        normalized_query="como busco por ruc en retenciones",
+        query_forms=query_entity_forms("como busco por ruc en retenciones"),
+        alias_targets=set(),
+        canonical_ids={"screen:ret", "field:ruc", "control:buscar"},
+        limit=20,
+    )
+    sql = str(statement).upper()
+
+    assert "CANONICAL_ID IN" in sql
+    assert "KNOWLEDGE_VERSION_ID" in sql
+    assert "CURRENT_REVIEW_STATUS IN" in sql

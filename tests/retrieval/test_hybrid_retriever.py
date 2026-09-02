@@ -1132,3 +1132,309 @@ def test_retrieve_resolves_version_without_preparing_chroma_projection(monkeypat
 
     assert result["knowledge_version"] == "v1"
     assert result["evidence_selection"]["reason"] == "insufficient_evidence"
+
+
+def test_same_turn_explicit_screen_scopes_ambiguous_search_before_graph(monkeypatch):
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.entity_resolver import (
+        EntityResolution,
+        EntityResolutionCandidate,
+    )
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
+
+    monkeypatch.setattr("erp_assistant.retrieval.retriever.ChromaSyncService", SyncService)
+
+    def candidate(canonical_id, entity_type, label):
+        return EntityResolutionCandidate(
+            canonical_id=canonical_id,
+            entity_type=entity_type,
+            safe_label=label,
+            route="/retenciones" if entity_type == "screen" else None,
+            score=1.0,
+            channels=("normalized_mention",),
+            matched_terms=(label.casefold(),),
+            channel_scores=(("normalized_mention", 1.0),),
+        )
+
+    class Resolver:
+        def __init__(self):
+            self.scoped_calls = []
+
+        def resolve(self, query_plan, *, version_id, limit):
+            if query_plan.target_entity_types == ("screen",):
+                rows = (candidate("screen:ret", "screen", "Retenciones"),)
+            else:
+                rows = (
+                    candidate("screen:ret", "screen", "Retenciones"),
+                    candidate("field:ruc-ret", "field", "RUC"),
+                    candidate("field:ruc-other", "field", "RUC"),
+                )
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=rows,
+            )
+
+        def resolve_in_screen(self, query_plan, *, version_id, screen_id, limit):
+            self.scoped_calls.append((screen_id, query_plan.intent))
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(
+                    candidate("screen:ret", "screen", "Retenciones"),
+                    candidate("field:ruc-ret", "field", "RUC"),
+                    candidate("control:buscar", "control", "Buscar"),
+                ),
+            )
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return []
+
+    resolver = Resolver()
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=object(),
+        embeddings=Embeddings(),
+        entity_resolver=resolver,
+    )
+
+    items = {
+        "screen:ret": SimpleNamespace(
+            id="db-screen-ret",
+            canonical_id="screen:ret",
+            entity_type="screen",
+            route="/retenciones",
+        ),
+        "field:ruc-ret": SimpleNamespace(
+            id="db-field-ruc",
+            canonical_id="field:ruc-ret",
+            entity_type="field",
+            route=None,
+        ),
+        "control:buscar": SimpleNamespace(
+            id="db-control-buscar",
+            canonical_id="control:buscar",
+            entity_type="control",
+            route=None,
+        ),
+    }
+    payloads = {
+        "db-screen-ret": {"title": "Retenciones"},
+        "db-field-ruc": {"label": "RUC"},
+        "db-control-buscar": {"label": "Buscar"},
+    }
+    retriever._validate = lambda ids, version_id: [items[cid] for cid in ids if cid in items]
+    retriever._effective = lambda item_id: payloads[item_id]
+    retriever._expand = lambda seeds, *args, **kwargs: [
+        {
+            "source_canonical_id": "screen:ret",
+            "canonical_id": "field:ruc-ret",
+            "entity_type": "field",
+            "path_edges": [
+                {
+                    "relationship_type": "HAS_FIELD",
+                    "from_canonical_id": "screen:ret",
+                    "to_canonical_id": "field:ruc-ret",
+                }
+            ],
+        },
+        {
+            "source_canonical_id": "screen:ret",
+            "canonical_id": "control:buscar",
+            "entity_type": "control",
+            "path_edges": [
+                {
+                    "relationship_type": "HAS_CONTROL",
+                    "from_canonical_id": "screen:ret",
+                    "to_canonical_id": "control:buscar",
+                }
+            ],
+        },
+    ]
+
+    result = retriever.retrieve("¿Cómo busco por RUC en Retenciones?")
+
+    assert resolver.scoped_calls
+    assert result["conversation_context"]["reason"] == "current_turn_screen_scope"
+    assert result["entity_resolution"]["status"] == "resolved"
+    assert result["graph_expansion"]["enabled"] is True
+    assert result["graph_expansion"]["strategy"] == "search_by_field"
+    assert result["evidence_selection"]["status"] == "selected"
+    assert result["evidence_selection"]["reason"] == "search_by_field"
+    assert {row["relationship_type"] for row in result["relations"]} == {
+        "HAS_FIELD",
+        "HAS_CONTROL",
+    }
+
+
+def test_same_turn_explicit_screen_scopes_ambiguous_navigation_before_graph(monkeypatch):
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.entity_resolver import (
+        EntityResolution,
+        EntityResolutionCandidate,
+    )
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
+
+    monkeypatch.setattr("erp_assistant.retrieval.retriever.ChromaSyncService", SyncService)
+
+    def candidate(canonical_id, entity_type, label):
+        return EntityResolutionCandidate(
+            canonical_id=canonical_id,
+            entity_type=entity_type,
+            safe_label=label,
+            route="/retenciones" if entity_type == "screen" else None,
+            score=1.0,
+            channels=("normalized_mention",),
+            matched_terms=(label.casefold(),),
+            channel_scores=(("normalized_mention", 1.0),),
+        )
+
+    class Resolver:
+        def __init__(self):
+            self.scoped_calls = []
+
+        def resolve(self, query_plan, *, version_id, limit):
+            if query_plan.target_entity_types == ("screen",):
+                rows = (candidate("screen:ret", "screen", "Retenciones"),)
+            else:
+                rows = (
+                    candidate("control:next-a", "control", "Siguiente página"),
+                    candidate("control:next-b", "control", "Siguiente página"),
+                    candidate("screen:ret", "screen", "Retenciones"),
+                )
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=rows,
+            )
+
+        def resolve_in_screen(self, query_plan, *, version_id, screen_id, limit):
+            self.scoped_calls.append((screen_id, query_plan.intent))
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=query_plan.normalized_question,
+                candidates=(
+                    candidate("screen:ret", "screen", "Retenciones"),
+                    candidate("control:next-ret", "control", "Siguiente página"),
+                    candidate("event:next-ret", "event", "Siguiente página"),
+                ),
+            )
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return []
+
+    resolver = Resolver()
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=object(),
+        embeddings=Embeddings(),
+        entity_resolver=resolver,
+    )
+
+    items = {
+        "screen:ret": SimpleNamespace(
+            id="db-screen-ret",
+            canonical_id="screen:ret",
+            entity_type="screen",
+            route="/retenciones",
+        ),
+        "control:next-ret": SimpleNamespace(
+            id="db-control-next",
+            canonical_id="control:next-ret",
+            entity_type="control",
+            route=None,
+        ),
+        "event:next-ret": SimpleNamespace(
+            id="db-event-next",
+            canonical_id="event:next-ret",
+            entity_type="event",
+            route=None,
+        ),
+    }
+    payloads = {
+        "db-screen-ret": {"title": "Retenciones"},
+        "db-control-next": {"label": "Siguiente página"},
+        "db-event-next": {"label": "Siguiente página"},
+    }
+    retriever._validate = lambda ids, version_id: [items[cid] for cid in ids if cid in items]
+    retriever._effective = lambda item_id: payloads[item_id]
+    retriever._expand = lambda seeds, *args, **kwargs: [
+        {
+            "source_canonical_id": "event:next-ret",
+            "canonical_id": "screen:ret",
+            "entity_type": "screen",
+            "path_edges": [
+                {
+                    "relationship_type": "HAS_EVENT",
+                    "from_canonical_id": "screen:ret",
+                    "to_canonical_id": "event:next-ret",
+                }
+            ],
+        },
+        {
+            "source_canonical_id": "event:next-ret",
+            "canonical_id": "control:next-ret",
+            "entity_type": "control",
+            "path_edges": [
+                {
+                    "relationship_type": "HAS_EVENT",
+                    "from_canonical_id": "screen:ret",
+                    "to_canonical_id": "event:next-ret",
+                },
+                {
+                    "relationship_type": "HAS_CONTROL",
+                    "from_canonical_id": "screen:ret",
+                    "to_canonical_id": "control:next-ret",
+                },
+            ],
+        },
+    ]
+
+    result = retriever.retrieve("¿Cómo avanzo a la siguiente página en Retenciones?")
+
+    assert resolver.scoped_calls
+    assert result["conversation_context"]["reason"] == "current_turn_screen_scope"
+    assert result["entity_resolution"]["status"] == "resolved"
+    assert result["graph_expansion"]["enabled"] is True
+    assert result["graph_expansion"]["strategy"] == "navigation_event"
+    assert result["evidence_selection"]["status"] == "selected"
+    assert result["evidence_selection"]["reason"] == "navigation_event"
+    assert any(row["relationship_type"] == "HAS_EVENT" for row in result["relations"])
