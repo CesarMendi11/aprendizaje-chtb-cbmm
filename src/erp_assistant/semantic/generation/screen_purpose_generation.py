@@ -19,26 +19,16 @@ from erp_assistant.semantic.schemas.screen_purpose_grounding_plan import (
     ScreenPurposeGroundingPlan,
 )
 from erp_assistant.semantic.schemas.screen_purpose_inference import InferenceModel, _safe_text
-from erp_assistant.semantic.validators.screen_purpose_grounding import validate_declared_capability
-from erp_assistant.structural.canonical.ids import normalize_text
 
 
 class GeneratedCapabilityDraft(InferenceModel):
     action: RecognizedAction
-    statement: str
-
-    @field_validator("statement")
-    @classmethod
-    def validate_statement(cls, value: Any) -> str:
-        return _safe_text(value, limit=400)
 
 
 class ScreenPurposeGenerationDraft(InferenceModel):
     semantic_type: Literal["screen_purpose"]
     screen_id: str
     supported_capabilities: list[GeneratedCapabilityDraft] = Field(min_length=1, max_length=12)
-    limitations: list[str] = Field(default_factory=list, max_length=0)
-    uncertainties: list[str] = Field(default_factory=list, max_length=0)
 
     @field_validator("screen_id")
     @classmethod
@@ -60,10 +50,9 @@ def build_screen_purpose_generation_schema(
             {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["action", "statement"],
+                "required": ["action"],
                 "properties": {
                     "action": {"const": hint.action},
-                    "statement": {"type": "string", "minLength": 1, "maxLength": 400},
                 },
             }
         )
@@ -73,7 +62,6 @@ def build_screen_purpose_generation_schema(
             stage="grounding_plan_validation",
             category="no_supported_generation_actions",
         )
-    empty_list = {"type": "array", "maxItems": 0}
     return {
         "type": "object",
         "additionalProperties": False,
@@ -81,8 +69,6 @@ def build_screen_purpose_generation_schema(
             "semantic_type",
             "screen_id",
             "supported_capabilities",
-            "limitations",
-            "uncertainties",
         ],
         "properties": {
             "semantic_type": {"const": "screen_purpose"},
@@ -91,10 +77,9 @@ def build_screen_purpose_generation_schema(
                 "type": "array",
                 "minItems": 1,
                 "maxItems": 12,
+                "uniqueItems": True,
                 "items": {"oneOf": alternatives},
             },
-            "limitations": empty_list,
-            "uncertainties": dict(empty_list),
         },
     }
 
@@ -114,32 +99,13 @@ CAPABILITY_ACTION_VERBS = {
     "delete": "eliminar",
     "process": "procesar",
 }
-PRUDENT_DRAFT_MARKERS = (
-    "presenta una opcion",
-    "muestra una opcion",
-    "existe un control",
-    "opcion asociada",
-    "control asociado",
-    "relacionada con",
-    "relacionado con",
-)
 
 
-def build_deterministic_capability_statement(
-    capability: GeneratedCapabilityDraft,
-    hint,
-) -> str:
-    """Render the public claim from action/policy, never from model-specific prose."""
-    normalized_statement = normalize_text(capability.statement)
-    prudent_draft = any(marker in normalized_statement for marker in PRUDENT_DRAFT_MARKERS)
-    if capability.action in CAPABILITY_ACTION_VERBS and (
-        hint.narrative_rule == "prudent_only" or prudent_draft
-    ):
-        return (
-            "La interfaz presenta una opción relacionada con "
-            f"{CAPABILITY_ACTION_VERBS[capability.action]}."
-        )
-    return CANONICAL_CAPABILITY_STATEMENTS[capability.action]
+def build_deterministic_capability_statement(action: RecognizedAction, hint) -> str:
+    """Render the public claim solely from governed action and policy."""
+    if action in CAPABILITY_ACTION_VERBS and hint.narrative_rule == "prudent_only":
+        return f"La interfaz presenta una opción relacionada con {CAPABILITY_ACTION_VERBS[action]}."
+    return CANONICAL_CAPABILITY_STATEMENTS[action]
 
 
 def parse_generation_draft(
@@ -187,6 +153,14 @@ def parse_generation_draft(
     if draft.screen_id != screen_id:
         raise InferenceScreenMismatchError("La inferencia corresponde a otra pantalla")
     hints = {hint.action: hint for hint in grounding_plan.supported_actions}
+    declared_actions = [capability.action for capability in draft.supported_capabilities]
+    if len(set(declared_actions)) != len(declared_actions):
+        raise InferenceSchemaError(
+            "La inferencia contiene acciones duplicadas",
+            stage="pydantic_validation",
+            location=("supported_capabilities",),
+            category="duplicate_declared_action",
+        )
     claims = []
     for position, capability in enumerate(draft.supported_capabilities):
         hint = hints.get(capability.action)
@@ -204,12 +178,9 @@ def parse_generation_draft(
                 location=("supported_capabilities", position),
                 category="grounding_hint_too_many_references",
             )
-        # The model statement is only a consistency signal. Evidence binding is
-        # deterministic and comes from the governed grounding plan, never from the LLM.
-        validate_declared_capability(capability, hint, position=position)
         claims.append(
             CapabilityClaim(
-                statement=build_deterministic_capability_statement(capability, hint),
+                statement=build_deterministic_capability_statement(capability.action, hint),
                 evidence_refs=list(hint.evidence_refs),
             )
         )

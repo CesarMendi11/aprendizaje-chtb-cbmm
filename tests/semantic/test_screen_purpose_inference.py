@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceJSONError,
-    InferenceNarrativeQualityError,
     InferenceSchemaError,
     InferenceScreenMismatchError,
     InferenceSensitiveContentError,
@@ -139,9 +138,7 @@ def valid_output(*, include_evidence_refs=False, **updates):
     values = {
         "semantic_type": "screen_purpose",
         "screen_id": "screen:test",
-        "supported_capabilities": [{"statement": "Permite buscar registros."}],
-        "limitations": [],
-        "uncertainties": [],
+        "supported_capabilities": [{"action": "search"}],
     }
     values.update(updates)
     values.pop("purpose_summary", None)
@@ -155,8 +152,6 @@ def valid_output(*, include_evidence_refs=False, **updates):
         "view": ("ver", "muestra", "visualizar", "listar"),
     }
     for capability in values.get("supported_capabilities", []):
-        if not include_evidence_refs:
-            capability.pop("evidence_refs", None)
         if "action" not in capability:
             statement = str(capability.get("statement", "")).casefold()
             capability["action"] = next(
@@ -167,6 +162,9 @@ def valid_output(*, include_evidence_refs=False, **updates):
                 ),
                 "search",
             )
+        capability.pop("statement", None)
+        if not include_evidence_refs:
+            capability.pop("evidence_refs", None)
     return values
 
 
@@ -326,6 +324,7 @@ def test_models_are_strict_frozen_and_claim_requires_refs():
     }
     for capability in payload["supported_capabilities"]:
         capability.pop("action")
+        capability["statement"] = "Permite buscar mediante los criterios disponibles."
         capability["evidence_refs"] = ["control:search", "field:ruc"]
     inference = ScreenPurposeInference.model_validate(payload)
     with pytest.raises(ValidationError):
@@ -338,30 +337,16 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v11"
+    assert PROMPT_VERSION == "screen-purpose-v12"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
 
-def test_v7_prompt_removes_summary_and_requires_empty_negative_lists():
+def test_v12_prompt_delegates_only_action_selection():
     prompt = build_user_prompt(package())
-    assert "No generes purpose_summary" in prompt
-    assert "deben ser siempre listas vacías" in prompt
-
-
-@pytest.mark.parametrize(
-    "statement",
-    [
-        "control:synthetic-search",
-        "Permite usar control:synthetic-search para buscar",
-    ],
-)
-def test_canonical_ids_are_rejected_from_narrative(statement):
-    value = valid_output(supported_capabilities=[{"statement": statement}])
-    with pytest.raises(InferenceNarrativeQualityError) as captured:
-        ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(package())
-    assert captured.value.category == "canonical_id_in_narrative"
-    assert statement not in str(captured.value)
+    assert "No generes purpose_summary ni statements" in prompt
+    assert "Cada capability contiene únicamente action" in prompt
+    assert "evidence_refs" in prompt
 
 
 def test_deterministic_purpose_never_uses_canonical_ids():
@@ -406,26 +391,8 @@ def test_search_and_pagination_are_grounded_by_relevant_references():
     assert len(candidate.inference.supported_capabilities) == 3
 
 
-def test_irrelevant_reference_and_unsupported_delete_are_rejected():
-    irrelevant = valid_output(
-        supported_capabilities=[
-            {
-                "statement": "Permite archivar documentos disponibles.",
-                "evidence_refs": ["control:search"],
-            }
-        ]
-    )
-    with pytest.raises(InferenceGroundingError):
-        ScreenPurposeInferenceService(FakeClient(json.dumps(irrelevant))).generate(package())
-    deletion = valid_output(
-        purpose_summary="Permite eliminar retenciones registradas.",
-        supported_capabilities=[
-            {
-                "statement": "Permite eliminar registros existentes.",
-                "evidence_refs": ["control:search"],
-            }
-        ],
-    )
+def test_unsupported_delete_action_is_rejected_before_public_inference():
+    deletion = valid_output(supported_capabilities=[{"action": "delete"}])
     with pytest.raises(InferenceUnsupportedActionError):
         ScreenPurposeInferenceService(FakeClient(json.dumps(deletion))).generate(package())
 
@@ -522,21 +489,11 @@ def test_direct_support_prevails_over_prudent_support_for_same_action():
             safety_decision="allow",
         ),
     ]
-    value = valid_output(
-        purpose_summary="Permite crear retenciones mediante controles disponibles.",
-        supported_capabilities=[
-            {
-                "statement": "La interfaz presenta una opción para crear una nueva retención.",
-                "evidence_refs": ["control:new"],
-            },
-            {
-                "statement": "Permite registrar una nueva retención desde la pantalla.",
-                "evidence_refs": ["control:new-allowed"],
-            },
-        ],
-    )
-    assert ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(
-        mutative_package(controls=controls)
+    candidate = ScreenPurposeInferenceService(
+        FakeClient(json.dumps(valid_output(supported_capabilities=[{"action": "create"}])))
+    ).generate(mutative_package(controls=controls))
+    assert candidate.inference.supported_capabilities[0].statement == (
+        "Permite crear mediante la opción disponible."
     )
 
 
@@ -835,19 +792,14 @@ def test_plan_accepts_search_and_navigation_with_permitted_references():
     assert len(candidate.inference.supported_capabilities) == 2
 
 
-def test_prudent_plan_rejects_direct_and_accepts_prudent_create():
-    direct = mutative_output(
-        "Permite crear una nueva retención.",
-        "Permite crear retenciones desde la pantalla.",
-    )
-    prudent = mutative_output(
-        "La interfaz presenta una opción para crear una nueva retención.",
-        "La pantalla muestra una opción relacionada con la creación de retenciones.",
-    )
+def test_prudent_plan_builds_prudent_public_create_deterministically():
     evidence = grounding_package()
-    with pytest.raises(InferenceUnsupportedActionError):
-        ScreenPurposeInferenceService(FakeClient(json.dumps(direct))).generate(evidence)
-    assert ScreenPurposeInferenceService(FakeClient(json.dumps(prudent))).generate(evidence)
+    candidate = ScreenPurposeInferenceService(
+        FakeClient(json.dumps(valid_output(supported_capabilities=[{"action": "create"}])))
+    ).generate(evidence)
+    assert candidate.inference.supported_capabilities[0].statement == (
+        "La interfaz presenta una opción relacionada con crear."
+    )
 
 
 def test_deterministic_purpose_cannot_name_action_forbidden_by_plan():
@@ -872,7 +824,7 @@ def test_negative_claims_are_not_accepted_in_generation_draft(field_name, claim,
         ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(package())
     assert captured.value.stage == "pydantic_validation"
     assert captured.value.location == (field_name,)
-    assert captured.value.category == "too_long"
+    assert captured.value.category == "extra_forbidden"
     assert captured.value.value_length == 1
     assert claim not in str(captured.value)
 
@@ -904,10 +856,6 @@ def test_generated_view_detail_overreach_is_not_persisted_as_public_claim():
         supported_capabilities=[
             {
                 "action": "view",
-                "statement": (
-                    "Permite visualizar detalles de retenciones en una pantalla de detalle."
-                ),
-                "evidence_refs": ["screen:test", "table:results"],
             }
         ]
     )
@@ -940,8 +888,6 @@ def test_generation_remains_conservative_even_with_explicit_detail_evidence():
         supported_capabilities=[
             {
                 "action": "view",
-                "statement": "Permite visualizar el detalle de una retención.",
-                "evidence_refs": ["control:detail"],
             }
         ]
     )
@@ -1039,9 +985,10 @@ def test_prudent_mutative_option_is_not_misclassified_as_view():
     assert candidate.inference.supported_capabilities[0].evidence_refs == ["control:new"]
 
 
-def test_prompt_constrains_unbacked_view_detail_semantics():
+def test_v12_prompt_does_not_delegate_narrative_or_evidence_binding():
     prompt = build_user_prompt(grounding_package()).casefold()
 
-    assert "no una vista de detalle" in prompt
-    assert "la evidencia permitida para esa action" in prompt
-    assert "detalle, detalles o ficha" in prompt
+    assert "cada capability contiene únicamente action" in prompt
+    assert "no generes purpose_summary ni statements" in prompt
+    assert "evidence_refs" in prompt
+    assert "no repitas la misma action" in prompt

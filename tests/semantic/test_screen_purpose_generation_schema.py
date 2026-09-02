@@ -47,8 +47,6 @@ def draft(capability):
             "semantic_type": "screen_purpose",
             "screen_id": "screen:test",
             "supported_capabilities": [capability],
-            "limitations": [],
-            "uncertainties": [],
         },
         ensure_ascii=False,
     )
@@ -77,18 +75,20 @@ def test_schema_is_deterministic_and_derived_only_from_supported_actions():
     assert "purpose_summary" not in first["required"]
     assert first["properties"]["screen_id"] == {"const": "screen:test"}
     assert first["properties"]["supported_capabilities"]["minItems"] == 1
-    assert first["properties"]["limitations"] == {"type": "array", "maxItems": 0}
-    assert first["properties"]["uncertainties"] == {"type": "array", "maxItems": 0}
+    assert first["properties"]["supported_capabilities"]["uniqueItems"] is True
+    assert set(first["required"]) == {"semantic_type", "screen_id", "supported_capabilities"}
+    assert set(first["properties"]) == {"semantic_type", "screen_id", "supported_capabilities"}
     consts = {item["properties"]["action"]["const"] for item in alternatives(first)}
     assert consts == {"search", "navigate", "view"}
     assert consts.isdisjoint(grounding_plan.forbidden_actions)
 
 
-def test_schema_does_not_delegate_evidence_binding_to_model():
+def test_schema_delegates_only_action_selection_to_model():
     schema = build_screen_purpose_generation_schema(plan(), screen_id="screen:test")
     for item in alternatives(schema):
-        assert item["required"] == ["action", "statement"]
-        assert set(item["properties"]) == {"action", "statement"}
+        assert item["required"] == ["action"]
+        assert set(item["properties"]) == {"action"}
+        assert "statement" not in item["properties"]
         assert "evidence_refs" not in item["properties"]
 
 
@@ -102,11 +102,8 @@ def test_no_supported_actions_stops_before_generation():
     assert captured.value.category == "no_supported_generation_actions"
 
 
-def test_removed_summary_and_nonempty_negative_lists_are_rejected():
-    capability = {
-        "action": "search",
-        "statement": "Permite buscar retenciones registradas.",
-    }
+def test_removed_generation_fields_are_rejected():
+    capability = {"action": "search"}
     values = json.loads(draft(capability))
     for update in (
         {"purpose_summary": "Texto generado no permitido."},
@@ -123,14 +120,7 @@ def test_removed_summary_and_nonempty_negative_lists_are_rejected():
 
 
 def test_empty_capabilities_have_sanitized_domain_category():
-    values = json.loads(
-        draft(
-            {
-                "action": "search",
-                "statement": "Permite buscar retenciones registradas.",
-            }
-        )
-    )
+    values = json.loads(draft({"action": "search"}))
     values["supported_capabilities"] = []
     with pytest.raises(InferenceGroundingError) as captured:
         parse_generation_draft(
@@ -143,35 +133,31 @@ def test_empty_capabilities_have_sanitized_domain_category():
 
 
 @pytest.mark.parametrize(
-    ("action", "statement", "canonical_statement", "expected_refs"),
+    ("action", "canonical_statement", "expected_refs"),
     [
         (
             "search",
-            "Permite buscar retenciones registradas.",
             "Permite buscar mediante los criterios disponibles.",
             ["control:search", "field:ruc"],
         ),
         (
             "navigate",
-            "Permite navegar a la siguiente página.",
             "Permite navegar entre las páginas de resultados.",
             ["event:next"],
         ),
         (
             "view",
-            "Permite visualizar retenciones registradas.",
             "Permite visualizar información disponible en la pantalla.",
             ["table:results"],
         ),
     ],
 )
 def test_valid_single_action_drafts_are_rendered_as_controlled_public_claims(
-    action, statement, canonical_statement, expected_refs
+    action, canonical_statement, expected_refs
 ):
-    inference = parse({"action": action, "statement": statement})
+    inference = parse({"action": action})
     claim = inference.supported_capabilities[0]
     assert claim.statement == canonical_statement
-    assert claim.statement != statement
     assert claim.evidence_refs == expected_refs
     assert "action" not in inference.model_dump(mode="json")["supported_capabilities"][0]
 
@@ -180,83 +166,52 @@ def test_forbidden_action_is_not_representable_or_mappable():
     schema = build_screen_purpose_generation_schema(plan(), screen_id="screen:test")
     assert "edit" not in {item["properties"]["action"]["const"] for item in alternatives(schema)}
     with pytest.raises(InferenceUnsupportedActionError):
-        parse(
-            {
-                "action": "edit",
-                "statement": "Permite editar retenciones registradas.",
-            }
+        parse({"action": "edit"})
+
+
+def test_model_cannot_supply_statement_or_evidence_refs():
+    for extra in (
+        {"statement": "Permite visualizar retenciones registradas."},
+        {"evidence_refs": ["table:results"]},
+    ):
+        with pytest.raises(InferenceSchemaError):
+            parse({"action": "view", **extra})
+
+
+def test_duplicate_declared_action_is_rejected_defensively():
+    raw = json.dumps(
+        {
+            "semantic_type": "screen_purpose",
+            "screen_id": "screen:test",
+            "supported_capabilities": [
+                {"action": "search"},
+                {"action": "search"},
+            ],
+        }
+    )
+    with pytest.raises(InferenceSchemaError) as captured:
+        parse_generation_draft(
+            raw,
+            screen_id="screen:test",
+            screen_title="Retenciones",
+            grounding_plan=plan(),
         )
+    assert captured.value.category == "duplicate_declared_action"
 
 
-def test_declared_action_must_match_statement_without_leaking_it():
-    statement = "Permite editar la retención registrada."
-    with pytest.raises(InferenceUnsupportedActionError) as captured:
-        parse(
-            {
-                "action": "search",
-                "statement": statement,
-            }
-        )
-    assert captured.value.category == "declared_action_statement_mismatch"
-    assert statement not in str(captured.value)
-
-
-def test_model_cannot_supply_evidence_refs():
-    with pytest.raises(InferenceSchemaError):
-        parse(
-            {
-                "action": "view",
-                "statement": "Permite visualizar retenciones registradas.",
-                "evidence_refs": ["control:search"],
-            }
-        )
-
-
-def test_statement_cannot_mix_two_recognized_actions():
-    with pytest.raises(InferenceUnsupportedActionError) as captured:
-        parse(
-            {
-                "action": "search",
-                "statement": "Permite buscar y visualizar retenciones.",
-            }
-        )
-    assert captured.value.category == "declared_action_statement_mismatch"
-
-
-def test_prudent_only_requires_prudent_language_but_direct_allows_direct_language():
+def test_prudent_only_public_wording_is_determined_by_grounding_plan():
     prudent_plan = ScreenPurposeGroundingPlan(
         supported_actions=(hint("create", ("control:new",), narrative_rule="prudent_only"),),
         forbidden_actions=("edit", "delete", "process"),
     )
-    with pytest.raises(InferenceUnsupportedActionError) as captured:
-        parse(
-            {
-                "action": "create",
-                "statement": "Permite crear una retención nueva.",
-            },
-            grounding_plan=prudent_plan,
-        )
-    assert captured.value.category == "declared_action_requires_prudent_wording"
-    assert parse(
-        {
-            "action": "create",
-            "statement": "La interfaz presenta una opción para crear retenciones.",
-        },
-        grounding_plan=prudent_plan,
-    )
-    assert parse(
-        {
-            "action": "search",
-            "statement": "Permite buscar retenciones registradas.",
-        }
+    inference = parse({"action": "create"}, grounding_plan=prudent_plan)
+    assert inference.supported_capabilities[0].statement == (
+        "La interfaz presenta una opción relacionada con crear."
     )
 
 
 def test_draft_models_are_strict_and_frozen():
-    capability = GeneratedCapabilityDraft(
-        action="search",
-        statement="Permite buscar retenciones registradas.",
-    )
+    capability = GeneratedCapabilityDraft(action="search")
     with pytest.raises(ValidationError):
         capability.action = "view"
     with pytest.raises(ValidationError):
@@ -272,11 +227,8 @@ def test_draft_models_are_strict_and_frozen():
         )
 
 
-def capability(action, statement, reference=None):
-    return GeneratedCapabilityDraft(
-        action=action,
-        statement=statement,
-    )
+def capability(action, statement=None, reference=None):
+    return GeneratedCapabilityDraft(action=action)
 
 
 def summary(capabilities, *, grounding_plan=None):
