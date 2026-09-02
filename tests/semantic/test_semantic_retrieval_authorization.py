@@ -51,15 +51,26 @@ def make_case(*, status=ReviewStatus.APPROVED, revision=1, evidence_hash="e" * 6
         screen_knowledge_item=screen,
     )
     package = SimpleNamespace(
+        screen_id=screen.canonical_id,
+        module=None,
         evidence_hash=evidence_hash,
         primary_evidence_ids=["evidence:screen"],
         evidence_ids=["evidence:screen"],
         fields=[],
-        controls=[SimpleNamespace()],
+        controls=[
+            SimpleNamespace(
+                control_id="control:buscar",
+                label="Buscar",
+                control_type="button",
+                mutative=False,
+                safety_decision=None,
+            )
+        ],
         tables=[],
         ui_states=[],
         events=[],
         transitions=[],
+        network_traces=[],
         screen_title="Retenciones",
         screen_route="/admin/cuentasxcobrar/retenciones",
     )
@@ -81,7 +92,7 @@ def make_case(*, status=ReviewStatus.APPROVED, revision=1, evidence_hash="e" * 6
         "supported_capabilities": [
             {
                 "statement": "Permite buscar mediante los criterios disponibles.",
-                "evidence_refs": ["field:ruc"],
+                "evidence_refs": ["control:buscar"],
             }
         ],
         "limitations": [],
@@ -131,5 +142,24 @@ def test_rejects_projection_when_current_evidence_is_stale():
 def test_rejects_projection_when_current_structure_is_ineligible():
     service, version, _proposal, package, hit = make_case()
     package.primary_evidence_ids = []
+
+    assert service.authorize_hits([hit], version=version) == []
+
+
+def test_rejects_projection_when_effective_semantic_exceeds_current_grounding_plan():
+    service, version, _proposal, _package, hit = make_case()
+    service.effective.payload = {
+        "semantic_type": "screen_purpose",
+        "screen_id": "screen:retenciones",
+        "purpose_summary": "Permite visualizar Retenciones desde la pantalla.",
+        "supported_capabilities": [
+            {
+                "statement": "Permite visualizar información disponible en la pantalla.",
+                "evidence_refs": ["screen:retenciones"],
+            }
+        ],
+        "limitations": [],
+        "uncertainties": [],
+    }
 
     assert service.authorize_hits([hit], version=version) == []

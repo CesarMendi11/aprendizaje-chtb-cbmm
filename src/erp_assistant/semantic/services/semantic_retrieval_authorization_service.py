@@ -10,6 +10,7 @@ from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
 
 from .semantic_effective_payload_service import SemanticEffectivePayloadService
+from .semantic_policy_compatibility import assess_screen_purpose_policy_compatibility
 
 PUBLISHABLE = {ReviewStatus.APPROVED, ReviewStatus.CORRECTED}
 
@@ -70,6 +71,8 @@ class SemanticRetrievalAuthorizationService:
                 continue
             payload = self.effective.publishable_payload(proposal.id)
             if not isinstance(payload, dict):
+                continue
+            if not assess_screen_purpose_policy_compatibility(payload, package).compatible:
                 continue
             purpose = self._safe(payload.get("purpose_summary"), 1000)
             title = self._safe(package.screen_title, 240)

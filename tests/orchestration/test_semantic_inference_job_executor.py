@@ -462,6 +462,91 @@ def test_executor_generates_and_persists_pending_proposal_without_self_approval(
     engine.dispose()
 
 
+def test_executor_generates_new_pending_proposal_for_same_version_older_contract():
+    engine, factory = build_factory()
+    version_id, screen_id = seed(factory)
+    evidence = package(version_id, screen_id)
+
+    with factory.begin() as session:
+        old = SemanticProposalService(session).create_pending_proposal(
+            knowledge_version_id=version_id,
+            screen_knowledge_item_id=screen_id,
+            semantic_type=SemanticType.SCREEN_PURPOSE,
+            source_payload={
+                "semantic_type": "screen_purpose",
+                "screen_id": evidence.screen_id,
+                "purpose_summary": "Permite consultar retenciones mediante búsqueda.",
+                "supported_capabilities": [
+                    {
+                        "statement": "Permite buscar registros.",
+                        "evidence_refs": ["control:buscar"],
+                    }
+                ],
+                "limitations": [],
+                "uncertainties": [],
+            },
+            evidence_payload=validated_semantic_evidence_snapshot(evidence),
+            evidence_ids=list(evidence.evidence_ids),
+            generation_model="llama3.2:3b",
+            prompt_version="screen-purpose-v12",
+            prompt_hash="b" * 64,
+            generation_parameters=GENERATION_PARAMETERS,
+        )
+        SemanticReviewService(session).approve(
+            old.id,
+            expected_revision=0,
+            reviewer_subject="user:test",
+            source="review_panel",
+            review_notes="Synthetic old-contract approval",
+        )
+        old_id = old.id
+
+    inference = Inference(candidate(evidence))
+    executor = SemanticInferenceJobExecutor(
+        factory,
+        inference_service_factory=lambda: inference,
+        evidence_builder_factory=lambda _session: Builder(evidence),
+    )
+
+    result = executor.execute(
+        job_id="00000000-0000-0000-0000-000000000106",
+        scope="screen",
+        target="/admin/cuentasxcobrar/retenciones",
+        parameters=params(version_id, screen_id, evidence),
+        progress=lambda *_: None,
+    )
+
+    assert inference.calls == 1
+    assert result["created"] is True
+    assert result["reused_existing"] is False
+    assert result["ollama_called"] is True
+    assert result["proposal_status"] == "pending_review"
+    assert result["prompt_version"] == PROMPT_VERSION
+    assert result["lifecycle_origin"] == "generated"
+    assert result["lifecycle_decision"] == "generate"
+    assert result["lifecycle_reasons"] == ["same_version_semantic_refresh_required"]
+    assert result["source_semantic_proposal_id"] is None
+
+    with factory() as session:
+        proposals = list(
+            session.scalars(
+                select(SemanticProposal)
+                .where(SemanticProposal.knowledge_version_id == version_id)
+                .order_by(SemanticProposal.created_at, SemanticProposal.id)
+            )
+        )
+        assert len(proposals) == 2
+        historical = next(item for item in proposals if item.id == old_id)
+        current = next(item for item in proposals if item.id != old_id)
+        assert historical.current_review_status == ReviewStatus.APPROVED
+        assert historical.prompt_version == "screen-purpose-v12"
+        assert current.current_review_status == ReviewStatus.PENDING_REVIEW
+        assert current.prompt_version == PROMPT_VERSION
+        assert current.lifecycle_origin == SemanticLifecycleOrigin.GENERATED
+
+    engine.dispose()
+
+
 def test_executor_reuses_same_generation_identity_without_calling_ollama_twice():
     engine, factory = build_factory()
     version_id, screen_id = seed(factory)

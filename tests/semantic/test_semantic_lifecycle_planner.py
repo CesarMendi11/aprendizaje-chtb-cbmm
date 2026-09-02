@@ -288,6 +288,47 @@ def test_planner_generates_when_active_version_has_no_predecessor(session):
     assert session.scalar(select(func.count()).select_from(SemanticProposal)) == 0
 
 
+def test_planner_generates_refresh_when_same_active_version_has_older_generation_contract(
+    session,
+):
+    suffix = uuid.uuid4().hex[:12]
+    erp = ERPSystemRecord(
+        id=f"erp:{suffix}",
+        slug=f"erp-{suffix}",
+        name="Synthetic ERP",
+        profile_name="test",
+        safe_metadata={},
+    )
+    version, screen = seed_version(
+        session,
+        erp,
+        name=f"bootstrap-{suffix}",
+        status=KnowledgeVersionStatus.ACTIVE,
+    )
+    package = evidence(version, screen)
+    publish_source(
+        session,
+        version,
+        screen,
+        package,
+        prompt_version="screen-purpose-v12",
+        prompt_hash="b" * 64,
+    )
+
+    plan = planner(session, {(version.id, screen.id): package}).plan(
+        version.id,
+        screen.id,
+        generation_model=MODEL,
+    )
+
+    assert plan.decision == SemanticLifecycleDecision.GENERATE
+    assert plan.reasons == ("same_version_semantic_refresh_required",)
+    assert plan.source_semantic_proposal_id is None
+    assert plan.source_knowledge_version_id is None
+    assert plan.target_evidence_hash == package.evidence_hash
+    assert session.scalar(select(func.count()).select_from(SemanticProposal)) == 1
+
+
 def test_planner_generates_when_predecessor_has_no_publishable_semantic(session):
     source_version, source_screen, target_version, target_screen = seed_replacement(session)
     source_package = evidence(source_version, source_screen)

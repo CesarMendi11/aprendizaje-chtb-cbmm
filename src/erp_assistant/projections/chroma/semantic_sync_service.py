@@ -21,6 +21,9 @@ from erp_assistant.semantic.evidence.screen_evidence_builder import (
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
+from erp_assistant.semantic.services.semantic_policy_compatibility import (
+    assess_screen_purpose_policy_compatibility,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 from erp_assistant.structural.canonical.privacy import sanitize_text
 
@@ -173,6 +176,9 @@ class SemanticChromaSyncService:
             payload = self.effective.publishable_payload(proposal.id)
             if payload is None:
                 skipped["proposal_not_publishable"] += 1
+                continue
+            if not assess_screen_purpose_policy_compatibility(payload, package).compatible:
+                skipped["current_grounding_incompatible"] += 1
                 continue
             try:
                 document = self.builder.build(

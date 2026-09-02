@@ -337,12 +337,12 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v12"
+    assert PROMPT_VERSION == "screen-purpose-v13"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
 
-def test_v12_prompt_delegates_only_action_selection():
+def test_v13_prompt_delegates_only_action_selection():
     prompt = build_user_prompt(package())
     assert "No generes purpose_summary ni statements" in prompt
     assert "Cada capability contiene únicamente action" in prompt
@@ -985,7 +985,7 @@ def test_prudent_mutative_option_is_not_misclassified_as_view():
     assert candidate.inference.supported_capabilities[0].evidence_refs == ["control:new"]
 
 
-def test_v12_prompt_does_not_delegate_narrative_or_evidence_binding():
+def test_v13_prompt_does_not_delegate_narrative_or_evidence_binding():
     prompt = build_user_prompt(grounding_package()).casefold()
 
     assert "cada capability contiene únicamente action" in prompt

@@ -52,6 +52,10 @@ def _matches(action: RecognizedAction, *values: str | None) -> bool:
     return bool(_tokens(*values) & ACTION_TERMS[action])
 
 
+def _is_nonfunctional_shell_category(category: str | None) -> bool:
+    return _tokens(category) == {"expand", "menu"}
+
+
 def _reference_type(reference_id: str) -> str:
     return reference_id.partition(":")[0]
 
@@ -83,6 +87,8 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
         if _matches("navigate", control.label, control.control_type):
             navigate_refs.add(control.control_id)
     for event in package.events:
+        if _is_nonfunctional_shell_category(event.category):
+            continue
         if _matches("search", event.label, event.category):
             search_refs.add(event.event_id)
         if _matches("navigate", event.label, event.category):
@@ -100,28 +106,32 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
         navigate_refs.update(
             transition.transition_id
             for transition in package.transitions
-            if _matches("navigate", transition.category)
-            or transition.trigger_control_id in trigger_ids
+            if not _is_nonfunctional_shell_category(transition.category)
+            and (
+                _matches("navigate", transition.category)
+                or transition.trigger_control_id in trigger_ids
+            )
         )
         hints["navigate"] = _hint("navigate", "direct", navigate_refs)
 
-    view_refs = {package.screen_id}
+    view_refs = {field.field_id for field in package.fields}
     for control in package.controls:
         if _matches("view", control.label, control.control_type):
             view_refs.add(control.control_id)
     for event in package.events:
+        if _is_nonfunctional_shell_category(event.category):
+            continue
         if _matches("view", event.label, event.category):
             view_refs.add(event.event_id)
     for table in package.tables:
         view_refs.add(table.table_id)
         view_refs.update(column.column_id for column in table.columns)
-    if search_refs:
-        view_refs.update(search_refs)
-    # Network evidence is supplementary only: the view action is already
-    # structurally supported above. Only traces whose observed methods are
-    # entirely read-only may be cited for that existing action.
-    view_refs.update(trace.evidence_id for trace in package.network_traces if trace.read_only)
-    hints["view"] = _hint("view", "direct", view_refs)
+    if view_refs:
+        # Screen identity and read-only network traces are contextual/supplementary.
+        # Neither may create view without observable functional display structure.
+        view_refs.add(package.screen_id)
+        view_refs.update(trace.evidence_id for trace in package.network_traces if trace.read_only)
+        hints["view"] = _hint("view", "direct", view_refs)
 
     for action in ("create", "edit", "delete", "process"):
         matching: list[tuple[str, str]] = []
@@ -129,6 +139,8 @@ def build_grounding_plan(package: ScreenEvidencePackage) -> ScreenPurposeGroundi
             if _matches(action, control.label, control.control_type) and control.mutative:
                 matching.append((control.control_id, control.safety_decision or "unknown"))
         for event in package.events:
+            if _is_nonfunctional_shell_category(event.category):
+                continue
             if _matches(action, event.label, event.category) and event.mutative:
                 matching.append((event.event_id, event.policy_decision or "unknown"))
         allowed = {ref for ref, decision in matching if decision.casefold() == "allow"}

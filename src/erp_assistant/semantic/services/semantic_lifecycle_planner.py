@@ -153,20 +153,6 @@ class SemanticLifecyclePlanner:
                 target_screen_id=screen.canonical_id,
             )
 
-        existing_target = self.proposals.list(
-            knowledge_version_id=version.id,
-            screen_knowledge_item_id=screen.id,
-            semantic_type=SemanticType.SCREEN_PURPOSE,
-            limit=2,
-        )
-        if existing_target:
-            return self._blocked(
-                "target_semantic_already_exists",
-                target_knowledge_version_id=version.id,
-                target_screen_knowledge_item_id=screen.id,
-                target_screen_id=screen.canonical_id,
-            )
-
         try:
             target_package = self.evidence_builder.build(version.id, screen.id)
         except ScreenEvidenceError as exc:
@@ -189,6 +175,33 @@ class SemanticLifecyclePlanner:
         if not eligibility.eligible:
             return self._blocked(
                 *(f"target_ineligible:{reason}" for reason in eligibility.reasons),
+                **base,
+            )
+
+        existing_target = self.proposals.list(
+            knowledge_version_id=version.id,
+            screen_knowledge_item_id=screen.id,
+            semantic_type=SemanticType.SCREEN_PURPOSE,
+            limit=1000,
+        )
+        if existing_target:
+            current_generation = self.proposals.get_by_generation_identity(
+                knowledge_version_id=version.id,
+                screen_knowledge_item_id=screen.id,
+                semantic_type=SemanticType.SCREEN_PURPOSE,
+                evidence_hash=target_package.evidence_hash,
+                prompt_hash=PROMPT_HASH,
+                generation_model=model,
+                generation_parameters_hash=GENERATION_PARAMETERS_HASH,
+            )
+            if current_generation is not None:
+                return self._blocked(
+                    "target_semantic_already_exists",
+                    **base,
+                )
+            return SemanticLifecyclePlan(
+                decision=SemanticLifecycleDecision.GENERATE,
+                reasons=("same_version_semantic_refresh_required",),
                 **base,
             )
 

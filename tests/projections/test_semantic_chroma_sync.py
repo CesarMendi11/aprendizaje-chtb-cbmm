@@ -72,7 +72,14 @@ def build_factory():
     return engine, sessionmaker(bind=engine, expire_on_commit=False)
 
 
-def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar registros."):
+def seed(
+    factory,
+    *,
+    approve=True,
+    prompt_hash="b" * 64,
+    purpose="Permite buscar Retenciones desde la pantalla.",
+    include_view=False,
+):
     with factory.begin() as session:
         erp = ERPSystemRecord(
             id="erp:semantic-sync",
@@ -146,16 +153,24 @@ def seed(factory, *, approve=True, prompt_hash="b" * 64, purpose="Permite buscar
         provisional = ScreenEvidencePackage.model_validate({**raw, "evidence_hash": "0" * 64})
         digest = canonical_json_hash(provisional.model_dump(mode="json", exclude={"evidence_hash"}))
         package = provisional.model_copy(update={"evidence_hash": digest})
+        capabilities = [
+            {
+                "statement": "Permite buscar mediante los criterios disponibles.",
+                "evidence_refs": ["control:buscar"],
+            }
+        ]
+        if include_view:
+            capabilities.append(
+                {
+                    "statement": "Permite visualizar información disponible en la pantalla.",
+                    "evidence_refs": [screen.canonical_id],
+                }
+            )
         source = {
             "semantic_type": "screen_purpose",
             "screen_id": screen.canonical_id,
             "purpose_summary": purpose,
-            "supported_capabilities": [
-                {
-                    "statement": "Permite buscar mediante los criterios disponibles.",
-                    "evidence_refs": [],
-                }
-            ],
+            "supported_capabilities": capabilities,
             "limitations": [],
             "uncertainties": [],
         }
@@ -203,7 +218,7 @@ def test_prepare_projects_only_fresh_human_approved_semantics():
         assert summary["documents"] == 1
         assert summary["skipped"] == 0
         document = documents[0]
-        assert "Propósito: Permite buscar registros." in document.text
+        assert "Propósito: Permite buscar Retenciones desde la pantalla." in document.text
         assert "Capacidad: Permite buscar mediante los criterios disponibles." in document.text
         assert document.metadata["canonical_id"] == "screen:retenciones"
         assert document.metadata["semantic_id"].startswith("semantic:")
@@ -238,6 +253,26 @@ def test_prepare_excludes_pending_and_stale_proposals():
         )
         assert documents == []
         assert summary["skipped_reasons"] == {"stale_evidence": 1}
+    engine.dispose()
+
+
+def test_prepare_excludes_semantics_incompatible_with_current_grounding_policy():
+    engine, factory = build_factory()
+    _version_id, erp_id, knowledge_version, _screen_id, _proposal_id, package = seed(
+        factory,
+        purpose="Permite buscar y visualizar Retenciones desde la pantalla.",
+        include_view=True,
+    )
+
+    with factory() as session:
+        service = SemanticChromaSyncService(session, evidence_builder=FakeEvidenceBuilder(package))
+        _version, documents, summary = service.prepare(
+            erp_id=erp_id, knowledge_version=knowledge_version
+        )
+
+        assert documents == []
+        assert summary["skipped_reasons"] == {"current_grounding_incompatible": 1}
+
     engine.dispose()
 
 

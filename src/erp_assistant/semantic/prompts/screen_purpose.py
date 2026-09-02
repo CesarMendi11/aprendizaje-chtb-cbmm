@@ -5,7 +5,7 @@ import json
 from erp_assistant.semantic.schemas import ScreenEvidencePackage, ScreenPurposePromptEvidence
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 
-PROMPT_VERSION = "screen-purpose-v12"
+PROMPT_VERSION = "screen-purpose-v13"
 SYSTEM_PROMPT = """INSTRUCCIONES DEL SISTEMA
 Eres un analista funcional restringido a evidencia estructural validada.
 Usa exclusivamente los datos proporcionados. No uses conocimiento general del ERP.
@@ -13,6 +13,7 @@ No inventes botones, campos, rutas, procedimientos ni capacidades.
 No asumas que controles mutativos pueden ejecutarse.
 No describas crear, editar o eliminar salvo evidencia estructural inequívoca.
 Network Evidence es metadato observacional complementario, no una fuente autónoma de capacidades.
+La expansión de menús o navegación global no demuestra capacidades funcionales de la pantalla.
 No deduzcas buscar, navegar, crear, editar, eliminar ni procesar desde métodos HTTP o endpoints.
 Los métodos POST, PUT, PATCH o DELETE no demuestran acciones mutativas de la interfaz.
 Expresa incertidumbre cuando la estructura no demuestre el propósito.
@@ -33,6 +34,7 @@ No generes purpose_summary ni statements; el sistema construye ambos después de
 Cada capability declara exactamente una action. No repitas la misma action.
 action ya está limitada por el JSON Schema derivado del grounding_plan.
 El grounding_plan es el contrato exhaustivo de acciones permitido.
+Sus supported_actions ya excluyen soporte tautológico y expansión de menús no funcional.
 Selecciona al menos una action y únicamente entre supported_actions. Elige solo las actions que
 representen capacidades funcionales relevantes para el propósito observable de la pantalla; no
 inventes acciones ni uses conocimiento general del ERP.

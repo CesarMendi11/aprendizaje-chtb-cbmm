@@ -402,7 +402,7 @@ def create_source_semantics(factory, seeded, packages):
             if key == "carry":
                 corrected = semantic_payload(
                     package,
-                    summary="Propósito corregido por una persona y preservado por carry-forward.",
+                    summary="Permite buscar Consulta estable con la corrección humana preservada.",
                 )
                 review.correct(
                     proposal.id,
@@ -579,7 +579,7 @@ def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorizatio
             SemanticEffectivePayloadService(session).publishable_payload(carried.id)[
                 "purpose_summary"
             ]
-            == "Propósito corregido por una persona y preservado por carry-forward."
+            == "Permite buscar Consulta estable con la corrección humana preservada."
         )
         assert reinferred.lifecycle_origin == SemanticLifecycleOrigin.REINFERRED
         assert reinferred.source_semantic_proposal_id == source_proposal_ids["reinfer"]
@@ -618,7 +618,7 @@ def test_cross_version_lifecycle_carry_forward_reinfer_chroma_and_reauthorizatio
         assert authorized[0]["review_revision"] == 0
         assert (
             authorized[0]["purpose_summary"]
-            == "Propósito corregido por una persona y preservado por carry-forward."
+            == "Permite buscar Consulta estable con la corrección humana preservada."
         )
 
     assert physical_rows(repository, knowledge_version=SOURCE_VERSION) == []
