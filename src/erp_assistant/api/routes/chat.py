@@ -15,10 +15,16 @@ async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
     try:
         with conversation_store.turn(conversation_id) as turn:
             with hybrid.create(generate=True) as retriever:
+                ask_kwargs = {
+                    "generate": True,
+                    "conversation_state": turn.state,
+                }
+                if payload.context is not None and payload.context.current_route is not None:
+                    ask_kwargs["current_route"] = payload.context.current_route
+
                 result = retriever.ask(
                     payload.question,
-                    generate=True,
-                    conversation_state=turn.state,
+                    **ask_kwargs,
                 )
 
             if result.get("answer_mode") not in {

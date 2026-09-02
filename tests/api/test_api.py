@@ -526,3 +526,114 @@ def test_hybrid_chat_preserves_canonical_source_types(settings):
             "sourceType": "erp_system",
         },
     ]
+
+
+def test_chat_forwards_current_route_only_as_context_hint():
+    import asyncio
+    from types import SimpleNamespace
+
+    from erp_assistant.api.routes.chat import chat
+    from erp_assistant.api.schemas.chat import ChatRequest
+    from erp_assistant.retrieval.conversation_context import (
+        ConversationState,
+    )
+
+    calls = {}
+
+    class Turn:
+        state = ConversationState()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def commit(self, state):
+            raise AssertionError("fixture response should not commit state")
+
+    class Store:
+        def resolve_conversation_id(self, value):
+            return value or "conversation:test"
+
+        def turn(self, conversation_id):
+            assert conversation_id == "conversation:test"
+            return Turn()
+
+    class Retriever:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ask(self, question, **kwargs):
+            calls["question"] = question
+            calls["kwargs"] = dict(kwargs)
+
+            return {
+                "answer": ("Necesito una pantalla o un módulo de referencia para continuar."),
+                "answer_mode": "clarification",
+                "sources": [],
+                "answer_decision": {
+                    "decision": "CLARIFICATION",
+                    "reason": "conversation_reference_missing",
+                    "intent": "SCREEN_PURPOSE",
+                    "confidence": "high",
+                },
+                "intent": "SCREEN_PURPOSE",
+                "confidence": "high",
+                "evidence_ids": [],
+                "retrieval": {},
+            }
+
+    class Factory:
+        def create(self, *, generate):
+            assert generate is True
+            return Retriever()
+
+    request = SimpleNamespace(
+        app=SimpleNamespace(
+            state=SimpleNamespace(
+                conversation_state_store=Store(),
+                hybrid_factory=Factory(),
+            )
+        )
+    )
+
+    payload = ChatRequest(
+        question="¿Para qué sirve esta pantalla?",
+        conversationId="conversation:test",
+        context={
+            "currentRoute": "/admin/general/anios",
+            "userId": 999,
+            "username": "client-claimed-user",
+            "role": "client-claimed-role",
+        },
+    )
+
+    response = asyncio.run(
+        chat(
+            payload,
+            request,
+        )
+    )
+
+    assert response.answer
+
+    assert calls["question"] == ("¿Para qué sirve esta pantalla?")
+
+    kwargs = calls["kwargs"]
+
+    assert kwargs["generate"] is True
+
+    assert isinstance(
+        kwargs["conversation_state"],
+        ConversationState,
+    )
+
+    assert kwargs["current_route"] == "/admin/general/anios"
+
+    assert "user_id" not in kwargs
+    assert "username" not in kwargs
+    assert "role" not in kwargs

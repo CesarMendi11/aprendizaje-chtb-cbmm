@@ -1438,3 +1438,185 @@ def test_same_turn_explicit_screen_scopes_ambiguous_navigation_before_graph(monk
     assert result["evidence_selection"]["status"] == "selected"
     assert result["evidence_selection"]["reason"] == "navigation_event"
     assert any(row["relationship_type"] == "HAS_EVENT" for row in result["relations"])
+
+
+def test_current_route_context_uses_governed_screen_and_replaces_stale_scope(monkeypatch):
+    import uuid
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.conversation_context import (
+        ConversationEntity,
+        ConversationState,
+    )
+
+    screen = SimpleNamespace(
+        id=uuid.uuid4(),
+        canonical_id="screen:year",
+        entity_type="screen",
+        route="/admin/general/anios",
+    )
+
+    class Session:
+        def scalars(self, statement):
+            return [screen]
+
+    version = SimpleNamespace(
+        id=uuid.uuid4(),
+        erp_id="erp:test",
+        knowledge_version="v-active",
+    )
+
+    retriever = HybridKnowledgeRetriever(
+        Session(),
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+    )
+
+    monkeypatch.setattr(
+        retriever,
+        "_effective",
+        lambda item_id: {
+            "title": "Año",
+            "route": "/admin/general/anios",
+        },
+    )
+
+    previous = ConversationState(
+        erp_id="erp:test",
+        knowledge_version="v-active",
+        current_screen=ConversationEntity(
+            canonical_id="screen:old",
+            entity_type="screen",
+            safe_label="Pantalla anterior",
+            route="/admin/old",
+        ),
+        current_module=ConversationEntity(
+            canonical_id="module:old",
+            entity_type="module",
+            safe_label="Módulo anterior",
+        ),
+        turn_index=7,
+    )
+
+    state = retriever._conversation_state_for_current_route(
+        previous,
+        "/admin/general/anios?foo=bar#section",
+        version=version,
+    )
+
+    assert state.erp_id == "erp:test"
+    assert state.knowledge_version == "v-active"
+    assert state.turn_index == 7
+
+    assert state.current_screen is not None
+    assert state.current_screen.canonical_id == "screen:year"
+    assert state.current_screen.safe_label == "Año"
+    assert state.current_screen.route == "/admin/general/anios"
+
+    assert state.current_module is None
+
+    assert state.resolved_entities == (state.current_screen,)
+
+    assert state.unresolved_entities == ()
+    assert state.relevant_evidence_refs == ()
+
+
+def test_unknown_current_route_clears_previous_screen_scope():
+    import uuid
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.conversation_context import (
+        ConversationEntity,
+        ConversationState,
+    )
+
+    class Session:
+        def scalars(self, statement):
+            return []
+
+    version = SimpleNamespace(
+        id=uuid.uuid4(),
+        erp_id="erp:test",
+        knowledge_version="v-active",
+    )
+
+    retriever = HybridKnowledgeRetriever(
+        Session(),
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+    )
+
+    previous = ConversationState(
+        erp_id="erp:test",
+        knowledge_version="v-active",
+        current_screen=ConversationEntity(
+            canonical_id="screen:old",
+            entity_type="screen",
+            safe_label="Pantalla anterior",
+            route="/admin/old",
+        ),
+        turn_index=3,
+    )
+
+    state = retriever._conversation_state_for_current_route(
+        previous,
+        "/admin/does-not-exist",
+        version=version,
+    )
+
+    assert state.current_screen is None
+    assert state.current_module is None
+    assert state.resolved_entities == ()
+    assert state.unresolved_entities == ()
+    assert state.turn_index == 3
+
+
+def test_external_current_route_fails_closed_without_database_lookup():
+    import uuid
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.conversation_context import (
+        ConversationEntity,
+        ConversationState,
+    )
+
+    class Session:
+        def scalars(self, statement):
+            raise AssertionError("external route must not reach PostgreSQL screen lookup")
+
+    version = SimpleNamespace(
+        id=uuid.uuid4(),
+        erp_id="erp:test",
+        knowledge_version="v-active",
+    )
+
+    retriever = HybridKnowledgeRetriever(
+        Session(),
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+    )
+
+    previous = ConversationState(
+        erp_id="erp:test",
+        knowledge_version="v-active",
+        current_screen=ConversationEntity(
+            canonical_id="screen:old",
+            entity_type="screen",
+            safe_label="Pantalla anterior",
+            route="/admin/old",
+        ),
+        turn_index=4,
+    )
+
+    state = retriever._conversation_state_for_current_route(
+        previous,
+        "https://example.invalid/admin/general/anios",
+        version=version,
+    )
+
+    assert state.current_screen is None
+    assert state.current_module is None
+    assert state.turn_index == 4

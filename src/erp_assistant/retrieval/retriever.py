@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 from dataclasses import replace
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from erp_assistant.persistence.postgres.models import KnowledgeItem
 from erp_assistant.projections.chroma.structural_sync_service import ChromaSyncService
@@ -25,6 +25,7 @@ from .context_builder import EvidenceContextBuilder
 from .conversation_context import (
     ConversationContextMode,
     ConversationContextResolver,
+    ConversationEntity,
     ConversationState,
     render_missing_context_clarification,
 )
@@ -607,8 +608,28 @@ class HybridKnowledgeRetriever:
             "context": context,
         }
 
-    def ask(self, question, *, generate=True, conversation_state=None, **kwargs):
+    def ask(
+        self,
+        question,
+        *,
+        generate=True,
+        conversation_state=None,
+        current_route=None,
+        **kwargs,
+    ):
         previous_state = ConversationState.coerce(conversation_state)
+
+        if current_route is not None:
+            current_version = ChromaSyncService(self.session).resolve_version(
+                erp_id=kwargs.get("erp_id"),
+                knowledge_version=kwargs.get("knowledge_version"),
+            )
+            previous_state = self._conversation_state_for_current_route(
+                previous_state,
+                current_route,
+                version=current_version,
+            )
+
         initial_query_plan = self.query_planner.plan(question)
         result = self.retrieve(
             question,
@@ -806,6 +827,144 @@ class HybridKnowledgeRetriever:
                 "max_hops": max_hops,
                 "limit": limit,
             },
+        )
+
+    @staticmethod
+    def _normalize_current_route(current_route):
+        """Normalize only an internal ERP route hint.
+
+        The client supplies a hint, never an authoritative screen identity.
+        Absolute/external URLs and protocol-relative URLs fail closed.
+        Query strings and fragments are not part of canonical screen routes.
+        """
+
+        route = str(current_route or "").strip()
+
+        if not route or not route.startswith("/") or route.startswith("//"):
+            return None
+
+        route = route.split("#", 1)[0]
+        route = route.split("?", 1)[0]
+        route = route.strip()
+
+        if not route or not route.startswith("/") or route.startswith("//"):
+            return None
+
+        return route
+
+    def _conversation_state_for_current_route(
+        self,
+        previous_state,
+        current_route,
+        *,
+        version,
+    ):
+        """Convert a client route hint into governed conversation context.
+
+        PostgreSQL remains authoritative. An explicit but unknown/invalid route
+        clears stale conversational screen scope instead of inheriting it.
+        """
+
+        previous = ConversationState.coerce(previous_state)
+
+        base_state = ConversationState(
+            erp_id=version.erp_id,
+            knowledge_version=version.knowledge_version,
+            turn_index=previous.turn_index,
+        )
+
+        route = self._normalize_current_route(current_route)
+
+        if route is None or self.session is None or not hasattr(self.session, "scalars"):
+            return base_state
+
+        #
+        # Exact raw-route candidates are normally enough. Corrected screens
+        # are included as well so their effective payload can move the route
+        # without making the pre-correction route authoritative.
+        #
+        items = list(
+            self.session.scalars(
+                select(KnowledgeItem).where(
+                    KnowledgeItem.knowledge_version_id == version.id,
+                    KnowledgeItem.entity_type == "screen",
+                    KnowledgeItem.current_review_status.in_(
+                        [
+                            ReviewStatus.APPROVED,
+                            ReviewStatus.CORRECTED,
+                        ]
+                    ),
+                    or_(
+                        KnowledgeItem.route == route,
+                        KnowledgeItem.current_review_status == ReviewStatus.CORRECTED,
+                    ),
+                )
+            )
+        )
+
+        if not items:
+            return base_state
+
+        #
+        # Reuse the same effective-payload authority used elsewhere by
+        # retrieval. A corrected screen is matched only by its effective
+        # route, never merely by a stale pre-correction route.
+        #
+        self._effective_cache = {}
+        self._effective_items = {item.id: item for item in items}
+
+        matches = {}
+
+        for item in items:
+            payload = self._effective(item.id)
+
+            if not isinstance(
+                payload,
+                dict,
+            ):
+                continue
+
+            effective_route = payload.get("route") if "route" in payload else item.route
+
+            effective_route = str(effective_route or "").strip()
+
+            if effective_route != route:
+                continue
+
+            safe_label = str(
+                self._label(
+                    item.entity_type,
+                    payload,
+                )
+                or ""
+            ).strip()
+
+            if not safe_label:
+                continue
+
+            entity = ConversationEntity(
+                canonical_id=item.canonical_id,
+                entity_type="screen",
+                safe_label=safe_label,
+                route=effective_route,
+            )
+
+            matches[entity.canonical_id] = entity
+
+        #
+        # 0 matches: unknown/untrusted route.
+        # >1 matches: ambiguous authority state.
+        # Both fail closed and clear any prior screen scope.
+        #
+        if len(matches) != 1:
+            return base_state
+
+        screen = next(iter(matches.values()))
+
+        return replace(
+            base_state,
+            current_screen=screen,
+            resolved_entities=(screen,),
         )
 
     def _validate(self, ids, version_id):
