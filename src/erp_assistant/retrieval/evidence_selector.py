@@ -330,9 +330,13 @@ class EvidenceSelector:
             if row.get("relationship_type") in {"HAS_EVENT", "HAS_CONTROL"} and label_matches(row)
         ]
         if named:
+            # When a visible Control and an observed Event describe the same
+            # navigation affordance, expose the governed Control as answer
+            # evidence. The Event remains a valid fallback when no matching
+            # Control is available.
             named.sort(
                 key=lambda row: (
-                    0 if row.get("relationship_type") == "HAS_EVENT" else 1,
+                    0 if row.get("relationship_type") == "HAS_CONTROL" else 1,
                     str(row.get("target_label") or ""),
                 )
             )

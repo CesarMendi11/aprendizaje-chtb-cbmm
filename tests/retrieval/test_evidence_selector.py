@@ -371,6 +371,83 @@ def test_navigation_event_matches_named_control_when_context_screen_is_only_foca
     ]
 
 
+def test_navigation_event_prefers_control_when_control_and_event_share_label():
+    selector = EvidenceSelector()
+    query = QueryPlan(
+        question=(
+            "¿Cómo avanzo a la siguiente página aquí? Referencia contextual validada: "
+            'pantalla "Comprobantes eléctronicos emitidos".'
+        ),
+        normalized_question=(
+            "como avanzo a la siguiente pagina aqui referencia contextual validada "
+            "pantalla comprobantes electronicos emitidos"
+        ),
+        intent=QueryIntent.NAVIGATION_EVENT,
+        target_entity_types=("screen", "control", "ui_state", "event", "transition"),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+    resolution = resolved(
+        candidate("screen:comp", "screen", "Comprobantes eléctronicos emitidos"),
+    )
+    sources = [
+        {
+            "canonical_id": "screen:comp",
+            "entity_type": "screen",
+            "safe_label": "Comprobantes eléctronicos emitidos",
+        },
+        {
+            "canonical_id": "control:next",
+            "entity_type": "control",
+            "safe_label": "Siguiente página",
+        },
+        {
+            "canonical_id": "event:next",
+            "entity_type": "event",
+            "safe_label": "Siguiente página",
+        },
+    ]
+    relations = [
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "event:next",
+            "relationship_type": "HAS_EVENT",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "Siguiente página",
+            "source_type": "screen",
+            "target_type": "event",
+        },
+        {
+            "source_canonical_id": "screen:comp",
+            "target_canonical_id": "control:next",
+            "relationship_type": "HAS_CONTROL",
+            "source_label": "Comprobantes eléctronicos emitidos",
+            "target_label": "Siguiente página",
+            "source_type": "screen",
+            "target_type": "control",
+        },
+    ]
+
+    result = selector.select(
+        query,
+        resolution,
+        graph_plan("screen:comp"),
+        sources,
+        relations,
+        [],
+    )
+
+    assert [row["canonical_id"] for row in result.sources] == [
+        "screen:comp",
+        "control:next",
+    ]
+    assert [row["relationship_type"] for row in result.relations] == [
+        "HAS_CONTROL",
+    ]
+
+
 def test_search_by_field_keeps_only_focal_field_and_search_control():
     selector = EvidenceSelector()
     resolution = resolved(candidate("field:ruc", "field", "RUC"))
