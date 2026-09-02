@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
-    InferenceReferenceError,
     InferenceSchemaError,
     InferenceUnsupportedActionError,
 )
@@ -85,19 +84,12 @@ def test_schema_is_deterministic_and_derived_only_from_supported_actions():
     assert consts.isdisjoint(grounding_plan.forbidden_actions)
 
 
-def test_each_schema_action_has_only_its_own_references():
+def test_schema_does_not_delegate_evidence_binding_to_model():
     schema = build_screen_purpose_generation_schema(plan(), screen_id="screen:test")
-    references = {
-        item["properties"]["action"]["const"]: set(
-            item["properties"]["evidence_refs"]["items"]["enum"]
-        )
-        for item in alternatives(schema)
-    }
-    assert references == {
-        "search": {"control:search", "field:ruc"},
-        "navigate": {"event:next"},
-        "view": {"table:results"},
-    }
+    for item in alternatives(schema):
+        assert item["required"] == ["action", "statement"]
+        assert set(item["properties"]) == {"action", "statement"}
+        assert "evidence_refs" not in item["properties"]
 
 
 def test_no_supported_actions_stops_before_generation():
@@ -114,7 +106,6 @@ def test_removed_summary_and_nonempty_negative_lists_are_rejected():
     capability = {
         "action": "search",
         "statement": "Permite buscar retenciones registradas.",
-        "evidence_refs": ["control:search"],
     }
     values = json.loads(draft(capability))
     for update in (
@@ -137,7 +128,6 @@ def test_empty_capabilities_have_sanitized_domain_category():
             {
                 "action": "search",
                 "statement": "Permite buscar retenciones registradas.",
-                "evidence_refs": ["control:search"],
             }
         )
     )
@@ -153,36 +143,36 @@ def test_empty_capabilities_have_sanitized_domain_category():
 
 
 @pytest.mark.parametrize(
-    ("action", "statement", "reference", "canonical_statement"),
+    ("action", "statement", "canonical_statement", "expected_refs"),
     [
         (
             "search",
             "Permite buscar retenciones registradas.",
-            "control:search",
             "Permite buscar mediante los criterios disponibles.",
+            ["control:search", "field:ruc"],
         ),
         (
             "navigate",
             "Permite navegar a la siguiente página.",
-            "event:next",
             "Permite navegar entre las páginas de resultados.",
+            ["event:next"],
         ),
         (
             "view",
             "Permite visualizar retenciones registradas.",
-            "table:results",
             "Permite visualizar información disponible en la pantalla.",
+            ["table:results"],
         ),
     ],
 )
 def test_valid_single_action_drafts_are_rendered_as_controlled_public_claims(
-    action, statement, reference, canonical_statement
+    action, statement, canonical_statement, expected_refs
 ):
-    inference = parse({"action": action, "statement": statement, "evidence_refs": [reference]})
+    inference = parse({"action": action, "statement": statement})
     claim = inference.supported_capabilities[0]
     assert claim.statement == canonical_statement
     assert claim.statement != statement
-    assert claim.evidence_refs == [reference]
+    assert claim.evidence_refs == expected_refs
     assert "action" not in inference.model_dump(mode="json")["supported_capabilities"][0]
 
 
@@ -194,7 +184,6 @@ def test_forbidden_action_is_not_representable_or_mappable():
             {
                 "action": "edit",
                 "statement": "Permite editar retenciones registradas.",
-                "evidence_refs": ["table:results"],
             }
         )
 
@@ -206,15 +195,14 @@ def test_declared_action_must_match_statement_without_leaking_it():
             {
                 "action": "search",
                 "statement": statement,
-                "evidence_refs": ["control:search"],
             }
         )
     assert captured.value.category == "declared_action_statement_mismatch"
     assert statement not in str(captured.value)
 
 
-def test_action_rejects_references_from_another_hint():
-    with pytest.raises(InferenceReferenceError) as captured:
+def test_model_cannot_supply_evidence_refs():
+    with pytest.raises(InferenceSchemaError):
         parse(
             {
                 "action": "view",
@@ -222,7 +210,6 @@ def test_action_rejects_references_from_another_hint():
                 "evidence_refs": ["control:search"],
             }
         )
-    assert captured.value.category == "declared_action_reference_not_permitted"
 
 
 def test_statement_cannot_mix_two_recognized_actions():
@@ -231,7 +218,6 @@ def test_statement_cannot_mix_two_recognized_actions():
             {
                 "action": "search",
                 "statement": "Permite buscar y visualizar retenciones.",
-                "evidence_refs": ["control:search"],
             }
         )
     assert captured.value.category == "declared_action_statement_mismatch"
@@ -247,7 +233,6 @@ def test_prudent_only_requires_prudent_language_but_direct_allows_direct_languag
             {
                 "action": "create",
                 "statement": "Permite crear una retención nueva.",
-                "evidence_refs": ["control:new"],
             },
             grounding_plan=prudent_plan,
         )
@@ -256,7 +241,6 @@ def test_prudent_only_requires_prudent_language_but_direct_allows_direct_languag
         {
             "action": "create",
             "statement": "La interfaz presenta una opción para crear retenciones.",
-            "evidence_refs": ["control:new"],
         },
         grounding_plan=prudent_plan,
     )
@@ -264,7 +248,6 @@ def test_prudent_only_requires_prudent_language_but_direct_allows_direct_languag
         {
             "action": "search",
             "statement": "Permite buscar retenciones registradas.",
-            "evidence_refs": ["control:search"],
         }
     )
 
@@ -273,7 +256,6 @@ def test_draft_models_are_strict_and_frozen():
     capability = GeneratedCapabilityDraft(
         action="search",
         statement="Permite buscar retenciones registradas.",
-        evidence_refs=["control:search"],
     )
     with pytest.raises(ValidationError):
         capability.action = "view"
@@ -290,11 +272,10 @@ def test_draft_models_are_strict_and_frozen():
         )
 
 
-def capability(action, statement, reference):
+def capability(action, statement, reference=None):
     return GeneratedCapabilityDraft(
         action=action,
         statement=statement,
-        evidence_refs=[reference],
     )
 
 

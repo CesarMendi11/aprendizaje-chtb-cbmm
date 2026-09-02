@@ -427,11 +427,29 @@ def validate_declared_capability(capability, hint, *, position: int) -> None:
         )
 
 
+def _purpose_action_tokens(summary: str, screen_title: str) -> set[str]:
+    """Ignore action-like title words only when prose asserts another action outside the title."""
+    normalized = normalize_text(summary)
+    full_tokens = {token for token in normalized.split() if token}
+    normalized_title = normalize_text(screen_title)
+    if not normalized_title:
+        return full_tokens
+    without_title, replacements = re.subn(
+        rf"(?<!\w){re.escape(normalized_title)}(?!\w)",
+        " ",
+        normalized,
+    )
+    if not replacements:
+        return full_tokens
+    outside_tokens = {token for token in without_title.split() if token}
+    return outside_tokens if _actions(outside_tokens) else full_tokens
+
+
 def _validate_purpose(summary, capability_support, package, forbidden_actions):
     location = ("purpose_summary",)
     _validate_narrative(summary, location, 4)
     tokens = _tokens(summary)
-    actions = _actions(tokens)
+    actions = _actions(_purpose_action_tokens(summary, package.screen_title))
     if "manage" in actions:
         _diagnostic(InferencePurposeGroundingError, location, "generic_management_purpose", summary)
     forbidden = actions & forbidden_actions

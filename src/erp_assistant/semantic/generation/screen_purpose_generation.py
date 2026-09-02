@@ -8,7 +8,6 @@ from pydantic import Field, ValidationError, field_validator
 from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceJSONError,
-    InferenceReferenceError,
     InferenceSchemaError,
     InferenceScreenMismatchError,
     InferenceSensitiveContentError,
@@ -27,17 +26,11 @@ from erp_assistant.structural.canonical.ids import normalize_text
 class GeneratedCapabilityDraft(InferenceModel):
     action: RecognizedAction
     statement: str
-    evidence_refs: list[str] = Field(min_length=1, max_length=20)
 
     @field_validator("statement")
     @classmethod
     def validate_statement(cls, value: Any) -> str:
         return _safe_text(value, limit=400)
-
-    @field_validator("evidence_refs")
-    @classmethod
-    def validate_refs(cls, values: list[str]) -> list[str]:
-        return CapabilityClaim.validate_refs(values)
 
 
 class ScreenPurposeGenerationDraft(InferenceModel):
@@ -67,17 +60,10 @@ def build_screen_purpose_generation_schema(
             {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["action", "statement", "evidence_refs"],
+                "required": ["action", "statement"],
                 "properties": {
                     "action": {"const": hint.action},
                     "statement": {"type": "string", "minLength": 1, "maxLength": 400},
-                    "evidence_refs": {
-                        "type": "array",
-                        "minItems": 1,
-                        "maxItems": 20,
-                        "uniqueItems": True,
-                        "items": {"enum": list(hint.evidence_refs)},
-                    },
                 },
             }
         )
@@ -211,20 +197,20 @@ def parse_generation_draft(
                 location=("supported_capabilities", position, "action"),
                 category="declared_action_not_supported",
             )
-        if not set(capability.evidence_refs).issubset(hint.evidence_refs):
-            raise InferenceReferenceError(
-                "Las referencias no corresponden a la acción declarada",
-                stage="grounding_validation",
-                location=("supported_capabilities", position, "evidence_refs"),
-                category="declared_action_reference_not_permitted",
+        if len(hint.evidence_refs) > 20:
+            raise InferenceGroundingError(
+                "El plan excede el máximo de evidencia publicable por capability",
+                stage="grounding_plan_validation",
+                location=("supported_capabilities", position),
+                category="grounding_hint_too_many_references",
             )
-        # The model statement is only a consistency signal. It is validated, then
-        # replaced with controlled language before any public semantic payload exists.
+        # The model statement is only a consistency signal. Evidence binding is
+        # deterministic and comes from the governed grounding plan, never from the LLM.
         validate_declared_capability(capability, hint, position=position)
         claims.append(
             CapabilityClaim(
                 statement=build_deterministic_capability_statement(capability, hint),
-                evidence_refs=list(capability.evidence_refs),
+                evidence_refs=list(hint.evidence_refs),
             )
         )
     purpose_summary = build_deterministic_purpose_summary(

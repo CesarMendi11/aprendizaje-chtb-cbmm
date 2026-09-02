@@ -14,7 +14,6 @@ from erp_assistant.semantic.generation.errors import (
     InferenceGroundingError,
     InferenceJSONError,
     InferenceNarrativeQualityError,
-    InferenceReferenceError,
     InferenceSchemaError,
     InferenceScreenMismatchError,
     InferenceSensitiveContentError,
@@ -136,13 +135,11 @@ def network_trace(
     )
 
 
-def valid_output(**updates):
+def valid_output(*, include_evidence_refs=False, **updates):
     values = {
         "semantic_type": "screen_purpose",
         "screen_id": "screen:test",
-        "supported_capabilities": [
-            {"statement": "Permite buscar registros.", "evidence_refs": ["control:search"]}
-        ],
+        "supported_capabilities": [{"statement": "Permite buscar registros."}],
         "limitations": [],
         "uncertainties": [],
     }
@@ -158,6 +155,8 @@ def valid_output(**updates):
         "view": ("ver", "muestra", "visualizar", "listar"),
     }
     for capability in values.get("supported_capabilities", []):
+        if not include_evidence_refs:
+            capability.pop("evidence_refs", None)
         if "action" not in capability:
             statement = str(capability.get("statement", "")).casefold()
             capability["action"] = next(
@@ -261,12 +260,16 @@ def test_prompt_projection_is_strict_frozen_and_does_not_mutate_package():
         (valid_output(screen_id="screen:other"), InferenceScreenMismatchError),
         (
             valid_output(
-                supported_capabilities=[{"statement": "X", "evidence_refs": ["field:invented"]}]
+                include_evidence_refs=True,
+                supported_capabilities=[{"statement": "X", "evidence_refs": ["field:invented"]}],
             ),
-            InferenceReferenceError,
+            InferenceSchemaError,
         ),
         (
-            valid_output(supported_capabilities=[{"statement": "X", "evidence_refs": []}]),
+            valid_output(
+                include_evidence_refs=True,
+                supported_capabilities=[{"statement": "X", "evidence_refs": []}],
+            ),
             InferenceSchemaError,
         ),
         ({**valid_output(), "extra": True}, InferenceSchemaError),
@@ -323,6 +326,7 @@ def test_models_are_strict_frozen_and_claim_requires_refs():
     }
     for capability in payload["supported_capabilities"]:
         capability.pop("action")
+        capability["evidence_refs"] = ["control:search", "field:ruc"]
     inference = ScreenPurposeInference.model_validate(payload)
     with pytest.raises(ValidationError):
         inference.purpose_summary = "changed"
@@ -334,7 +338,7 @@ def test_prompt_and_hashes_are_stable_across_dict_order():
     assert build_user_prompt(first) == build_user_prompt(second)
     assert PROMPT_HASH == PROMPT_HASH
     assert GENERATION_PARAMETERS_HASH == GENERATION_PARAMETERS_HASH
-    assert PROMPT_VERSION == "screen-purpose-v10"
+    assert PROMPT_VERSION == "screen-purpose-v11"
     assert PROMPT_HASH != "0d865144c0e9c86d019433d070a6a403b87ed4bbd9b06d9020ec9e0db22738fd"
     assert PROMPT_HASH != "21ec359426dfadad22a8d9b790755621d4741e1bae2ed18cb8d1e04042854199"
 
@@ -353,9 +357,7 @@ def test_v7_prompt_removes_summary_and_requires_empty_negative_lists():
     ],
 )
 def test_canonical_ids_are_rejected_from_narrative(statement):
-    value = valid_output(
-        supported_capabilities=[{"statement": statement, "evidence_refs": ["control:search"]}]
-    )
+    value = valid_output(supported_capabilities=[{"statement": statement}])
     with pytest.raises(InferenceNarrativeQualityError) as captured:
         ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(package())
     assert captured.value.category == "canonical_id_in_narrative"
@@ -591,6 +593,51 @@ def grounding_package(*, decision="review", mutative=True, **updates):
 
 def hints_by_action(evidence):
     return {hint.action: hint for hint in build_grounding_plan(evidence).supported_actions}
+
+
+@pytest.mark.parametrize(
+    ("screen_title", "action", "statement"),
+    [
+        (
+            "Consulta de información SRI",
+            "view",
+            "Permite visualizar información disponible.",
+        ),
+        (
+            "Consulta de pagos por cliente",
+            "view",
+            "Permite visualizar información disponible.",
+        ),
+        (
+            "Consulta y actualización de cuenta portal",
+            "view",
+            "Permite visualizar información disponible.",
+        ),
+        (
+            "Lista de facturas",
+            "navigate",
+            "Permite navegar a la siguiente página.",
+        ),
+    ],
+)
+def test_action_like_screen_title_does_not_expand_deterministic_purpose(
+    screen_title, action, statement
+):
+    evidence = grounding_package(screen_title=screen_title)
+    value = valid_output(
+        supported_capabilities=[
+            {
+                "action": action,
+                "statement": statement,
+            }
+        ]
+    )
+
+    candidate = ScreenPurposeInferenceService(
+        FakeClient(json.dumps(value, ensure_ascii=False))
+    ).generate(evidence)
+
+    assert candidate.inference.supported_capabilities
 
 
 def test_grounding_plan_derives_search_navigation_view_and_prudent_create():
@@ -872,7 +919,10 @@ def test_generated_view_detail_overreach_is_not_persisted_as_public_claim():
     claim = candidate.inference.supported_capabilities[0]
     assert claim.statement == "Permite visualizar información disponible en la pantalla."
     assert "detalle" not in claim.statement.casefold()
-    assert claim.evidence_refs == ["screen:test", "table:results"]
+    view_hint = next(
+        hint for hint in build_grounding_plan(evidence).supported_actions if hint.action == "view"
+    )
+    assert claim.evidence_refs == list(view_hint.evidence_refs)
 
 
 def test_generation_remains_conservative_even_with_explicit_detail_evidence():
@@ -902,7 +952,10 @@ def test_generation_remains_conservative_even_with_explicit_detail_evidence():
 
     claim = candidate.inference.supported_capabilities[0]
     assert claim.statement == "Permite visualizar información disponible en la pantalla."
-    assert claim.evidence_refs == ["control:detail"]
+    view_hint = next(
+        hint for hint in build_grounding_plan(evidence).supported_actions if hint.action == "view"
+    )
+    assert claim.evidence_refs == list(view_hint.evidence_refs)
 
 
 def test_grounding_validator_still_allows_human_detail_claim_when_evidence_is_explicit():
@@ -967,7 +1020,12 @@ def test_table_statement_is_detected_as_view_and_uses_table_reference():
         ],
     )
     candidate = ScreenPurposeInferenceService(FakeClient(json.dumps(value))).generate(evidence)
-    assert candidate.inference.supported_capabilities[0].evidence_refs == ["table:results"]
+    view_hint = next(
+        hint for hint in build_grounding_plan(evidence).supported_actions if hint.action == "view"
+    )
+    assert candidate.inference.supported_capabilities[0].evidence_refs == list(
+        view_hint.evidence_refs
+    )
 
 
 def test_prudent_mutative_option_is_not_misclassified_as_view():
@@ -985,5 +1043,5 @@ def test_prompt_constrains_unbacked_view_detail_semantics():
     prompt = build_user_prompt(grounding_package()).casefold()
 
     assert "no una vista de detalle" in prompt
-    assert "alguna evidence_ref citada" in prompt
+    assert "la evidencia permitida para esa action" in prompt
     assert "detalle, detalles o ficha" in prompt
