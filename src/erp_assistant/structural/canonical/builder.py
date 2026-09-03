@@ -33,8 +33,9 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.5"
+GENERATOR_VERSION = "4.0.6"
 NONFUNCTIONAL_ICON_LABELS = {"bars-3"}
+CONTROL_IDENTITY_LABEL_KEYS = ("label", "text", "aria_label", "title", "placeholder")
 ARTIFACT_NAMES = (
     "screen_index.json",
     "routes_graph.json",
@@ -299,9 +300,19 @@ class CanonicalKnowledgeBuilder:
                 if self._excluded(item):
                     continue
                 label = self._label(item) or "unlabeled control"
+                identity_label = (
+                    self._label_from_keys(item, CONTROL_IDENTITY_LABEL_KEYS)
+                    or "unlabeled control"
+                )
                 controls.append(
                     Control(
-                        id=stable_id("control", screen.id, "button", normalize_text(label), pos),
+                        id=stable_id(
+                            "control",
+                            screen.id,
+                            "button",
+                            normalize_text(identity_label),
+                            pos,
+                        ),
                         screen_id=screen.id,
                         label=label,
                         normalized_label=normalize_text(label),

@@ -30,7 +30,7 @@ def test_home_screen_without_module_is_not_reported_as_route_without_module():
     kb = build()
     home = next(item for item in kb.screens if item.route == "/app/home")
 
-    assert kb.generator_version == "4.0.5"
+    assert kb.generator_version == "4.0.6"
     assert home.module_id is None
     assert not any(
         warning.code == "route_without_module" and warning.entity_id == home.id
@@ -959,7 +959,7 @@ def test_builder_uses_icon_label_for_previously_unlabeled_button():
     assert len(controls) == 1
     assert controls[0].label == "edit"
     assert controls[0].normalized_label == "edit"
-    assert kb.generator_version == "4.0.5"
+    assert kb.generator_version == "4.0.6"
 
 
 def test_builder_does_not_promote_global_shell_icon_to_functional_control_label():
@@ -1141,7 +1141,7 @@ def test_builder_projects_dynamic_route_states_into_originating_functional_scree
     save = next(control for control in product_controls if control.label == "Save")
     assert save.mutative is True
     assert save.source_refs == ["state_registry.json"]
-    assert kb.generator_version == "4.0.5"
+    assert kb.generator_version == "4.0.6"
 
 
 def test_builder_keeps_unreachable_state_without_screen_as_omission():
