@@ -174,3 +174,30 @@ def test_screen_extractor_truncates_visible_text():
 
     assert len(data["visible_text"]) == 50
     assert data["visible_text_truncated"] is True
+
+
+def test_screen_extractor_recovers_icon_only_button_semantics():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Icon buttons</title></head>
+      <body>
+        <button id="mail"><mat-icon svgIcon="feather:mail"></mat-icon></button>
+        <button id="delete"><mat-icon data-mat-icon-name="delete"></mat-icon></button>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html)
+
+        data = ScreenExtractor(page, build_profile()).extract()
+
+        browser.close()
+
+    assert [item["text"] for item in data["buttons"]] == ["", ""]
+    assert [item["icon_label"] for item in data["buttons"]] == ["mail", "delete"]
+    assert data["buttons"][0]["icon_source"] in {"svgIcon", "svgicon"}
+    assert data["buttons"][1]["icon_source"] == "data-mat-icon-name"

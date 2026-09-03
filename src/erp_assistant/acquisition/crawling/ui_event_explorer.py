@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import Any, Iterator
+from urllib.parse import urlsplit
 
 from playwright.sync_api import Page
 
@@ -17,6 +19,7 @@ from erp_assistant.acquisition.discovery.event_candidate_discovery import (
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 from erp_assistant.acquisition.models.ui_event import UIEvent
 from erp_assistant.acquisition.models.ui_state import UIState
+from erp_assistant.acquisition.policy.sandbox_policy import SandboxExplorationPolicy
 
 
 class EventEffect(StrEnum):
@@ -177,6 +180,7 @@ class UIEventExplorer:
             profile=profile,
             default_timeout_ms=self.click_timeout_ms,
         )
+        self.sandbox_policy = SandboxExplorationPolicy(profile)
 
     def set_state_restorer(self, restorer: StateRestorer | None) -> None:
         self.state_restorer = restorer
@@ -193,7 +197,14 @@ class UIEventExplorer:
         current_screen_data = screen_data or self.extractor.extract()
         current_signature = self.state_signature_builder.build(current_screen_data)
 
-        candidates = self.candidate_discovery.discover_exploration_candidates(current_screen_data)
+        candidates = self._sandbox_openers_for_state(
+            current_screen_data,
+            source_state=source_state,
+        )
+        candidates.extend(
+            self.candidate_discovery.discover_exploration_candidates(current_screen_data)
+        )
+        candidates = self._deduplicate_candidates_by_selector(candidates)
         candidates = self._filter_candidates_for_ui_events(
             candidates,
             allowed_categories=allowed_categories,
@@ -269,7 +280,8 @@ class UIEventExplorer:
         for candidate in candidates:
             if not candidate.selector:
                 continue
-            if candidate.dangerous:
+            sandbox_authorized = self._candidate_has_sandbox_override(candidate)
+            if candidate.dangerous and not sandbox_authorized:
                 continue
             if self.skip_link_navigation and (
                 candidate.action_kind == "link_navigation"
@@ -279,6 +291,7 @@ class UIEventExplorer:
             if (
                 allowed_categories is not None
                 and candidate.event_category not in allowed_categories
+                and not sandbox_authorized
             ):
                 continue
             if candidate.event_category in {"expand_menu", "collapse_menu"}:
@@ -292,6 +305,102 @@ class UIEventExplorer:
             filtered.append(candidate)
 
         return filtered
+
+    def _sandbox_openers_for_state(
+        self,
+        screen_data: dict[str, Any],
+        *,
+        source_state: UIState | None,
+    ) -> list[EventCandidate]:
+        if not self.sandbox_policy.active or source_state is None:
+            return []
+
+        source_depth = source_state.path.depth if source_state.path is not None else 0
+        is_home_route = bool(self.home_route and source_state.route == self.home_route)
+        selected: list[EventCandidate] = []
+
+        for candidate in self.candidate_discovery.discover_denied_candidates(screen_data):
+            authorization = self.sandbox_policy.evaluate(
+                candidate,
+                source_state_depth=source_depth,
+                is_home_route=is_home_route,
+            )
+            if not authorization.allowed:
+                continue
+
+            candidate.metadata["sandbox_override"] = {
+                "authorized": True,
+                "environment": self.sandbox_policy.environment,
+                "strategy": self.sandbox_policy.strategy,
+                "base_decision": candidate.decision,
+                "base_risk_level": candidate.risk_level,
+                "reasons": list(authorization.reasons),
+            }
+            selected.append(candidate)
+
+            if len(selected) >= self.sandbox_policy.max_openers_per_root_state:
+                break
+
+        return selected
+
+    @staticmethod
+    def _candidate_has_sandbox_override(candidate: EventCandidate) -> bool:
+        override = candidate.metadata.get("sandbox_override")
+        return isinstance(override, dict) and override.get("authorized") is True
+
+    @staticmethod
+    def _deduplicate_candidates_by_selector(
+        candidates: list[EventCandidate],
+    ) -> list[EventCandidate]:
+        seen: set[str] = set()
+        selected: list[EventCandidate] = []
+        for candidate in candidates:
+            key = candidate.selector or f"{candidate.event_category}:{candidate.label}"
+            if key in seen:
+                continue
+            seen.add(key)
+            selected.append(candidate)
+        return selected
+
+    @contextmanager
+    def _sandbox_network_guard(
+        self,
+        candidate: EventCandidate,
+    ) -> Iterator[dict[str, Any] | None]:
+        if not self._candidate_has_sandbox_override(candidate):
+            yield None
+            return
+
+        audit: dict[str, Any] = {
+            "blocked_methods": sorted(self.sandbox_policy.blocked_http_methods),
+            "requests_observed": 0,
+            "blocked_mutating_requests": [],
+        }
+        candidate.metadata["sandbox_network_guard"] = audit
+
+        def guard(route, request) -> None:
+            method = request.method.upper()
+            parsed = urlsplit(request.url)
+            audit["requests_observed"] += 1
+
+            if method in self.sandbox_policy.blocked_http_methods:
+                audit["blocked_mutating_requests"].append(
+                    {
+                        "method": method,
+                        "resource_type": request.resource_type,
+                        "path": parsed.path,
+                    }
+                )
+                route.abort()
+                return
+
+            route.continue_()
+
+        self.page.route("**/*", guard)
+        try:
+            yield audit
+        finally:
+            self.page.unroute("**/*", guard)
 
     def _traversed_menu_selectors(self, source_state: UIState | None) -> set[str]:
         """Evita volver a accionar el mismo menú usado para llegar al estado."""
@@ -361,106 +470,138 @@ class UIEventExplorer:
         restore_result: RestoreResult | None = None,
     ) -> UIEventResult:
         event = candidate.to_ui_event()
-
-        interaction = self.interaction_executor.click(candidate.selector)
-        if not interaction.success:
-            return self._error_result(
-                candidate=candidate,
-                before_fingerprint=before_fingerprint,
-                before_exact_fingerprint=before_exact_fingerprint,
-                before_route=before_route,
-                before_screen_data=before_screen_data,
-                error=interaction.error or "interaction_failed",
-                source_state_id=source_state_id,
-                restore_result=restore_result,
-                interaction_attempts=interaction.attempts,
-                interaction_strategy=interaction.strategy,
-                interaction_succeeded=False,
-            )
+        interaction = None
 
         try:
-            if self.event_wait_ms:
-                self.page.wait_for_timeout(self.event_wait_ms)
+            with self._sandbox_network_guard(candidate) as sandbox_audit:
+                interaction = self.interaction_executor.click(candidate.selector)
+                if not interaction.success:
+                    return self._error_result(
+                        candidate=candidate,
+                        before_fingerprint=before_fingerprint,
+                        before_exact_fingerprint=before_exact_fingerprint,
+                        before_route=before_route,
+                        before_screen_data=before_screen_data,
+                        error=interaction.error or "interaction_failed",
+                        source_state_id=source_state_id,
+                        restore_result=restore_result,
+                        interaction_attempts=interaction.attempts,
+                        interaction_strategy=interaction.strategy,
+                        interaction_succeeded=False,
+                    )
 
-            observer = StableStateObserver(
-                profile=self.profile,
-                extractor=self.extractor,
-                signature_builder=self.state_signature_builder,
-                wait_fn=self.page.wait_for_timeout,
-            )
-            observation = observer.observe(
-                title_hint=(
-                    before_screen_data.get("functional_title")
-                    or before_screen_data.get("title")
-                    or ""
-                ),
-                canonical_title=(
-                    before_screen_data.get("functional_title")
-                    or before_screen_data.get("title")
-                    or None
-                ),
-            )
-            if not observation.stable:
-                return self._error_result(
-                    candidate=candidate,
-                    before_fingerprint=before_fingerprint,
-                    before_exact_fingerprint=before_exact_fingerprint,
+                if self.event_wait_ms:
+                    self.page.wait_for_timeout(self.event_wait_ms)
+
+                if sandbox_audit and sandbox_audit["blocked_mutating_requests"]:
+                    return self._error_result(
+                        candidate=candidate,
+                        before_fingerprint=before_fingerprint,
+                        before_exact_fingerprint=before_exact_fingerprint,
+                        before_route=before_route,
+                        before_screen_data=before_screen_data,
+                        error="sandbox_mutating_request_blocked",
+                        source_state_id=source_state_id,
+                        restore_result=restore_result,
+                        interaction_attempts=interaction.attempts,
+                        interaction_strategy=interaction.strategy,
+                        interaction_succeeded=True,
+                    )
+
+                observer = StableStateObserver(
+                    profile=self.profile,
+                    extractor=self.extractor,
+                    signature_builder=self.state_signature_builder,
+                    wait_fn=self.page.wait_for_timeout,
+                )
+                observation = observer.observe(
+                    title_hint=(
+                        before_screen_data.get("functional_title")
+                        or before_screen_data.get("title")
+                        or ""
+                    ),
+                    canonical_title=(
+                        before_screen_data.get("functional_title")
+                        or before_screen_data.get("title")
+                        or None
+                    ),
+                )
+                if not observation.stable:
+                    return self._error_result(
+                        candidate=candidate,
+                        before_fingerprint=before_fingerprint,
+                        before_exact_fingerprint=before_exact_fingerprint,
+                        before_route=before_route,
+                        before_screen_data=observation.screen_data,
+                        error="state_observation_unstable",
+                        source_state_id=source_state_id,
+                        restore_result=restore_result,
+                        interaction_attempts=interaction.attempts,
+                        interaction_strategy=interaction.strategy,
+                        interaction_succeeded=True,
+                        after_observation=observation.diagnostics(),
+                    )
+
+                if sandbox_audit and sandbox_audit["blocked_mutating_requests"]:
+                    return self._error_result(
+                        candidate=candidate,
+                        before_fingerprint=before_fingerprint,
+                        before_exact_fingerprint=before_exact_fingerprint,
+                        before_route=before_route,
+                        before_screen_data=before_screen_data,
+                        error="sandbox_mutating_request_blocked",
+                        source_state_id=source_state_id,
+                        restore_result=restore_result,
+                        interaction_attempts=interaction.attempts,
+                        interaction_strategy=interaction.strategy,
+                        interaction_succeeded=True,
+                        after_observation=observation.diagnostics(),
+                    )
+
+                after_screen_data = observation.screen_data
+                after_signature = observation.signature
+                effect = classify_event_effect(
                     before_route=before_route,
-                    before_screen_data=observation.screen_data,
-                    error="state_observation_unstable",
+                    before_structural_fingerprint=before_fingerprint,
+                    before_exact_fingerprint=before_exact_fingerprint,
+                    after=after_signature,
+                )
+                changed = effect is not EventEffect.NO_EFFECT
+
+                if effect.creates_state:
+                    after_html, after_screenshot, artifact_error = self._capture_result_artifacts()
+                else:
+                    after_html, after_screenshot, artifact_error = (
+                        None,
+                        None,
+                        None,
+                    )
+
+                return UIEventResult(
+                    event=event,
+                    candidate=candidate.to_dict(),
+                    changed=changed,
+                    effect=effect,
+                    before_fingerprint=before_fingerprint,
+                    after_fingerprint=after_signature.structural_fingerprint,
+                    before_exact_fingerprint=before_exact_fingerprint,
+                    after_exact_fingerprint=after_signature.exact_fingerprint,
+                    before_route=before_route,
+                    after_route=after_signature.route,
+                    after_screen_data=after_screen_data,
+                    error=None,
                     source_state_id=source_state_id,
-                    restore_result=restore_result,
+                    restored_before=restore_result is not None,
+                    restore_strategy=(restore_result.strategy if restore_result else None),
+                    artifact_error=artifact_error,
+                    after_html=after_html,
+                    after_screenshot=after_screenshot,
                     interaction_attempts=interaction.attempts,
                     interaction_strategy=interaction.strategy,
                     interaction_succeeded=True,
+                    restore_diagnostics=(restore_result.diagnostics() if restore_result else {}),
                     after_observation=observation.diagnostics(),
                 )
-
-            after_screen_data = observation.screen_data
-            after_signature = observation.signature
-            effect = classify_event_effect(
-                before_route=before_route,
-                before_structural_fingerprint=before_fingerprint,
-                before_exact_fingerprint=before_exact_fingerprint,
-                after=after_signature,
-            )
-            changed = effect is not EventEffect.NO_EFFECT
-
-            if effect.creates_state:
-                after_html, after_screenshot, artifact_error = self._capture_result_artifacts()
-            else:
-                after_html, after_screenshot, artifact_error = (
-                    None,
-                    None,
-                    None,
-                )
-
-            return UIEventResult(
-                event=event,
-                candidate=candidate.to_dict(),
-                changed=changed,
-                effect=effect,
-                before_fingerprint=before_fingerprint,
-                after_fingerprint=after_signature.structural_fingerprint,
-                before_exact_fingerprint=before_exact_fingerprint,
-                after_exact_fingerprint=after_signature.exact_fingerprint,
-                before_route=before_route,
-                after_route=after_signature.route,
-                after_screen_data=after_screen_data,
-                error=None,
-                source_state_id=source_state_id,
-                restored_before=restore_result is not None,
-                restore_strategy=(restore_result.strategy if restore_result else None),
-                artifact_error=artifact_error,
-                after_html=after_html,
-                after_screenshot=after_screenshot,
-                interaction_attempts=interaction.attempts,
-                interaction_strategy=interaction.strategy,
-                interaction_succeeded=True,
-                restore_diagnostics=(restore_result.diagnostics() if restore_result else {}),
-                after_observation=observation.diagnostics(),
-            )
-
         except Exception as error:
             return self._error_result(
                 candidate=candidate,
@@ -471,9 +612,9 @@ class UIEventExplorer:
                 error=str(error),
                 source_state_id=source_state_id,
                 restore_result=restore_result,
-                interaction_attempts=interaction.attempts,
-                interaction_strategy=interaction.strategy,
-                interaction_succeeded=True,
+                interaction_attempts=(interaction.attempts if interaction else 0),
+                interaction_strategy=(interaction.strategy if interaction else None),
+                interaction_succeeded=(interaction.success if interaction else False),
             )
 
     def _capture_result_artifacts(

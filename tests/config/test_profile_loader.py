@@ -379,3 +379,59 @@ output:
 
     with pytest.raises(ValueError, match="login.username/login.password"):
         ProfileLoader(profile_path).load()
+
+
+def test_profile_loader_accepts_cbmm_test_full_sandbox_profile():
+    profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
+
+    assert profile["crawl_mode"] == {
+        "environment": "test",
+        "strategy": "test_full",
+    }
+    sandbox = profile["sandbox_exploration"]
+    assert sandbox["enabled"] is True
+    assert sandbox["root_states_only"] is True
+    assert sandbox["max_openers_per_root_state"] == 2
+    assert "main_content" in sandbox["allowed_regions"]
+    assert "POST" in sandbox["blocked_http_methods"]
+
+
+def test_profile_loader_rejects_test_full_outside_test_environment(tmp_path):
+    profile_path = tmp_path / "invalid_test_full.yaml"
+    profile_path.write_text(
+        """
+erp:
+  name: Test
+  code: test
+  base_url: http://localhost:8080
+login:
+  url: /login
+  username_selector: '#user'
+  password_selector: '#password'
+  submit_role_name: Ingresar
+  success_url_contains: /admin/home
+navigation:
+  home_url: /admin/home
+exploration:
+  allowed_routes: [/admin/]
+  blocked_routes: []
+safety: {}
+crawl_mode:
+  environment: production
+  strategy: test_full
+sandbox_exploration:
+  enabled: true
+  opener_label_prefixes: [nueva]
+extraction: {}
+output:
+  raw_playwright_dir: data/raw/playwright
+  html_dir: data/raw/html
+  screenshots_dir: data/raw/screenshots
+  processed_structural_dir: data/processed/structural
+  review_structural_dir: data/review/structural
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="test_full solo se permite"):
+        ProfileLoader(profile_path).load()

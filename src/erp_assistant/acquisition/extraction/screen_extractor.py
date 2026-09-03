@@ -153,6 +153,88 @@ class ScreenExtractor:
                 return normalizeText(directText);
             };
 
+            const normalizeIconName = (value) => {
+                let text = normalizeText(value);
+                if (!text) return "";
+                if (/^https?:\/\//i.test(text)) return "";
+
+                text = text.replace(/^#/, "");
+
+                // Los packs de iconos suelen usar namespaces como
+                // ``feather:mail`` o ``mat_solid:delete``. Para la etiqueta
+                // funcional interesa el nombre terminal, mientras la fuente
+                // original se conserva por separado para auditoría.
+                if (text.includes(":")) {
+                    text = text.split(":").pop() || text;
+                }
+
+                return normalizeText(text).slice(0, 80);
+            };
+
+            const iconEvidenceOf = (element) => {
+                if (!element || !element.querySelectorAll) {
+                    return {label: "", source: null};
+                }
+
+                const nodes = [
+                    element,
+                    ...Array.from(
+                        element.querySelectorAll(
+                            "mat-icon, i, svg, use, " +
+                            "[svgIcon], [svgicon], [fontIcon], [fonticon], " +
+                            "[data-mat-icon-name], [data-icon]"
+                        )
+                    ),
+                ];
+
+                const attributes = [
+                    "svgIcon",
+                    "svgicon",
+                    "fontIcon",
+                    "fonticon",
+                    "data-mat-icon-name",
+                    "data-icon",
+                    "ng-reflect-svg-icon",
+                    "ng-reflect-font-icon",
+                ];
+
+                for (const node of nodes) {
+                    if (!node || !node.getAttribute) continue;
+
+                    for (const attribute of attributes) {
+                        const label = normalizeIconName(node.getAttribute(attribute));
+                        if (label) {
+                            return {label, source: attribute};
+                        }
+                    }
+
+                    if (
+                        node.tagName &&
+                        node.tagName.toLowerCase() === "mat-icon"
+                    ) {
+                        const label = normalizeIconName(node.textContent);
+                        if (label) {
+                            return {label, source: "mat-icon:text"};
+                        }
+                    }
+
+                    if (
+                        node.tagName &&
+                        node.tagName.toLowerCase() === "use"
+                    ) {
+                        const label = normalizeIconName(
+                            node.getAttribute("href") ||
+                            node.getAttribute("xlink:href")
+                        );
+                        if (label) {
+                            return {label, source: "svg-use"};
+                        }
+                    }
+                }
+
+                return {label: "", source: null};
+            };
+
             const cssPath = (element) => {
                 if (!element || !element.tagName) return "";
                 const parts = [];
@@ -295,20 +377,26 @@ class ScreenExtractor:
                     "button, [role='button'], input[type='button'], input[type='submit']"
                 ))
                     .filter(isVisible)
-                    .map((element) => ({
-                        ...baseItem(element),
-                        text: textOf(element),
-                        type: element.getAttribute("type"),
-                        role: element.getAttribute("role"),
-                        aria_label: element.getAttribute("aria-label"),
-                        aria_expanded: element.getAttribute("aria-expanded"),
-                        aria_selected: element.getAttribute("aria-selected"),
-                        aria_controls: element.getAttribute("aria-controls"),
-                        title: element.getAttribute("title"),
-                        disabled: Boolean(
-                            element.disabled || element.getAttribute("aria-disabled") === "true"
-                        ),
-                    }))
+                    .map((element) => {
+                        const iconEvidence = iconEvidenceOf(element);
+                        return {
+                            ...baseItem(element),
+                            text: textOf(element),
+                            icon_label: iconEvidence.label || null,
+                            icon_source: iconEvidence.source,
+                            type: element.getAttribute("type"),
+                            role: element.getAttribute("role"),
+                            aria_label: element.getAttribute("aria-label"),
+                            aria_expanded: element.getAttribute("aria-expanded"),
+                            aria_selected: element.getAttribute("aria-selected"),
+                            aria_controls: element.getAttribute("aria-controls"),
+                            title: element.getAttribute("title"),
+                            disabled: Boolean(
+                                element.disabled ||
+                                element.getAttribute("aria-disabled") === "true"
+                            ),
+                        };
+                    })
             );
 
             const labelForInput = (input) => {

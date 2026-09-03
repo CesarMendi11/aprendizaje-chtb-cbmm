@@ -33,7 +33,8 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.3"
+GENERATOR_VERSION = "4.0.4"
+NONFUNCTIONAL_ICON_LABELS = {"bars-3"}
 ARTIFACT_NAMES = (
     "screen_index.json",
     "routes_graph.json",
@@ -910,14 +911,21 @@ class CanonicalKnowledgeBuilder:
 
     @staticmethod
     def _label(item):
-        return next(
-            (
-                str(item.get(key)).strip()
-                for key in ("label", "text", "aria_label", "title", "placeholder")
-                if item.get(key) and str(item.get(key)).strip()
-            ),
-            "",
-        )
+        for key in (
+            "label",
+            "text",
+            "aria_label",
+            "title",
+            "placeholder",
+            "icon_label",
+        ):
+            value = str(item.get(key) or "").strip()
+            if not value:
+                continue
+            if key == "icon_label" and value.casefold() in NONFUNCTIONAL_ICON_LABELS:
+                continue
+            return value
+        return ""
 
     @staticmethod
     def _mutative(item):

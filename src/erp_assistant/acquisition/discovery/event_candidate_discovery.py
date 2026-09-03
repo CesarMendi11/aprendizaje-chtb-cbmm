@@ -93,6 +93,8 @@ class EventCandidateDiscovery:
         "item",
     ]
 
+    NONFUNCTIONAL_ICON_LABELS = {"bars-3"}
+
     LOW_VALUE_LABELS = {
         "admin",
         "administrador",
@@ -328,6 +330,24 @@ class EventCandidateDiscovery:
             "selected_for_exploration": [candidate.to_dict() for candidate in selected],
         }
 
+    def discover_denied_candidates(
+        self,
+        screen_data: dict[str, Any],
+    ) -> list[EventCandidate]:
+        """Devuelve candidatos DENY deduplicados para auditorías especiales.
+
+        No concede autorización de ejecución. Los consumidores deben aplicar
+        una política adicional explícita antes de interactuar con cualquiera
+        de estos candidatos.
+        """
+        candidates = [
+            candidate
+            for candidate in self._discover_all_candidates(screen_data)
+            if candidate.decision == EventDecision.DENY.value
+        ]
+        candidates.sort(key=self._audit_sort_key)
+        return candidates
+
     def discover_review_candidates(
         self,
         screen_data: dict[str, Any],
@@ -420,6 +440,8 @@ class EventCandidateDiscovery:
                     "role": item.get("role"),
                     "aria_label": item.get("aria_label"),
                     "title": item.get("title"),
+                    "icon_label": item.get("icon_label"),
+                    "icon_source": item.get("icon_source"),
                     "aria_expanded": item.get("aria_expanded"),
                     "aria_selected": item.get("aria_selected"),
                     "aria_controls": item.get("aria_controls"),
@@ -731,17 +753,21 @@ class EventCandidateDiscovery:
 
     def _best_label(self, item: dict[str, Any]) -> str:
         values = [
-            item.get("text"),
-            item.get("aria_label"),
-            item.get("title"),
-            item.get("placeholder"),
-            item.get("name"),
-            item.get("id"),
+            ("text", item.get("text")),
+            ("aria_label", item.get("aria_label")),
+            ("title", item.get("title")),
+            ("placeholder", item.get("placeholder")),
+            ("icon_label", item.get("icon_label")),
+            ("name", item.get("name")),
+            ("id", item.get("id")),
         ]
-        for value in values:
+        for source, value in values:
             cleaned = self._clean_text(value)
-            if cleaned:
-                return cleaned
+            if not cleaned:
+                continue
+            if source == "icon_label" and cleaned.casefold() in self.NONFUNCTIONAL_ICON_LABELS:
+                continue
+            return cleaned
         return ""
 
     def _clean_text(self, value: Any) -> str:

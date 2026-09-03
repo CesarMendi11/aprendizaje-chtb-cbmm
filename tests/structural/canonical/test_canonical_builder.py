@@ -30,7 +30,7 @@ def test_home_screen_without_module_is_not_reported_as_route_without_module():
     kb = build()
     home = next(item for item in kb.screens if item.route == "/app/home")
 
-    assert kb.generator_version == "4.0.3"
+    assert kb.generator_version == "4.0.4"
     assert home.module_id is None
     assert not any(
         warning.code == "route_without_module" and warning.entity_id == home.id
@@ -938,3 +938,46 @@ def test_build_from_paths_records_profile_hash_without_changing_functional_versi
         from_paths.source_artifact_hashes[profile_ref] == hashlib.sha256(profile_bytes).hexdigest()
     )
     assert from_paths.knowledge_version == direct.knowledge_version
+
+
+def test_builder_uses_icon_label_for_previously_unlabeled_button():
+    artifacts = fictional_artifacts()
+    screen = artifacts["screen_index.json"]["screens"][1]
+    screen["buttons"] = [
+        {
+            "text": "",
+            "icon_label": "edit",
+            "icon_source": "svgIcon",
+            "region": "main_content",
+        }
+    ]
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    product = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    controls = [item for item in kb.controls if item.screen_id == product.id]
+
+    assert len(controls) == 1
+    assert controls[0].label == "edit"
+    assert controls[0].normalized_label == "edit"
+    assert kb.generator_version == "4.0.4"
+
+
+def test_builder_does_not_promote_global_shell_icon_to_functional_control_label():
+    artifacts = fictional_artifacts()
+    screen = artifacts["screen_index.json"]["screens"][1]
+    screen["buttons"] = [
+        {
+            "text": "",
+            "icon_label": "bars-3",
+            "icon_source": "data-mat-icon-name",
+            "region": "main_content",
+        }
+    ]
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    product = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    controls = [item for item in kb.controls if item.screen_id == product.id]
+
+    assert len(controls) == 1
+    assert controls[0].label == "unlabeled control"
+    assert controls[0].normalized_label == "unlabeled control"

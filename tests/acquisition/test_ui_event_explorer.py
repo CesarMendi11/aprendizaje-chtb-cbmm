@@ -452,3 +452,166 @@ def test_selector_descendant_accepts_shortened_equivalent_prefix():
         )
         is False
     )
+
+
+def _sandbox_source_state(explorer: UIEventExplorer) -> UIState:
+    screen_data = explorer.extractor.extract()
+    signature = explorer.state_signature_builder.build(screen_data)
+    return UIState(
+        state_id="sandbox-root",
+        route=signature.route,
+        title=screen_data.get("functional_title") or screen_data.get("title", ""),
+        exact_signature=signature.exact_fingerprint,
+        structural_signature=signature.structural_fingerprint,
+        summary={},
+        path=CrawlPath(root_state_id="sandbox-root"),
+    )
+
+
+def test_ui_event_explorer_test_full_observes_denied_root_opener_without_submit():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Trámites</title></head>
+      <body>
+        <main>
+          <button id="new" type="button" onclick="
+            document.getElementById('form').style.display='block';
+          ">Nueva trámite</button>
+          <section id="form" style="display:none">
+            <label>Asunto <input name="subject"></label>
+            <button type="submit">Enviar</button>
+          </section>
+        </main>
+      </body>
+    </html>
+    """
+
+    profile = build_profile()
+    profile["crawl_mode"] = {"environment": "test", "strategy": "test_full"}
+    profile["sandbox_exploration"] = {
+        "enabled": True,
+        "root_states_only": True,
+        "max_openers_per_root_state": 1,
+        "allowed_regions": ["main_content"],
+        "opener_label_prefixes": ["nueva"],
+        "blocked_http_methods": ["POST", "PUT", "PATCH", "DELETE"],
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html, url=f"{BASE_URL}/admin/tramites/actividades")
+
+        explorer = build_explorer(page, profile)
+        source_state = _sandbox_source_state(explorer)
+        results = explorer.explore_current_state(
+            source_state=source_state,
+            allowed_categories={"open_modal"},
+        )
+        browser.close()
+
+    sandbox_results = [
+        result
+        for result in results
+        if result.candidate.get("metadata", {}).get("sandbox_override", {}).get("authorized")
+    ]
+    assert len(sandbox_results) == 1
+    result = sandbox_results[0]
+    assert result.event.label == "Nueva trámite"
+    assert result.event.decision == EventDecision.DENY
+    assert result.changed is True
+    assert result.effect is not None
+    assert result.error is None
+    assert result.candidate["metadata"]["sandbox_network_guard"]["blocked_mutating_requests"] == []
+
+
+def test_ui_event_explorer_safe_strategy_does_not_execute_denied_opener():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Trámites</title></head>
+      <body>
+        <main>
+          <button id="new" type="button" onclick="
+            document.body.dataset.opened='yes';
+          ">Nueva trámite</button>
+        </main>
+      </body>
+    </html>
+    """
+
+    profile = build_profile()
+    profile["crawl_mode"] = {"environment": "test", "strategy": "safe"}
+    profile["sandbox_exploration"] = {
+        "enabled": True,
+        "opener_label_prefixes": ["nueva"],
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html, url=f"{BASE_URL}/admin/tramites/actividades")
+
+        explorer = build_explorer(page, profile)
+        source_state = _sandbox_source_state(explorer)
+        results = explorer.explore_current_state(source_state=source_state)
+        opened = page.get_attribute("body", "data-opened")
+        browser.close()
+
+    assert opened is None
+    assert not any(result.event.label == "Nueva trámite" for result in results)
+
+
+def test_ui_event_explorer_test_full_blocks_mutating_network_request():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Trámites</title></head>
+      <body>
+        <main>
+          <button id="new" type="button" onclick="
+            fetch('/api/create', {method: 'POST'});
+          ">Nueva trámite</button>
+        </main>
+      </body>
+    </html>
+    """
+
+    profile = build_profile()
+    profile["crawl_mode"] = {"environment": "test", "strategy": "test_full"}
+    profile["sandbox_exploration"] = {
+        "enabled": True,
+        "root_states_only": True,
+        "max_openers_per_root_state": 1,
+        "allowed_regions": ["main_content"],
+        "opener_label_prefixes": ["nueva"],
+        "blocked_http_methods": ["POST", "PUT", "PATCH", "DELETE"],
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html, url=f"{BASE_URL}/admin/tramites/actividades")
+
+        explorer = build_explorer(page, profile)
+        source_state = _sandbox_source_state(explorer)
+        results = explorer.explore_current_state(source_state=source_state)
+        browser.close()
+
+    sandbox_results = [
+        result
+        for result in results
+        if result.candidate.get("metadata", {}).get("sandbox_override", {}).get("authorized")
+    ]
+    assert len(sandbox_results) == 1
+    result = sandbox_results[0]
+    assert result.error == "sandbox_mutating_request_blocked"
+    blocked = result.candidate["metadata"]["sandbox_network_guard"]["blocked_mutating_requests"]
+    assert blocked == [
+        {
+            "method": "POST",
+            "resource_type": "fetch",
+            "path": "/api/create",
+        }
+    ]

@@ -224,8 +224,34 @@ output:
   cache_dir: "data/cache"
 
 crawl_mode:
-  environment: "production" # production | staging | test
-  strategy: "safe" # safe | interactive | test_full
+  # El caso de estudio CBMM usa un ERP/base de pruebas. La estrategia test_full
+  # habilita únicamente openers observacionales bajo la política sandbox de
+  # abajo; la política SAFE sigue siendo el comportamiento por defecto para
+  # perfiles production/staging o strategy=safe.
+  environment: "test" # production | staging | test
+  strategy: "test_full" # safe | interactive | test_full
+
+sandbox_exploration:
+  enabled: true
+  root_states_only: true
+  max_openers_per_root_state: 2
+  allowed_regions:
+    - "main_content"
+  # Prefijos configurables para acciones que normalmente abren formularios o
+  # editores. La política base continúa clasificándolas como mutative_action
+  # DENY; test_full solo permite observar el estado resultante sin submit.
+  opener_label_prefixes:
+    - "nuevo"
+    - "nueva"
+    - "crear"
+    - "edit"
+    - "agregar"
+    - "add"
+  blocked_http_methods:
+    - "POST"
+    - "PUT"
+    - "PATCH"
+    - "DELETE"
 
 browser_interaction:
   # Los menús de algunos ERP se animan o reconstruyen tras cada navegación.

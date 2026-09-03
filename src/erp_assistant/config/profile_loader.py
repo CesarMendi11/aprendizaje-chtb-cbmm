@@ -142,6 +142,47 @@ class ProfileLoader:
                 if unknown:
                     raise ValueError(f"safety.{field} contiene categorías desconocidas: {unknown}")
 
+        crawl_mode = profile.get("crawl_mode", {}) or {}
+        if crawl_mode and not isinstance(crawl_mode, dict):
+            raise ValueError("crawl_mode debe ser un objeto.")
+
+        environment = str(crawl_mode.get("environment", "production"))
+        strategy = str(crawl_mode.get("strategy", "safe"))
+        if environment not in {"production", "staging", "test"}:
+            raise ValueError("crawl_mode.environment debe ser production, staging o test.")
+        if strategy not in {"safe", "interactive", "test_full"}:
+            raise ValueError("crawl_mode.strategy debe ser safe, interactive o test_full.")
+        if strategy == "test_full" and environment != "test":
+            raise ValueError("crawl_mode.strategy=test_full solo se permite con environment=test.")
+
+        sandbox = profile.get("sandbox_exploration", {}) or {}
+        if sandbox and not isinstance(sandbox, dict):
+            raise ValueError("sandbox_exploration debe ser un objeto.")
+
+        sandbox_enabled = sandbox.get("enabled")
+        if sandbox_enabled is not None and not isinstance(sandbox_enabled, bool):
+            raise ValueError("sandbox_exploration.enabled debe ser booleano.")
+
+        root_states_only = sandbox.get("root_states_only")
+        if root_states_only is not None and not isinstance(root_states_only, bool):
+            raise ValueError("sandbox_exploration.root_states_only debe ser booleano.")
+
+        max_openers = sandbox.get("max_openers_per_root_state")
+        if max_openers is not None and (not isinstance(max_openers, int) or max_openers < 0):
+            raise ValueError(
+                "sandbox_exploration.max_openers_per_root_state debe ser un entero no negativo."
+            )
+
+        for field in ["allowed_regions", "opener_label_prefixes", "blocked_http_methods"]:
+            value = sandbox.get(field)
+            if value is not None and (
+                not isinstance(value, list)
+                or not all(isinstance(item, str) and item.strip() for item in value)
+            ):
+                raise ValueError(
+                    f"sandbox_exploration.{field} debe ser una lista de textos no vacíos."
+                )
+
         ui_events = profile.get("ui_events", {})
 
         max_event_depth = ui_events.get("max_event_depth")

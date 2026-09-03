@@ -756,3 +756,61 @@ def test_nested_collapsable_target_keeps_expand_menu_semantics():
 
     assert candidate.event_category == "expand_menu"
     assert candidate.decision == "allow"
+
+
+def test_event_candidate_discovery_uses_icon_label_when_text_is_empty():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "",
+                "icon_label": "delete",
+                "icon_source": "data-mat-icon-name",
+                "tag": "button",
+                "type": None,
+                "selector": "table > tbody > tr:nth-of-type(1) > td > button",
+                "region": "main_content",
+                "within_table": True,
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].label == "delete"
+    assert candidates[0].event_category == "mutative_action"
+    assert candidates[0].dangerous is True
+    assert candidates[0].metadata["icon_label"] == "delete"
+    assert candidates[0].metadata["icon_source"] == "data-mat-icon-name"
+
+
+def test_event_candidate_discovery_keeps_shell_icon_as_metadata_not_functional_label():
+    discovery = build_discovery()
+
+    screen_data = {
+        "buttons": [
+            {
+                "text": "",
+                "icon_label": "bars-3",
+                "icon_source": "data-mat-icon-name",
+                "tag": "button",
+                "type": None,
+                "selector": "admin-layout > div > div:nth-of-type(1) > button",
+                "region": "main_content",
+                "within_table": False,
+            }
+        ],
+        "links": [],
+        "custom_interactives": [],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].label == ""
+    assert candidates[0].metadata["icon_label"] == "bars-3"
+    assert candidates[0].metadata["icon_source"] == "data-mat-icon-name"
