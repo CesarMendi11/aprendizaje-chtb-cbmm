@@ -1,6 +1,6 @@
 """Fase 3B.1: persistencia y revisión de conocimiento."""
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "20260716_01"
