@@ -89,10 +89,40 @@ def build_screen_purpose_generation_schema_v14(
     }
 
 
+def _normalize_duplicate_evidence_refs(value: dict[str, Any]) -> int:
+    capabilities = value.get("supported_capabilities")
+    if not isinstance(capabilities, list):
+        return 0
+
+    removed = 0
+    for claim in capabilities:
+        if not isinstance(claim, dict):
+            continue
+        references = claim.get("evidence_refs")
+        if not isinstance(references, list):
+            continue
+        deduplicated: list[Any] = []
+        seen: set[Any] = set()
+        for reference in references:
+            try:
+                already_seen = reference in seen
+            except TypeError:
+                deduplicated.append(reference)
+                continue
+            if already_seen:
+                removed += 1
+                continue
+            seen.add(reference)
+            deduplicated.append(reference)
+        claim["evidence_refs"] = deduplicated
+    return removed
+
+
 def parse_generation_draft_v14(
     raw: str,
     *,
     package: ScreenEvidencePackage,
+    normalization_warnings: list[str] | None = None,
 ) -> ScreenPurposeInference:
     if raw.lstrip().startswith("```") or raw.rstrip().endswith("```"):
         raise InferenceJSONError("La inferencia no es JSON puro")
@@ -102,6 +132,10 @@ def parse_generation_draft_v14(
         raise InferenceJSONError("La inferencia contiene JSON inválido") from exc
     if not isinstance(value, dict):
         raise InferenceJSONError("La raíz de la inferencia debe ser un objeto")
+
+    removed_references = _normalize_duplicate_evidence_refs(value)
+    if removed_references and normalization_warnings is not None:
+        normalization_warnings.append(f"deduplicated_evidence_refs:{removed_references}")
 
     try:
         inference = ScreenPurposeInference.model_validate(value)

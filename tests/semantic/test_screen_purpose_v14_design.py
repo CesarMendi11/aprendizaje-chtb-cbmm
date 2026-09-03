@@ -15,6 +15,7 @@ from erp_assistant.semantic.generation.screen_purpose_generation_v14 import (
 from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     PROMPT_VERSION,
+    SYSTEM_PROMPT,
     build_user_prompt_v14,
 )
 from erp_assistant.semantic.schemas.screen_evidence import (
@@ -156,14 +157,19 @@ def valid_output(**updates):
 def test_v14_prompt_delegates_semantic_interpretation_but_keeps_human_authority():
     prompt = build_user_prompt_v14(package())
 
-    assert PROMPT_VERSION == "screen-purpose-v14"
+    assert PROMPT_VERSION == "screen-purpose-v14.1"
     assert GENERATION_PARAMETERS["num_predict"] == 2048
+    assert GENERATION_PARAMETERS["think"] is False
     assert "claims funcionales libres" in prompt
     assert "revisión humana" in prompt
     assert "grounding_plan" not in prompt
     assert "supported_actions" not in prompt
     assert "control:send" in prompt
     assert "column:risk" in prompt
+    assert "Field prueba la presencia de un campo de entrada visible" in SYSTEM_PROMPT
+    assert "TableColumn prueba que un dato se presenta como columna" in SYSTEM_PROMPT
+    assert "La ausencia de una evidencia no demuestra" in SYSTEM_PROMPT
+    assert "no uses Fields como si fueran columnas de resultados" in prompt
 
 
 def test_claimable_refs_exclude_shell_network_identity_and_unlabeled_control():
@@ -217,6 +223,29 @@ def test_v14_parser_accepts_rich_claims_and_preserves_model_language():
         "Presenta datos de propietario y nivel de riesgo de los establecimientos."
     )
     assert inference.supported_capabilities[1].evidence_refs == ["control:send"]
+
+
+def test_v14_parser_mechanically_deduplicates_repeated_evidence_refs():
+    evidence = package()
+    value = valid_output()
+    value["supported_capabilities"][0]["evidence_refs"] = [
+        "column:owner",
+        "column:risk",
+        "column:owner",
+    ]
+
+    warnings: list[str] = []
+    inference = parse_generation_draft_v14(
+        json.dumps(value, ensure_ascii=False),
+        package=evidence,
+        normalization_warnings=warnings,
+    )
+
+    assert inference.supported_capabilities[0].evidence_refs == [
+        "column:owner",
+        "column:risk",
+    ]
+    assert warnings == ["deduplicated_evidence_refs:1"]
 
 
 def test_v14_parser_rejects_screen_mismatch():

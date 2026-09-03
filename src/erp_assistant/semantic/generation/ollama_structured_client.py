@@ -46,18 +46,29 @@ class OllamaStructuredGenerationClient:
             raise ValueError("El timeout estructurado debe ser positivo")
 
     def generate(
-        self, prompt: str, *, system: str, schema: dict[str, Any]
+        self,
+        prompt: str,
+        *,
+        system: str,
+        schema: dict[str, Any],
+        options: dict[str, Any] | None = None,
+        think: bool | None = None,
     ) -> StructuredGenerationResponse:
         if not prompt.strip() or not system.strip():
             raise ValueError("Prompt estructurado vacío")
+        generation_options = self._generation_options(options)
         payload = {
             "model": self.settings.model,
             "prompt": prompt,
             "system": system,
             "stream": False,
             "format": schema if self.mode == "json_schema" else "json",
-            "options": {"temperature": 0, "num_predict": 1024},
+            "options": generation_options,
         }
+        if think is not None:
+            if not isinstance(think, bool):
+                raise ValueError("think estructurado inválido")
+            payload["think"] = think
         try:
             response = (
                 self.client.post("/api/generate", json=payload, timeout=self.timeout)
@@ -95,3 +106,22 @@ class OllamaStructuredGenerationClient:
         if len(answer.encode("utf-8")) > MAX_GENERATED_TEXT_BYTES:
             raise OllamaResponseTooLargeError("La salida generada excede el límite")
         return StructuredGenerationResponse(answer.strip(), self.mode)
+
+    @staticmethod
+    def _generation_options(options: dict[str, Any] | None) -> dict[str, Any]:
+        if options is None:
+            return {"temperature": 0, "num_predict": 1024}
+        if not isinstance(options, dict):
+            raise ValueError("Las opciones de generación estructurada deben ser un objeto")
+        unknown = set(options) - {"temperature", "num_predict"}
+        if unknown:
+            raise ValueError("La generación estructurada recibió opciones no soportadas")
+        temperature = options.get("temperature", 0)
+        num_predict = options.get("num_predict", 1024)
+        if isinstance(temperature, bool) or not isinstance(temperature, (int, float)):
+            raise ValueError("temperature estructurada inválida")
+        if temperature < 0:
+            raise ValueError("temperature estructurada inválida")
+        if isinstance(num_predict, bool) or not isinstance(num_predict, int) or num_predict <= 0:
+            raise ValueError("num_predict estructurado inválido")
+        return {"temperature": temperature, "num_predict": num_predict}

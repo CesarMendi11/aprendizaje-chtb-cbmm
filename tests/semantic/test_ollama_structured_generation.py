@@ -44,6 +44,86 @@ def test_json_schema_mode_sends_schema_and_canonical_options():
     assert captured["format"] == {"type": "object"}
     assert captured["stream"] is False
     assert captured["options"] == {"temperature": 0, "num_predict": 1024}
+    assert "think" not in captured
+
+
+def test_structured_generation_can_disable_thinking_explicitly():
+    captured = {}
+
+    def handler(request):
+        captured.update(__import__("json").loads(request.content))
+        return httpx.Response(200, json={"response": "{}"})
+
+    structured, http = client(handler)
+    try:
+        structured.generate(
+            "prompt",
+            system="system",
+            schema={"type": "object"},
+            think=False,
+        )
+    finally:
+        http.close()
+
+    assert captured["think"] is False
+
+
+def test_structured_generation_rejects_non_boolean_think():
+    structured, http = client(lambda request: httpx.Response(200, json={"response": "{}"}))
+    try:
+        with pytest.raises(ValueError, match="think estructurado inválido"):
+            structured.generate(
+                "prompt",
+                system="system",
+                schema={"type": "object"},
+                think="false",
+            )
+    finally:
+        http.close()
+
+
+def test_structured_generation_accepts_explicit_bounded_options():
+    captured = {}
+
+    def handler(request):
+        captured.update(__import__("json").loads(request.content))
+        return httpx.Response(200, json={"response": "{}"})
+
+    structured, http = client(handler)
+    try:
+        structured.generate(
+            "prompt",
+            system="system",
+            schema={"type": "object"},
+            options={"temperature": 0, "num_predict": 2048},
+        )
+    finally:
+        http.close()
+
+    assert captured["options"] == {"temperature": 0, "num_predict": 2048}
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        {"temperature": -1, "num_predict": 1024},
+        {"temperature": 0, "num_predict": 0},
+        {"temperature": 0, "num_predict": True},
+        {"temperature": 0, "seed": 1},
+    ],
+)
+def test_structured_generation_rejects_invalid_or_unknown_options(options):
+    structured, http = client(lambda request: httpx.Response(200, json={"response": "{}"}))
+    try:
+        with pytest.raises(ValueError):
+            structured.generate(
+                "prompt",
+                system="system",
+                schema={"type": "object"},
+                options=options,
+            )
+    finally:
+        http.close()
 
 
 def test_json_compatibility_mode_is_explicit():
