@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import time
 
 from sqlalchemy import func, select
 
@@ -145,13 +146,16 @@ def run(screen_ids: list[str], *, model: str | None = None):
                     },
                 },
             }
+            started = time.perf_counter()
             try:
                 generated = inference.generate(package)
             except Exception as exc:  # pilot must preserve the other screen results
+                row["generation_elapsed_ms"] = round((time.perf_counter() - started) * 1000, 3)
                 row["status"] = "generation_failed"
                 row["error_type"] = type(exc).__name__
                 row["error"] = str(exc)[:500]
             else:
+                row["generation_elapsed_ms"] = round((time.perf_counter() - started) * 1000, 3)
                 candidate = generated.inference
                 row.update(
                     {

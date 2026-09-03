@@ -1,0 +1,85 @@
+{
+  "set_id": "m2-v14-development-screens-v1",
+  "purpose": "development_only",
+  "status": "active_development",
+  "knowledge_version": "95849e2365f37800",
+  "selection_method": "purposive_stratified_by_observed_evidence_profile",
+  "exclude_from_final_m2_quality_evaluation": true,
+  "notes": [
+    "Este conjunto se usa para ajustar el contrato/prompt y seleccionar el modelo M2 antes del freeze.",
+    "No usar sus pantallas para estimar la calidad final no sesgada de M2.",
+    "Enviar Notificaciones y Retenciones ya fueron usadas durante la iteración v14/v14.1 y por eso quedan explícitamente dentro de development."
+  ],
+  "screens": [
+    {
+      "screen_id": "screen:b57867f14f98a5a2795eeaae",
+      "title": "Enviar Notificaciones",
+      "route": "/admin/permisos/enviar-inspecciones",
+      "profile": "table_heavy_ambiguous_action_column",
+      "used_in_prompt_iteration": true
+    },
+    {
+      "screen_id": "screen:4c3175a29f8bb4dcf439da9c",
+      "title": "Retenciones",
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "profile": "search_fields_table_create_control_pagination",
+      "used_in_prompt_iteration": true
+    },
+    {
+      "screen_id": "screen:71105f78199cc37941c65451",
+      "title": "Facturación Electronica",
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "profile": "form_heavy_mutative_controls_dynamic_events",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:a45ea4a430e56ea55bf56616",
+      "title": "Gestion de Tareas",
+      "route": "/admin/tramites/actividades",
+      "profile": "search_table_multiple_functional_controls",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:2cbfcc50092c51fea72e5977",
+      "title": "Modulo de Cajas",
+      "route": "/admin/rentas/cajas",
+      "profile": "input_only_transaction_affordances_no_table",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:1847866be42b22ef131a3439",
+      "title": "Emitir solicitudes",
+      "route": "/admin/permisos/emitir",
+      "profile": "table_mutative_affordance_readonly_detail_event",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:3d1bc7d7bb183c70d7862d51",
+      "title": "Documentos",
+      "route": "/admin/tramites/documentos",
+      "profile": "multi_control_modal_event_table",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:7f8fc3b858438dbeb808fe95",
+      "title": "Trámites",
+      "route": "/admin/gerencial/tramites",
+      "profile": "filter_controls_dropdown_dynamic_states_no_table",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:809b97e2eda72ce9d93f7cba",
+      "title": "Firma electrónica",
+      "route": "/admin/sri/firma-electronica",
+      "profile": "sparse_edge_control_and_events",
+      "used_in_prompt_iteration": false
+    },
+    {
+      "screen_id": "screen:3953cb22d33afb233e2032f5",
+      "title": "Dashboard",
+      "route": "/admin/home",
+      "profile": "fail_closed_no_claimable_evidence",
+      "used_in_prompt_iteration": true
+    }
+  ]
+}
