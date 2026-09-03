@@ -62,7 +62,12 @@ class CanonicalNetworkEvidenceIntegrator:
         payload = self._load(path)
         self._validate_capture_policy(payload)
 
-        by_route: dict[str, list[dict[str, Any]]] = {}
+        screen_by_route = {screen.route: screen.id for screen in knowledge.screens}
+        state_screen_ids_by_route: dict[str, set[str]] = {}
+        for state in knowledge.ui_states:
+            state_screen_ids_by_route.setdefault(state.route, set()).add(state.screen_id)
+
+        by_screen_id: dict[str, list[dict[str, Any]]] = {}
         sensitive_exclusions = 0
         omitted = 0
         for raw in payload.get("observations") or []:
@@ -72,9 +77,19 @@ class CanonicalNetworkEvidenceIntegrator:
                 if isinstance(raw, dict) and self._looks_sensitive(raw):
                     sensitive_exclusions += 1
                 continue
-            by_route.setdefault(clean["screen_route"], []).append(clean)
 
-        for values in by_route.values():
+            route = clean["screen_route"]
+            screen_id = screen_by_route.get(route)
+            if screen_id is None:
+                owners = state_screen_ids_by_route.get(route, set())
+                if len(owners) == 1:
+                    screen_id = next(iter(owners))
+            if screen_id is None:
+                omitted += 1
+                continue
+            by_screen_id.setdefault(screen_id, []).append(clean)
+
+        for values in by_screen_id.values():
             values.sort(key=self._observation_sort_key)
 
         evidence = list(knowledge.evidence)
@@ -85,7 +100,7 @@ class CanonicalNetworkEvidenceIntegrator:
         container_hash = hashlib.sha256(path.read_bytes()).hexdigest()
 
         for screen in knowledge.screens:
-            observations = by_route.get(screen.route, [])
+            observations = by_screen_id.get(screen.id, [])
             if not observations:
                 screens.append(screen)
                 continue
@@ -123,11 +138,6 @@ class CanonicalNetworkEvidenceIntegrator:
                     }
                 )
             )
-
-        attached_routes = {screen.route for screen in screens}
-        omitted += sum(
-            len(values) for route, values in by_route.items() if route not in attached_routes
-        )
 
         source_artifacts = list(knowledge.source_artifacts)
         if "network_evidence.json" not in source_artifacts:

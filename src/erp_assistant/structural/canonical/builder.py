@@ -33,7 +33,7 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.4"
+GENERATOR_VERSION = "4.0.5"
 NONFUNCTIONAL_ICON_LABELS = {"bars-3"}
 ARTIFACT_NAMES = (
     "screen_index.json",
@@ -140,6 +140,11 @@ class CanonicalKnowledgeBuilder:
         functional_routes = {
             normalize_route(item.get("route")) for item in screen_payloads if item.get("route")
         }
+        state_screen_routes, ambiguous_state_owners = self._state_screen_routes(
+            state_payloads,
+            transition_payloads,
+            functional_routes,
+        )
         modules, route_modules = self._modules(
             erp_id,
             route_graph,
@@ -193,6 +198,67 @@ class CanonicalKnowledgeBuilder:
             )
             screens.append(screen)
             by_route[route] = screen
+
+        states: list[UIState] = []
+        state_map: dict[str, UIState] = {}
+        state_raw_map: dict[str, dict[str, Any]] = {}
+        screen_by_id = {screen.id: screen for screen in screens}
+        for raw in state_payloads:
+            original = str(raw.get("state_id") or raw.get("structural_signature") or "")
+            route = normalize_route(raw.get("route"))
+            owner_route = state_screen_routes.get(original)
+            screen = by_route.get(owner_route) if owner_route else None
+            if not screen:
+                code = (
+                    "ambiguous_state_screen_owner"
+                    if original in ambiguous_state_owners
+                    else "state_without_screen"
+                )
+                message = (
+                    "Estado omitido: pantalla propietaria ambigua"
+                    if code == "ambiguous_state_screen_owner"
+                    else "Estado omitido: ruta sin pantalla propietaria"
+                )
+                self._warn(code, message, "ui_state")
+                self._omit("ui_states")
+                continue
+            structural = str(
+                raw.get("structural_signature") or raw.get("structural_fingerprint") or original
+            )
+            path = raw.get("path") or {}
+            depth = int((raw.get("metadata") or {}).get("depth", path.get("depth", 0)) or 0)
+            state_id = stable_id("ui_state", screen.id, structural)
+            evidence_ids = []
+            if route != screen.route:
+                evidence_ids.append(
+                    self._evidence(
+                        evidence,
+                        "ui_state",
+                        state_id,
+                        "state_registry.json",
+                        hashes,
+                        EvidenceType.STRUCTURAL_JSON,
+                        artifact_base,
+                    )
+                )
+            state = UIState(
+                id=state_id,
+                screen_id=screen.id,
+                route=route,
+                depth=depth,
+                title=str(raw.get("title") or screen.title),
+                exact_fingerprint=self._clean_optional(raw.get("exact_signature")),
+                structural_fingerprint=structural,
+                is_route_root=depth == 0
+                or (raw.get("metadata") or {}).get("kind") == "route_root_state",
+                observed_path=path.get("steps") or [],
+                restore_path=path.get("steps") or [],
+                source_refs=["state_registry.json"],
+                evidence_ids=evidence_ids,
+            )
+            states.append(state)
+            state_map[original] = state
+            state_raw_map[original] = raw
 
         fields: list[FieldEntity] = []
         controls: list[Control] = []
@@ -318,38 +384,32 @@ class CanonicalKnowledgeBuilder:
                     )
                 )
 
-        states: list[UIState] = []
-        state_map: dict[str, UIState] = {}
-        for raw in state_payloads:
-            route = normalize_route(raw.get("route"))
-            screen = by_route.get(route)
-            if not screen:
-                self._warn("state_without_screen", "Estado omitido: ruta sin pantalla", "ui_state")
-                self._omit("ui_states")
-                continue
-            original = str(raw.get("state_id") or raw.get("structural_signature") or "")
-            structural = str(
-                raw.get("structural_signature") or raw.get("structural_fingerprint") or original
+        projected_states = sorted(
+            (
+                (state, state_raw_map[original])
+                for original, state in state_map.items()
+                if state.route != screen_by_id[state.screen_id].route
+                and isinstance((state_raw_map[original]).get("summary"), dict)
+            ),
+            key=lambda pair: (
+                pair[0].screen_id,
+                pair[0].route,
+                pair[0].depth,
+                pair[0].structural_fingerprint,
+            ),
+        )
+        for state, raw in projected_states:
+            self._project_state_summary(
+                screen=screen_by_id[state.screen_id],
+                summary=raw["summary"],
+                evidence_ids=state.evidence_ids,
+                fields=fields,
+                controls=controls,
+                tables=tables,
+                columns=columns,
+                links=links,
+                by_route=by_route,
             )
-            path = raw.get("path") or {}
-            depth = int((raw.get("metadata") or {}).get("depth", path.get("depth", 0)) or 0)
-            state = UIState(
-                id=stable_id("ui_state", screen.id, structural),
-                screen_id=screen.id,
-                route=route,
-                depth=depth,
-                title=str(raw.get("title") or screen.title),
-                exact_fingerprint=self._clean_optional(raw.get("exact_signature")),
-                structural_fingerprint=structural,
-                is_route_root=depth == 0
-                or (raw.get("metadata") or {}).get("kind") == "route_root_state",
-                observed_path=path.get("steps") or [],
-                restore_path=path.get("steps") or [],
-                source_refs=["state_registry.json"],
-                evidence_ids=[],
-            )
-            states.append(state)
-            state_map[original] = state
 
         events: list[Event] = []
         transitions: list[Transition] = []
@@ -494,6 +554,238 @@ class CanonicalKnowledgeBuilder:
             "omitted_entities": self.omitted,
             "statistics": knowledge.statistics,
         }
+
+    def _state_screen_routes(
+        self,
+        state_payloads,
+        transition_payloads,
+        functional_routes,
+    ):
+        state_routes = {}
+        owners = {}
+        root_refs = {}
+
+        for raw in state_payloads:
+            original = str(raw.get("state_id") or raw.get("structural_signature") or "")
+            if not original:
+                continue
+            route = normalize_route(raw.get("route"))
+            state_routes[original] = route
+            if route in functional_routes:
+                owners[original] = route
+            path = raw.get("path") or {}
+            root_ref = str(path.get("root_state_id") or "").strip()
+            if root_ref:
+                root_refs[original] = root_ref
+
+        transition_edges = [
+            (
+                str(raw.get("source_state_id") or ""),
+                str(raw.get("target_state_id") or ""),
+            )
+            for raw in transition_payloads
+        ]
+
+        ambiguous = set()
+        while True:
+            proposals = {}
+            for state_id in state_routes:
+                if state_id in owners:
+                    continue
+                candidates = set()
+                root_ref = root_refs.get(state_id)
+                if root_ref in owners:
+                    candidates.add(owners[root_ref])
+                for source_id, target_id in transition_edges:
+                    if target_id == state_id and source_id in owners:
+                        candidates.add(owners[source_id])
+                if candidates:
+                    proposals[state_id] = candidates
+
+            changed = False
+            for state_id in sorted(proposals):
+                candidates = proposals[state_id]
+                if len(candidates) == 1:
+                    owners[state_id] = next(iter(candidates))
+                    changed = True
+                else:
+                    ambiguous.add(state_id)
+
+            if not changed:
+                break
+
+        return owners, ambiguous
+
+    def _project_state_summary(
+        self,
+        *,
+        screen,
+        summary,
+        evidence_ids,
+        fields,
+        controls,
+        tables,
+        columns,
+        links,
+        by_route,
+    ):
+        source_refs = ["state_registry.json"]
+
+        field_keys = {
+            (
+                item.screen_id,
+                item.normalized_label,
+                item.name or "",
+                item.input_type or "",
+            )
+            for item in fields
+        }
+        for item in summary.get("inputs") or []:
+            if not isinstance(item, dict) or self._excluded(item):
+                continue
+            label = self._label(item) or str(
+                item.get("name") or item.get("placeholder") or "field"
+            )
+            name = self._clean_optional(item.get("name"))
+            input_type = self._clean_optional(item.get("type") or item.get("input_type"))
+            key = (screen.id, normalize_text(label), name or "", input_type or "")
+            if key in field_keys:
+                continue
+            field_keys.add(key)
+            fields.append(
+                FieldEntity(
+                    id=stable_id("field", screen.id, "state", *key[1:]),
+                    screen_id=screen.id,
+                    label=label,
+                    normalized_label=key[1],
+                    name=name,
+                    input_type=input_type,
+                    placeholder=self._safe_optional(item.get("placeholder")),
+                    required=bool(item.get("required")),
+                    readonly=bool(item.get("readonly")),
+                    disabled=bool(item.get("disabled")),
+                    region=item.get("region") or "main_content",
+                    selector=self._clean_optional(item.get("selector")),
+                    source_refs=source_refs,
+                    evidence_ids=evidence_ids,
+                )
+            )
+
+        control_keys = {
+            (item.screen_id, item.control_type.value, item.normalized_label, item.mutative)
+            for item in controls
+        }
+        for item in summary.get("buttons") or []:
+            if not isinstance(item, dict) or self._excluded(item):
+                continue
+            label = self._label(item) or "unlabeled control"
+            mutative = self._mutative(item)
+            key = (screen.id, ControlType.BUTTON.value, normalize_text(label), mutative)
+            if key in control_keys:
+                continue
+            control_keys.add(key)
+            controls.append(
+                Control(
+                    id=stable_id("control", screen.id, "state", "button", key[2], mutative),
+                    screen_id=screen.id,
+                    label=label,
+                    normalized_label=key[2],
+                    control_type=ControlType.BUTTON,
+                    mutative=mutative,
+                    region=item.get("region") or "main_content",
+                    selector=self._clean_optional(item.get("selector")),
+                    source_refs=source_refs,
+                    evidence_ids=evidence_ids,
+                )
+            )
+
+        table_keys = {}
+        for item in tables:
+            headers = tuple(
+                column.normalized_name
+                for column in columns
+                if column.table_id == item.id
+            )
+            table_keys[(item.screen_id, headers, item.normalized_name or "")] = item.id
+
+        for item in summary.get("tables") or []:
+            if not isinstance(item, dict) or self._excluded(item):
+                continue
+            name = self._label(item) or None
+            headers = []
+            for header in item.get("headers") or item.get("columns") or []:
+                header_name = str(
+                    header.get("name") if isinstance(header, dict) else header
+                ).strip()
+                if header_name:
+                    headers.append(header_name)
+            normalized_headers = tuple(normalize_text(value) for value in headers)
+            key = (screen.id, normalized_headers, normalize_text(name))
+            if key in table_keys:
+                continue
+            table_id = stable_id(
+                "table", screen.id, "state", key[2], normalized_headers
+            )
+            table_columns = []
+            for col_pos, header_name in enumerate(headers):
+                column = TableColumn(
+                    id=stable_id(
+                        "table_column", table_id, normalize_text(header_name), col_pos
+                    ),
+                    table_id=table_id,
+                    name=header_name,
+                    normalized_name=normalize_text(header_name),
+                    position=col_pos,
+                    source_refs=source_refs,
+                )
+                columns.append(column)
+                table_columns.append(column.id)
+            tables.append(
+                Table(
+                    id=table_id,
+                    screen_id=screen.id,
+                    name=name,
+                    normalized_name=normalize_text(name) or None,
+                    region=item.get("region") or "main_content",
+                    column_ids=table_columns,
+                    row_count_observed=None,
+                    source_refs=source_refs,
+                    evidence_ids=evidence_ids,
+                )
+            )
+            table_keys[key] = table_id
+
+        link_keys = {
+            (item.screen_id, item.normalized_label, item.target_route)
+            for item in links
+        }
+        for item in [*(summary.get("local_links") or []), *(summary.get("links") or [])]:
+            if not isinstance(item, dict) or self._excluded(item):
+                continue
+            target = item.get("href") or item.get("target_route")
+            if not isinstance(target, str) or not target.startswith("/"):
+                continue
+            target_route = normalize_route(target)
+            label = self._label(item) or target_route
+            key = (screen.id, normalize_text(label), target_route)
+            if key in link_keys:
+                continue
+            link_keys.add(key)
+            links.append(
+                Link(
+                    id=stable_id("link", screen.id, key[1], target_route),
+                    screen_id=screen.id,
+                    label=label,
+                    normalized_label=key[1],
+                    target_route=target_route,
+                    target_screen_id=(
+                        by_route[target_route].id if target_route in by_route else None
+                    ),
+                    region=item.get("region") or "main_content",
+                    source_refs=source_refs,
+                    evidence_ids=evidence_ids,
+                )
+            )
 
     def _modules(
         self,

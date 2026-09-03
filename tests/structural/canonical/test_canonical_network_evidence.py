@@ -134,3 +134,89 @@ def test_integrator_omits_sensitive_observation(tmp_path):
     assert result.screen_count == 0
     assert result.sensitive_exclusions == 1
     assert result.omitted_observations == 1
+
+
+def test_integrator_attaches_dynamic_state_route_trace_to_owning_screen(tmp_path):
+    artifacts = fictional_artifacts()
+    artifacts["state_registry.json"]["states"].append(
+        {
+            "state_id": "raw:product-create",
+            "route": "/app/inventory/products/create",
+            "title": "Create product",
+            "structural_signature": "product-create",
+            "path": {
+                "root_state_id": "raw:product",
+                "target_state_id": "raw:product-create",
+                "depth": 1,
+                "steps": [],
+            },
+            "summary": {
+                "inputs": [{"label": "Name", "name": "name"}],
+                "buttons": [],
+                "tables": [],
+                "links": [],
+            },
+        }
+    )
+    artifacts["state_flow_graph.json"]["transitions"].append(
+        {
+            "source_state_id": "raw:product",
+            "target_state_id": "raw:product-create",
+            "event": {
+                "event_type": "mutative_action",
+                "label": "New",
+                "decision": "deny",
+            },
+            "changed_route": True,
+            "observed": True,
+            "metadata": {"effect": "ROUTE_CHANGE"},
+        }
+    )
+    knowledge = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    products = next(
+        item for item in knowledge.screens if item.route == "/app/inventory/products"
+    )
+
+    path = tmp_path / "network_evidence.json"
+    path.write_text(
+        json.dumps(
+            {
+                "capture_policy": {
+                    "bodies_captured": False,
+                    "headers_captured": False,
+                    "query_values_captured": False,
+                },
+                "observations": [
+                    {
+                        "screen_route": "/app/inventory/products/create",
+                        "method": "GET",
+                        "endpoint_path": "/api/products/template",
+                        "origin_id": "same_origin",
+                        "origin_kind": "same_origin",
+                        "resource_type": "xhr",
+                        "status_codes": [200],
+                        "observed_count": 2,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = CanonicalNetworkEvidenceIntegrator(tmp_path).integrate(knowledge, path)
+
+    assert result.observation_count == 2
+    assert result.screen_count == 1
+    assert result.omitted_observations == 0
+    evidence = [
+        item
+        for item in result.knowledge.evidence
+        if item.evidence_type.value == "network_trace"
+    ]
+    assert len(evidence) == 1
+    assert evidence[0].source_entity_id == products.id
+    assert evidence[0].id in next(
+        item
+        for item in result.knowledge.screens
+        if item.id == products.id
+    ).evidence_ids

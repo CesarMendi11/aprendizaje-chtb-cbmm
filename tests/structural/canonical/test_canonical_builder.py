@@ -30,7 +30,7 @@ def test_home_screen_without_module_is_not_reported_as_route_without_module():
     kb = build()
     home = next(item for item in kb.screens if item.route == "/app/home")
 
-    assert kb.generator_version == "4.0.4"
+    assert kb.generator_version == "4.0.5"
     assert home.module_id is None
     assert not any(
         warning.code == "route_without_module" and warning.entity_id == home.id
@@ -959,7 +959,7 @@ def test_builder_uses_icon_label_for_previously_unlabeled_button():
     assert len(controls) == 1
     assert controls[0].label == "edit"
     assert controls[0].normalized_label == "edit"
-    assert kb.generator_version == "4.0.4"
+    assert kb.generator_version == "4.0.5"
 
 
 def test_builder_does_not_promote_global_shell_icon_to_functional_control_label():
@@ -981,3 +981,192 @@ def test_builder_does_not_promote_global_shell_icon_to_functional_control_label(
     assert len(controls) == 1
     assert controls[0].label == "unlabeled control"
     assert controls[0].normalized_label == "unlabeled control"
+
+
+def test_builder_projects_dynamic_route_states_into_originating_functional_screen():
+    artifacts = fictional_artifacts()
+    product_state = "raw:product"
+    create_state = "raw:product-create"
+    create_dropdown_state = "raw:product-create-dropdown"
+
+    artifacts["state_registry.json"]["states"].extend(
+        [
+            {
+                "state_id": create_state,
+                "route": "/app/inventory/products/create",
+                "title": "Create product",
+                "structural_signature": "product-create",
+                "path": {
+                    "root_state_id": product_state,
+                    "target_state_id": create_state,
+                    "depth": 1,
+                    "steps": [],
+                },
+                "summary": {
+                    "route": "/app/inventory/products/create",
+                    "title": "Create product",
+                    "inputs": [
+                        {
+                            "label": "Name",
+                            "name": "name",
+                            "type": "text",
+                            "required": True,
+                        }
+                    ],
+                    "buttons": [
+                        {"text": "Save", "type": "submit"}
+                    ],
+                    "tables": [],
+                    "links": [],
+                },
+            },
+            {
+                "state_id": create_dropdown_state,
+                "route": "/app/inventory/products/create",
+                "title": "Create product",
+                "structural_signature": "product-create-dropdown",
+                "path": {
+                    "root_state_id": product_state,
+                    "target_state_id": create_dropdown_state,
+                    "depth": 2,
+                    "steps": [],
+                },
+                "summary": {
+                    "route": "/app/inventory/products/create",
+                    "title": "Create product",
+                    "inputs": [
+                        {
+                            "label": "Name",
+                            "name": "name",
+                            "type": "text",
+                            "required": True,
+                        },
+                        {
+                            "label": "Category",
+                            "name": "category",
+                            "type": "select",
+                        },
+                    ],
+                    "buttons": [
+                        {"text": "Save", "type": "submit"}
+                    ],
+                    "tables": [],
+                    "links": [],
+                },
+            },
+        ]
+    )
+    artifacts["state_flow_graph.json"]["transitions"].extend(
+        [
+            {
+                "source_state_id": product_state,
+                "target_state_id": create_state,
+                "event": {
+                    "event_type": "mutative_action",
+                    "label": "New",
+                    "decision": "deny",
+                    "metadata": {
+                        "region": "main_content",
+                        "sandbox_override": {
+                            "authorized": True,
+                            "environment": "test",
+                            "strategy": "test_full",
+                            "base_decision": "deny",
+                        },
+                    },
+                },
+                "changed_route": True,
+                "observed": True,
+                "metadata": {"effect": "ROUTE_CHANGE"},
+            },
+            {
+                "source_state_id": create_state,
+                "target_state_id": create_dropdown_state,
+                "event": {
+                    "event_type": "open_dropdown",
+                    "label": "Category",
+                    "decision": "allow",
+                    "metadata": {"region": "main_content"},
+                },
+                "changed_route": False,
+                "observed": True,
+                "metadata": {"effect": "STRUCTURAL_CHANGE"},
+            },
+        ]
+    )
+
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(fictional_profile(), artifacts)
+    report = builder.build_report(kb)
+
+    products = next(
+        screen for screen in kb.screens if screen.route == "/app/inventory/products"
+    )
+    assert {screen.route for screen in kb.screens} == {
+        "/app/home",
+        "/app/inventory/products",
+        "/app/purchasing/suppliers",
+    }
+
+    dynamic_states = [
+        state for state in kb.ui_states if state.route == "/app/inventory/products/create"
+    ]
+    assert len(dynamic_states) == 2
+    assert all(state.screen_id == products.id for state in dynamic_states)
+    assert all(state.evidence_ids for state in dynamic_states)
+
+    assert len(kb.transitions) == 3
+    assert any(
+        transition.effect == "ROUTE_CHANGE" and transition.route_changed
+        for transition in kb.transitions
+    )
+    assert not any(
+        warning.code in {"state_without_screen", "incomplete_transition"}
+        for warning in kb.build_warnings
+    )
+    assert report["incomplete_transitions"] == 0
+    assert report["omitted_entities"].get("ui_states", 0) == 0
+    assert report["omitted_entities"].get("transitions", 0) == 0
+
+    product_fields = [field for field in kb.fields if field.screen_id == products.id]
+    assert {field.label for field in product_fields} >= {"SKU", "Name", "Category"}
+    assert sum(field.label == "Name" for field in product_fields) == 1
+    name = next(field for field in product_fields if field.label == "Name")
+    assert name.source_refs == ["state_registry.json"]
+    assert name.evidence_ids
+
+    product_controls = [
+        control for control in kb.controls if control.screen_id == products.id
+    ]
+    save = next(control for control in product_controls if control.label == "Save")
+    assert save.mutative is True
+    assert save.source_refs == ["state_registry.json"]
+    assert kb.generator_version == "4.0.5"
+
+
+def test_builder_keeps_unreachable_state_without_screen_as_omission():
+    artifacts = fictional_artifacts()
+    artifacts["state_registry.json"]["states"].append(
+        {
+            "state_id": "raw:orphan-state",
+            "route": "/app/unobserved/dynamic",
+            "title": "Orphan dynamic state",
+            "structural_signature": "orphan-dynamic",
+            "path": {"depth": 1, "steps": []},
+            "summary": {
+                "inputs": [{"label": "Should not materialize"}],
+                "buttons": [],
+                "tables": [],
+                "links": [],
+            },
+        }
+    )
+
+    builder = CanonicalKnowledgeBuilder()
+    kb = builder.build(fictional_profile(), artifacts)
+    report = builder.build_report(kb)
+
+    assert not any(state.route == "/app/unobserved/dynamic" for state in kb.ui_states)
+    assert any(warning.code == "state_without_screen" for warning in kb.build_warnings)
+    assert report["omitted_entities"]["ui_states"] == 1
+    assert not any(field.label == "Should not materialize" for field in kb.fields)
