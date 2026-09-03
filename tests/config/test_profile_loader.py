@@ -253,7 +253,7 @@ def test_profile_loader_accepts_state_stability_configuration():
     assert detection["navigation_state_routes"] == ["/admin/home"]
     assert detection["stability"]["enabled"] is True
     assert detection["stability"]["required_consecutive_samples"] == 2
-    assert detection["stability"]["minimum_observation_ms"] == 500
+    assert detection["stability"]["minimum_observation_ms"] == 3000
 
 
 def test_profile_loader_rejects_zero_required_stability_samples(tmp_path):
