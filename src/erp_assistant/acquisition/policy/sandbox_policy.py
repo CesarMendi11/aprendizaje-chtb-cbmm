@@ -5,6 +5,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from erp_assistant.acquisition.discovery.event_candidate_discovery import EventCandidate
+from erp_assistant.acquisition.models.ui_event import (
+    EventDecision,
+    RiskLevel,
+    UIEvent,
+    UIEventType,
+)
 
 
 @dataclass(frozen=True)
@@ -59,6 +65,80 @@ class SandboxExplorationPolicy:
             )
             if str(value).strip()
         }
+
+    def evaluate_replay_event(
+        self,
+        event: UIEvent,
+        *,
+        source_state_depth: int | None,
+        is_home_route: bool,
+    ) -> SandboxAuthorization:
+        """Revalida un opener sandbox antes de reproducir su ``CrawlPath``.
+
+        El ``sandbox_override`` persistido es evidencia de la autorización
+        original, no una autorización suficiente por sí misma. El replay
+        exige que el perfil actual siga siendo ``test/test_full`` y vuelve a
+        comprobar las restricciones observables disponibles en ``UIEvent``.
+        """
+
+        if not self.active:
+            return SandboxAuthorization(False, ("sandbox_not_active",))
+
+        if is_home_route:
+            return SandboxAuthorization(False, ("sandbox_home_route_blocked",))
+
+        if self.root_states_only and source_state_depth != 0:
+            return SandboxAuthorization(False, ("sandbox_root_state_only",))
+
+        if event.event_type is not UIEventType.MUTATIVE_ACTION:
+            return SandboxAuthorization(False, ("sandbox_requires_mutative_opener",))
+
+        if event.decision is not EventDecision.DENY:
+            return SandboxAuthorization(False, ("sandbox_requires_base_policy_deny",))
+
+        if event.risk_level not in {RiskLevel.HIGH, RiskLevel.CRITICAL}:
+            return SandboxAuthorization(False, ("sandbox_requires_high_risk_base_event",))
+
+        override = event.metadata.get("sandbox_override")
+        if not isinstance(override, dict) or override.get("authorized") is not True:
+            return SandboxAuthorization(False, ("sandbox_missing_original_authorization",))
+
+        if str(override.get("environment") or "").lower() != self.environment:
+            return SandboxAuthorization(False, ("sandbox_environment_mismatch",))
+
+        if str(override.get("strategy") or "").lower() != self.strategy:
+            return SandboxAuthorization(False, ("sandbox_strategy_mismatch",))
+
+        if str(override.get("base_decision") or "").lower() != EventDecision.DENY.value:
+            return SandboxAuthorization(False, ("sandbox_base_decision_mismatch",))
+
+        if str(override.get("base_risk_level") or "").lower() != event.risk_level.value:
+            return SandboxAuthorization(False, ("sandbox_base_risk_mismatch",))
+
+        if str(event.metadata.get("type") or "").strip().casefold() == "submit":
+            return SandboxAuthorization(False, ("sandbox_submit_blocked",))
+
+        region = str(event.metadata.get("region") or "main_content")
+        if region not in self.allowed_regions:
+            return SandboxAuthorization(False, ("sandbox_region_not_allowed",))
+
+        label = self._normalize(event.label)
+        if not label:
+            return SandboxAuthorization(False, ("sandbox_missing_label",))
+
+        if not any(label.startswith(prefix) for prefix in self.opener_label_prefixes):
+            return SandboxAuthorization(False, ("sandbox_label_not_opener",))
+
+        return SandboxAuthorization(
+            True,
+            (
+                "sandbox_replay_test_environment",
+                "sandbox_replay_test_full_strategy",
+                "sandbox_replay_original_override_present",
+                "sandbox_replay_root_opener_match",
+                "sandbox_replay_submit_not_present",
+            ),
+        )
 
     def evaluate(
         self,

@@ -47,6 +47,7 @@ class RestoreResult:
             "summary_comparison": self.summary_comparison,
             "attempt_history": self.attempt_history,
             "observation": self.observation,
+            "sandbox_replay_audits": (list(self.replay.sandbox_audits) if self.replay else []),
         }
 
     def to_dict(self) -> dict[str, Any]:

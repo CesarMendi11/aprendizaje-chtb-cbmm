@@ -261,3 +261,252 @@ def test_path_replayer_waits_for_expected_root_fingerprint_after_stable_partial_
     assert result.signature is not None
     assert result.signature.structural_fingerprint == target.structural_signature
     assert navigator.paths == [ROUTE]
+
+
+def sandbox_profile() -> dict:
+    profile = build_profile()
+    profile.update(
+        {
+            "crawl_mode": {
+                "environment": "test",
+                "strategy": "test_full",
+            },
+            "sandbox_exploration": {
+                "enabled": True,
+                "root_states_only": True,
+                "max_openers_per_root_state": 2,
+                "allowed_regions": ["main_content"],
+                "opener_label_prefixes": ["nuevo", "nueva", "crear", "edit"],
+                "blocked_http_methods": ["POST", "PUT", "PATCH", "DELETE"],
+            },
+        }
+    )
+    return profile
+
+
+def build_sandbox_state(page, profile, *, html: str):
+    class SandboxNavigator:
+        def __init__(self, browser_page):
+            self.page = browser_page
+
+        def goto_path(self, path: str) -> None:
+            assert path == "/admin/test"
+            self.page.set_content(html)
+
+    class SandboxExtractor:
+        def __init__(self, browser_page, cfg):
+            self.delegate = ScreenExtractor(browser_page, cfg)
+
+        def extract(self):
+            data = self.delegate.extract()
+            data["path"] = "/admin/test"
+            data["url"] = "http://example.invalid/admin/test"
+            return data
+
+    navigator = SandboxNavigator(page)
+    navigator.goto_path("/admin/test")
+    extractor = SandboxExtractor(page, profile)
+    builder = StateSignatureBuilder()
+    registry = StateRegistry()
+
+    root_signature = builder.build(extractor.extract())
+    root_id = registry.build_state_id(root_signature.structural_fingerprint)
+    root_path = CrawlPath(root_state_id=root_id)
+    root = registry.register_signature(root_signature, path=root_path).state
+
+    page.evaluate("document.getElementById('form').style.display='block'")
+    target_signature = builder.build(extractor.extract())
+    target_id = registry.build_state_id(target_signature.structural_fingerprint)
+
+    event = UIEvent(
+        event_type=UIEventType.MUTATIVE_ACTION,
+        label="Nueva retención",
+        selector="button.opener",
+        decision=EventDecision.DENY,
+        risk_level=RiskLevel.CRITICAL,
+        metadata={
+            "type": "button",
+            "region": "main_content",
+            "sandbox_override": {
+                "authorized": True,
+                "environment": "test",
+                "strategy": "test_full",
+                "base_decision": "deny",
+                "base_risk_level": "critical",
+                "reasons": [
+                    "sandbox_test_environment",
+                    "sandbox_test_full_strategy",
+                    "sandbox_root_opener_match",
+                    "sandbox_submit_not_present",
+                ],
+            },
+        },
+    )
+    target_path = root_path.append(
+        CrawlPathStep(
+            source_state_id=root.state_id,
+            event=event,
+            target_state_id=target_id,
+        )
+    )
+    target = registry.register_signature(
+        target_signature,
+        path=target_path,
+    ).state
+
+    assert target.state_id != root.state_id
+    assert target.path is not None
+    assert target.path.depth == 1
+
+    return navigator, extractor, builder, registry, root, target
+
+
+def test_path_replayer_replays_test_full_sandbox_opener_without_changing_base_deny():
+    profile = sandbox_profile()
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>ERP Test</title></head>
+      <body>
+        <h1>Retenciones</h1>
+        <button class="opener" onclick="
+          document.getElementById('form').style.display='block';
+        ">Nueva retención</button>
+        <section id="form" style="display:none">
+          <label>RUC <input name="ruc"></label>
+        </section>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        navigator, extractor, builder, registry, root, target = build_sandbox_state(
+            page,
+            profile,
+            html=html,
+        )
+
+        replayer = PathReplayer(
+            page=page,
+            profile=profile,
+            navigator=navigator,
+            extractor=extractor,
+            signature_builder=builder,
+            registry=registry,
+        )
+        result = replayer.replay(
+            target.path,
+            expected_target_state_id=target.state_id,
+        )
+        browser.close()
+
+    assert target.path.steps[0].event.decision is EventDecision.DENY
+    assert result.success is True
+    assert result.completed_steps == 1
+    assert result.reached_state_id == target.state_id
+    assert len(result.sandbox_audits) == 1
+    assert result.sandbox_audits[0]["base_decision"] == "deny"
+    assert result.sandbox_audits[0]["blocked_mutating_requests"] == []
+
+
+def test_path_replayer_does_not_replay_sandbox_override_when_profile_is_safe():
+    test_full_profile = sandbox_profile()
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>ERP Test</title></head>
+      <body>
+        <h1>Retenciones</h1>
+        <button class="opener" onclick="
+          document.getElementById('form').style.display='block';
+        ">Nueva retención</button>
+        <section id="form" style="display:none">
+          <label>RUC <input name="ruc"></label>
+        </section>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        navigator, extractor, builder, registry, root, target = build_sandbox_state(
+            page,
+            test_full_profile,
+            html=html,
+        )
+
+        safe_profile = sandbox_profile()
+        safe_profile["crawl_mode"]["strategy"] = "safe"
+        replayer = PathReplayer(
+            page=page,
+            profile=safe_profile,
+            navigator=navigator,
+            extractor=extractor,
+            signature_builder=builder,
+            registry=registry,
+        )
+        result = replayer.replay(target.path)
+        browser.close()
+
+    assert result.success is False
+    assert "no autorizado" in result.error
+    assert result.sandbox_audits == []
+
+
+def test_path_replayer_blocks_mutating_request_during_sandbox_replay():
+    profile = sandbox_profile()
+    profile["state_replay"]["step_wait_ms"] = 50
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>ERP Test</title>
+        <base href="http://example.invalid/">
+      </head>
+      <body>
+        <h1>Retenciones</h1>
+        <button class="opener" onclick="
+          fetch('/mutate?secret=not-persisted', {method: 'POST'});
+          document.getElementById('form').style.display='block';
+        ">Nueva retención</button>
+        <section id="form" style="display:none">
+          <label>RUC <input name="ruc"></label>
+        </section>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        navigator, extractor, builder, registry, root, target = build_sandbox_state(
+            page,
+            profile,
+            html=html,
+        )
+
+        replayer = PathReplayer(
+            page=page,
+            profile=profile,
+            navigator=navigator,
+            extractor=extractor,
+            signature_builder=builder,
+            registry=registry,
+        )
+        result = replayer.replay(target.path)
+        browser.close()
+
+    assert result.success is False
+    assert result.error == "sandbox_replay_mutating_request_blocked"
+    assert len(result.sandbox_audits) == 1
+    blocked = result.sandbox_audits[0]["blocked_mutating_requests"]
+    assert blocked == [
+        {
+            "method": "POST",
+            "resource_type": "fetch",
+            "path": "/mutate",
+        }
+    ]

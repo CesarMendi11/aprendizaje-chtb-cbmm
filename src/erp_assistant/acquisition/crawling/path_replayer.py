@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterator
+from urllib.parse import urlsplit
 
 from playwright.sync_api import Page
 
@@ -13,6 +15,7 @@ from erp_assistant.acquisition.crawling.state_signature import StateSignature, S
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 from erp_assistant.acquisition.models.crawl_path import CrawlPath, CrawlPathStep
 from erp_assistant.acquisition.models.ui_event import EventDecision, UIEvent
+from erp_assistant.acquisition.policy.sandbox_policy import SandboxExplorationPolicy
 
 
 @dataclass
@@ -28,6 +31,7 @@ class ReplayResult:
     signature: StateSignature | None
     error: str | None = None
     observation: dict[str, Any] = field(default_factory=dict)
+    sandbox_audits: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -40,6 +44,7 @@ class ReplayResult:
             "signature": self.signature.to_dict() if self.signature else None,
             "error": self.error,
             "observation": self.observation or {},
+            "sandbox_audits": list(self.sandbox_audits),
         }
 
 
@@ -47,8 +52,10 @@ class PathReplayer:
     """
     Reproduce de forma determinística una ``CrawlPath`` usando Playwright.
 
-    Solo ejecuta eventos previamente clasificados como ``allow``. Cada paso se
-    valida contra el estado esperado cuando el target ya está registrado.
+    Ejecuta eventos ``allow`` y, únicamente en ``test/test_full``, puede
+    reproducir un opener sandbox previamente autorizado sin convertir su
+    decisión base ``deny`` en ``allow``. Cada paso se valida contra el estado
+    esperado cuando el target ya está registrado.
     """
 
     def __init__(
@@ -80,6 +87,8 @@ class PathReplayer:
             )
         )
         self.verify_each_step = bool(config.get("verify_each_step", True))
+        self.home_route = str(profile.get("navigation", {}).get("home_url") or "")
+        self.sandbox_policy = SandboxExplorationPolicy(profile)
         self.interaction_executor = BrowserInteractionExecutor(
             page=page,
             profile=profile,
@@ -95,6 +104,7 @@ class PathReplayer:
         signature: StateSignature | None = None
         completed_steps = 0
         observation_diagnostics: dict[str, Any] = {}
+        sandbox_audits: list[dict[str, Any]] = []
 
         try:
             root_state = self.registry.require(path.root_state_id)
@@ -114,26 +124,50 @@ class PathReplayer:
 
             reached_state_id = root_state.state_id
 
-            for step in path.steps:
+            for source_state_depth, step in enumerate(path.steps):
                 self._validate_step_source(step, reached_state_id)
-                self._execute_event(step.event)
-                self._wait(self.step_wait_ms)
 
-                expected_state = (
-                    self.registry.get(step.target_state_id) if step.target_state_id else None
+                sandbox_authorization = self.sandbox_policy.evaluate_replay_event(
+                    step.event,
+                    source_state_depth=source_state_depth,
+                    is_home_route=bool(self.home_route and root_state.route == self.home_route),
                 )
-                observation = self._observe(
-                    title_hint=(
-                        self._state_title_hint(expected_state)
-                        if expected_state
-                        else root_state.title
-                    ),
-                    canonical_title=(expected_state.title if expected_state else root_state.title),
-                    expected_structural_fingerprint=(
-                        expected_state.structural_signature if expected_state else None
-                    ),
-                )
-                observation_diagnostics = observation.diagnostics()
+                sandbox_authorized = sandbox_authorization.allowed
+
+                with self._sandbox_network_guard(
+                    step.event,
+                    authorization_reasons=sandbox_authorization.reasons,
+                    authorized=sandbox_authorized,
+                ) as sandbox_audit:
+                    if sandbox_audit is not None:
+                        sandbox_audits.append(sandbox_audit)
+
+                    self._execute_event(
+                        step.event,
+                        sandbox_authorized=sandbox_authorized,
+                    )
+                    self._wait(self.step_wait_ms)
+                    self._assert_no_blocked_sandbox_request(sandbox_audit)
+
+                    expected_state = (
+                        self.registry.get(step.target_state_id) if step.target_state_id else None
+                    )
+                    observation = self._observe(
+                        title_hint=(
+                            self._state_title_hint(expected_state)
+                            if expected_state
+                            else root_state.title
+                        ),
+                        canonical_title=(
+                            expected_state.title if expected_state else root_state.title
+                        ),
+                        expected_structural_fingerprint=(
+                            expected_state.structural_signature if expected_state else None
+                        ),
+                    )
+                    observation_diagnostics = observation.diagnostics()
+                    self._assert_no_blocked_sandbox_request(sandbox_audit)
+
                 self._assert_observation_stable(observation, "paso reproducido")
                 screen_data = observation.screen_data
                 signature = observation.signature
@@ -157,6 +191,7 @@ class PathReplayer:
                 completed_steps=completed_steps,
                 screen_data=screen_data,
                 signature=signature,
+                sandbox_audits=sandbox_audits,
             )
 
         except (KeyError, ValueError, RuntimeError) as error:
@@ -170,6 +205,7 @@ class PathReplayer:
                 signature=signature,
                 error=str(error),
                 observation=observation_diagnostics,
+                sandbox_audits=sandbox_audits,
             )
         except Exception as error:  # frontera defensiva del navegador
             return ReplayResult(
@@ -182,6 +218,7 @@ class PathReplayer:
                 signature=signature,
                 error=f"unexpected_replay_error: {error}",
                 observation=observation_diagnostics,
+                sandbox_audits=sandbox_audits,
             )
 
     def _observe(
@@ -218,8 +255,13 @@ class PathReplayer:
         if not observation.stable:
             raise RuntimeError(f"La observación de {context} no alcanzó una firma estable.")
 
-    def _execute_event(self, event: UIEvent) -> None:
-        if event.decision is not EventDecision.ALLOW:
+    def _execute_event(
+        self,
+        event: UIEvent,
+        *,
+        sandbox_authorized: bool = False,
+    ) -> None:
+        if event.decision is not EventDecision.ALLOW and not sandbox_authorized:
             raise ValueError(
                 "PathReplayer rechazó un evento no autorizado: "
                 f"{event.label!r} ({event.decision.value})."
@@ -234,6 +276,60 @@ class PathReplayer:
                 f"{event.label!r} después de {interaction.attempts} intentos: "
                 f"{interaction.error}"
             )
+
+    @contextmanager
+    def _sandbox_network_guard(
+        self,
+        event: UIEvent,
+        *,
+        authorization_reasons: tuple[str, ...],
+        authorized: bool,
+    ) -> Iterator[dict[str, Any] | None]:
+        if not authorized:
+            yield None
+            return
+
+        audit: dict[str, Any] = {
+            "label": event.label,
+            "event_type": event.event_type.value,
+            "base_decision": event.decision.value,
+            "base_risk_level": event.risk_level.value,
+            "authorization_reasons": list(authorization_reasons),
+            "blocked_methods": sorted(self.sandbox_policy.blocked_http_methods),
+            "requests_observed": 0,
+            "blocked_mutating_requests": [],
+        }
+
+        def guard(route, request) -> None:
+            method = request.method.upper()
+            parsed = urlsplit(request.url)
+            audit["requests_observed"] += 1
+
+            if method in self.sandbox_policy.blocked_http_methods:
+                audit["blocked_mutating_requests"].append(
+                    {
+                        "method": method,
+                        "resource_type": request.resource_type,
+                        "path": parsed.path,
+                    }
+                )
+                route.abort()
+                return
+
+            route.continue_()
+
+        self.page.route("**/*", guard)
+        try:
+            yield audit
+        finally:
+            self.page.unroute("**/*", guard)
+
+    @staticmethod
+    def _assert_no_blocked_sandbox_request(
+        sandbox_audit: dict[str, Any] | None,
+    ) -> None:
+        if sandbox_audit and sandbox_audit["blocked_mutating_requests"]:
+            raise RuntimeError("sandbox_replay_mutating_request_blocked")
 
     def _validate_step_source(
         self,
