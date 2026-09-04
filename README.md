@@ -530,6 +530,8 @@ ERP_ASSISTANT_CRAWL_PROFILE=configs/cbmm.yaml
 ERP_ASSISTANT_OLLAMA_URL=http://OLLAMA_HOST:11434
 ERP_ASSISTANT_EMBEDDING_MODEL=qwen3-embedding:0.6b
 ERP_ASSISTANT_GENERATION_MODEL=llama3.2:3b
+ERP_ASSISTANT_WRITER_MODEL=qwen3.5:4b
+ERP_ASSISTANT_WRITER_TIMEOUT=60
 ```
 
 Las credenciales de PostgreSQL, Neo4j, ERP y cualquier proveedor externo deben mantenerse únicamente en configuración local segura.

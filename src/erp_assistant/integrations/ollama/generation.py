@@ -13,6 +13,44 @@ class OllamaGenerationError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class OllamaWriterSettings:
+    url: str = field(
+        default_factory=lambda: os.getenv(
+            "ERP_ASSISTANT_OLLAMA_URL",
+            "http://127.0.0.1:11434",
+        )
+    )
+    model: str = field(
+        default_factory=lambda: os.getenv(
+            "ERP_ASSISTANT_WRITER_MODEL",
+            "qwen3.5:4b",
+        )
+    )
+    timeout: float = field(
+        default_factory=lambda: float(os.getenv("ERP_ASSISTANT_WRITER_TIMEOUT", "60"))
+    )
+
+    def __post_init__(self) -> None:
+        url = str(self.url or "").strip().rstrip("/")
+        model = str(self.model or "").strip()
+        parsed = urlsplit(url)
+
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or any(char.isspace() for char in url)
+        ):
+            raise ValueError("ERP_ASSISTANT_OLLAMA_URL inválida")
+        if not model:
+            raise ValueError("ERP_ASSISTANT_WRITER_MODEL no puede estar vacío")
+        if self.timeout <= 0:
+            raise ValueError("ERP_ASSISTANT_WRITER_TIMEOUT debe ser mayor que cero")
+
+        object.__setattr__(self, "url", url)
+        object.__setattr__(self, "model", model)
+
+
+@dataclass(frozen=True)
 class OllamaGenerationSettings:
     url: str = field(
         default_factory=lambda: os.getenv(
@@ -63,11 +101,11 @@ class OllamaGenerationSettings:
 class OllamaGenerationClient:
     def __init__(
         self,
-        settings: OllamaGenerationSettings | None = None,
+        settings: OllamaGenerationSettings | OllamaWriterSettings | None = None,
         *,
         client=None,
     ):
-        self.settings = settings or OllamaGenerationSettings()
+        self.settings = settings or OllamaWriterSettings()
         self.client = client
 
     def generate(self, prompt: str, *, system: str) -> str:
@@ -83,7 +121,8 @@ class OllamaGenerationClient:
             "prompt": prompt,
             "system": system,
             "stream": False,
-            "options": {"temperature": 0},
+            "think": False,
+            "options": {"temperature": 0, "num_predict": 512},
         }
         try:
             if self.client is not None:

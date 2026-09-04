@@ -6,6 +6,7 @@ import pytest
 from erp_assistant.integrations.ollama.generation import (
     OllamaGenerationClient,
     OllamaGenerationSettings,
+    OllamaWriterSettings,
 )
 from erp_assistant.semantic.generation.errors import (
     EmptyStructuredOutputError,
@@ -189,6 +190,19 @@ def test_existing_text_generation_client_contract_is_unchanged():
     assert OllamaGenerationClient(settings).settings.model == "existing-model"
 
 
+def test_writer_settings_are_independent_from_semantic_generation_model(monkeypatch):
+    monkeypatch.setenv("ERP_ASSISTANT_GENERATION_MODEL", "qwen3.5:9b")
+    monkeypatch.setenv("ERP_ASSISTANT_WRITER_MODEL", "qwen3.5:4b")
+    monkeypatch.setenv("ERP_ASSISTANT_WRITER_TIMEOUT", "60")
+
+    assert OllamaGenerationSettings().model == "qwen3.5:9b"
+
+    writer = OllamaWriterSettings()
+    assert writer.model == "qwen3.5:4b"
+    assert writer.timeout == 60
+    assert OllamaGenerationClient().settings.model == "qwen3.5:4b"
+
+
 def test_structured_timeout_defaults_to_120_and_can_be_overridden():
     settings = OllamaGenerationSettings(timeout=30)
     assert OllamaStructuredGenerationClient(settings).timeout == 120
@@ -238,5 +252,6 @@ def test_text_generation_client_uses_settings_and_returns_trimmed_text():
         "prompt": "pregunta",
         "system": "system",
         "stream": False,
-        "options": {"temperature": 0},
+        "think": False,
+        "options": {"temperature": 0, "num_predict": 512},
     }

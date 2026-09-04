@@ -1,0 +1,39 @@
+{
+  "development_comparison": {
+    "base_report_sha256": "ee2adb03e80c39ad09675617646a931346ebbbdee8fb3ea2c4859469989d9f90",
+    "w01": {
+      "assessment": "rejected: false abstention on Cajas despite sufficient governed evidence",
+      "median_latency_ms": 18053.984,
+      "model": "llama3.2:3b"
+    },
+    "w02": {
+      "assessment": "selected: both cases useful and grounded; lower latency than W03/W04",
+      "median_latency_ms": 29008.361,
+      "model": "qwen3.5:4b"
+    },
+    "w03": {
+      "assessment": "not selected: good answers but materially slower without clear quality gain",
+      "median_latency_ms": 55377.106,
+      "model": "qwen3.5:9b"
+    },
+    "w04": {
+      "assessment": "not selected: useful but slower than W02 and omitted available task actions in the Tareas answer",
+      "median_latency_ms": 41916.38,
+      "model": "qwen2.5:7b"
+    },
+    "w04_report_sha256": "376aa1a815c84e4a74cd0083280c357e09af379a28b4db2912d1de5635484fe9"
+  },
+  "formal_rq_data": false,
+  "freeze_id": "m3-writer-development-freeze-v1",
+  "reopen_policy": "Reopen only for a demonstrated blocking M3 integration defect. No additional writer candidates by curiosity.",
+  "selected": {
+    "alias": "W02",
+    "model": "qwen3.5:4b",
+    "num_predict": 512,
+    "temperature": 0,
+    "think": false,
+    "timeout_seconds": 60
+  },
+  "selection_scope": "M3 grounded answer writer only; M2 semantic generator remains frozen independently.",
+  "status": "frozen_for_end_to_end_prototype_development"
+}
