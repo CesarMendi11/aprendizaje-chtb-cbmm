@@ -78,6 +78,13 @@ class EvidenceContextBuilder:
             "HAS_CONTROL": 'La pantalla "{s}" contiene el control "{t}".',
             "HAS_TABLE": 'La pantalla "{s}" contiene la tabla "{t}".',
             "HAS_COLUMN": 'La tabla "{s}" contiene la columna "{t}".',
+            "HAS_STATE": 'La pantalla "{s}" contiene el estado "{t}".',
+            "HAS_LINK": 'La pantalla "{s}" contiene el enlace "{t}".',
+            "TARGETS": 'El enlace "{s}" lleva a la pantalla "{t}".',
+            "HAS_EVENT": 'En la pantalla "{s}" se observó el evento "{t}".',
+            "FROM_STATE": 'El {st} "{s}" parte del estado "{t}".',
+            "TO_STATE": 'El {st} "{s}" conduce al estado "{t}".',
+            "TRIGGERED_BY": 'La transición "{s}" se activa mediante el evento "{t}".',
         }
         template = templates.get(row.get("relationship_type"))
         if template:
@@ -90,7 +97,7 @@ class EvidenceContextBuilder:
                 ),
             )
         return (
-            f'"{row.get("source_label") or "Entidad validada"}" se relaciona mediante '
-            f"{row.get('relationship_type') or 'RELATION'} con "
+            f'"{row.get("source_label") or "Entidad validada"}" '
+            f"está relacionado con "
             f'"{row.get("target_label") or "Entidad validada"}".'
         )

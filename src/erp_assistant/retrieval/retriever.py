@@ -32,7 +32,7 @@ from .conversation_context import (
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
 from .evidence_selector import EvidenceSelection, EvidenceSelector
 from .graph_expansion import GraphExpansionPlan, QueryAwareGraphExpansionPlanner
-from .query_plan import QueryPlan, QueryPlanner
+from .query_plan import QueryIntent, QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
 
 ALLOWED_RELATIONSHIPS = {
@@ -683,7 +683,11 @@ class HybridKnowledgeRetriever:
             deterministic_plan=structural_plan,
             has_context=bool(result.get("context")),
             has_sources=bool(result.get("sources")),
-            policy_abstention=self._needs_abstention(question, result),
+            policy_abstention=self._needs_abstention(
+                question,
+                result,
+                query_plan=query_plan,
+            ),
         )
 
         result["intent"] = structural_plan.get("intent")
@@ -796,6 +800,13 @@ class HybridKnowledgeRetriever:
                 seen.add(value)
                 facts.append(value)
 
+        def informative_label(value):
+            label = " ".join(str(value or "").split()).casefold()
+            return bool(label) and label not in {
+                "unlabeled control",
+                "entidad validada",
+            }
+
         for semantic in result.get("approved_semantics", [])[:2]:
             label = str(semantic.get("safe_label") or "Pantalla validada")
             summary = str(semantic.get("purpose_summary") or "").strip()
@@ -807,6 +818,10 @@ class HybridKnowledgeRetriever:
                     add(f'Capacidad aprobada de "{label}": {statement}')
 
         for relation in result.get("relations", [])[:10]:
+            if not informative_label(relation.get("source_label")):
+                continue
+            if not informative_label(relation.get("target_label")):
+                continue
             add(EvidenceContextBuilder._natural_fact(relation))
 
         if not facts:
@@ -814,7 +829,7 @@ class HybridKnowledgeRetriever:
                 label = str(source.get("safe_label") or "").strip()
                 entity_type = str(source.get("entity_type") or "entidad").strip()
 
-                if label:
+                if informative_label(label):
                     add(f'{entity_type}: "{label}"')
 
         if not facts:
@@ -1189,7 +1204,21 @@ class HybridKnowledgeRetriever:
         return out
 
     @staticmethod
-    def _needs_abstention(question, result):
+    def _needs_abstention(
+        question,
+        result,
+        *,
+        query_plan=None,
+    ):
+        # A clear locative formulation such as "¿Dónde registro...?"
+        # asks where the action is available; it does not ask the
+        # assistant to perform or operationally guide the mutation.
+        if (
+            query_plan is not None
+            and query_plan.intent == QueryIntent.LOCATE_SCREEN
+        ):
+            return False
+
         terms = {
             action
             for action, pattern in MUTATIVE_FORMS.items()

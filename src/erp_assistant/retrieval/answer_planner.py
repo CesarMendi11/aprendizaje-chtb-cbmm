@@ -201,12 +201,42 @@ class StructuralAnswerPlanner:
                     intent, answer + ".", [field] + ([module] if module else []), "high"
                 )
         if intent == "LOCATE_SCREEN":
-            matches = [
+            screen_relations = [
                 r
                 for r in rels
                 if r.get("relationship_type") == "HAS_SCREEN"
-                and self._matches(question, r["target_label"])
             ]
+            matches = [
+                r
+                for r in screen_relations
+                if self._matches(
+                    question,
+                    r.get("target_label", ""),
+                )
+            ]
+
+            # EvidenceSelector already resolves ambiguity before the
+            # answer layer. A natural-language surface form can still
+            # differ from the canonical label ("retención" versus
+            # "Retenciones"). In that case, trust the governed selected
+            # relation only when exactly one canonical screen remains.
+            if not matches:
+                target_ids = {
+                    str(
+                        r.get(
+                            "target_canonical_id"
+                        )
+                        or ""
+                    )
+                    for r in screen_relations
+                    if r.get(
+                        "target_canonical_id"
+                    )
+                }
+
+                if len(target_ids) == 1:
+                    matches = screen_relations
+
             if matches:
                 # A screen can be linked both from the ERP root and from its
                 # functional module. For a module-location question, prefer the

@@ -25,6 +25,23 @@ def test_query_planner_preserves_current_intent_contract():
         assert planner.plan(question).intent == expected
 
 
+def test_locative_mutative_wording_locates_the_screen_without_requesting_mutation():
+    planner = QueryPlanner()
+
+    for question in (
+        "¿Dónde registro un trámite?",
+        "¿Dónde puedo crear una retención?",
+        "¿En qué pantalla creo una retención?",
+        "¿En cuál módulo apruebo una solicitud?",
+    ):
+        plan = planner.plan(question)
+        assert plan.intent == QueryIntent.LOCATE_SCREEN
+        assert plan.mutative_action is False
+
+    assert planner.plan("Quiero registrar un año").intent == QueryIntent.MUTATIVE_ACTION
+    assert planner.plan("¿Cómo elimino un comprobante?").intent == QueryIntent.MUTATIVE_ACTION
+
+
 def test_query_planner_does_not_treat_descriptive_module_mentions_as_location_requests():
     planner = QueryPlanner()
 

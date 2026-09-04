@@ -84,6 +84,43 @@ def test_context_uses_only_selected_approved_semantic_payload():
     assert "Consultar años registrados." in context
 
 
+def test_relation_rendering_naturalizes_graph_relationship_names():
+    link_fact = EvidenceContextBuilder._natural_fact(
+        {
+            "relationship_type": "HAS_LINK",
+            "source_label": "Comprobantes",
+            "target_label": "Retenciones",
+            "source_type": "screen",
+        }
+    )
+    transition_fact = EvidenceContextBuilder._natural_fact(
+        {
+            "relationship_type": "FROM_STATE",
+            "source_label": "Abrir detalle",
+            "target_label": "Listado",
+            "source_type": "event",
+        }
+    )
+
+    assert link_fact == 'La pantalla "Comprobantes" contiene el enlace "Retenciones".'
+    assert transition_fact == 'El evento "Abrir detalle" parte del estado "Listado".'
+    assert "HAS_LINK" not in link_fact
+    assert "FROM_STATE" not in transition_fact
+
+
+def test_unknown_relation_fallback_does_not_expose_internal_relationship_name():
+    fact = EvidenceContextBuilder._natural_fact(
+        {
+            "relationship_type": "INTERNAL_TECHNICAL_RELATION",
+            "source_label": "Origen",
+            "target_label": "Destino",
+        }
+    )
+
+    assert fact == '"Origen" está relacionado con "Destino".'
+    assert "INTERNAL_TECHNICAL_RELATION" not in fact
+
+
 def test_clarification_selection_produces_no_llm_context():
     selection = EvidenceSelection(
         status="clarification_required",

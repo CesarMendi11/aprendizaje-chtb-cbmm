@@ -216,6 +216,34 @@ def test_writer_disabled_renders_deterministic_governed_evidence_baseline():
     assert gen.prompt is None
 
 
+def test_writer_disabled_baseline_hides_placeholders_and_internal_relation_names():
+    answer = HybridKnowledgeRetriever._render_evidence_baseline(
+        {
+            "approved_semantics": [],
+            "relations": [
+                {
+                    "relationship_type": "HAS_CONTROL",
+                    "source_label": "Comprobantes",
+                    "source_type": "screen",
+                    "target_label": "unlabeled control",
+                },
+                {
+                    "relationship_type": "HAS_LINK",
+                    "source_label": "Comprobantes",
+                    "source_type": "screen",
+                    "target_label": "Retenciones",
+                },
+            ],
+            "sources": [],
+        }
+    )
+
+    assert "unlabeled control" not in answer
+    assert "HAS_CONTROL" not in answer
+    assert "HAS_LINK" not in answer
+    assert 'enlace "Retenciones"' in answer
+
+
 def test_semantic_ablation_skips_semantic_projection_and_authorization(
     monkeypatch,
 ):
@@ -2297,3 +2325,65 @@ def test_external_current_route_fails_closed_without_database_lookup():
     assert state.current_screen is None
     assert state.current_module is None
     assert state.turn_index == 4
+
+
+def test_locative_action_wording_does_not_trigger_mutative_policy_fallback():
+    from erp_assistant.retrieval.query_plan import (
+        QueryIntent,
+        QueryPlanner,
+    )
+
+    planner = QueryPlanner()
+
+    locative_plan = planner.plan(
+        "¿Dónde registro un trámite?"
+    )
+
+    assert locative_plan.intent == QueryIntent.LOCATE_SCREEN
+    assert locative_plan.mutative_action is False
+
+    assert (
+        HybridKnowledgeRetriever._needs_abstention(
+            "¿Dónde registro un trámite?",
+            {"sources": []},
+            query_plan=locative_plan,
+        )
+        is False
+    )
+
+    locative_create_plan = planner.plan(
+        "¿En qué pantalla creo una retención?"
+    )
+
+    assert (
+        locative_create_plan.intent
+        == QueryIntent.LOCATE_SCREEN
+    )
+
+    assert (
+        HybridKnowledgeRetriever._needs_abstention(
+            "¿En qué pantalla creo una retención?",
+            {"sources": []},
+            query_plan=locative_create_plan,
+        )
+        is False
+    )
+
+    mutative_plan = planner.plan(
+        "¿Cómo elimino un comprobante?"
+    )
+
+    assert (
+        mutative_plan.intent
+        == QueryIntent.MUTATIVE_ACTION
+    )
+    assert mutative_plan.mutative_action is True
+
+    assert (
+        HybridKnowledgeRetriever._needs_abstention(
+            "¿Cómo elimino un comprobante?",
+            {"sources": []},
+            query_plan=mutative_plan,
+        )
+        is True
+    )

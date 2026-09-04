@@ -533,3 +533,68 @@ def test_navigation_event_uses_matching_control_when_no_direct_event_exists():
     assert 'pantalla "Comprobantes eléctronicos emitidos"' in result["answer"]
     assert "NOTA DE CRÉDITO" not in result["answer"]
     assert result["evidence_ids"] == ["screen:comp", "control:next"]
+
+
+def test_locate_screen_uses_unique_governed_relation_when_surface_form_differs():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "module:cxc",
+            "target_canonical_id": "screen:retenciones",
+            "source_label": "Cuentas por cobrar",
+            "target_label": "Retenciones",
+            "source_type": "module",
+            "target_type": "screen",
+        }
+    ]
+
+    result = planner.plan(
+        "¿En qué pantalla creo una retención?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["supported"] is True
+    assert result["intent"] == "LOCATE_SCREEN"
+    assert result["confidence"] == "high"
+    assert result["answer"] == (
+        'La pantalla "Retenciones" está dentro del módulo '
+        '"Cuentas por cobrar".'
+    )
+    assert "crear" not in result["answer"].casefold()
+
+
+def test_locate_screen_does_not_guess_when_multiple_screen_targets_remain():
+    planner = StructuralAnswerPlanner()
+    relations = [
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "module:a",
+            "target_canonical_id": "screen:a",
+            "source_label": "Módulo A",
+            "target_label": "Trámites internos",
+            "source_type": "module",
+            "target_type": "screen",
+        },
+        {
+            "relationship_type": "HAS_SCREEN",
+            "source_canonical_id": "module:b",
+            "target_canonical_id": "screen:b",
+            "source_label": "Módulo B",
+            "target_label": "Trámites externos",
+            "source_type": "module",
+            "target_type": "screen",
+        },
+    ]
+
+    result = planner.plan(
+        "¿Dónde registro un trámite?",
+        [],
+        relations,
+        [],
+    )
+
+    assert result["intent"] == "LOCATE_SCREEN"
+    assert result["supported"] is False

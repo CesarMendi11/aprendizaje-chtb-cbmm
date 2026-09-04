@@ -91,7 +91,18 @@ class QueryPlanner:
         q = str(question).casefold()
         normalized = normalized if normalized is not None else QueryPlanner.normalize(question)
 
-        if re.search(r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)", q):
+        mutative_pattern = r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)"
+        locative_action = bool(
+            re.search(
+                r"\b(?:donde|en (?:que|cual) (?:pantalla|modulo))\b",
+                normalized,
+            )
+            and re.search(mutative_pattern, normalized)
+            and not re.search(r"\b(?:campo|boton|control)\b", normalized)
+        )
+        if locative_action:
+            return QueryIntent.LOCATE_SCREEN
+        if re.search(mutative_pattern, q):
             return QueryIntent.MUTATIVE_ACTION
         if any(
             phrase in normalized
