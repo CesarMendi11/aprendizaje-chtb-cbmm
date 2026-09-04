@@ -225,7 +225,10 @@ class HybridKnowledgeRetriever:
             conversation_context.mode == ConversationContextMode.DIRECT
             and resolution.status == "ambiguous"
             and not query_plan.mutative_action
-            and "screen" in query_plan.target_entity_types
+            and (
+                not query_plan.target_entity_types
+                or "screen" in query_plan.target_entity_types
+            )
             and self.entity_resolver is not None
             and hasattr(self.entity_resolver, "resolve_in_screen")
         ):

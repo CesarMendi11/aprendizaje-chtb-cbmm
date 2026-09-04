@@ -1134,6 +1134,282 @@ def test_retrieve_resolves_version_without_preparing_chroma_projection(monkeypat
     assert result["evidence_selection"]["reason"] == "insufficient_evidence"
 
 
+def test_generic_grounded_question_scopes_ambiguous_child_label_to_explicit_screen(
+    monkeypatch,
+):
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.entity_resolver import (
+        EntityResolution,
+        EntityResolutionCandidate,
+    )
+    from erp_assistant.retrieval.query_plan import QueryPlan
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(self, *, erp_id=None, knowledge_version=None):
+            return version
+
+    monkeypatch.setattr(
+        "erp_assistant.retrieval.retriever.ChromaSyncService",
+        SyncService,
+    )
+
+    def candidate(
+        canonical_id,
+        entity_type,
+        label,
+    ):
+        return EntityResolutionCandidate(
+            canonical_id=canonical_id,
+            entity_type=entity_type,
+            safe_label=label,
+            route=(
+                "/rentas/cajas"
+                if entity_type == "screen"
+                else None
+            ),
+            score=1.0,
+            channels=(
+                "normalized_mention",
+            ),
+            matched_terms=(
+                label.casefold(),
+            ),
+            channel_scores=(
+                (
+                    "normalized_mention",
+                    1.0,
+                ),
+            ),
+        )
+
+    class Resolver:
+        def __init__(self):
+            self.scoped_calls = []
+
+        def resolve(
+            self,
+            query_plan,
+            *,
+            version_id,
+            limit,
+        ):
+            if (
+                query_plan.target_entity_types
+                == ("screen",)
+            ):
+                rows = (
+                    candidate(
+                        "screen:cajas",
+                        "screen",
+                        "Modulo de Cajas",
+                    ),
+                )
+            else:
+                rows = (
+                    candidate(
+                        "screen:cajas",
+                        "screen",
+                        "Modulo de Cajas",
+                    ),
+                    candidate(
+                        "column:acciones-a",
+                        "table_column",
+                        "ACCIONES",
+                    ),
+                    candidate(
+                        "column:acciones-b",
+                        "table_column",
+                        "ACCIONES",
+                    ),
+                )
+
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=(
+                    query_plan.normalized_question
+                ),
+                candidates=rows,
+            )
+
+        def resolve_in_screen(
+            self,
+            query_plan,
+            *,
+            version_id,
+            screen_id,
+            limit,
+        ):
+            self.scoped_calls.append(
+                (
+                    screen_id,
+                    query_plan.intent,
+                )
+            )
+
+            return EntityResolution(
+                query=query_plan.question,
+                normalized_query=(
+                    query_plan.normalized_question
+                ),
+                candidates=(
+                    candidate(
+                        "screen:cajas",
+                        "screen",
+                        "Modulo de Cajas",
+                    ),
+                    candidate(
+                        "column:acciones-cajas",
+                        "table_column",
+                        "ACCIONES",
+                    ),
+                ),
+            )
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(
+            self,
+            embedding,
+            **kwargs,
+        ):
+            return []
+
+    resolver = Resolver()
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=object(),
+        embeddings=Embeddings(),
+        entity_resolver=resolver,
+    )
+
+    items = {
+        "screen:cajas":
+            SimpleNamespace(
+                id="db-screen-cajas",
+                canonical_id=(
+                    "screen:cajas"
+                ),
+                entity_type="screen",
+                route="/rentas/cajas",
+            ),
+
+        "column:acciones-cajas":
+            SimpleNamespace(
+                id="db-column-acciones",
+                canonical_id=(
+                    "column:acciones-cajas"
+                ),
+                entity_type=(
+                    "table_column"
+                ),
+                route=None,
+            ),
+    }
+
+    payloads = {
+        "db-screen-cajas": {
+            "title":
+                "Modulo de Cajas",
+        },
+
+        "db-column-acciones": {
+            "name":
+                "ACCIONES",
+        },
+    }
+
+    retriever._validate = (
+        lambda ids, version_id: [
+            items[cid]
+            for cid in ids
+            if cid in items
+        ]
+    )
+
+    retriever._effective = (
+        lambda item_id:
+            payloads[item_id]
+    )
+
+    retriever._expand = (
+        lambda seeds, *args, **kwargs: []
+    )
+
+    question = (
+        "Cuéntame qué información y acciones "
+        "se observan en Modulo de Cajas."
+    )
+
+    query_plan = QueryPlan(
+        question=question,
+        normalized_question=(
+            "cuentame que informacion y acciones "
+            "se observan en modulo de cajas"
+        ),
+        intent=None,
+        target_entity_types=(),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+
+    result = retriever.retrieve(
+        question,
+        query_plan=query_plan,
+    )
+
+    assert resolver.scoped_calls == [
+        (
+            "screen:cajas",
+            None,
+        )
+    ]
+
+    assert (
+        result[
+            "conversation_context"
+        ]["reason"]
+        == "current_turn_screen_scope"
+    )
+
+    assert (
+        result[
+            "entity_resolution"
+        ]["status"]
+        == "resolved"
+    )
+
+    assert (
+        result[
+            "evidence_selection"
+        ]["status"]
+        == "selected"
+    )
+
+    assert (
+        result[
+            "evidence_selection"
+        ]["reason"]
+        == "bounded_generic"
+    )
+
+
 def test_same_turn_explicit_screen_scopes_ambiguous_search_before_graph(monkeypatch):
     from types import SimpleNamespace
 
