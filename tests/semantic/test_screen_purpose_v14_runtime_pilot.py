@@ -50,6 +50,23 @@ class DuplicateReferenceClient(CapturingClient):
         )
 
 
+class DuplicateClaimClient(CapturingClient):
+    def generate(self, prompt, *, system, schema, options=None, think=None):
+        value = valid_output()
+
+        value["supported_capabilities"].append(
+            {
+                "statement": value["supported_capabilities"][0]["statement"],
+                "evidence_refs": ["column:owner"],
+            }
+        )
+
+        return StructuredGenerationResponse(
+            json.dumps(value, ensure_ascii=False),
+            "json_schema",
+        )
+
+
 def test_v14_service_uses_rich_contract_and_2048_budget_without_persistence():
     client = CapturingClient()
     generated = ScreenPurposeInferenceServiceV14(client).generate(package())
@@ -59,6 +76,7 @@ def test_v14_service_uses_rich_contract_and_2048_budget_without_persistence():
     assert call["options"] == {
         "temperature": GENERATION_PARAMETERS["temperature"],
         "num_predict": 2048,
+        "num_ctx": 8192,
     }
     assert call["think"] is False
     assert "supported_actions" not in call["prompt"]
@@ -72,6 +90,15 @@ def test_v14_service_uses_rich_contract_and_2048_budget_without_persistence():
     assert generated.generation_parameters == GENERATION_PARAMETERS
     assert generated.inference.supported_capabilities[0].statement.startswith("Presenta datos")
     assert generated.raw_response_hash is not None
+
+
+def test_v14_service_records_mechanical_claim_deduplication_warning():
+    generated = ScreenPurposeInferenceServiceV14(
+        DuplicateClaimClient()
+    ).generate(package())
+
+    assert len(generated.inference.supported_capabilities) == 2
+    assert generated.warnings == ["deduplicated_functional_claims:1"]
 
 
 def test_v14_service_records_mechanical_reference_deduplication_warning():

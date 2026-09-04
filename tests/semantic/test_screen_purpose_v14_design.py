@@ -159,6 +159,7 @@ def test_v14_prompt_delegates_semantic_interpretation_but_keeps_human_authority(
 
     assert PROMPT_VERSION == "screen-purpose-v14.1"
     assert GENERATION_PARAMETERS["num_predict"] == 2048
+    assert GENERATION_PARAMETERS["num_ctx"] == 8192
     assert GENERATION_PARAMETERS["think"] is False
     assert "claims funcionales libres" in prompt
     assert "revisión humana" in prompt
@@ -246,6 +247,44 @@ def test_v14_parser_mechanically_deduplicates_repeated_evidence_refs():
         "column:risk",
     ]
     assert warnings == ["deduplicated_evidence_refs:1"]
+
+
+def test_v14_parser_mechanically_deduplicates_normalized_duplicate_claims():
+    evidence = package()
+    value = valid_output()
+
+    value["supported_capabilities"][0]["evidence_refs"] = ["column:owner"]
+
+    value["supported_capabilities"].append(
+        {
+            "statement": (
+                "  PRESENTA datos de propietario y nivel de riesgo "
+                "de los establecimientos!!! "
+            ),
+            "evidence_refs": ["column:risk"],
+        }
+    )
+
+    warnings: list[str] = []
+
+    inference = parse_generation_draft_v14(
+        json.dumps(value, ensure_ascii=False),
+        package=evidence,
+        normalization_warnings=warnings,
+    )
+
+    assert len(inference.supported_capabilities) == 2
+
+    assert inference.supported_capabilities[0].statement == (
+        "Presenta datos de propietario y nivel de riesgo de los establecimientos."
+    )
+
+    assert inference.supported_capabilities[0].evidence_refs == [
+        "column:owner",
+        "column:risk",
+    ]
+
+    assert warnings == ["deduplicated_functional_claims:1"]
 
 
 def test_v14_parser_rejects_screen_mismatch():

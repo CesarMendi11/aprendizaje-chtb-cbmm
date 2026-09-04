@@ -17,6 +17,7 @@ from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
     claimable_reference_ids,
     validate_v14_claim_references,
 )
+from erp_assistant.structural.canonical.ids import normalize_text
 
 
 def build_screen_purpose_generation_schema_v14(
@@ -89,6 +90,49 @@ def build_screen_purpose_generation_schema_v14(
     }
 
 
+def _normalize_duplicate_functional_claims(value: dict[str, Any]) -> int:
+    capabilities = value.get("supported_capabilities")
+    if not isinstance(capabilities, list):
+        return 0
+
+    removed = 0
+    deduplicated: list[Any] = []
+    positions: dict[str, int] = {}
+
+    for claim in capabilities:
+        if not isinstance(claim, dict):
+            deduplicated.append(claim)
+            continue
+
+        statement = claim.get("statement")
+        if not isinstance(statement, str):
+            deduplicated.append(claim)
+            continue
+
+        statement_key = normalize_text(statement)
+        if not statement_key:
+            deduplicated.append(claim)
+            continue
+
+        if statement_key not in positions:
+            positions[statement_key] = len(deduplicated)
+            deduplicated.append(claim)
+            continue
+
+        removed += 1
+        existing = deduplicated[positions[statement_key]]
+        existing_refs = existing.get("evidence_refs")
+        incoming_refs = claim.get("evidence_refs")
+
+        if isinstance(existing_refs, list) and isinstance(incoming_refs, list):
+            for reference in incoming_refs:
+                if reference not in existing_refs:
+                    existing_refs.append(reference)
+
+    value["supported_capabilities"] = deduplicated
+    return removed
+
+
 def _normalize_duplicate_evidence_refs(value: dict[str, Any]) -> int:
     capabilities = value.get("supported_capabilities")
     if not isinstance(capabilities, list):
@@ -132,6 +176,10 @@ def parse_generation_draft_v14(
         raise InferenceJSONError("La inferencia contiene JSON inválido") from exc
     if not isinstance(value, dict):
         raise InferenceJSONError("La raíz de la inferencia debe ser un objeto")
+
+    removed_claims = _normalize_duplicate_functional_claims(value)
+    if removed_claims and normalization_warnings is not None:
+        normalization_warnings.append(f"deduplicated_functional_claims:{removed_claims}")
 
     removed_references = _normalize_duplicate_evidence_refs(value)
     if removed_references and normalization_warnings is not None:

@@ -96,12 +96,16 @@ def test_structured_generation_accepts_explicit_bounded_options():
             "prompt",
             system="system",
             schema={"type": "object"},
-            options={"temperature": 0, "num_predict": 2048},
+            options={"temperature": 0, "num_predict": 2048, "num_ctx": 8192},
         )
     finally:
         http.close()
 
-    assert captured["options"] == {"temperature": 0, "num_predict": 2048}
+    assert captured["options"] == {
+        "temperature": 0,
+        "num_predict": 2048,
+        "num_ctx": 8192,
+    }
 
 
 @pytest.mark.parametrize(
@@ -110,6 +114,8 @@ def test_structured_generation_accepts_explicit_bounded_options():
         {"temperature": -1, "num_predict": 1024},
         {"temperature": 0, "num_predict": 0},
         {"temperature": 0, "num_predict": True},
+        {"temperature": 0, "num_predict": 1024, "num_ctx": 0},
+        {"temperature": 0, "num_predict": 1024, "num_ctx": True},
         {"temperature": 0, "seed": 1},
     ],
 )

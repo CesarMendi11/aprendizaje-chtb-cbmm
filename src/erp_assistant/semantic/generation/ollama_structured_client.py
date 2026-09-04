@@ -113,15 +113,23 @@ class OllamaStructuredGenerationClient:
             return {"temperature": 0, "num_predict": 1024}
         if not isinstance(options, dict):
             raise ValueError("Las opciones de generación estructurada deben ser un objeto")
-        unknown = set(options) - {"temperature", "num_predict"}
+        unknown = set(options) - {"temperature", "num_predict", "num_ctx"}
         if unknown:
             raise ValueError("La generación estructurada recibió opciones no soportadas")
         temperature = options.get("temperature", 0)
         num_predict = options.get("num_predict", 1024)
+        num_ctx = options.get("num_ctx")
         if isinstance(temperature, bool) or not isinstance(temperature, (int, float)):
             raise ValueError("temperature estructurada inválida")
         if temperature < 0:
             raise ValueError("temperature estructurada inválida")
         if isinstance(num_predict, bool) or not isinstance(num_predict, int) or num_predict <= 0:
             raise ValueError("num_predict estructurado inválido")
-        return {"temperature": temperature, "num_predict": num_predict}
+        if num_ctx is not None and (
+            isinstance(num_ctx, bool) or not isinstance(num_ctx, int) or num_ctx <= 0
+        ):
+            raise ValueError("num_ctx estructurado inválido")
+        generation_options = {"temperature": temperature, "num_predict": num_predict}
+        if num_ctx is not None:
+            generation_options["num_ctx"] = num_ctx
+        return generation_options

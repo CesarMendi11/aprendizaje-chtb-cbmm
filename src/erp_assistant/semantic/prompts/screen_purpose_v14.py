@@ -57,6 +57,7 @@ GENERATION_PARAMETERS = {
     "temperature": 0,
     "stream": False,
     "num_predict": 2048,
+    "num_ctx": 8192,
     "think": False,
 }
 PROMPT_HASH = canonical_json_hash(

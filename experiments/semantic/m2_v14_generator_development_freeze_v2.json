@@ -1,0 +1,238 @@
+{
+  "created_at": "2026-09-04T21:05:26.937595+00:00",
+  "development_materialization_transition": {
+    "active_semantic_proposals_before_v2_reset": 42,
+    "reason": "They were generated under generation_parameters_hash 11764bdb628f2cb6ba694d45080ef1cd0eab133039435ea1b8cd2e79b22d8b92, which did not explicitly freeze num_ctx=8192.",
+    "required_action_before_v2_materialization": "archive and reset ACTIVE DEVELOPMENT semantic state without changing structural authority",
+    "those_proposals_are_development_only": true,
+    "those_proposals_are_valid_under_v2_contract": false,
+    "v2_materialization_target": {
+      "active_screens": 57,
+      "eligible_screens": 55,
+      "ineligible_screens": 2,
+      "required_contract_hash": "804387ac4f995a49166a0f0db9519825caa5b143ac11bd017842a1d730aedbf8"
+    }
+  },
+  "development_model_selection": {
+    "benchmark_sha256": "9ba8a240151e52dfc0035c9f94933b1442863f75eb19b1adfd1d83f905a446f0",
+    "blind_human_review_sha256": "68737c6327be0345f0c4ad35cb53ef173470a347b8ececc54709ecca74c8c613",
+    "selected_alias": "M03",
+    "selected_model": "qwen3.5:9b",
+    "selection_reason": "M03 obtuvo 3 ACCEPT, el máximo entre los aliases, por lo que ganó en el primer criterio predefinido sin requerir desempate.",
+    "selection_rule": [
+      "1. Maximizar ACCEPT entre las 9 pantallas elegibles.",
+      "2. En empate, maximizar ACCEPT + CORRECTABLE.",
+      "3. En empate, minimizar REJECT.",
+      "4. En empate, maximizar generaciones completadas.",
+      "5. En empate, minimizar latencia mediana."
+    ],
+    "summary": {
+      "M01": {
+        "accept": 1,
+        "completion_rate_eligible": 0.666667,
+        "correctable": 5,
+        "eligible_screens": 9,
+        "generated": 6,
+        "median_latency_ms": 286558.071,
+        "model": "qwen2.5:14b",
+        "reject": 0,
+        "reviewed_generated": 6
+      },
+      "M02": {
+        "accept": 0,
+        "completion_rate_eligible": 0.888889,
+        "correctable": 4,
+        "eligible_screens": 9,
+        "generated": 8,
+        "median_latency_ms": 82110.465,
+        "model": "phi4-mini:3.8b",
+        "reject": 4,
+        "reviewed_generated": 8
+      },
+      "M03": {
+        "accept": 3,
+        "completion_rate_eligible": 0.888889,
+        "correctable": 5,
+        "eligible_screens": 9,
+        "generated": 8,
+        "median_latency_ms": 175608.656,
+        "model": "qwen3.5:9b",
+        "reject": 0,
+        "reviewed_generated": 8
+      }
+    }
+  },
+  "development_policy": {
+    "full_57_screen_generation_required_now": true,
+    "generator_configuration": "FROZEN_V2",
+    "model": "FROZEN",
+    "prompt": "FROZEN",
+    "reopen_only_if": "un defecto bloqueante reproducible detectado durante la certificación DEVELOPMENT previa al GLOBAL DEVELOPMENT FREEZE impide completar el contrato",
+    "temporary_semantic_data_allowed": true,
+    "temporary_semantic_data_must_be_removed_before_formal_evaluation": true,
+    "think_mode": "FROZEN"
+  },
+  "formal_rq_data_collection_started": false,
+  "freeze_id": "m2-v14-generator-development-freeze-v2",
+  "frozen_generator": {
+    "generation_parameters": {
+      "num_ctx": 8192,
+      "num_predict": 2048,
+      "stream": false,
+      "temperature": 0,
+      "think": false
+    },
+    "generation_parameters_hash": "804387ac4f995a49166a0f0db9519825caa5b143ac11bd017842a1d730aedbf8",
+    "model": "qwen3.5:9b",
+    "prompt_hash": "600107521e6d2b29e986d8ff07752446c7fdf632b6c27d3c726d4e26e13fae08",
+    "prompt_version": "screen-purpose-v14.1",
+    "structured_timeout_seconds": 300.0
+  },
+  "git_head_at_freeze": "d56b9b0aa294115a0692128a9a2cc3e9c86945bb",
+  "implementation_fingerprints": {
+    "ollama_structured_client.py": "18fd1c368fe8dfbf5b48d978981aa9001cd6b9953c844a621c67497fe9a09f78",
+    "screen_purpose_generation_v14.py": "5e1e8ae24372ac242fcb9abf6b71e827126b6f5c7c7be510d823f23d4cb65ded",
+    "screen_purpose_service_v14.py": "7e766d4fd61619d431d02a215a84329f5b01b064369ec5ffedce5e12b824edf8",
+    "screen_purpose_v14.py": "3063942ad03af7e1b8eb4b9b6b0663885bf6895af362b5f793b3ef1d934fca03"
+  },
+  "knowledge_version": "4a7f929598c8fa76",
+  "m1_status": "FROZEN_UNCHANGED",
+  "next_steps": [
+    "commit the minimal M2 v2 contract correction and this freeze artifact",
+    "archive the current 42 ACTIVE DEVELOPMENT semantic proposals and their relevant DEVELOPMENT review history",
+    "reset only ACTIVE DEVELOPMENT semantic proposals/review state and semantic Chroma projection; preserve M1, structural PostgreSQL authority, Neo4j structural data, and structural Chroma",
+    "regenerate all 55 semantically eligible ACTIVE screens under this single v2 contract",
+    "perform DEVELOPMENT HITL without exposing the formal RQ2 reviewer to the DEVELOPMENT proposal set",
+    "rebuild DEVELOPMENT semantic Chroma and run complete end-to-end certification",
+    "after all blockers are closed, perform GLOBAL DEVELOPMENT FREEZE",
+    "reset DEVELOPMENT semantic data again before formal RQ1/RQ2/RQ3 execution"
+  ],
+  "phase": "development",
+  "protocol_reference": {
+    "path": "experiments/protocol/protocol_v2.json",
+    "protocol_changed_for_this_reopen": false,
+    "reason": "The experimental design is unchanged. This v2 freeze records a technical DEVELOPMENT correction discovered before formal data collection.",
+    "sha256": "a7eb71e24049354483591f4e82347d6f0fc5037340d4732e2a64696fb9ec61d6"
+  },
+  "reopen_evidence": {
+    "classification": "DEVELOPMENT_BLOCKER_REOPEN",
+    "failed_generation_diagnostic": {
+      "observed": {
+        "conclusion": "The 12 JSON failures were deterministic context exhaustion at an effective 4096-token runtime context, not num_predict exhaustion.",
+        "grounding_failures": 1,
+        "json_failures": 12,
+        "length_terminated": 12,
+        "reproduced_json_failures": 12,
+        "token_total_for_every_length_failure": 4096
+      },
+      "path": "cbmm-M2-failed-generation-diagnostic-20260904_141527.json",
+      "sha256": "fdea7c01abc09ad3f2ba326197a0cd621277e2fbcf33129fe106da5c7447ee58"
+    },
+    "formal_rq_data": false,
+    "initial_materialization": {
+      "observed": {
+        "active_semantic_proposals_after": 42,
+        "fail": 13,
+        "pass": 39,
+        "targets": 52
+      },
+      "path": "cbmm-M2-57-development-generation-20260904_102111.json",
+      "sha256": "0dfefb084257d2d49abb42149d2f7c4020e711d8ae72457258822c28dc34ea3d"
+    },
+    "num_ctx_8192_pilot": {
+      "observed": {
+        "loaded_context_length": 8192,
+        "remaining_length_terminations": 0,
+        "sri_duplicate_claims_removed": 8,
+        "sri_valid_after_mechanical_dedup": true,
+        "truncation_cases_tested": 12,
+        "valid_v14": 12
+      },
+      "path": "cbmm-M2-numctx8192-pilot-20260904_150641.json",
+      "sha256": "9fc93f0df71eb08d637f889bfa6644453001270e4c7d9b339057699107b9231c"
+    },
+    "preflight": {
+      "observed": {
+        "active_screens": 57,
+        "limit_exceeded_warnings": 0,
+        "safe_evidence_pass": 57,
+        "semantically_eligible": 55,
+        "semantically_ineligible": 2
+      },
+      "path": "cbmm-M2-57-development-preflight-20260904_101239.json",
+      "sha256": "1fca934391a3500ca495eabae02d784e1abe2e2f9bba4f77d12bc274b3ef08ec"
+    }
+  },
+  "semantic_boundary": {
+    "factual_authority": "PostgreSQL + governance",
+    "llm_may": [
+      "interpretar evidencia",
+      "sintetizar señales",
+      "proponer propósito funcional",
+      "redactar claims funcionales libres",
+      "expresar incertidumbre"
+    ],
+    "llm_may_not": [
+      "añadir hechos fuera de la evidencia autorizada",
+      "convertirse en autoridad factual"
+    ],
+    "mechanical_normalization_may": [
+      "eliminar duplicación representacional exacta según normalize_text(statement)",
+      "unir evidence_refs de claims representacionalmente idénticos"
+    ],
+    "mechanical_normalization_may_not": [
+      "decidir qué capacidad funcional debe existir",
+      "mapear evidencia a una taxonomía funcional cerrada",
+      "crear claims funcionales",
+      "eliminar claims por significado inferido",
+      "relajar las reglas de grounding"
+    ],
+    "semantic_truth_authority": "human_reviewer"
+  },
+  "status": "frozen_for_full_development_materialization",
+  "supersedes": {
+    "freeze_id": "m2-v14-generator-development-freeze-v1",
+    "path": "experiments/semantic/m2_v14_generator_development_freeze_v1.json",
+    "reason": "A full 57-screen DEVELOPMENT materialization demonstrated a reproducible runtime context-capacity blocker and one representational duplicate-claim failure before GLOBAL DEVELOPMENT FREEZE.",
+    "sha256": "622a6032fbcc264699fc6e569d9050b8c208f281508655d901d753b95501cd12"
+  },
+  "think_mode_selection": {
+    "ab_artifact_sha256": "f7ca5430b1ea560c22c00f84a827aabfd5f410134459fbbe55e4e69069b9e728",
+    "ab_review_sha256": "7e3b8c5acb3f5407d5b9631b4fc2f6b744ea55be17467898c39cfa1d48061c2b",
+    "decision_rule": "think=true solo podía seleccionarse si completaba 4/4 generaciones y ganaba al menos 3/4 comparaciones ciegas.",
+    "pairwise_preference_tally_used_for_selection": false,
+    "selected_think": false,
+    "selection_reason": "think=true produjo 0/4 salidas estructuradas válidas y no cumplió la condición previa de completitud; se conserva think=false.",
+    "think_true_generated": 0,
+    "think_true_requested": 4
+  },
+  "v2_changes": {
+    "duplicate_claim_normalization": {
+      "change": "Before grounding validation, merge supported capabilities only when normalize_text(statement) is identical.",
+      "evidence_refs": "stable union",
+      "first_statement_preserved": true,
+      "functional_truth_decided_by_code": false,
+      "grounding_validator_relaxed": false,
+      "semantic_taxonomy_introduced": false,
+      "warning": "deduplicated_functional_claims:<count>"
+    },
+    "runtime_context": {
+      "change": "Explicitly freeze num_ctx=8192 for structured M2 generation.",
+      "scientific_effect": "Capacity/reproducibility correction only; it does not constrain which functional claims the LLM may propose."
+    },
+    "unchanged": [
+      "selected model qwen3.5:9b",
+      "prompt version screen-purpose-v14.1",
+      "prompt content/hash",
+      "JSON Schema",
+      "temperature=0",
+      "num_predict=2048",
+      "think=false",
+      "structured timeout=300 seconds",
+      "Safe Evidence boundary",
+      "claim evidence_refs requirement",
+      "grounding validation",
+      "human semantic truth authority"
+    ]
+  }
+}

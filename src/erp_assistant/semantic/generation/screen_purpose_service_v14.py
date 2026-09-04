@@ -45,6 +45,7 @@ class ScreenPurposeInferenceServiceV14:
             options={
                 "temperature": GENERATION_PARAMETERS["temperature"],
                 "num_predict": GENERATION_PARAMETERS["num_predict"],
+                "num_ctx": GENERATION_PARAMETERS["num_ctx"],
             },
             think=GENERATION_PARAMETERS["think"],
         )
