@@ -10,6 +10,12 @@ from pathlib import Path
 from typing import Any
 
 from erp_assistant.config.paths import PROJECT_ROOT
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
+    GENERATION_PARAMETERS,
+    GENERATION_PARAMETERS_HASH,
+    PROMPT_HASH,
+    PROMPT_VERSION,
+)
 from scripts.experiments.common import sha256_file, utc_now_iso, write_json_atomic
 from scripts.experiments.pilot_screen_purpose_v14 import run as run_pilot
 
@@ -95,29 +101,41 @@ def _percentile(values: list[float], percentile: float) -> float | None:
 def summarize_model_result(result: dict[str, Any]) -> dict[str, Any]:
     rows = result["results"]
     generated = [row for row in rows if row.get("status") == "generated"]
+    failures = [row for row in rows if row.get("status") != "generated"]
     ineligible = [
         row
-        for row in rows
-        if row.get("status") != "generated" and row.get("error_type") == "InferenceGroundingError"
+        for row in failures
+        if row.get("error_category") == "no_claimable_semantic_evidence"
+    ]
+    validation_failures = [
+        row
+        for row in failures
+        if row not in ineligible and str(row.get("error_type", "")).startswith("Inference")
     ]
     generation_failures = [
         row
-        for row in rows
-        if row.get("status") != "generated" and row.get("error_type") != "InferenceGroundingError"
+        for row in failures
+        if row not in ineligible and row not in validation_failures
     ]
     latencies = [
         float(row["generation_elapsed_ms"])
         for row in rows
         if isinstance(row.get("generation_elapsed_ms"), (int, float))
-        and row.get("error_type") != "InferenceGroundingError"
+        and row not in ineligible
     ]
     claims = sum(len(row.get("functional_claims", [])) for row in generated)
     warnings = sum(len(row.get("warnings", [])) for row in generated)
+    eligible_screens = len(rows) - len(ineligible)
     return {
         "screens": len(rows),
+        "eligible_screens": eligible_screens,
         "generated": len(generated),
         "ineligible": len(ineligible),
+        "validation_failures": len(validation_failures),
         "generation_failures": len(generation_failures),
+        "completion_rate_eligible": (
+            round(len(generated) / eligible_screens, 6) if eligible_screens else None
+        ),
         "claims": claims,
         "warnings": warnings,
         "latency_ms": {
@@ -194,11 +212,26 @@ def build_benchmark(
             "run": result,
         }
 
+    runtime_timeouts = {
+        float(result["run"]["generation_runtime"]["structured_timeout_seconds"])
+        for result in results.values()
+    }
+    if len(runtime_timeouts) != 1:
+        raise RuntimeError("Los modelos no usaron el mismo timeout estructurado")
+    structured_timeout_seconds = runtime_timeouts.pop()
+
     return {
-        "benchmark_id": "m2-v14-development-model-benchmark-v1",
+        "benchmark_id": "m2-v14-development-model-benchmark-v2",
         "purpose": "development_only_model_selection",
         "generated_at": utc_now_iso(),
         "git_head": _git_head(),
+        "generation_contract": {
+            "prompt_version": PROMPT_VERSION,
+            "prompt_hash": PROMPT_HASH,
+            "generation_parameters": GENERATION_PARAMETERS,
+            "generation_parameters_hash": GENERATION_PARAMETERS_HASH,
+            "structured_timeout_seconds": structured_timeout_seconds,
+        },
         "screen_set": {
             "set_id": screen_set["set_id"],
             "sha256": screen_set_hash,
@@ -213,8 +246,9 @@ def build_benchmark(
         "results": results,
         "selection_status": "pending_human_review",
         "selection_rule": (
-            "No seleccionar por estilo. Revisar corrección semántica, soporte de evidencia, "
-            "utilidad, omisiones, sobreinferencias y latencia sobre development."
+            "No seleccionar por estilo. Considerar cumplimiento operativo del contrato y revisar "
+            "corrección semántica, soporte de evidencia, utilidad, omisiones, sobreinferencias "
+            "y latencia sobre development."
         ),
     }
 
@@ -317,9 +351,10 @@ def main(argv=None):
         summary = benchmark["results"][model]["summary"]
         latency = summary["latency_ms"]
         print(
-            f"{model}: generated={summary['generated']}/{summary['screens']} "
-            f"ineligible={summary['ineligible']} failures={summary['generation_failures']} "
-            f"claims={summary['claims']} median_ms={latency['median']} p95_ms={latency['p95']}"
+            f"{model}: generated={summary['generated']}/{summary['eligible_screens']} eligible "
+            f"ineligible={summary['ineligible']} validation_failures={summary['validation_failures']} "
+            f"generation_failures={summary['generation_failures']} claims={summary['claims']} "
+            f"median_ms={latency['median']} p95_ms={latency['p95']}"
         )
     if review is not None:
         print(f"review_csv: {review}")

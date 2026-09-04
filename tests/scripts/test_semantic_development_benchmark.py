@@ -56,7 +56,7 @@ def test_load_development_set_rejects_duplicate_screen_ids(tmp_path):
         load_development_set(path)
 
 
-def test_summarize_model_result_excludes_pre_generation_grounding_failure_from_latency():
+def test_summarize_model_result_distinguishes_ineligible_validation_and_runtime_failures():
     summary = summarize_model_result(
         {
             "results": [
@@ -75,17 +75,28 @@ def test_summarize_model_result_excludes_pre_generation_grounding_failure_from_l
                     "status": "generation_failed",
                     "generation_elapsed_ms": 1.0,
                     "error_type": "InferenceGroundingError",
+                    "error_category": "no_claimable_semantic_evidence",
+                },
+                {
+                    "status": "generation_failed",
+                    "generation_elapsed_ms": 250.0,
+                    "error_type": "InferenceGroundingError",
+                    "error_category": "duplicate_functional_claim",
                 },
             ]
         }
     )
 
+    assert summary["screens"] == 4
+    assert summary["eligible_screens"] == 3
     assert summary["generated"] == 1
     assert summary["ineligible"] == 1
+    assert summary["validation_failures"] == 1
     assert summary["generation_failures"] == 1
+    assert summary["completion_rate_eligible"] == pytest.approx(1 / 3)
     assert summary["claims"] == 2
-    assert summary["latency_ms"]["count"] == 2
-    assert summary["latency_ms"]["mean"] == 200.0
+    assert summary["latency_ms"]["count"] == 3
+    assert summary["latency_ms"]["mean"] == 216.667
 
 
 def test_model_aliases_are_deterministic_and_do_not_expose_model_name():

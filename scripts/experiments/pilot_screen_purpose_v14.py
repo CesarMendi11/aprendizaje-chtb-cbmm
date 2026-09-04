@@ -154,6 +154,13 @@ def run(screen_ids: list[str], *, model: str | None = None):
                 row["status"] = "generation_failed"
                 row["error_type"] = type(exc).__name__
                 row["error"] = str(exc)[:500]
+                for attribute in ("stage", "category", "value_length", "value_type"):
+                    value = getattr(exc, attribute, None)
+                    if value is not None:
+                        row[f"error_{attribute}"] = value
+                location = getattr(exc, "location", ())
+                if location:
+                    row["error_location"] = list(location)
             else:
                 row["generation_elapsed_ms"] = round((time.perf_counter() - started) * 1000, 3)
                 candidate = generated.inference
@@ -191,6 +198,9 @@ def run(screen_ids: list[str], *, model: str | None = None):
             "knowledge_version": version.knowledge_version,
             "knowledge_version_id": str(version.id),
             "generation_model": settings.model,
+            "generation_runtime": {
+                "structured_timeout_seconds": settings.structured_timeout,
+            },
             "screens_requested": len(requested),
             "semantic_persistence_before": before,
             "semantic_persistence_after": after,
