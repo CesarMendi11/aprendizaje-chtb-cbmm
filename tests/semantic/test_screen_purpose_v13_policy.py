@@ -163,7 +163,7 @@ def test_table_and_columns_create_structural_view():
     assert refs == {"screen:test", "table:results", "table_column:name"}
 
 
-def test_raw_structure_without_grounded_action_fails_semantic_eligibility():
+def test_active_v14_eligibility_does_not_require_v13_action_vocabulary():
     evidence = package(
         controls=[
             ControlEvidence(
@@ -176,8 +176,8 @@ def test_raw_structure_without_grounded_action_fails_semantic_eligibility():
     )
     assessment = evaluate_screen_semantic_eligibility(evidence)
     assert assessment.functional_signal_count == 1
-    assert assessment.eligible is False
-    assert assessment.reasons == ("missing_grounded_action_support",)
+    assert assessment.eligible is True
+    assert assessment.reasons == ()
 
 
 def test_retenciones_like_contract_preserves_search_navigate_and_view():

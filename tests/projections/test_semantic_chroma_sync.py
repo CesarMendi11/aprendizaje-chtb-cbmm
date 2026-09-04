@@ -78,6 +78,7 @@ def seed(
     approve=True,
     prompt_hash="b" * 64,
     purpose="Permite buscar Retenciones desde la pantalla.",
+    capability_statement="Permite buscar mediante los criterios disponibles.",
     include_view=False,
 ):
     with factory.begin() as session:
@@ -155,7 +156,7 @@ def seed(
         package = provisional.model_copy(update={"evidence_hash": digest})
         capabilities = [
             {
-                "statement": "Permite buscar mediante los criterios disponibles.",
+                "statement": capability_statement,
                 "evidence_refs": ["control:buscar"],
             }
         ]
@@ -225,6 +226,32 @@ def test_prepare_projects_only_fresh_human_approved_semantics():
         assert document.metadata["review_status"] == "approved"
         assert document.metadata["review_revision"] == 1
         assert document.metadata["document_kind"] == "semantic"
+    engine.dispose()
+
+
+def test_prepare_projects_v14_free_semantics_with_claimable_provenance():
+    engine, factory = build_factory()
+    _version_id, erp_id, knowledge_version, _screen_id, _proposal_id, package = seed(
+        factory,
+        capability_statement=(
+            "Ayuda a localizar información relevante para una revisión operativa."
+        ),
+    )
+
+    with factory() as session:
+        service = SemanticChromaSyncService(
+            session,
+            evidence_builder=FakeEvidenceBuilder(package),
+        )
+        _version, documents, summary = service.prepare(
+            erp_id=erp_id,
+            knowledge_version=knowledge_version,
+        )
+
+        assert summary["documents"] == 1
+        assert summary["skipped"] == 0
+        assert "Ayuda a localizar información relevante" in documents[0].text
+
     engine.dispose()
 
 

@@ -520,7 +520,7 @@ def test_reviewer_and_reason_are_strict(api, body):
     )
 
 
-@pytest.mark.parametrize("mutation", ["screen", "type", "ref", "narrative", "action"])
+@pytest.mark.parametrize("mutation", ["screen", "type", "ref"])
 def test_invalid_corrections_are_rejected_and_rolled_back(api, mutation):
     client, factory = api
     semantic_id, corrected, _ = seed(factory, suffix=mutation)
@@ -531,10 +531,6 @@ def test_invalid_corrections_are_rejected_and_rolled_back(api, mutation):
         corrected["semantic_type"] = "other"
     elif mutation == "ref":
         corrected["supported_capabilities"][0]["evidence_refs"] = ["control:unknown"]
-    elif mutation == "narrative":
-        corrected["supported_capabilities"][0]["statement"] = "Usa control:narrative aquí."
-    elif mutation == "action":
-        corrected["supported_capabilities"][0]["statement"] = "Permite eliminar registros."
     response = client.post(
         f"/api/admin/semantic-proposals/{semantic_id}/correct",
         json=action_body(corrected_payload=corrected),
@@ -546,6 +542,32 @@ def test_invalid_corrections_are_rejected_and_rolled_back(api, mutation):
         )
         assert proposal.current_review_status == ReviewStatus.PENDING_REVIEW
         assert session.scalar(select(func.count()).select_from(SemanticReviewAction)) == 0
+
+
+def test_v14_correction_allows_free_semantic_interpretation_with_claimable_provenance(api):
+    client, factory = api
+    semantic_id, corrected, _ = seed(factory, suffix="v14-free-claim")
+    corrected = {
+        **corrected,
+        "purpose_summary": "Apoya la localización y revisión operativa de registros.",
+        "supported_capabilities": [
+            {
+                "statement": (
+                    "Ayuda a localizar información relevante para una revisión operativa."
+                ),
+                "evidence_refs": ["control:v14-free-claim"],
+            }
+        ],
+    }
+
+    response = client.post(
+        f"/api/admin/semantic-proposals/{semantic_id}/correct",
+        json=action_body(corrected_payload=corrected),
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["current_review_status"] == "corrected"
+    assert response.json()["effective_payload"] == corrected
 
 
 @pytest.mark.parametrize("change", [{"expected_status": "approved"}, {"expected_revision": 1}])

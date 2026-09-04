@@ -66,6 +66,23 @@ def test_semantic_eligibility_reports_both_missing_conditions_deterministically(
     )
 
 
+def test_unlabeled_control_does_not_create_v14_semantic_eligibility():
+    base = package(functional=False)
+    unlabeled = ControlEvidence(
+        control_id="control:unlabeled",
+        label="unlabeled control",
+        control_type="button",
+        mutative=False,
+    )
+    evidence = base.model_copy(update={"controls": [unlabeled]})
+
+    assessment = evaluate_screen_semantic_eligibility(evidence)
+
+    assert assessment.eligible is False
+    assert assessment.functional_signal_count == 0
+    assert assessment.reasons == ("missing_functional_structure",)
+
+
 def test_network_evidence_does_not_create_semantic_eligibility():
     trace = NetworkTraceEvidence(
         evidence_id="evidence:network",

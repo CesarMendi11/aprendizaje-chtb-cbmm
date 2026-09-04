@@ -47,8 +47,9 @@ from erp_assistant.semantic.services.semantic_exceptions import (
     SemanticTransitionError,
 )
 from erp_assistant.semantic.services.semantic_review_service import SemanticReviewService
-from erp_assistant.semantic.validators.screen_purpose_grounding import validate_capability_grounding
-from erp_assistant.semantic.validators.screen_purpose_validator import allowed_references
+from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
+    validate_v14_claim_references,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 router = APIRouter(
@@ -276,15 +277,7 @@ def _review(
             package = current_package
             if body.corrected_payload.screen_id != package.screen_id:
                 raise SemanticPayloadError("screen_id no puede cambiar")
-            unknown_refs = {
-                reference
-                for capability in body.corrected_payload.supported_capabilities
-                for reference in capability.evidence_refs
-                if reference not in allowed_references(package)
-            }
-            if unknown_refs:
-                raise SemanticPayloadError("evidence_refs contiene referencias desconocidas")
-            validate_capability_grounding(body.corrected_payload, package)
+            validate_v14_claim_references(body.corrected_payload, package)
             changed = service.correct(
                 proposal.id,
                 body.corrected_payload.model_dump(mode="json"),

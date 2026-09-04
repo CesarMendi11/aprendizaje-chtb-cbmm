@@ -6,10 +6,8 @@ from pydantic import ValidationError
 
 from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
 from erp_assistant.semantic.schemas import ScreenEvidencePackage, ScreenPurposeInference
-from erp_assistant.semantic.validators import (
-    allowed_references,
-    build_grounding_plan,
-    validate_capability_grounding,
+from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
+    validate_v14_claim_references,
 )
 
 
@@ -27,8 +25,8 @@ def assess_screen_purpose_policy_compatibility(
     """Revalidate an effective semantic payload against the current grounding policy.
 
     Historical prompt identity is provenance, not current authorization. A reviewed
-    payload remains usable only while its effective claims still validate against
-    the current Safe Evidence and Grounding Plan.
+    payload remains usable only while its claims still point to currently claimable
+    structural evidence. Semantic truth remains a human-review responsibility.
     """
     if not isinstance(payload, dict):
         return SemanticPolicyCompatibility(False, "invalid_effective_payload")
@@ -41,20 +39,8 @@ def assess_screen_purpose_policy_compatibility(
     if inference.screen_id != package.screen_id:
         return SemanticPolicyCompatibility(False, "effective_screen_mismatch")
 
-    allowed = allowed_references(package)
-    if any(
-        reference not in allowed
-        for claim in inference.supported_capabilities
-        for reference in claim.evidence_refs
-    ):
-        return SemanticPolicyCompatibility(False, "unknown_effective_reference")
-
     try:
-        validate_capability_grounding(
-            inference,
-            package,
-            build_grounding_plan(package),
-        )
+        validate_v14_claim_references(inference, package)
     except ScreenPurposeGenerationError as exc:
         return SemanticPolicyCompatibility(
             False,

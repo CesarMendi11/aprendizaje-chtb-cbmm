@@ -122,6 +122,32 @@ def test_authorizes_only_current_postgresql_semantic_projection():
     assert row["score"] == 0.92
 
 
+def test_authorizes_v14_free_semantic_claim_with_claimable_reference():
+    service, version, _proposal, _package, hit = make_case()
+    service.effective.payload = {
+        "semantic_type": "screen_purpose",
+        "screen_id": "screen:retenciones",
+        "purpose_summary": "Apoya la localización y revisión operativa de registros.",
+        "supported_capabilities": [
+            {
+                "statement": (
+                    "Ayuda a localizar información relevante para una revisión operativa."
+                ),
+                "evidence_refs": ["control:buscar"],
+            }
+        ],
+        "limitations": [],
+        "uncertainties": [],
+    }
+
+    rows = service.authorize_hits([hit], version=version)
+
+    assert len(rows) == 1
+    assert rows[0]["supported_capabilities"] == [
+        "Ayuda a localizar información relevante para una revisión operativa."
+    ]
+
+
 def test_rejects_projection_when_postgresql_status_or_revision_changed():
     service, version, proposal, _package, hit = make_case()
     proposal.current_review_status = ReviewStatus.REJECTED

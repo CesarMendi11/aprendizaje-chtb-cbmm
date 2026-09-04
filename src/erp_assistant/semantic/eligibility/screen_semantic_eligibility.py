@@ -5,13 +5,14 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from erp_assistant.semantic.schemas.screen_evidence import ScreenEvidencePackage
-from erp_assistant.semantic.validators.screen_purpose_grounding_plan import build_grounding_plan
+from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
+    meaningful_semantic_signal_count,
+)
 
 SemanticEligibilityStatus = Literal["eligible", "insufficient_evidence"]
 SemanticEligibilityReason = Literal[
     "missing_primary_evidence",
     "missing_functional_structure",
-    "missing_grounded_action_support",
 ]
 
 
@@ -30,21 +31,12 @@ def evaluate_screen_semantic_eligibility(
     package: ScreenEvidencePackage,
 ) -> SemanticEligibilityAssessment:
     """Decide deterministically whether a safe screen package may reach the LLM."""
-    functional_signal_count = (
-        len(package.fields)
-        + len(package.controls)
-        + len(package.tables)
-        + len(package.ui_states)
-        + len(package.events)
-        + len(package.transitions)
-    )
+    functional_signal_count = meaningful_semantic_signal_count(package)
     reasons: list[SemanticEligibilityReason] = []
     if not package.primary_evidence_ids:
         reasons.append("missing_primary_evidence")
     if functional_signal_count <= 0:
         reasons.append("missing_functional_structure")
-    elif not build_grounding_plan(package).supported_actions:
-        reasons.append("missing_grounded_action_support")
     return SemanticEligibilityAssessment(
         status="eligible" if not reasons else "insufficient_evidence",
         eligible=not reasons,
