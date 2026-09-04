@@ -25,6 +25,18 @@ def test_query_planner_preserves_current_intent_contract():
         assert planner.plan(question).intent == expected
 
 
+def test_query_planner_does_not_treat_descriptive_module_mentions_as_location_requests():
+    planner = QueryPlanner()
+
+    assert (
+        planner.plan(
+            "Cuéntame qué información y acciones se observan en Modulo de Cajas."
+        ).intent
+        is None
+    )
+    assert planner.plan("¿Qué módulo contiene la pantalla Año?").intent == QueryIntent.LOCATE_SCREEN
+
+
 def test_query_plan_exposes_downstream_requirements_without_resolving_entities():
     planner = QueryPlanner()
 

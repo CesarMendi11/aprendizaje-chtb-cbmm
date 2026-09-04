@@ -124,8 +124,11 @@ class QueryPlanner:
             return QueryIntent.LIST_FIELDS
         if re.search(r"\b(dónde|donde|ingreso|aparece)\b.*\b(campo|ruc|identificaci)", q):
             return QueryIntent.LOCATE_FIELD
-        if re.search(r"\b(módulo|modulo)\b", q) and re.search(
-            r"\b(qué|que|cuál|cual|dónde|donde|está|esta|pertenece|pantalla)\b", q
+        if re.search(r"\b(módulo|modulo)\b", q) and (
+            re.search(r"\b(?:en|a)\s+(?:qué|que|cuál|cual)\s+(?:módulo|modulo)\b", q)
+            or re.search(r"\b(?:qué|que|cuál|cual)\s+(?:módulo|modulo)\b", q)
+            or re.search(r"\b(?:módulo|modulo)\b.*\b(?:está|esta|pertenece)\b", q)
+            or re.search(r"\b(?:está|esta|pertenece)\b.*\b(?:módulo|modulo)\b", q)
         ):
             return QueryIntent.LOCATE_SCREEN
         if re.search(r"\b(columnas|columna|tabla)\b", q):
