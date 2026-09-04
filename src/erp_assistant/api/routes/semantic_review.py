@@ -34,6 +34,7 @@ from erp_assistant.semantic.evidence.screen_evidence_builder import (
     ScreenEvidenceError,
 )
 from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
+from erp_assistant.semantic.schemas import ScreenPurposeInference
 from erp_assistant.semantic.services.semantic_effective_payload_service import (
     SemanticEffectivePayloadService,
 )
@@ -51,6 +52,7 @@ from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
     validate_v14_claim_references,
 )
 from erp_assistant.structural.canonical.enums import ReviewStatus
+from erp_assistant.structural.canonical.ids import normalize_text
 
 router = APIRouter(
     prefix="/semantic-proposals",
@@ -268,6 +270,8 @@ def _review(
             "reviewer_subject": body.reviewer_id,
             "source": "admin_api",
             "review_notes": body.reason,
+            "review_started_at": body.review_started_at,
+            "review_duration_ms": body.review_duration_ms,
         }
         if action == "correct":
             assert isinstance(body, CorrectionRequest)
@@ -278,9 +282,40 @@ def _review(
             if body.corrected_payload.screen_id != package.screen_id:
                 raise SemanticPayloadError("screen_id no puede cambiar")
             validate_v14_claim_references(body.corrected_payload, package)
+
+            def claim_key(claim) -> tuple[str, tuple[str, ...]]:
+                return (
+                    normalize_text(claim.statement),
+                    tuple(sorted(claim.evidence_refs)),
+                )
+
+            corrected_claims = {
+                claim_key(claim)
+                for claim in body.corrected_payload.supported_capabilities
+            }
+            effective_before = ScreenPurposeInference.model_validate(
+                SemanticEffectivePayloadService(session).effective_payload(proposal.id)
+            )
+            existing_claims = {
+                claim_key(claim) for claim in effective_before.supported_capabilities
+            }
+            human_claims = [
+                claim.model_dump(mode="json") for claim in body.human_added_claims
+            ]
+            for claim in body.human_added_claims:
+                key = claim_key(claim)
+                if key not in corrected_claims:
+                    raise SemanticPayloadError(
+                        "Cada human_added_claim debe existir en corrected_payload"
+                    )
+                if key in existing_claims:
+                    raise SemanticPayloadError(
+                        "human_added_claims debe contener solo afirmaciones nuevas"
+                    )
             changed = service.correct(
                 proposal.id,
                 body.corrected_payload.model_dump(mode="json"),
+                human_added_claims=human_claims,
                 **kwargs,
             )
         else:
@@ -288,8 +323,6 @@ def _review(
         effective_service = SemanticEffectivePayloadService(session)
         effective = effective_service.effective_payload(changed.id)
         publishable = effective_service.publishable_payload(changed.id)
-        from erp_assistant.semantic.schemas import ScreenPurposeInference
-
         return ReviewResultResponse(
             action=action,
             semantic_id=semantic_id,

@@ -352,6 +352,92 @@ def test_concurrent_requests_use_independent_sessions_and_http_transactions(api)
     assert len(rollbacks) == 1
 
 
+def test_correction_records_human_added_claim_provenance_and_review_timing(api):
+    client, factory = api
+    semantic_id, source, _ = seed(factory, suffix="human-trace")
+    corrected = {
+        **source,
+        "purpose_summary": "Permite buscar y revisar registros sintéticos.",
+        "supported_capabilities": [
+            *source["supported_capabilities"],
+            {
+                "statement": "Permite ingresar un código para filtrar registros.",
+                "evidence_refs": ["field:human-trace"],
+            },
+        ],
+    }
+    response = client.post(
+        f"/api/admin/semantic-proposals/{semantic_id}/correct",
+        json=action_body(
+            corrected_payload=corrected,
+            human_added_claims=[
+                {
+                    "statement": "Permite ingresar un código para filtrar registros.",
+                    "evidence_refs": ["field:human-trace"],
+                    "provenance": "human",
+                }
+            ],
+            review_started_at="2020-01-01T00:00:00Z",
+            review_duration_ms=12_345,
+        ),
+    )
+    assert response.status_code == 200, response.text
+
+    detail = client.get(f"/api/admin/semantic-proposals/{semantic_id}").json()
+    action = detail["review_history"][0]
+
+    assert action["human_added_claims"] == [
+        {
+            "statement": "Permite ingresar un código para filtrar registros.",
+            "evidence_refs": ["field:human-trace"],
+            "provenance": "human",
+        }
+    ]
+    assert action["review_duration_ms"] == 12_345
+    assert action["review_started_at"].startswith("2020-01-01T00:00:00")
+
+    with factory() as session:
+        stored = session.scalar(
+            select(SemanticReviewAction).join(SemanticProposal).where(
+                SemanticProposal.semantic_id == semantic_id
+            )
+        )
+        assert stored is not None
+        assert stored.human_added_claims[0]["provenance"] == "human"
+        assert stored.review_duration_ms == 12_345
+        assert stored.review_started_at is not None
+
+
+def test_human_added_claim_must_be_new_and_present_in_corrected_payload(api):
+    client, factory = api
+    semantic_id, source, _ = seed(factory, suffix="human-invalid")
+    duplicate = source["supported_capabilities"][0]
+
+    response = client.post(
+        f"/api/admin/semantic-proposals/{semantic_id}/correct",
+        json=action_body(
+            corrected_payload={**source, "purpose_summary": "Resumen corregido."},
+            human_added_claims=[{**duplicate, "provenance": "human"}],
+        ),
+    )
+    assert response.status_code == 422
+
+    absent = {
+        "statement": "Permite usar el campo Código como filtro.",
+        "evidence_refs": ["field:human-invalid"],
+        "provenance": "human",
+    }
+
+    response = client.post(
+        f"/api/admin/semantic-proposals/{semantic_id}/correct",
+        json=action_body(
+            corrected_payload={**source, "purpose_summary": "Otro resumen corregido."},
+            human_added_claims=[absent],
+        ),
+    )
+    assert response.status_code == 422
+
+
 def test_pagination_filters_detail_and_sanitized_evidence(api):
     client, factory = api
     first, source, _ = seed(factory, suffix="first")

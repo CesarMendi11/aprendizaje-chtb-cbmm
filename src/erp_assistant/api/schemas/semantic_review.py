@@ -6,7 +6,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from erp_assistant.persistence.postgres.enums import SemanticLifecycleOrigin
-from erp_assistant.semantic.schemas import ScreenPurposeInference
+from erp_assistant.semantic.schemas import (
+    CapabilityClaim,
+    ScreenPurposeInference,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 
@@ -46,6 +49,10 @@ class SemanticProposalListResponse(StrictResponseModel):
     next_offset: int | None
 
 
+class HumanAddedClaim(CapabilityClaim):
+    provenance: Literal["human"] = "human"
+
+
 class ReviewActionResponse(StrictResponseModel):
     action: str
     previous_status: ReviewStatus
@@ -54,6 +61,9 @@ class ReviewActionResponse(StrictResponseModel):
     reviewer_id: str
     reviewer_identity_verified: Literal[False] = False
     corrected_payload: ScreenPurposeInference | None
+    human_added_claims: tuple[HumanAddedClaim, ...] = ()
+    review_started_at: datetime | None = None
+    review_duration_ms: int | None = None
     created_at: datetime
 
 
@@ -110,6 +120,8 @@ class ReviewRequest(StrictResponseModel):
     reason: str = Field(min_length=1, max_length=4000)
     expected_status: ReviewStatus
     expected_revision: int = Field(ge=0)
+    review_started_at: datetime | None = None
+    review_duration_ms: int | None = Field(default=None, ge=0, le=86_400_000)
 
     @field_validator("reviewer_id", "reason")
     @classmethod
@@ -123,6 +135,7 @@ class ReviewRequest(StrictResponseModel):
 
 class CorrectionRequest(ReviewRequest):
     corrected_payload: ScreenPurposeInference
+    human_added_claims: tuple[HumanAddedClaim, ...] = ()
 
 
 class ReviewResultResponse(EffectivePayloadResponse):

@@ -486,6 +486,10 @@ class SemanticReviewAction(TimestampMixin, Base):
         CheckConstraint("trim(source) <> ''", name="source_nonempty"),
         CheckConstraint("length(proposal_content_hash) = 64", name="proposal_hash_length"),
         CheckConstraint(
+            "review_duration_ms IS NULL OR review_duration_ms >= 0",
+            name="review_duration_ms_nonnegative",
+        ),
+        CheckConstraint(
             "action IN ('approve', 'reject', 'correct', 'reset_to_pending')",
             name="action_supported",
         ),
@@ -511,6 +515,11 @@ class SemanticReviewAction(TimestampMixin, Base):
     previous_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus), nullable=False)
     new_status: Mapped[ReviewStatus] = mapped_column(StringEnum(ReviewStatus), nullable=False)
     corrected_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    human_added_claims: Mapped[list[Any]] = mapped_column(
+        JSONType, default=list, nullable=False
+    )
+    review_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    review_duration_ms: Mapped[int | None] = mapped_column(Integer)
     review_notes: Mapped[str | None] = mapped_column(String(4000))
     reviewer_subject: Mapped[str] = mapped_column(String(240), nullable=False)
     proposal_content_hash: Mapped[str] = mapped_column(String(64), nullable=False)

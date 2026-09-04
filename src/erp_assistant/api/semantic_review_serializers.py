@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from erp_assistant.api.schemas.semantic_review import (
     GenerationTraceResponse,
+    HumanAddedClaim,
     ReviewActionResponse,
     ScreenEvidenceReviewResponse,
     SemanticProposalDetailResponse,
@@ -99,6 +100,12 @@ def proposal_detail(proposal: SemanticProposal, session) -> SemanticProposalDeta
                 if action.corrected_payload is not None
                 else None
             ),
+            human_added_claims=tuple(
+                HumanAddedClaim.model_validate(item)
+                for item in action.human_added_claims
+            ),
+            review_started_at=action.review_started_at,
+            review_duration_ms=action.review_duration_ms,
             created_at=action.created_at,
         )
         for action in actions

@@ -224,6 +224,11 @@ def semantic_review_action_payload(action: Any) -> dict[str, Any]:
         "previous_status": str(action.previous_status),
         "new_status": str(action.new_status),
         "corrected_payload": copy.deepcopy(action.corrected_payload),
+        "human_added_claims": copy.deepcopy(action.human_added_claims),
+        "review_started_at": (
+            action.review_started_at.isoformat() if action.review_started_at else None
+        ),
+        "review_duration_ms": action.review_duration_ms,
         "review_notes": action.review_notes,
         "reviewer_subject": action.reviewer_subject,
         "source": action.source,
