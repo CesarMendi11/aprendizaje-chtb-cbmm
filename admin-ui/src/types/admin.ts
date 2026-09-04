@@ -163,6 +163,9 @@ export interface CapabilityClaim {
   statement: string;
   evidence_refs: string[];
 }
+export interface HumanAddedClaim extends CapabilityClaim {
+  provenance: "human";
+}
 export interface ScreenPurposeInference {
   semantic_type: "screen_purpose";
   screen_id: string;
@@ -232,6 +235,9 @@ export interface ReviewHistoryItem {
   reviewer_id: string;
   reviewer_identity_verified: false;
   corrected_payload: ScreenPurposeInference | null;
+  human_added_claims: HumanAddedClaim[];
+  review_started_at: string | null;
+  review_duration_ms: number | null;
   created_at: string;
   diagnostic: string | null;
 }
@@ -420,10 +426,13 @@ export interface SemanticReviewRequest {
   reason: string;
   expected_status: ReviewStatus;
   expected_revision: number;
+  review_started_at: string;
+  review_duration_ms: number;
 }
 
 export interface SemanticCorrectionRequest extends SemanticReviewRequest {
   corrected_payload: ScreenPurposeInference;
+  human_added_claims: HumanAddedClaim[];
 }
 
 export interface SemanticReviewResult {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AdminApiError,
   approveSemanticProposal,
@@ -9,6 +9,7 @@ import {
 } from "../../api/client";
 import type {
   AdminProposalSummary,
+  CapabilityClaim,
   NetworkTraceEvidence,
   PipelineJobDetail,
   ScreenPurposeInference,
@@ -20,6 +21,13 @@ import { StatusBadge } from "../../components/StatusBadge";
 type Tab = "summary" | "structure" | "inference" | "traceability";
 export type ScreenDetailMode = "full" | "structural" | "semantic";
 type SemanticAction = "approve" | "correct" | "reject";
+type EditableCapability = CapabilityClaim & { origin: "generated" | "human" };
+type SemanticCorrectionDraft = Omit<
+  ScreenPurposeInference,
+  "supported_capabilities"
+> & {
+  supported_capabilities: EditableCapability[];
+};
 const allTabs: { id: Tab; label: string }[] = [
   { id: "summary", label: "Resumen" },
   { id: "structure", label: "Estructura" },
@@ -48,6 +56,119 @@ const messageOf = (error: unknown) =>
     : error instanceof Error
       ? error.message
       : "Ocurrió un error inesperado.";
+function correctionDraftFrom(
+  value: ScreenPurposeInference | null,
+): SemanticCorrectionDraft | null {
+  if (!value) return null;
+  return {
+    ...value,
+    supported_capabilities: value.supported_capabilities.map((claim) => ({
+      ...claim,
+      evidence_refs: [...claim.evidence_refs],
+      origin: "generated",
+    })),
+    limitations: [...value.limitations],
+    uncertainties: [...value.uncertainties],
+  };
+}
+
+function formatDuration(value: number | null) {
+  if (value === null) return "No registrado";
+  const totalSeconds = Math.max(0, Math.floor(value / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function meaningfulEvidenceLabel(value: string | null) {
+  const normalized = (value ?? "").trim().toLocaleLowerCase();
+  return !["", "unlabeled control", "control sin etiqueta", "sin etiqueta"].includes(
+    normalized,
+  );
+}
+
+function claimableEvidenceIds(context: ScreenReviewContextResponse) {
+  const evidence = context.structural_evidence;
+  const values: string[] = [];
+
+  for (const field of evidence.fields)
+    if (meaningfulEvidenceLabel(field.label)) values.push(field.field_id);
+
+  for (const control of evidence.controls)
+    if (meaningfulEvidenceLabel(control.label)) values.push(control.control_id);
+
+  for (const table of evidence.tables) {
+    if (meaningfulEvidenceLabel(table.name)) values.push(table.table_id);
+    for (const column of table.columns)
+      if (meaningfulEvidenceLabel(column.label)) values.push(column.column_id);
+  }
+
+  const screenTitle = (evidence.screen_title ?? "").trim().toLocaleLowerCase();
+  for (const state of evidence.ui_states) {
+    const title = state.title.trim().toLocaleLowerCase();
+    if (title && title !== screenTitle) values.push(state.state_id);
+  }
+
+  for (const event of evidence.events) {
+    if (event.category.trim().toLocaleLowerCase() === "expand menu") continue;
+    if (meaningfulEvidenceLabel(event.label)) values.push(event.event_id);
+  }
+
+  for (const transition of evidence.transitions) {
+    const category = transition.category.trim().toLocaleLowerCase();
+    if (category && category !== "expand menu")
+      values.push(transition.transition_id);
+  }
+
+  return values;
+}
+
+function evidenceLabel(
+  evidenceId: string,
+  context: ScreenReviewContextResponse,
+) {
+  const evidence = context.structural_evidence;
+  if (evidenceId === evidence.screen_id)
+    return `Pantalla · ${evidence.screen_title ?? context.screen.title ?? "Sin título"}`;
+  if (evidence.module?.module_id === evidenceId)
+    return `Módulo · ${evidence.module.name}`;
+
+  const field = evidence.fields.find((item) => item.field_id === evidenceId);
+  if (field) return `Campo · ${field.label}`;
+
+  const control = evidence.controls.find(
+    (item) => item.control_id === evidenceId,
+  );
+  if (control) return `Control · ${control.label}`;
+
+  for (const table of evidence.tables) {
+    if (table.table_id === evidenceId) return `Tabla · ${table.name}`;
+    const column = table.columns.find((item) => item.column_id === evidenceId);
+    if (column) return `Columna · ${table.name} / ${column.label}`;
+  }
+
+  const state = evidence.ui_states.find((item) => item.state_id === evidenceId);
+  if (state) return `Estado UI · ${state.title}`;
+
+  const event = evidence.events.find((item) => item.event_id === evidenceId);
+  if (event) return `Evento · ${event.label}`;
+
+  const transition = evidence.transitions.find(
+    (item) => item.transition_id === evidenceId,
+  );
+  if (transition) return `Transición · ${transition.category}`;
+
+  const network = evidence.network_traces.find(
+    (item) => item.evidence_id === evidenceId,
+  );
+  if (network) {
+    const endpoints = network.endpoint_paths.slice(0, 2).join(", ");
+    return `Network · ${endpoints || network.evidence_id}`;
+  }
+
+  return evidenceId;
+}
+
 function List({
   values,
   empty = "No disponible en el snapshot de demostración.",
@@ -117,7 +238,11 @@ export function ScreenDetail({
   const [reviewer, setReviewer] = useState("");
   const [reason, setReason] = useState("");
   const [correctionMode, setCorrectionMode] = useState(false);
-  const [correctionText, setCorrectionText] = useState("");
+  const [correctionDraft, setCorrectionDraft] =
+    useState<SemanticCorrectionDraft | null>(null);
+  const [reviewElapsedMs, setReviewElapsedMs] = useState(0);
+  const reviewStartedAtRef = useRef<string | null>(null);
+  const reviewStartedMsRef = useRef<number | null>(null);
   const [actionBusy, setActionBusy] = useState<SemanticAction | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -143,13 +268,42 @@ export function ScreenDetail({
 
   useEffect(() => {
     setCorrectionMode(false);
-    setCorrectionText(
-      JSON.stringify(proposal?.effective_payload ?? p ?? {}, null, 2),
+    setCorrectionDraft(
+      correctionDraftFrom(proposal?.effective_payload ?? p ?? null),
     );
     setActionMessage(null);
     setActionError(null);
     setInferenceJob(null);
-  }, [context.screen.screen_id, proposal?.summary.semantic_id]);
+
+    if (
+      mode !== "structural" &&
+      proposal?.summary.current_review_status === "pending_review" &&
+      proposalFresh
+    ) {
+      reviewStartedAtRef.current = new Date().toISOString();
+      reviewStartedMsRef.current = Date.now();
+      setReviewElapsedMs(0);
+    } else {
+      reviewStartedAtRef.current = null;
+      reviewStartedMsRef.current = null;
+      setReviewElapsedMs(0);
+    }
+  }, [
+    context.screen.screen_id,
+    proposal?.summary.semantic_id,
+    proposal?.summary.review_revision,
+    proposalFresh,
+    mode,
+  ]);
+
+  useEffect(() => {
+    if (!reviewable || reviewStartedMsRef.current === null) return;
+    const timer = window.setInterval(() => {
+      const started = reviewStartedMsRef.current;
+      if (started !== null) setReviewElapsedMs(Date.now() - started);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [reviewable, context.screen.screen_id, proposal?.summary.semantic_id]);
 
   async function refreshAll() {
     await onRefresh();
@@ -207,14 +361,22 @@ export function ScreenDetail({
       );
       return;
     }
-    setActionBusy(action);
     setActionError(null);
     setActionMessage(null);
+    const reviewStartedAt = reviewStartedAtRef.current;
+    const reviewStartedMs = reviewStartedMsRef.current;
+    if (!reviewStartedAt || reviewStartedMs === null) {
+      setActionError("No se pudo iniciar el cronómetro de revisión.");
+      return;
+    }
+    setActionBusy(action);
     const base = {
       reviewer_id: cleanReviewer,
       reason: cleanReason,
       expected_status: proposal.summary.current_review_status,
       expected_revision: proposal.summary.review_revision,
+      review_started_at: reviewStartedAt,
+      review_duration_ms: Math.max(0, Date.now() - reviewStartedMs),
     };
     try {
       if (action === "approve")
@@ -222,19 +384,53 @@ export function ScreenDetail({
       if (action === "reject")
         await rejectSemanticProposal(proposal.summary.semantic_id, base);
       if (action === "correct") {
-        let corrected: unknown;
-        try {
-          corrected = JSON.parse(correctionText);
-        } catch {
-          throw new Error("El JSON corregido no es válido.");
-        }
-        if (!isScreenPurposeInference(corrected))
+        if (!correctionDraft)
+          throw new Error("No existe un borrador semántico para corregir.");
+
+        const purposeSummary = correctionDraft.purpose_summary.trim();
+        if (!purposeSummary)
+          throw new Error("El propósito no puede quedar vacío.");
+
+        const capabilities = correctionDraft.supported_capabilities.map(
+          ({ origin: _origin, ...claim }) => ({
+            statement: claim.statement.trim(),
+            evidence_refs: [...new Set(claim.evidence_refs)],
+          }),
+        );
+
+        if (capabilities.some((claim) => !claim.statement))
+          throw new Error("Cada afirmación debe contener texto.");
+
+        if (capabilities.some((claim) => claim.evidence_refs.length === 0))
           throw new Error(
-            "El JSON corregido no cumple la forma mínima de ScreenPurposeInference.",
+            "Cada afirmación debe conservar al menos una evidencia.",
           );
+
+        const corrected: ScreenPurposeInference = {
+          semantic_type: correctionDraft.semantic_type,
+          screen_id: correctionDraft.screen_id,
+          purpose_summary: purposeSummary,
+          supported_capabilities: capabilities,
+          limitations: correctionDraft.limitations
+            .map((item) => item.trim())
+            .filter(Boolean),
+          uncertainties: correctionDraft.uncertainties
+            .map((item) => item.trim())
+            .filter(Boolean),
+        };
+
+        const humanAddedClaims = correctionDraft.supported_capabilities
+          .filter((claim) => claim.origin === "human")
+          .map((claim) => ({
+            statement: claim.statement.trim(),
+            evidence_refs: [...new Set(claim.evidence_refs)],
+            provenance: "human" as const,
+          }));
+
         await correctSemanticProposal(proposal.summary.semantic_id, {
           ...base,
           corrected_payload: corrected,
+          human_added_claims: humanAddedClaims,
         });
       }
       setActionMessage(
@@ -396,7 +592,8 @@ export function ScreenDetail({
               reviewer={reviewer}
               reason={reason}
               correctionMode={correctionMode}
-              correctionText={correctionText}
+              correctionDraft={correctionDraft}
+              reviewElapsedMs={reviewElapsedMs}
               actionBusy={actionBusy}
               actionMessage={actionMessage}
               actionError={actionError}
@@ -406,7 +603,7 @@ export function ScreenDetail({
               onReviewer={setReviewer}
               onReason={setReason}
               onCorrectionMode={setCorrectionMode}
-              onCorrectionText={setCorrectionText}
+              onCorrectionDraft={setCorrectionDraft}
               onInfer={() => void runInference()}
               onReview={(action) => void performReview(action)}
             />
@@ -567,7 +764,7 @@ export function ScreenDetail({
                 <List
                   values={context.review_history.map(
                     (item) =>
-                      `${item.action}: ${item.previous_status} → ${item.new_status} · ${item.reviewer_id}`,
+                      `${item.action}: ${item.previous_status} → ${item.new_status} · ${item.reviewer_id} · tiempo ${formatDuration(item.review_duration_ms)} · adiciones humanas ${item.human_added_claims.length}`,
                   )}
                 />
               ) : (
@@ -615,7 +812,8 @@ function SemanticGovernancePanel({
   reviewer,
   reason,
   correctionMode,
-  correctionText,
+  correctionDraft,
+  reviewElapsedMs,
   actionBusy,
   actionMessage,
   actionError,
@@ -625,7 +823,7 @@ function SemanticGovernancePanel({
   onReviewer,
   onReason,
   onCorrectionMode,
-  onCorrectionText,
+  onCorrectionDraft,
   onInfer,
   onReview,
 }: {
@@ -634,7 +832,8 @@ function SemanticGovernancePanel({
   reviewer: string;
   reason: string;
   correctionMode: boolean;
-  correctionText: string;
+  correctionDraft: SemanticCorrectionDraft | null;
+  reviewElapsedMs: number;
   actionBusy: SemanticAction | null;
   actionMessage: string | null;
   actionError: string | null;
@@ -644,13 +843,41 @@ function SemanticGovernancePanel({
   onReviewer: (value: string) => void;
   onReason: (value: string) => void;
   onCorrectionMode: (value: boolean) => void;
-  onCorrectionText: (value: string) => void;
+  onCorrectionDraft: (value: SemanticCorrectionDraft | null) => void;
   onInfer: () => void;
   onReview: (action: SemanticAction) => void;
 }) {
   const proposal = context.active_proposal;
   const inferenceRunning =
     inferenceJob && ["queued", "running"].includes(inferenceJob.status);
+
+  const evidenceOptions = Array.from(
+    new Set([
+      ...claimableEvidenceIds(context),
+      ...(correctionDraft?.supported_capabilities.flatMap(
+        (claim) => claim.evidence_refs,
+      ) ?? []),
+    ]),
+  );
+
+  function updateDraft(
+    update: (value: SemanticCorrectionDraft) => SemanticCorrectionDraft,
+  ) {
+    if (correctionDraft) onCorrectionDraft(update(correctionDraft));
+  }
+
+  function updateClaim(
+    index: number,
+    update: (value: EditableCapability) => EditableCapability,
+  ) {
+    updateDraft((draft) => ({
+      ...draft,
+      supported_capabilities: draft.supported_capabilities.map((claim, item) =>
+        item === index ? update(claim) : claim,
+      ),
+    }));
+  }
+
   return (
     <section className="semantic-governance" aria-label="Gobierno semántico">
       <div className="semantic-governance__head">
@@ -755,30 +982,217 @@ function SemanticGovernancePanel({
                   onChange={(event) => onReason(event.target.value)}
                 />
               </label>
+              <div className="semantic-review-timer" aria-live="polite">
+                <span>Tiempo de revisión</span>
+                <strong>{formatDuration(reviewElapsedMs)}</strong>
+                <small>Se registra automáticamente al tomar la decisión.</small>
+              </div>
+
               <label className="semantic-correction-toggle">
                 <input
                   type="checkbox"
                   checked={correctionMode}
                   onChange={(event) => onCorrectionMode(event.target.checked)}
                 />
-                <span>Corregir el payload antes de decidir</span>
+                <span>Corregir contenido o añadir conocimiento humano</span>
               </label>
-              {correctionMode && (
-                <label>
-                  <span>Payload corregido · JSON</span>
-                  <textarea
-                    className="semantic-editor"
-                    value={correctionText}
-                    rows={15}
-                    spellCheck={false}
-                    onChange={(event) => onCorrectionText(event.target.value)}
-                  />
+
+              {correctionMode && correctionDraft && (
+                <div className="semantic-structured-editor">
+                  <label>
+                    <span>Propósito de la pantalla</span>
+                    <textarea
+                      value={correctionDraft.purpose_summary}
+                      rows={4}
+                      onChange={(event) =>
+                        updateDraft((draft) => ({
+                          ...draft,
+                          purpose_summary: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <div className="semantic-claims-editor">
+                    <div className="semantic-editor-heading">
+                      <div>
+                        <strong>Afirmaciones funcionales</strong>
+                        <small>
+                          Edite o elimine propuestas del LLM; las nuevas se
+                          registran con provenance=human.
+                        </small>
+                      </div>
+
+                      <button
+                        className="semantic-button semantic-button--correct"
+                        type="button"
+                        onClick={() =>
+                          updateDraft((draft) => ({
+                            ...draft,
+                            supported_capabilities: [
+                              ...draft.supported_capabilities,
+                              {
+                                statement: "",
+                                evidence_refs: [],
+                                origin: "human",
+                              },
+                            ],
+                          }))
+                        }
+                      >
+                        + Añadir afirmación humana
+                      </button>
+                    </div>
+
+                    {correctionDraft.supported_capabilities.map(
+                      (claim, index) => (
+                        <div
+                          className="semantic-claim-editor"
+                          key={`${claim.origin}-${index}`}
+                        >
+                          <div className="semantic-claim-editor__head">
+                            <span
+                              className={`semantic-origin semantic-origin--${claim.origin}`}
+                            >
+                              {claim.origin === "human"
+                                ? "Añadida por humano"
+                                : "Propuesta LLM"}
+                            </span>
+
+                            <button
+                              type="button"
+                              className="semantic-link-button semantic-link-button--danger"
+                              onClick={() =>
+                                updateDraft((draft) => ({
+                                  ...draft,
+                                  supported_capabilities:
+                                    draft.supported_capabilities.filter(
+                                      (_, item) => item !== index,
+                                    ),
+                                }))
+                              }
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+
+                          <textarea
+                            rows={3}
+                            value={claim.statement}
+                            placeholder="Describa una capacidad funcional respaldada por la evidencia."
+                            onChange={(event) =>
+                              updateClaim(index, (current) => ({
+                                ...current,
+                                statement: event.target.value,
+                              }))
+                            }
+                          />
+
+                          <div className="semantic-evidence-editor">
+                            <strong>Evidencia</strong>
+
+                            <div className="semantic-evidence-chips">
+                              {claim.evidence_refs.map((evidenceId) => (
+                                <span
+                                  className="semantic-evidence-chip"
+                                  key={evidenceId}
+                                >
+                                  <span>
+                                    {evidenceLabel(evidenceId, context)}
+                                    <small>{evidenceId}</small>
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    aria-label={`Quitar ${evidenceId}`}
+                                    onClick={() =>
+                                      updateClaim(index, (current) => ({
+                                        ...current,
+                                        evidence_refs:
+                                          current.evidence_refs.filter(
+                                            (item) => item !== evidenceId,
+                                          ),
+                                      }))
+                                    }
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+
+                            <select
+                              value=""
+                              onChange={(event) => {
+                                const evidenceId = event.target.value;
+                                if (!evidenceId) return;
+
+                                updateClaim(index, (current) => ({
+                                  ...current,
+                                  evidence_refs:
+                                    current.evidence_refs.includes(evidenceId)
+                                      ? current.evidence_refs
+                                      : [
+                                          ...current.evidence_refs,
+                                          evidenceId,
+                                        ],
+                                }));
+                              }}
+                            >
+                              <option value="">Añadir evidencia…</option>
+
+                              {evidenceOptions
+                                .filter(
+                                  (evidenceId) =>
+                                    !claim.evidence_refs.includes(evidenceId),
+                                )
+                                .map((evidenceId) => (
+                                  <option value={evidenceId} key={evidenceId}>
+                                    {evidenceLabel(evidenceId, context)}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+
+                  <div className="semantic-editor-columns">
+                    <label>
+                      <span>Limitaciones · una por línea</span>
+                      <textarea
+                        rows={5}
+                        value={correctionDraft.limitations.join("\n")}
+                        onChange={(event) =>
+                          updateDraft((draft) => ({
+                            ...draft,
+                            limitations: event.target.value.split("\n"),
+                          }))
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      <span>Incertidumbres · una por línea</span>
+                      <textarea
+                        rows={5}
+                        value={correctionDraft.uncertainties.join("\n")}
+                        onChange={(event) =>
+                          updateDraft((draft) => ({
+                            ...draft,
+                            uncertainties: event.target.value.split("\n"),
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+
                   <small>
-                    El backend vuelve a validar screen_id, semantic_type,
-                    evidence_refs y grounding. La corrección humana no evita las
-                    guardas deterministas.
+                    Los nombres de evidencia son legibles para la revisión, pero
+                    el backend recibe y revalida los IDs gobernados exactos.
                   </small>
-                </label>
+                </div>
               )}
               <div className="semantic-actions">
                 <button
@@ -793,7 +1207,10 @@ function SemanticGovernancePanel({
                 <button
                   className="semantic-button semantic-button--correct"
                   disabled={
-                    !reviewable || Boolean(actionBusy) || !correctionMode
+                    !reviewable ||
+                    Boolean(actionBusy) ||
+                    !correctionMode ||
+                    !correctionDraft
                   }
                   onClick={() => onReview("correct")}
                 >
@@ -863,21 +1280,6 @@ function stageLabel(stage: string) {
   return labels[stage] ?? stage.replaceAll("_", " ");
 }
 
-function isScreenPurposeInference(
-  value: unknown,
-): value is ScreenPurposeInference {
-  if (typeof value !== "object" || value === null || Array.isArray(value))
-    return false;
-  const record = value as Record<string, unknown>;
-  return (
-    record.semantic_type === "screen_purpose" &&
-    typeof record.screen_id === "string" &&
-    typeof record.purpose_summary === "string" &&
-    Array.isArray(record.supported_capabilities) &&
-    Array.isArray(record.limitations) &&
-    Array.isArray(record.uncertainties)
-  );
-}
 function Section({
   title,
   children,
