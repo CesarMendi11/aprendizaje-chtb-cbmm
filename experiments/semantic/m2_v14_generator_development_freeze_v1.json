@@ -1,0 +1,116 @@
+{
+  "created_at": "2026-09-04T07:58:06.366746+00:00",
+  "development_model_selection": {
+    "benchmark_sha256": "9ba8a240151e52dfc0035c9f94933b1442863f75eb19b1adfd1d83f905a446f0",
+    "blind_human_review_sha256": "68737c6327be0345f0c4ad35cb53ef173470a347b8ececc54709ecca74c8c613",
+    "selected_alias": "M03",
+    "selected_model": "qwen3.5:9b",
+    "selection_reason": "M03 obtuvo 3 ACCEPT, el máximo entre los aliases, por lo que ganó en el primer criterio predefinido sin requerir desempate.",
+    "selection_rule": [
+      "1. Maximizar ACCEPT entre las 9 pantallas elegibles.",
+      "2. En empate, maximizar ACCEPT + CORRECTABLE.",
+      "3. En empate, minimizar REJECT.",
+      "4. En empate, maximizar generaciones completadas.",
+      "5. En empate, minimizar latencia mediana."
+    ],
+    "summary": {
+      "M01": {
+        "accept": 1,
+        "completion_rate_eligible": 0.666667,
+        "correctable": 5,
+        "eligible_screens": 9,
+        "generated": 6,
+        "median_latency_ms": 286558.071,
+        "model": "qwen2.5:14b",
+        "reject": 0,
+        "reviewed_generated": 6
+      },
+      "M02": {
+        "accept": 0,
+        "completion_rate_eligible": 0.888889,
+        "correctable": 4,
+        "eligible_screens": 9,
+        "generated": 8,
+        "median_latency_ms": 82110.465,
+        "model": "phi4-mini:3.8b",
+        "reject": 4,
+        "reviewed_generated": 8
+      },
+      "M03": {
+        "accept": 3,
+        "completion_rate_eligible": 0.888889,
+        "correctable": 5,
+        "eligible_screens": 9,
+        "generated": 8,
+        "median_latency_ms": 175608.656,
+        "model": "qwen3.5:9b",
+        "reject": 0,
+        "reviewed_generated": 8
+      }
+    }
+  },
+  "development_policy": {
+    "full_57_screen_generation_required_now": false,
+    "generator_configuration": "FROZEN",
+    "model": "FROZEN",
+    "prompt": "FROZEN",
+    "reopen_only_if": "un defecto bloqueante de integración impide completar el prototipo end-to-end",
+    "temporary_semantic_data_allowed": true,
+    "temporary_semantic_data_must_be_removed_before_formal_evaluation": true,
+    "think_mode": "FROZEN"
+  },
+  "formal_rq_data_collection_started": false,
+  "freeze_id": "m2-v14-generator-development-freeze-v1",
+  "frozen_generator": {
+    "generation_parameters": {
+      "num_predict": 2048,
+      "stream": false,
+      "temperature": 0,
+      "think": false
+    },
+    "generation_parameters_hash": "11764bdb628f2cb6ba694d45080ef1cd0eab133039435ea1b8cd2e79b22d8b92",
+    "model": "qwen3.5:9b",
+    "prompt_hash": "600107521e6d2b29e986d8ff07752446c7fdf632b6c27d3c726d4e26e13fae08",
+    "prompt_version": "screen-purpose-v14.1",
+    "structured_timeout_seconds": 300.0
+  },
+  "git_head_at_freeze": "09852a7977fc56709406c11f6453bb87faa01e7d",
+  "knowledge_version": "4a7f929598c8fa76",
+  "m1_status": "FROZEN_UNCHANGED",
+  "next_steps": [
+    "integrar v14.1 con persistencia semántica",
+    "generar un conjunto pequeño de pantallas DEVELOPMENT",
+    "autoaceptar solo esa semántica temporal de desarrollo",
+    "implementar y validar M3 end-to-end",
+    "realizar una corrida DEVELOPMENT completa de 57 pantallas antes del GLOBAL DEVELOPMENT FREEZE",
+    "eliminar/resetear semántica temporal",
+    "iniciar después la adquisición formal RQ1/RQ2/RQ3"
+  ],
+  "phase": "development",
+  "semantic_boundary": {
+    "factual_authority": "PostgreSQL + governance",
+    "llm_may": [
+      "interpretar evidencia",
+      "sintetizar señales",
+      "proponer propósito funcional",
+      "redactar claims funcionales libres",
+      "expresar incertidumbre"
+    ],
+    "llm_may_not": [
+      "añadir hechos fuera de la evidencia autorizada",
+      "convertirse en autoridad factual"
+    ],
+    "semantic_truth_authority": "human_reviewer"
+  },
+  "status": "frozen_for_end_to_end_prototype_development",
+  "think_mode_selection": {
+    "ab_artifact_sha256": "f7ca5430b1ea560c22c00f84a827aabfd5f410134459fbbe55e4e69069b9e728",
+    "ab_review_sha256": "7e3b8c5acb3f5407d5b9631b4fc2f6b744ea55be17467898c39cfa1d48061c2b",
+    "decision_rule": "think=true solo podía seleccionarse si completaba 4/4 generaciones y ganaba al menos 3/4 comparaciones ciegas.",
+    "pairwise_preference_tally_used_for_selection": false,
+    "selected_think": false,
+    "selection_reason": "think=true produjo 0/4 salidas estructuradas válidas y no cumplió la condición previa de completitud; se conserva think=false.",
+    "think_true_generated": 0,
+    "think_true_requested": 4
+  }
+}
