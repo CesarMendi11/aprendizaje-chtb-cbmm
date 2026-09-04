@@ -23,11 +23,11 @@ from erp_assistant.integrations.ollama.generation import OllamaGenerationSetting
 from erp_assistant.persistence.postgres.enums import KnowledgeVersionStatus
 from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVersionRecord
 from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
-from erp_assistant.semantic.generation import (
-    OllamaStructuredGenerationClient,
-    ScreenPurposeInferenceService,
-)
+from erp_assistant.semantic.generation import OllamaStructuredGenerationClient
 from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
+from erp_assistant.semantic.generation.screen_purpose_service_v14 import (
+    ScreenPurposeInferenceServiceV14,
+)
 from erp_assistant.semantic.services.semantic_exceptions import SemanticDomainError
 from erp_assistant.semantic.workflows import ScreenPurposeProposalWorkflow
 from erp_assistant.structural.canonical.enums import ReviewStatus
@@ -153,7 +153,7 @@ def main() -> int:
                 installed = {item.get("name") for item in tags.json().get("models", [])}
                 if ollama.model not in installed:
                     raise CLIError("generation_model_not_installed")
-                inference = ScreenPurposeInferenceService(
+                inference = ScreenPurposeInferenceServiceV14(
                     TrackedOllamaStructuredGenerationClient(
                         settings=ollama,
                         mode="json_schema",

@@ -15,8 +15,10 @@ from erp_assistant.persistence.postgres.models import (
 from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
-from erp_assistant.semantic.generation.screen_purpose_service import ScreenPurposeInferenceService
-from erp_assistant.semantic.prompts import (
+from erp_assistant.semantic.generation.screen_purpose_service_v14 import (
+    ScreenPurposeInferenceServiceV14,
+)
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
@@ -39,7 +41,10 @@ from erp_assistant.semantic.services.semantic_payloads import (
     validated_semantic_evidence_snapshot,
 )
 from erp_assistant.semantic.services.semantic_proposal_service import SemanticProposalService
-from erp_assistant.semantic.validators import allowed_references, validate_capability_grounding
+from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
+    claimable_reference_ids,
+    validate_v14_claim_references,
+)
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 
@@ -92,6 +97,7 @@ def map_candidate_to_pending_proposal(
         candidate.model_dump(mode="python")
     )
     inference_payload = candidate_copy.inference.model_dump(mode="json")
+    claimable_references = set(claimable_reference_ids(package_copy))
     checks = {
         "semantic_type": candidate_copy.inference.semantic_type == SemanticType.SCREEN_PURPOSE,
         "screen_id": candidate_copy.inference.screen_id == package_copy.screen_id,
@@ -107,7 +113,7 @@ def map_candidate_to_pending_proposal(
         "generation_model": candidate_copy.generation_model == expected_model,
         "structured_output_mode": candidate_copy.structured_output_mode in {"json_schema", "json"},
         "references": all(
-            reference in allowed_references(package_copy)
+            reference in claimable_references
             for claim in candidate_copy.inference.supported_capabilities
             for reference in claim.evidence_refs
         ),
@@ -117,7 +123,7 @@ def map_candidate_to_pending_proposal(
         raise SemanticCandidateMismatchError(
             "El candidato semántico es incompatible: " + ", ".join(failed)
         )
-    validate_capability_grounding(candidate_copy.inference, package_copy)
+    validate_v14_claim_references(candidate_copy.inference, package_copy)
     evidence_snapshot = validated_semantic_evidence_snapshot(package_copy)
     if evidence_snapshot.evidence_hash != package_copy.evidence_hash:
         raise SemanticCandidateMismatchError("El snapshot de evidencia es incompatible")
@@ -141,7 +147,7 @@ class ScreenPurposeProposalWorkflow:
         session: Session,
         *,
         evidence_builder: ScreenEvidenceBuilder | None = None,
-        inference_service: ScreenPurposeInferenceService,
+        inference_service: ScreenPurposeInferenceServiceV14,
         proposal_service: SemanticProposalService | None = None,
     ):
         self.session = session

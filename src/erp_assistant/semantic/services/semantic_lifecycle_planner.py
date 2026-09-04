@@ -21,7 +21,7 @@ from erp_assistant.projections.replacement_service import (
 from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
 from erp_assistant.semantic.evidence.screen_evidence_builder import ScreenEvidenceError
-from erp_assistant.semantic.prompts import (
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,

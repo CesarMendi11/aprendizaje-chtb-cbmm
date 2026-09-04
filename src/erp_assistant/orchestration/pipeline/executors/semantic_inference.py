@@ -13,12 +13,12 @@ from erp_assistant.persistence.postgres.models import KnowledgeItem, KnowledgeVe
 from erp_assistant.persistence.postgres.repositories import SemanticProposalRepository
 from erp_assistant.semantic.eligibility import evaluate_screen_semantic_eligibility
 from erp_assistant.semantic.evidence import ScreenEvidenceBuilder
-from erp_assistant.semantic.generation import (
-    OllamaStructuredGenerationClient,
-    ScreenPurposeInferenceService,
-)
+from erp_assistant.semantic.generation import OllamaStructuredGenerationClient
 from erp_assistant.semantic.generation.errors import ScreenPurposeGenerationError
-from erp_assistant.semantic.prompts import (
+from erp_assistant.semantic.generation.screen_purpose_service_v14 import (
+    ScreenPurposeInferenceServiceV14,
+)
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,
@@ -69,7 +69,7 @@ class SemanticInferenceJobExecutor:
             settings=settings,
             mode="json_schema",
         )
-        return ScreenPurposeInferenceService(client)
+        return ScreenPurposeInferenceServiceV14(client)
 
     def execute(self, *, job_id, scope, target, parameters, progress):
         if scope != PipelineJobScope.SCREEN:

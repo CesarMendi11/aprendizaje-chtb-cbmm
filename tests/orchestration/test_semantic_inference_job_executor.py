@@ -29,7 +29,7 @@ from erp_assistant.persistence.postgres.models import (
     SemanticReviewAction,
 )
 from erp_assistant.semantic.generation.errors import InferenceGroundingError
-from erp_assistant.semantic.prompts import (
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     GENERATION_PARAMETERS_HASH,
     PROMPT_HASH,

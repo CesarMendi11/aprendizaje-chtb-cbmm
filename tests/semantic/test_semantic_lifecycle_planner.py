@@ -21,7 +21,7 @@ from erp_assistant.persistence.postgres.models import (
     KnowledgeVersionRecord,
     SemanticProposal,
 )
-from erp_assistant.semantic.prompts import (
+from erp_assistant.semantic.prompts.screen_purpose_v14 import (
     GENERATION_PARAMETERS,
     PROMPT_HASH,
     PROMPT_VERSION,
