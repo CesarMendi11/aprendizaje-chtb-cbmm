@@ -401,6 +401,12 @@ class HybridKnowledgeRetriever:
             else []
         )
 
+        approved_semantics = self._scope_generic_semantics(
+            query_plan,
+            resolution,
+            approved_semantics,
+        )
+
         rankings = {
             "canonical": [
                 RankedItem(canonical_id, score)
@@ -817,6 +823,45 @@ class HybridKnowledgeRetriever:
         return "Evidencia validada disponible:\n" + "\n".join(
             f"- {fact}" for fact in facts[:12]
         )
+
+    @staticmethod
+    def _scope_generic_semantics(
+        query_plan,
+        resolution,
+        approved_semantics,
+    ):
+        rows = list(approved_semantics or [])
+
+        if query_plan.intent is not None or not rows:
+            return rows
+
+        explicit_channels = {
+            "normalized_mention",
+            "alias",
+            "normalized_containment",
+        }
+
+        explicit_screen_ids = {
+            candidate.canonical_id
+            for candidate in resolution.candidates
+            if candidate.entity_type == "screen"
+            and candidate.score >= 0.90
+            and explicit_channels.intersection(candidate.channels)
+        }
+
+        # A unique, authoritative screen mention is enough to bound semantic
+        # relevance.  Multiple explicit screens are preserved so comparison
+        # questions remain possible instead of being arbitrarily narrowed.
+        if len(explicit_screen_ids) != 1:
+            return rows
+
+        screen_id = next(iter(explicit_screen_ids))
+
+        return [
+            row
+            for row in rows
+            if row.get("screen_id") == screen_id
+        ]
 
     @staticmethod
     def _merge_neighbors(*groups):

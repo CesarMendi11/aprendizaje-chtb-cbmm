@@ -408,6 +408,151 @@ def test_graph_ablation_disables_planned_traversal(
     assert result["retrieval"]["graph_seed_count"] == 0
 
 
+def test_generic_semantics_scope_to_unique_explicit_screen_before_rank_fusion():
+    from erp_assistant.retrieval.entity_resolver import (
+        EntityResolution,
+        EntityResolutionCandidate,
+    )
+    from erp_assistant.retrieval.query_plan import QueryPlan
+
+    query_plan = QueryPlan(
+        question=(
+            "Cuéntame qué información y acciones "
+            "se observan en Modulo de Cajas."
+        ),
+        normalized_question=(
+            "cuentame que informacion y acciones "
+            "se observan en modulo de cajas"
+        ),
+        intent=None,
+        target_entity_types=(),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+
+    resolution = EntityResolution(
+        query=query_plan.question,
+        normalized_query=query_plan.normalized_question,
+        candidates=(
+            EntityResolutionCandidate(
+                canonical_id="screen:cajas",
+                entity_type="screen",
+                safe_label="Modulo de Cajas",
+                route="/admin/rentas/cajas",
+                score=1.0,
+                channels=("normalized_mention",),
+                matched_terms=("modulo de cajas",),
+                channel_scores=(("normalized_mention", 1.0),),
+            ),
+        ),
+    )
+
+    approved = [
+        {
+            "semantic_id": "semantic:cajas",
+            "screen_id": "screen:cajas",
+            "safe_label": "Modulo de Cajas",
+        },
+        {
+            "semantic_id": "semantic:documentos",
+            "screen_id": "screen:documentos",
+            "safe_label": "Documentos",
+        },
+    ]
+
+    scoped = HybridKnowledgeRetriever._scope_generic_semantics(
+        query_plan,
+        resolution,
+        approved,
+    )
+
+    assert [
+        row["semantic_id"]
+        for row in scoped
+    ] == [
+        "semantic:cajas",
+    ]
+
+
+def test_generic_semantics_preserve_legitimate_multiple_explicit_screens():
+    from erp_assistant.retrieval.entity_resolver import (
+        EntityResolution,
+        EntityResolutionCandidate,
+    )
+    from erp_assistant.retrieval.query_plan import QueryPlan
+
+    query_plan = QueryPlan(
+        question="Compara Modulo de Cajas con Documentos.",
+        normalized_question="compara modulo de cajas con documentos",
+        intent=None,
+        target_entity_types=(),
+        requires_entity_resolution=True,
+        requires_graph_context=True,
+        requires_semantic_evidence=False,
+        mutative_action=False,
+    )
+
+    def screen(
+        canonical_id,
+        label,
+        route,
+    ):
+        return EntityResolutionCandidate(
+            canonical_id=canonical_id,
+            entity_type="screen",
+            safe_label=label,
+            route=route,
+            score=1.0,
+            channels=("normalized_mention",),
+            matched_terms=(label.casefold(),),
+            channel_scores=(("normalized_mention", 1.0),),
+        )
+
+    resolution = EntityResolution(
+        query=query_plan.question,
+        normalized_query=query_plan.normalized_question,
+        candidates=(
+            screen(
+                "screen:cajas",
+                "Modulo de Cajas",
+                "/admin/rentas/cajas",
+            ),
+            screen(
+                "screen:documentos",
+                "Documentos",
+                "/admin/tramites/documentos",
+            ),
+        ),
+    )
+
+    approved = [
+        {
+            "semantic_id": "semantic:cajas",
+            "screen_id": "screen:cajas",
+        },
+        {
+            "semantic_id": "semantic:documentos",
+            "screen_id": "screen:documentos",
+        },
+    ]
+
+    scoped = HybridKnowledgeRetriever._scope_generic_semantics(
+        query_plan,
+        resolution,
+        approved,
+    )
+
+    assert [
+        row["semantic_id"]
+        for row in scoped
+    ] == [
+        "semantic:cajas",
+        "semantic:documentos",
+    ]
+
+
 def test_candidate_ids_include_intermediate_graph_path_nodes():
     neighbors = [
         {
