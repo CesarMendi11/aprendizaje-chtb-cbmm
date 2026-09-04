@@ -152,6 +152,262 @@ def test_no_generate_preserves_context_and_does_not_call_generator():
     assert gen.prompt is None
 
 
+def test_writer_disabled_renders_deterministic_governed_evidence_baseline():
+    gen = Generator()
+
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+        generator=gen,
+    )
+
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "sources": [
+            {
+                "canonical_id": "screen:cajas",
+                "entity_type": "screen",
+                "safe_label": "Modulo de Cajas",
+            }
+        ],
+        "relations": [
+            {
+                "relationship_type": "HAS_CONTROL",
+                "source_label": "Modulo de Cajas",
+                "source_type": "screen",
+                "target_label": "Pagar",
+            }
+        ],
+        "approved_semantics": [
+            {
+                "safe_label": "Modulo de Cajas",
+                "purpose_summary": (
+                    "Permite consultar y gestionar registros de caja."
+                ),
+                "supported_capabilities": [
+                    "Permite consultar deuda."
+                ],
+            }
+        ],
+        "context": "CONTEXTO VALIDADO",
+    }
+
+    result = retriever.ask(
+        "Cuéntame sobre Modulo de Cajas.",
+        generate=False,
+        writer_enabled=False,
+    )
+
+    assert result["answer_mode"] == "deterministic_evidence"
+    assert result["answer_decision"]["decision"] == "DETERMINISTIC_ANSWER"
+
+    assert (
+        result["answer_decision"]["reason"]
+        == "writer_disabled_experimental_baseline"
+    )
+
+    assert "Propósito aprobado" in result["answer"]
+    assert "Permite consultar deuda" in result["answer"]
+    assert 'control "Pagar"' in result["answer"]
+
+    assert "context" not in result
+    assert gen.prompt is None
+
+
+def test_semantic_ablation_skips_semantic_projection_and_authorization(
+    monkeypatch,
+):
+    from types import SimpleNamespace
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(
+            self,
+            *,
+            erp_id=None,
+            knowledge_version=None,
+        ):
+            return version
+
+    monkeypatch.setattr(
+        "erp_assistant.retrieval.retriever.ChromaSyncService",
+        SyncService,
+    )
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return []
+
+    class SemanticChroma:
+        def query(self, embedding, **kwargs):
+            raise AssertionError(
+                "semantic projection must be disabled"
+            )
+
+    class Authorizer:
+        def authorize_hits(self, hits, *, version):
+            raise AssertionError(
+                "semantic authorization must be disabled"
+            )
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        semantic_chroma=SemanticChroma(),
+        semantic_authorizer=Authorizer(),
+        neo4j=None,
+        embeddings=Embeddings(),
+    )
+
+    retriever._validate = (
+        lambda ids, version_id: []
+    )
+
+    result = retriever.retrieve(
+        "¿Para qué sirve la pantalla Retenciones?",
+        semantic_enabled=False,
+    )
+
+    assert result["retrieval"]["semantic_candidates"] == 0
+    assert result["retrieval"]["approved_semantic_hits"] == 0
+    assert result["retrieval"]["selected_semantics"] == 0
+
+
+def test_graph_ablation_disables_planned_traversal(
+    monkeypatch,
+):
+    from types import SimpleNamespace
+
+    from erp_assistant.retrieval.graph_expansion import (
+        GraphExpansionPlan,
+    )
+
+    version = SimpleNamespace(
+        id="version-db-id",
+        erp_id="erp:test",
+        knowledge_version="v1",
+    )
+
+    class SyncService:
+        def __init__(self, session):
+            pass
+
+        def resolve_version(
+            self,
+            *,
+            erp_id=None,
+            knowledge_version=None,
+        ):
+            return version
+
+    monkeypatch.setattr(
+        "erp_assistant.retrieval.retriever.ChromaSyncService",
+        SyncService,
+    )
+
+    class Embeddings:
+        def embed(self, question):
+            return [[0.1, 0.2]]
+
+    class StructuralChroma:
+        def query(self, embedding, **kwargs):
+            return [
+                {
+                    "canonical_id": "screen:ano",
+                    "score": 0.9,
+                }
+            ]
+
+    class Graph:
+        def execute(self, query, parameters):
+            raise AssertionError(
+                "Neo4j traversal must be disabled"
+            )
+
+    class Planner:
+        def plan(
+            self,
+            query_plan,
+            resolution,
+            fused,
+            **kwargs,
+        ):
+            return GraphExpansionPlan(
+                enabled=True,
+                strategy="locate_screen",
+                reason="fixture_plan",
+                seed_canonical_ids=("screen:ano",),
+                seed_entity_types=("screen",),
+                endpoint_entity_types=("screen", "module"),
+                relationships=("HAS_SCREEN",),
+                max_hops=2,
+                limit=20,
+            )
+
+    item = SimpleNamespace(
+        id="screen-db-id",
+        canonical_id="screen:ano",
+        entity_type="screen",
+        route="/admin/general/anios",
+    )
+
+    retriever = HybridKnowledgeRetriever(
+        object(),
+        chroma=StructuralChroma(),
+        neo4j=Graph(),
+        embeddings=Embeddings(),
+        graph_planner=Planner(),
+    )
+
+    retriever._validate = (
+        lambda ids, version_id: (
+            [item]
+            if "screen:ano" in ids
+            else []
+        )
+    )
+
+    retriever._effective = (
+        lambda item_id: {
+            "title": "Año"
+        }
+    )
+
+    result = retriever.retrieve(
+        "¿Dónde está Año?",
+        graph_enabled=False,
+    )
+
+    assert result["graph_expansion"]["enabled"] is False
+
+    assert (
+        result["graph_expansion"]["reason"]
+        == "experiment_graph_disabled"
+    )
+
+    assert (
+        result["graph_expansion"]["seed_canonical_ids"]
+        == []
+    )
+
+    assert result["retrieval"]["graph_neighbors"] == 0
+    assert result["retrieval"]["graph_seed_count"] == 0
+
+
 def test_candidate_ids_include_intermediate_graph_path_nodes():
     neighbors = [
         {

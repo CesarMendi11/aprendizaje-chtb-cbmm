@@ -31,7 +31,7 @@ from .conversation_context import (
 )
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
 from .evidence_selector import EvidenceSelection, EvidenceSelector
-from .graph_expansion import QueryAwareGraphExpansionPlanner
+from .graph_expansion import GraphExpansionPlan, QueryAwareGraphExpansionPlanner
 from .query_plan import QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
 
@@ -124,6 +124,8 @@ class HybridKnowledgeRetriever:
         semantic_top_k=8,
         entity_top_k=12,
         graph_limit=20,
+        semantic_enabled=True,
+        graph_enabled=True,
         query_plan: QueryPlan | None = None,
         conversation_state: ConversationState | dict[str, object] | None = None,
     ):
@@ -390,12 +392,12 @@ class HybridKnowledgeRetriever:
                 erp_id=erp_id,
                 knowledge_version=knowledge_version,
             )
-            if self.semantic_chroma is not None
+            if semantic_enabled and self.semantic_chroma is not None
             else []
         )
         approved_semantics = (
             self.semantic_authorizer.authorize_hits(semantic_candidates, version=version)
-            if self.semantic_authorizer is not None
+            if semantic_enabled and self.semantic_authorizer is not None
             else []
         )
 
@@ -444,6 +446,18 @@ class HybridKnowledgeRetriever:
             candidate_types=candidate_types,
             graph_limit=graph_limit,
         )
+        if not graph_enabled:
+            graph_plan = GraphExpansionPlan(
+                enabled=False,
+                strategy=graph_plan.strategy,
+                reason="experiment_graph_disabled",
+                seed_canonical_ids=(),
+                seed_entity_types=graph_plan.seed_entity_types,
+                endpoint_entity_types=graph_plan.endpoint_entity_types,
+                relationships=graph_plan.relationships,
+                max_hops=graph_plan.max_hops,
+                limit=graph_plan.limit,
+            )
         neighbors = (
             self._expand(
                 list(graph_plan.seed_canonical_ids),
@@ -616,6 +630,7 @@ class HybridKnowledgeRetriever:
         question,
         *,
         generate=True,
+        writer_enabled=None,
         conversation_state=None,
         current_route=None,
         **kwargs,
@@ -717,6 +732,30 @@ class HybridKnowledgeRetriever:
             return finalize()
 
         # GROUNDED_LLM is the only path on which generated prose is allowed.
+        # Experimental A/B conditions keep the same governed evidence boundary
+        # but render it deterministically so the writer contribution can be
+        # isolated from retrieval and semantic-HITL effects.
+        if writer_enabled is False:
+            baseline_answer = self._render_evidence_baseline(result)
+            if self._is_abstention(baseline_answer):
+                result["answer"] = ABSTAIN
+                result["answer_mode"] = "insufficient_evidence"
+                result["evidence_ids"] = []
+                result.pop("context", None)
+                return finalize()
+
+            baseline_decision = replace(
+                decision,
+                decision=AnswerDecisionType.DETERMINISTIC_ANSWER,
+                reason="writer_disabled_experimental_baseline",
+            )
+            result["answer"] = baseline_answer
+            result["answer_mode"] = "deterministic_evidence"
+            result["answer_decision"] = baseline_decision.as_dict()
+            result["confidence"] = baseline_decision.confidence
+            result.pop("context", None)
+            return finalize()
+
         result["answer_mode"] = "ollama_grounded"
         if not generate or not self.generator:
             result["answer"] = None
@@ -739,6 +778,45 @@ class HybridKnowledgeRetriever:
             result["evidence_ids"] = []
         result.pop("context", None)
         return finalize()
+
+    @staticmethod
+    def _render_evidence_baseline(result):
+        facts = []
+        seen = set()
+
+        def add(value):
+            value = str(value or "").strip()
+            if value and value not in seen:
+                seen.add(value)
+                facts.append(value)
+
+        for semantic in result.get("approved_semantics", [])[:2]:
+            label = str(semantic.get("safe_label") or "Pantalla validada")
+            summary = str(semantic.get("purpose_summary") or "").strip()
+            if summary:
+                add(f'Propósito aprobado de "{label}": {summary}')
+
+            for statement in semantic.get("supported_capabilities", [])[:6]:
+                if statement:
+                    add(f'Capacidad aprobada de "{label}": {statement}')
+
+        for relation in result.get("relations", [])[:10]:
+            add(EvidenceContextBuilder._natural_fact(relation))
+
+        if not facts:
+            for source in result.get("sources", [])[:6]:
+                label = str(source.get("safe_label") or "").strip()
+                entity_type = str(source.get("entity_type") or "entidad").strip()
+
+                if label:
+                    add(f'{entity_type}: "{label}"')
+
+        if not facts:
+            return ABSTAIN
+
+        return "Evidencia validada disponible:\n" + "\n".join(
+            f"- {fact}" for fact in facts[:12]
+        )
 
     @staticmethod
     def _merge_neighbors(*groups):

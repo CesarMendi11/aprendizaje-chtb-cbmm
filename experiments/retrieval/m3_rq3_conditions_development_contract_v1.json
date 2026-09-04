@@ -1,0 +1,44 @@
+{
+  "conditions": {
+    "A": {
+      "description": "Structural governed retrieval with deterministic evidence rendering only.",
+      "grounded_writer": false,
+      "semantic_hitl_retrieval": false,
+      "structural_retrieval": true
+    },
+    "B": {
+      "description": "Condition A plus authorized semantic HITL knowledge; deterministic evidence rendering when no exact deterministic answer exists.",
+      "grounded_writer": false,
+      "semantic_hitl_retrieval": true,
+      "structural_retrieval": true
+    },
+    "C": {
+      "description": "Condition B plus grounded LLM writer for open questions when governed evidence is sufficient.",
+      "grounded_writer": true,
+      "semantic_hitl_retrieval": true,
+      "structural_retrieval": true
+    }
+  },
+  "contract_id": "m3-rq3-conditions-development-v1",
+  "default_runtime": {
+    "experiment_condition": "C",
+    "graph_enabled": true
+  },
+  "formal_rq_data": false,
+  "invariants": [
+    "PostgreSQL remains authority in all conditions.",
+    "Ambiguity, mutative-action policy, clarification and abstention remain deterministic in all conditions.",
+    "A/B never call the answer writer.",
+    "A never queries or authorizes semantic Chroma knowledge.",
+    "Graph OFF never executes Neo4j traversal.",
+    "Condition C does not force the LLM over exact deterministic answers; the writer is used only on the GROUNDED_LLM path."
+  ],
+  "reopen_policy": "Reopen only for a demonstrated blocking experimental-control defect before the global development freeze.",
+  "secondary_ablation": {
+    "graph_enabled": {
+      "off": "Neo4j expansion disabled after the governed traversal plan is computed; canonical and dense retrieval remain available.",
+      "on": "Governed query-aware Neo4j expansion enabled."
+    }
+  },
+  "status": "frozen_for_end_to_end_prototype_development"
+}

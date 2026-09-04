@@ -528,6 +528,101 @@ def test_hybrid_chat_preserves_canonical_source_types(settings):
     ]
 
 
+@pytest.mark.parametrize(
+    ("condition", "graph_enabled", "expected_generate", "expected_kwargs"),
+    [
+        (
+            "A",
+            True,
+            False,
+            {"writer_enabled": False, "semantic_enabled": False},
+        ),
+        (
+            "B",
+            False,
+            False,
+            {"writer_enabled": False, "graph_enabled": False},
+        ),
+        ("C", True, True, {}),
+    ],
+)
+def test_chat_exposes_reproducible_rq3_controls(
+    settings,
+    condition,
+    graph_enabled,
+    expected_generate,
+    expected_kwargs,
+):
+    from contextlib import contextmanager
+
+    calls = {}
+
+    class Retriever:
+        def ask(self, question, **kwargs):
+            calls["ask"] = dict(kwargs)
+
+            return {
+                "answer": "Respuesta controlada.",
+                "answer_mode": "deterministic_graph",
+                "answer_decision": {
+                    "decision": "DETERMINISTIC_ANSWER",
+                    "reason": "deterministic_structural_answer",
+                    "intent": "LOCATE_SCREEN",
+                    "confidence": "high",
+                },
+                "sources": [],
+                "retrieval": {},
+                "graph_expansion": {
+                    "enabled": graph_enabled,
+                    "reason": "fixture",
+                },
+            }
+
+    class Factory:
+        @contextmanager
+        def create(self, *, generate=True):
+            calls["factory_generate"] = generate
+            yield Retriever()
+
+    app = create_app(settings)
+    app.state.hybrid_factory = Factory()
+
+    response = ApiClient(app).post(
+        "/api/chat",
+        json={
+            "question": "¿Dónde está Año?",
+            "experimentCondition": condition,
+            "graphEnabled": graph_enabled,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+
+    payload = response.json()
+
+    assert calls["factory_generate"] is expected_generate
+    assert calls["ask"]["generate"] is expected_generate
+
+    for key, value in expected_kwargs.items():
+        assert calls["ask"][key] is value
+
+    assert payload["experimentCondition"] == condition
+    assert payload["graphEnabled"] is graph_enabled
+    assert payload["graphExpansion"]["enabled"] is graph_enabled
+
+
+def test_chat_experimental_controls_reject_unknown_condition(client):
+    response = client.post(
+        "/api/chat",
+        json={
+            "question": "¿Dónde está Año?",
+            "experimentCondition": "D",
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_chat_forwards_current_route_only_as_context_hint():
     import asyncio
     from types import SimpleNamespace

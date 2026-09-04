@@ -12,13 +12,22 @@ async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
     conversation_id = conversation_store.resolve_conversation_id(payload.conversation_id)
 
     hybrid = request.app.state.hybrid_factory
+    condition = payload.experiment_condition
+    semantic_enabled = condition in {"B", "C"}
+    writer_enabled = condition == "C"
     try:
         with conversation_store.turn(conversation_id) as turn:
-            with hybrid.create(generate=True) as retriever:
+            with hybrid.create(generate=writer_enabled) as retriever:
                 ask_kwargs = {
-                    "generate": True,
+                    "generate": writer_enabled,
                     "conversation_state": turn.state,
                 }
+                if not writer_enabled:
+                    ask_kwargs["writer_enabled"] = False
+                if not semantic_enabled:
+                    ask_kwargs["semantic_enabled"] = False
+                if not payload.graph_enabled:
+                    ask_kwargs["graph_enabled"] = False
                 if payload.context is not None and payload.context.current_route is not None:
                     ask_kwargs["current_route"] = payload.context.current_route
 
@@ -34,6 +43,7 @@ async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
                 "ollama_grounded",
                 "insufficient_evidence",
                 "clarification",
+                "deterministic_evidence",
             }:
                 raise RuntimeError("Hybrid retriever devolvió un answer_mode no soportado")
 
@@ -62,6 +72,9 @@ async def chat(payload: ChatRequest, request: Request) -> ChatResponse:
                 confidence=result.get("confidence"),
                 evidence_ids=result.get("evidence_ids", []),
                 retrieval=result.get("retrieval"),
+                experimentCondition=condition,
+                graphEnabled=payload.graph_enabled,
+                graphExpansion=result.get("graph_expansion"),
             )
     except HTTPException:
         raise

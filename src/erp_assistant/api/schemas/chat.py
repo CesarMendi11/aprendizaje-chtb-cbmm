@@ -26,6 +26,10 @@ class ChatRequest(BaseModel):
     question: str = Field(max_length=2000)
     conversation_id: str | None = Field(default=None, alias="conversationId", max_length=200)
     context: ChatContext | None = None
+    experiment_condition: Literal["A", "B", "C"] = Field(
+        default="C", alias="experimentCondition"
+    )
+    graph_enabled: bool = Field(default=True, alias="graphEnabled")
 
     @field_validator("question")
     @classmethod
@@ -65,6 +69,9 @@ class ChatResponse(BaseModel):
     confidence: str | None = None
     evidence_ids: list[str] = []
     retrieval: dict[str, int] | None = None
+    experiment_condition: Literal["A", "B", "C"] = Field(alias="experimentCondition")
+    graph_enabled: bool = Field(alias="graphEnabled")
+    graph_expansion: dict[str, object] | None = Field(default=None, alias="graphExpansion")
 
 
 class HealthResponse(BaseModel):
