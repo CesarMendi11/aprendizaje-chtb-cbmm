@@ -1,0 +1,180 @@
+{
+  "created_at": "2026-09-05T03:06:35.147180+00:00",
+  "development_evidence": {
+    "documentos_retry": {
+      "contract": "same v14.2 contract; timeout=300s",
+      "observed": {
+        "duration_ms": 286746.1,
+        "false_cancel_delete_association_removed": true,
+        "new_claims": 12,
+        "new_generic_control_claims": 0,
+        "old_claims": 12,
+        "old_generic_control_claims": 1,
+        "persisted_proposals": 0,
+        "semantic_chroma_writes": 0,
+        "status": "PASS",
+        "useful_structural_capabilities_preserved": true
+      },
+      "path": "cbmm-M2-v14.2-documentos-retry-20260904_214811.zip",
+      "sha256": "f8cadac542879cf291c7e77de8329384dd94661215fa8d46988f8b5cdfbb0694"
+    },
+    "v14_2_12screen_pilot": {
+      "contract": "same model/generation parameters; timeout=300s",
+      "observed": {
+        "human_side_by_side_conclusion": "The systematic generic-control artifact was removed without observed loss of the named functional controls. Remaining semantic errors are suitable for HITL rather than further prompt tuning.",
+        "new_generic_control_claims": 0,
+        "old_generic_control_claims": 4,
+        "pass": 11,
+        "persisted_proposals": 0,
+        "semantic_chroma_writes": 0,
+        "timeout": 1
+      },
+      "path": "cbmm-M2-v14.2-12screen-pilot-20260904_210916.zip",
+      "sha256": "ad0eccca0f893c91ff5a32a230deae8a91ee137168358ef726136fb4d31a908b"
+    },
+    "v14_2_read_only_projection_audit": {
+      "eligible_screens": 55,
+      "hidden_generic_control_ids_exposed": 0,
+      "named_controls_after": 322,
+      "named_controls_before": 322,
+      "projected_dangling_transition_refs": 0,
+      "projected_generic_controls": 0,
+      "source_generic_controls": 55
+    },
+    "v2_full_materialization": {
+      "observed": {
+        "created": 55,
+        "eligible": 55,
+        "fail": 0,
+        "pass": 55,
+        "reused": 0,
+        "semantic_chroma_after": 0
+      },
+      "path": "cbmm-M2-v2-55-development-materialization-20260904_165348.json",
+      "sha256": "552a50ff776f3478bcfaab0350d756f156cd7de1632abdf153544e3a134ef493"
+    }
+  },
+  "development_policy": {
+    "development_hitl_required_after_generation": true,
+    "formal_rq_data": false,
+    "full_55_eligible_generation_required": true,
+    "generator_configuration": "FROZEN_V3",
+    "reopen_only_if": "a demonstrated technical or methodological blocker is found before GLOBAL DEVELOPMENT FREEZE"
+  },
+  "development_state_transition": {
+    "physical_deletion_required": false,
+    "semantic_chroma_must_remain_empty_before_v3_hitl": true,
+    "v1_and_v2_are": "retained DEVELOPMENT history and are not publishable formal evidence",
+    "v1_proposals": 42,
+    "v2_proposals": 55,
+    "v3_materialization_target": {
+      "active_screens": 57,
+      "eligible_screens": 55,
+      "ineligible_screens": 2,
+      "required_generation_parameters_hash": "804387ac4f995a49166a0f0db9519825caa5b143ac11bd017842a1d730aedbf8",
+      "required_model": "qwen3.5:9b",
+      "required_prompt_hash": "e4b48bb013b188f87ed6cce6cfa6c7296d435519347a7eb35bacd1c355fe9acd"
+    }
+  },
+  "formal_rq_data_collection_started": false,
+  "freeze_id": "m2-v14-generator-development-freeze-v3",
+  "frozen_generator": {
+    "generation_parameters": {
+      "num_ctx": 8192,
+      "num_predict": 2048,
+      "stream": false,
+      "temperature": 0,
+      "think": false
+    },
+    "generation_parameters_hash": "804387ac4f995a49166a0f0db9519825caa5b143ac11bd017842a1d730aedbf8",
+    "model": "qwen3.5:9b",
+    "prompt_hash": "e4b48bb013b188f87ed6cce6cfa6c7296d435519347a7eb35bacd1c355fe9acd",
+    "prompt_version": "screen-purpose-v14.2",
+    "structured_timeout_seconds": 360.0
+  },
+  "git_head_at_freeze": "40536771181d77e07574db48d241dfa02e167edf",
+  "implementation_fingerprints": {
+    "src/erp_assistant/semantic/generation/ollama_structured_client.py": "18fd1c368fe8dfbf5b48d978981aa9001cd6b9953c844a621c67497fe9a09f78",
+    "src/erp_assistant/semantic/generation/screen_purpose_generation_v14.py": "5e1e8ae24372ac242fcb9abf6b71e827126b6f5c7c7be510d823f23d4cb65ded",
+    "src/erp_assistant/semantic/generation/screen_purpose_service_v14.py": "7e766d4fd61619d431d02a215a84329f5b01b064369ec5ffedce5e12b824edf8",
+    "src/erp_assistant/semantic/prompts/screen_purpose_v14.py": "36cf8a1b35d7aa4272496163cacdac906c12f8fce1bf82c901fdc665488ffea1",
+    "src/erp_assistant/semantic/schemas/screen_purpose_prompt_evidence_v14.py": "83f9eb735159aa50f48956d0adf850dc23180716b1e6d91034b4076b14877053"
+  },
+  "knowledge_version": "4a7f929598c8fa76",
+  "m1_status": "FROZEN_UNCHANGED",
+  "next_steps": [
+    "commit the v14.2 prompt-evidence alignment and this v3 DEVELOPMENT freeze",
+    "materialize all 55 eligible ACTIVE screens under the homogeneous v3 contract",
+    "perform DEVELOPMENT HITL only on v3 proposals using a non-formal reviewer",
+    "project only publishable v3 semantics to semantic Chroma",
+    "run end-to-end assistant certification",
+    "perform GLOBAL DEVELOPMENT FREEZE before formal RQ data collection"
+  ],
+  "phase": "development",
+  "protocol_reference": {
+    "path": "experiments/protocol/protocol_v2.json",
+    "protocol_changed_for_this_reopen": false,
+    "reason": "The experimental design is unchanged. Freeze v3 records a DEVELOPMENT-only correction to align prompt-visible evidence with the existing claimable-reference policy.",
+    "sha256": "a7eb71e24049354483591f4e82347d6f0fc5037340d4732e2a64696fb9ec61d6"
+  },
+  "semantic_boundary": {
+    "factual_authority": "PostgreSQL + governance",
+    "llm_may": [
+      "interpret evidence",
+      "synthesize signals",
+      "propose functional purpose",
+      "write free functional claims",
+      "express uncertainty"
+    ],
+    "llm_may_not": [
+      "add facts outside authorized evidence",
+      "become factual authority"
+    ],
+    "mechanical_validation_may_not": [
+      "decide semantic truth",
+      "introduce a closed functional taxonomy",
+      "repair claims by inferred meaning"
+    ],
+    "semantic_truth_authority": "human_reviewer"
+  },
+  "status": "frozen_for_full_development_materialization",
+  "supersedes": {
+    "freeze_id": "m2-v14-generator-development-freeze-v2",
+    "path": "experiments/semantic/m2_v14_generator_development_freeze_v2.json",
+    "reason": "DEVELOPMENT HITL exposed a systematic prompt/grounding contract mismatch: generic unlabeled controls were visible to the LLM while the existing claim policy intentionally excluded them from claimable references.",
+    "sha256": "5eb8ad9e75e692508eebd021c375a54454a6334f7a3caada917f8dbdff533f27"
+  },
+  "v3_changes": {
+    "prompt_evidence_alignment": {
+      "change": [
+        "Exclude controls with empty/generic labels from the evidence projection presented to the semantic LLM.",
+        "Remove those hidden control IDs from the projected evidence_ids.",
+        "Rebuild the main-content Controls line using only visible named controls.",
+        "If a future transition references a hidden control, preserve the transition but clear only its projected trigger_control_id.",
+        "Explicitly instruct the generator that generic/unlabeled controls are not direct functional support."
+      ],
+      "claim_policy_relaxed": false,
+      "human_truth_authority_changed": false,
+      "semantic_taxonomy_introduced": false,
+      "structural_authority_changed": false
+    },
+    "structured_timeout": {
+      "from_seconds": 300.0,
+      "reason": "A valid DEVELOPMENT screen completed in 286.746 seconds on retry after one 300-second timeout. The additional margin is an operational completion allowance and does not modify the model input, model sampling parameters, context size, output schema, or semantic policy.",
+      "to_seconds": 360.0
+    },
+    "unchanged": [
+      "selected model qwen3.5:9b",
+      "temperature=0",
+      "num_predict=2048",
+      "num_ctx=8192",
+      "think=false",
+      "JSON Schema",
+      "Safe Evidence structural authority",
+      "claim evidence_refs requirement",
+      "grounding validation",
+      "mechanical exact-duplicate normalization",
+      "human semantic truth authority"
+    ]
+  }
+}

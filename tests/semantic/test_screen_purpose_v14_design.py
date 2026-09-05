@@ -27,7 +27,11 @@ from erp_assistant.semantic.schemas.screen_evidence import (
     NetworkTraceEvidence,
     ScreenEvidencePackage,
     TableEvidence,
+    TransitionEvidence,
     UIStateEvidence,
+)
+from erp_assistant.semantic.schemas.screen_purpose_prompt_evidence_v14 import (
+    ScreenPurposePromptEvidenceV14,
 )
 from erp_assistant.semantic.services.semantic_payloads import canonical_json_hash
 from erp_assistant.semantic.validators.screen_purpose_claim_policy import (
@@ -157,7 +161,7 @@ def valid_output(**updates):
 def test_v14_prompt_delegates_semantic_interpretation_but_keeps_human_authority():
     prompt = build_user_prompt_v14(package())
 
-    assert PROMPT_VERSION == "screen-purpose-v14.1"
+    assert PROMPT_VERSION == "screen-purpose-v14.2"
     assert GENERATION_PARAMETERS["num_predict"] == 2048
     assert GENERATION_PARAMETERS["num_ctx"] == 8192
     assert GENERATION_PARAMETERS["think"] is False
@@ -171,6 +175,60 @@ def test_v14_prompt_delegates_semantic_interpretation_but_keeps_human_authority(
     assert "TableColumn prueba que un dato se presenta como columna" in SYSTEM_PROMPT
     assert "La ausencia de una evidencia no demuestra" in SYSTEM_PROMPT
     assert "no uses Fields como si fueran columnas de resultados" in prompt
+
+
+def test_v14_prompt_projection_hides_unlabeled_control_but_keeps_named_controls():
+    evidence = package(
+        main_content_text=(
+            "Pantalla: Enviar Notificaciones\n"
+            "Controles: Enviar correo; unlabeled control\n"
+            "Estados: Enviar Notificaciones"
+        ),
+        evidence_ids=[
+            "evidence:screen",
+            "evidence:network",
+            "control:send",
+            "control:unlabeled",
+        ],
+    )
+
+    projection = ScreenPurposePromptEvidenceV14.from_package(evidence)
+
+    assert [control.control_id for control in projection.controls] == ["control:send"]
+    assert "Enviar correo" in projection.main_content_text
+    assert "unlabeled control" not in projection.main_content_text.casefold()
+    assert "control:send" in projection.evidence_ids
+    assert "control:unlabeled" not in projection.evidence_ids
+
+    prompt = build_user_prompt_v14(evidence)
+
+    assert "control:send" in prompt
+    assert "control:unlabeled" not in prompt
+    assert "unlabeled control" not in prompt.casefold()
+
+
+def test_v14_prompt_projection_sanitizes_hidden_control_transition_reference():
+    evidence = package(
+        main_content_text=(
+            "Pantalla: Enviar Notificaciones\n"
+            "Controles: Enviar correo; unlabeled control"
+        ),
+        transitions=[
+            TransitionEvidence(
+                transition_id="transition:hidden",
+                category="state_change",
+                source_state_id="state:root",
+                target_state_id="state:detail",
+                trigger_control_id="control:unlabeled",
+            )
+        ],
+    )
+
+    projection = ScreenPurposePromptEvidenceV14.from_package(evidence)
+
+    assert len(projection.transitions) == 1
+    assert projection.transitions[0].transition_id == "transition:hidden"
+    assert projection.transitions[0].trigger_control_id is None
 
 
 def test_claimable_refs_exclude_shell_network_identity_and_unlabeled_control():
