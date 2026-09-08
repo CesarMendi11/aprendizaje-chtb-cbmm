@@ -1,0 +1,45 @@
+{
+  "amendment_id": "cbmm-formal-preparation-amendment-v1",
+  "artifact_impact": {
+    "backend_runtime_changed": false,
+    "development_e2e_invalidated": false,
+    "development_recertification_required": false,
+    "frontend_runtime_changed": false,
+    "m1_changed": false,
+    "m2_changed": false,
+    "m3_changed": false
+  },
+  "created_at": "2026-09-08T05:00:08.950234+00:00",
+  "defects_corrected": [
+    "The previous formal start criterion required independent references and the formal manifest to be frozen, while its execution order froze the RQ2 reference and RQ3 bank only after RQ1 had already begun.",
+    "The previous pre-run manifest requirements mixed frozen experimental inputs with fingerprints that can only exist after FORMAL RQ1/RQ2 outputs are produced.",
+    "The RQ1 protocol listed secondary structural entity types without a frozen quantitative matching/scoring contract, while the validated primary harness scores module, screen and screen_hierarchy."
+  ],
+  "formal_rq_data": false,
+  "formal_rq_data_collection_started": false,
+  "next_step": "prepare Expert A independent RQ1 structural reference packet",
+  "original_global_development_freeze": {
+    "path": "experiments/protocol/global_development_freeze_v1.json",
+    "remains_immutable": true,
+    "sha256": "74ba08bd594d089baec5568bb136ce5aa4c72c101823aa85b9f1854c1c130582"
+  },
+  "phase": "FORMAL_PREPARATION",
+  "replacement_protocol": {
+    "path": "experiments/protocol/protocol_v2_1.json",
+    "sha256": "f960f5f6f3daaeb1f1077bd29cdc6b966b249b77b6021f96197b632884245754",
+    "version": "2.1.0"
+  },
+  "schema_version": "1.0.0",
+  "scientific_impact": {
+    "development_observations_promoted_to_formal": false,
+    "formal_reference_independence_preserved": true,
+    "formal_results_exist": false,
+    "formal_sequence_now_consistent": true
+  },
+  "superseded_protocol": {
+    "path": "experiments/protocol/protocol_v2.json",
+    "sha256": "a7eb71e24049354483591f4e82347d6f0fc5037340d4732e2a64696fb9ec61d6",
+    "version": "2.0.0"
+  },
+  "trigger": "demonstrated_methodological_defect_before_formal_data"
+}

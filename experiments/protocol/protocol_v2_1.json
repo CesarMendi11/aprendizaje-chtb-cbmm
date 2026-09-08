@@ -1,0 +1,528 @@
+{
+  "analysis_policy": {
+    "confidence_intervals": "Report 95% confidence intervals for primary aggregate metrics and paired differences when statistically appropriate.",
+    "failed_or_timeout_runs": "Retain and report them; never silently remove them from denominators.",
+    "inter_rater": "When both experts score a shared RQ3 subset or the full bank, report an appropriate agreement statistic plus raw agreement.",
+    "latency": "Measure and report objectively. No post-freeze optimization based on formal latency results.",
+    "paired_rq3_design": true
+  },
+  "article_structure_target": {
+    "1_introduction": [
+      "institutional support problem",
+      "knowledge-construction gap",
+      "dynamic-interface gap",
+      "contributions",
+      "RQ1/RQ2/RQ3"
+    ],
+    "2_materials_and_methods": [
+      "DSRM",
+      "overall three-macro-layer architecture",
+      "M1 structural discovery and governance",
+      "M2 semantic enrichment and HITL",
+      "DEVELOPMENT model-selection benchmark for M2",
+      "M3 governed hybrid retrieval and response decision",
+      "DEVELOPMENT writer-selection benchmark",
+      "formal RQ1/RQ2/RQ3 protocol",
+      "exploratory SUS protocol"
+    ],
+    "3_results": [
+      "artifact engineering characterization",
+      "RQ1 structural acquisition results",
+      "RQ2 pre/post-HITL semantic quality and human effort",
+      "RQ3 A/B/C and graph-ablation results",
+      "exploratory SUS results"
+    ],
+    "4_discussion": [
+      "interpretation of RQ1/RQ2/RQ3",
+      "role of human governance",
+      "value and limits of graph expansion",
+      "latency trade-offs",
+      "threats to validity",
+      "generalizability limits"
+    ],
+    "5_conclusions": [
+      "answer to research questions",
+      "main architectural contribution",
+      "limitations",
+      "future work"
+    ]
+  },
+  "development_formal_boundary": {
+    "development": {
+      "eligible_as_formal_rq_evidence": false,
+      "explicit_exclusions_from_formal_results": [
+        "propuestas semánticas temporales actuales",
+        "materialización DEVELOPMENT de las 57 pantallas",
+        "decisiones HITL realizadas en DEVELOPMENT",
+        "A/B/C development smokes",
+        "model-selection benchmarks",
+        "regression matrices"
+      ],
+      "may_influence_system": true,
+      "purposes": [
+        "selección de modelos",
+        "desarrollo de prompts y schemas",
+        "pruebas unitarias y de integración",
+        "materialización semántica de las 57 pantallas",
+        "detección de blockers de escala real",
+        "certificación end-to-end",
+        "correcciones antes del global freeze"
+      ]
+    },
+    "formal": {
+      "may_influence_system": false,
+      "starts_only_after": [
+        "global development freeze",
+        "independent structural Gold Standard frozen",
+        "independent semantic reference frozen",
+        "final RQ3 query bank and answer key frozen",
+        "isolated FORMAL persistence initialized and reset checks passed",
+        "formal pre-run experiment manifest frozen"
+      ]
+    },
+    "global_development_freeze": {
+      "occurs_after": [
+        "protocol_v2 freeze",
+        "57-screen DEVELOPMENT semantic materialization",
+        "full DEVELOPMENT end-to-end certification",
+        "closure of demonstrated blockers"
+      ]
+    },
+    "reset_before_formal": {
+      "development_archive_untouched": true,
+      "formal_environment_must_exclude": [
+        "DEVELOPMENT SemanticProposal rows",
+        "DEVELOPMENT semantic review decisions",
+        "DEVELOPMENT effective semantic versions",
+        "DEVELOPMENT semantic Chroma projection"
+      ],
+      "purpose": "Evitar contaminación entre DEVELOPMENT y FORMAL mediante persistencia formal aislada, preservando intacto el archivo de ingeniería DEVELOPMENT.",
+      "required": true,
+      "required_initial_semantic_state": {
+        "effective_semantic_versions": 0,
+        "semantic_chroma_documents": 0,
+        "semantic_proposals": 0,
+        "semantic_review_actions": 0
+      },
+      "strategy": "isolated_formal_persistence"
+    }
+  },
+  "development_model_selection": {
+    "article_placement": [
+      "Materiales y Métodos: selección DEVELOPMENT del modelo de enriquecimiento semántico.",
+      "Materiales y Métodos: selección DEVELOPMENT del writer grounded."
+    ],
+    "formal_rq_evidence": false,
+    "interpretation": "Los benchmarks explican por qué se seleccionaron los modelos congelados, pero no se reutilizan como resultados de RQ1, RQ2 o RQ3.",
+    "report_in_article": true,
+    "reportable_dimensions": [
+      "modelos candidatos",
+      "cumplimiento del contrato de salida",
+      "grounding/factualidad evaluada durante DEVELOPMENT",
+      "latencia observada",
+      "estabilidad/repetibilidad",
+      "modelo finalmente congelado"
+    ],
+    "scientific_role": "Caracterización y justificación de diseño del artefacto; no constituye una pregunta de investigación formal."
+  },
+  "formal_execution_order": [
+    "Expert A freezes independent structural Gold Standard from direct ERP inspection",
+    "Expert A freezes independent semantic reference before any FORMAL SemanticProposal is seen",
+    "investigators construct and Expert A validates/finalizes RQ3 query bank and answer key",
+    "freeze final RQ3 query bank and answer key",
+    "initialize isolated FORMAL persistence with no DEVELOPMENT semantic state",
+    "freeze formal randomization seed and sampling/allocation manifest",
+    "capture and freeze formal pre-run experiment manifest containing all reference hashes",
+    "FORMAL data collection starts",
+    "execute formal structural acquisition",
+    "capture immutable raw RQ1 structural output manifest",
+    "compute RQ1 primary metrics before structural HITL",
+    "perform separate deterministic evidence-traceability audit",
+    "Expert B performs formal structural HITL",
+    "publish corrected/authorized formal structural ACTIVE",
+    "capture structural Chroma and Neo4j formal projection manifests",
+    "execute frozen formal M2 proposal generation",
+    "retain generation failures/timeouts in the denominator",
+    "score PRE-HITL semantics against the already-frozen semantic reference",
+    "Expert B performs timed formal semantic HITL",
+    "score POST-HITL semantics against the same frozen semantic reference",
+    "publish authorized formal semantic projection",
+    "execute paired A/B/C graph-ON conditions using the frozen RQ3 bank",
+    "execute pre-specified C graph-OFF ablation",
+    "anonymize and randomize RQ3 responses",
+    "Expert A performs primary blind RQ3 scoring",
+    "Expert B performs secondary blind scoring where planned",
+    "freeze scoring before condition identities are unblinded",
+    "unblind conditions and compute RQ3 aggregates",
+    "conduct exploratory SUS with target 15 ERP users",
+    "archive immutable reports, hashes and manifests"
+  ],
+  "formal_freeze_manifest_requirements": [
+    "backend Git HEAD and clean worktree",
+    "frontend Git HEAD and clean worktree",
+    "global DEVELOPMENT freeze artifact/SHA256",
+    "protocol_v2_1 SHA256",
+    "crawl profile SHA256",
+    "M2 generator freeze artifact/SHA256",
+    "M3 writer freeze artifact/SHA256",
+    "M3 condition contract/SHA256",
+    "embedding model and dimensionality",
+    "PostgreSQL migration revision",
+    "isolated FORMAL persistence identifier",
+    "FORMAL semantic initial-state/reset confirmation",
+    "independent structural Gold Standard SHA256",
+    "independent semantic reference SHA256",
+    "final RQ3 query bank and answer-key SHA256",
+    "formal randomization seed",
+    "sampling/allocation manifest"
+  ],
+  "formal_output_manifest_requirements": [
+    "formal RQ1 crawl job/report identifiers and SHA256",
+    "formal RQ1 raw structural knowledge version/fingerprint",
+    "formal RQ1 metric report SHA256 before structural HITL",
+    "formal structural HITL action/report SHA256",
+    "authorized formal structural ACTIVE fingerprint",
+    "formal structural Chroma fingerprint/counts after publication",
+    "formal Neo4j projection fingerprint/counts after publication",
+    "formal M2 raw proposal-set identifier/SHA256 including failures",
+    "formal RQ2 PRE-HITL scoring artifact/SHA256",
+    "formal RQ2 timed HITL action/effort artifact/SHA256",
+    "formal RQ2 POST-HITL scoring artifact/SHA256",
+    "authorized formal semantic Chroma fingerprint/counts",
+    "RQ3 run-plan SHA256",
+    "RQ3 capture-set SHA256",
+    "RQ3 blind-packet SHA256",
+    "RQ3 private mapping SHA256",
+    "RQ3 frozen scoring artifact SHA256",
+    "RQ3 aggregate report SHA256",
+    "SUS anonymized aggregate/report SHA256 when conducted"
+  ],
+  "formal_rq_data": false,
+  "formal_start_definition": {
+    "event": "first execution that intentionally creates FORMAL RQ output",
+    "must_be_preceded_by": [
+      "all three independent/frozen evaluation references",
+      "isolated FORMAL persistence verification",
+      "frozen pre-run manifest"
+    ],
+    "preparation_artifacts_are_formal_results": false
+  },
+  "frozen_development_contracts": {
+    "m2_generator": {
+      "path": "experiments/semantic/m2_v14_generator_development_freeze_v1.json",
+      "sha256": "622a6032fbcc264699fc6e569d9050b8c208f281508655d901d753b95501cd12"
+    },
+    "m3_conditions": {
+      "path": "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json",
+      "sha256": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e"
+    },
+    "m3_writer": {
+      "path": "experiments/retrieval/m3_writer_development_freeze_v1.json",
+      "sha256": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604"
+    }
+  },
+  "human_roles": {
+    "erp_users": {
+      "formal_role": "evaluación exploratoria de usabilidad SUS",
+      "not_required_for": [
+        "Gold Standard RQ1",
+        "referencia semántica RQ2",
+        "HITL estructural",
+        "HITL semántico",
+        "scoring técnico principal RQ3"
+      ],
+      "profile": "usuarios reales o representativos del ERP institucional",
+      "target_n": 15
+    },
+    "expert_A": {
+      "formal_roles": [
+        "autor/validador principal del Gold Standard estructural RQ1",
+        "autor/validador principal de la referencia semántica RQ2",
+        "validador funcional del banco y answer key de RQ3",
+        "evaluador principal ciego respecto de condición A/B/C en RQ3"
+      ],
+      "must_not_see_before_reference_freeze": [
+        "salida formal del crawler evaluada en RQ1",
+        "SemanticProposal formal evaluada en RQ2"
+      ],
+      "profile": "Encargado del departamento de TI con conocimiento funcional amplio del ERP."
+    },
+    "expert_B": {
+      "development_restriction": "No debe revisar la materialización semántica DEVELOPMENT de las mismas pantallas antes de su HITL FORMAL si su tiempo o decisiones serán utilizados como evidencia RQ2.",
+      "formal_roles": [
+        "HITL estructural posterior a la medición RQ1",
+        "HITL semántico formal RQ2",
+        "evaluador secundario ciego de RQ3 cuando sea operativamente viable"
+      ],
+      "profile": "Técnico/programador del ERP con conocimiento técnico y funcional del sistema.",
+      "rq3_blinding_caveat": "Su identidad de condición A/B/C permanece oculta, pero su exposición previa al HITL formal puede permitir reconocer contenido. Por ello Expert A es el evaluador ciego principal y Expert B se utiliza como evaluación secundaria/acuerdo entre evaluadores."
+    }
+  },
+  "protocol_version": "2.1.0",
+  "reopen_policy": "Reopen the protocol only for a demonstrated methodological defect. A technical blocker found before the global DEVELOPMENT freeze may be corrected and re-certified without converting prior DEVELOPMENT observations into formal evidence.",
+  "reporting_guardrails": [
+    "Use 'recuperación híbrida con expansión de grafo gobernada' when describing the implemented M3 mechanism.",
+    "Model-selection benchmarks are DEVELOPMENT design evidence, not a fourth RQ.",
+    "Carry-forward is review-status transfer, not measured human time saving.",
+    "Approval rate alone is not semantic quality.",
+    "Do not claim exhaustive modelling of dynamic enum/option domains.",
+    "SUS is exploratory and not the main causal evidence of RQ3.",
+    "No DEVELOPMENT output may be relabelled as FORMAL evidence."
+  ],
+  "research_questions": {
+    "RQ1": {
+      "evaluated_layer": "M1",
+      "question": "¿Con qué fidelidad, cobertura y trazabilidad puede Chat-CBMM adquirir conocimiento funcional estructural de una interfaz ERP dinámica respecto de una referencia humana independiente?"
+    },
+    "RQ2": {
+      "evaluated_layer": "M2",
+      "question": "¿Qué calidad semántica alcanza la generación grounded antes y después del Human-in-the-Loop, y qué esfuerzo humano requiere convertir las propuestas en conocimiento autorizado?"
+    },
+    "RQ3": {
+      "evaluated_layer": "M3",
+      "question": "¿Cómo cambia la calidad factual, el grounding, el comportamiento seguro y la latencia del asistente al añadir semántica HITL autorizada, un writer grounded y, secundariamente, expansión gobernada de grafo?"
+    }
+  },
+  "research_team": {
+    "investigator_responsibilities": [
+      "diseño y construcción del artefacto",
+      "preparación del protocolo",
+      "preparación de plantillas y formularios",
+      "ejecución técnica de experimentos",
+      "anonimización y aleatorización de resultados RQ3",
+      "cálculo reproducible de métricas",
+      "análisis estadístico",
+      "documentación y redacción científica"
+    ],
+    "investigator_restrictions": [
+      "No redefinir referencias, answer keys ni criterios de corrección después de observar los resultados formales.",
+      "No utilizar datos FORMAL para volver a ajustar código, prompts, modelos, thresholds o reglas del sistema."
+    ],
+    "investigators": [
+      {
+        "name": "Cesar Andres Mendieta Espinoza",
+        "role": "investigador",
+        "role_id": "INVESTIGATOR_1"
+      },
+      {
+        "name": "Jonathan Joseph Chalco Berrezueta",
+        "role": "investigador",
+        "role_id": "INVESTIGATOR_2"
+      }
+    ]
+  },
+  "rq1_design": {
+    "experimental_unit": "primary exhaustive navigation-structure item (module, screen and screen_hierarchy); secondary structural entity types are supporting scope in protocol v2.1",
+    "formal_sequence": [
+      "freeze structural Gold Standard",
+      "execute formal crawler/acquisition",
+      "compare automated output against Gold Standard",
+      "compute RQ1 metrics before structural HITL",
+      "Expert B performs structural HITL",
+      "publish corrected/authorized formal ACTIVE"
+    ],
+    "gold_standard": {
+      "frozen_before_formal_output_is_inspected": true,
+      "investigators_may_prepare_template": true,
+      "primary_author": "expert_A",
+      "source": "inspección manual directa del ERP y conocimiento funcional del experto, no la salida del crawler"
+    },
+    "governance_descriptives": [
+      "approve/correct/reject counts",
+      "carry-forward review-status transfer",
+      "privacy findings"
+    ],
+    "metric_operationalization": {
+      "evidence_traceability": "reported as a separate deterministic provenance audit; its audit contract must be frozen before the first FORMAL structural output is inspected",
+      "precision_recall_f1": "computed exhaustively for module, screen and screen_hierarchy using the frozen independent structural reference"
+    },
+    "metrics": [
+      "precision",
+      "recall",
+      "f1",
+      "false_positives",
+      "false_negatives"
+    ],
+    "not_claimed": [
+      "formal longitudinal incremental-maintenance effectiveness",
+      "exhaustive coverage of all dynamic option/value domains"
+    ],
+    "primary_exhaustive_dimensions": [
+      "module",
+      "screen",
+      "screen_hierarchy"
+    ],
+    "secondary_scope_policy": {
+      "included_in_primary_precision_recall_f1": false,
+      "promotion_to_formal_quantitative_metric_requires": "a separately specified reference schema, matching rule, sampling manifest and scoring harness frozen before the first corresponding FORMAL output is inspected",
+      "role": "supporting_descriptive_scope"
+    },
+    "secondary_stratified_entity_types": [
+      "ui_state",
+      "field",
+      "control",
+      "table",
+      "table_column",
+      "link",
+      "event",
+      "transition"
+    ],
+    "supporting_audits": [
+      "evidence_traceability"
+    ]
+  },
+  "rq2_design": {
+    "descriptive_only": [
+      "approval_rate"
+    ],
+    "experimental_unit": "semantically eligible functional screen",
+    "formal_hitl": {
+      "actions": [
+        "approve",
+        "correct",
+        "reject"
+      ],
+      "development_prior_exposure_prohibited": true,
+      "reviewer": "expert_B",
+      "timed": true
+    },
+    "human_effort_metrics": [
+      "review_duration_ms",
+      "approve_correct_reject_distribution",
+      "machine_claims_retained",
+      "machine_claims_changed_or_removed",
+      "human_added_claim_count"
+    ],
+    "interpretation_rule": "Approval rate alone is not semantic accuracy and is not evidence of time saved.",
+    "measurement_points": {
+      "post_hitl": "effective authorized semantic content after human review",
+      "pre_hitl": "raw formal SemanticProposal before human decision"
+    },
+    "quality_metrics": [
+      "claim_precision",
+      "claim_recall",
+      "claim_f1",
+      "unsupported_claim_rate",
+      "semantic_screen_coverage"
+    ],
+    "semantic_reference": {
+      "content": [
+        "expected screen purpose",
+        "expected grounded functional capabilities where applicable"
+      ],
+      "frozen_before_formal_semantic_proposals_are_seen": true,
+      "primary_author": "expert_A",
+      "source": "inspección funcional del ERP y conocimiento experto"
+    }
+  },
+  "rq3_design": {
+    "blinded_scoring": {
+      "condition_labels_hidden": true,
+      "investigators_do_not_supply_condition_identity": true,
+      "primary_evaluator": "expert_A",
+      "responses_randomized": true,
+      "secondary_evaluator": "expert_B",
+      "secondary_role": "inter-rater/robustness assessment; interpret with exposure caveat because Expert B previously performed formal HITL"
+    },
+    "condition_contract": "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json",
+    "conditions": {
+      "A": "governed structural retrieval; no authorized semantic retrieval; no writer; deterministic evidence renderer",
+      "B": "A plus authorized semantic HITL knowledge; no writer",
+      "C": "B plus grounded writer for open questions when governed evidence is sufficient"
+    },
+    "primary_comparisons": [
+      {
+        "comparison": "B-A",
+        "effect": "authorized semantic HITL contribution"
+      },
+      {
+        "comparison": "C-B",
+        "effect": "grounded writer contribution"
+      }
+    ],
+    "primary_metrics": [
+      "expected_behavior_accuracy",
+      "factual_precision",
+      "factual_recall",
+      "factual_f1",
+      "supported_claim_rate",
+      "unsupported_claim_rate",
+      "clarification_accuracy",
+      "abstention_accuracy",
+      "mutative_policy_accuracy",
+      "currentRoute_resolution_accuracy"
+    ],
+    "query_bank": {
+      "answer_key_structure": [
+        "expected behavior: answer/clarification/abstention",
+        "required factual claims",
+        "acceptable equivalent facts",
+        "unsupported/prohibited claims where relevant"
+      ],
+      "constructed_by": [
+        "investigators",
+        "expert_A functional validation"
+      ],
+      "frozen_before_formal_execution": true,
+      "must_not_be_tuned_after_results": true,
+      "same_questions_across_conditions": true,
+      "strata": [
+        "locate_screen",
+        "screen_purpose",
+        "fields_and_search",
+        "tables_and_columns",
+        "controls_actions_and_navigation",
+        "current_route_context",
+        "ambiguity_and_clarification",
+        "out_of_scope_abstention",
+        "mutative_safety"
+      ]
+    },
+    "runtime_metrics": [
+      "end_to_end_latency_ms",
+      "p50_latency_ms",
+      "p95_latency_ms",
+      "writer_invocation_rate"
+    ],
+    "safety_invariants": [
+      "PostgreSQL reauthorization before use",
+      "mutative policy remains deterministic",
+      "clarification remains deterministic",
+      "abstention remains deterministic",
+      "condition A never queries semantic Chroma",
+      "conditions A and B never invoke grounded writer",
+      "graph OFF never executes Neo4j expansion"
+    ],
+    "secondary_ablation": {
+      "comparison": "C_graph_on-C_graph_off",
+      "effect": "governed graph-expansion contribution"
+    }
+  },
+  "status": "formal_preparation_protocol_frozen",
+  "study": {
+    "artifact": "Chat-CBMM",
+    "case_study": "ERP del Cuerpo de Bomberos Municipal de Machala",
+    "central_contribution": "Construcción semiautomática y gobernada de conocimiento funcional desde interfaces ERP dinámicas, enriquecimiento semántico Human-in-the-Loop y asistencia conversacional mediante recuperación híbrida con expansión de grafo.",
+    "methodology": "Design Science Research Methodology"
+  },
+  "supersedes": {
+    "path": "experiments/protocol/protocol_v2.json",
+    "reason": "Enmienda metodológica pre-FORMAL: alinea la secuencia de congelamiento de referencias con el criterio de inicio FORMAL, separa el manifest pre-run de los manifests de resultados y aclara el alcance cuantitativo primario de RQ1. No modifica el artefacto software congelado ni utiliza datos FORMAL.",
+    "sha256": "a7eb71e24049354483591f4e82347d6f0fc5037340d4732e2a64696fb9ec61d6"
+  },
+  "sus_exploratory": {
+    "instrument": "System Usability Scale",
+    "interpretation": "Describe perceived usability of the case-study prototype; do not treat the sample as population-level evidence.",
+    "items": 10,
+    "participant_profile": "usuarios reales/representativos del ERP",
+    "report": [
+      "valid participant count",
+      "SUS mean",
+      "SUS median",
+      "dispersion"
+    ],
+    "research_role": "exploratory_only",
+    "system_condition": "final integrated C_graph_on prototype",
+    "target_participants": 15
+  }
+}
