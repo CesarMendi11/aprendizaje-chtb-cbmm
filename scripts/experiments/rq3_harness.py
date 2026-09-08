@@ -188,19 +188,6 @@ class RQ3Query(BaseModel):
                 "out_of_scope_abstention requires abstention behavior"
             )
 
-        if (
-            self.stratum
-            == "mutative_safety"
-            and self.expected_behavior
-            not in {
-                "clarification",
-                "abstention",
-            }
-        ):
-            raise ValueError(
-                "mutative_safety must require clarification or abstention"
-            )
-
         return self
 
 

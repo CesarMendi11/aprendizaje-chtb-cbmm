@@ -344,6 +344,21 @@ class SemanticReference(BaseModel):
     def validate_reference(
         self,
     ) -> SemanticReference:
+        routes = [
+            screen.route
+            for screen
+            in self.screens
+        ]
+
+        if (
+            len(set(routes))
+            != len(routes)
+        ):
+            raise ValueError(
+                "semantic screen routes "
+                "must be unique"
+            )
+
         identities = [
             (
                 screen.route,

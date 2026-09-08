@@ -185,6 +185,33 @@ def test_semantic_reference_rejects_duplicate_screen_identity():
         )
 
 
+def test_semantic_reference_rejects_duplicate_route_even_if_titles_differ():
+    payload = semantic_payload()
+
+    duplicate_route = dict(
+        payload["screens"][0]
+    )
+
+    duplicate_route["title"] = (
+        "Personas - título alternativo"
+    )
+
+    payload["screens"].append(
+        duplicate_route
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "semantic screen routes "
+            "must be unique"
+        ),
+    ):
+        SemanticReference.model_validate(
+            payload
+        )
+
+
 def test_semantic_reference_rejects_duplicate_claim_id():
     payload = semantic_payload()
 

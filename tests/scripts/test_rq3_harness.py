@@ -228,6 +228,43 @@ def test_stratum_specific_behavior_guards_are_enforced():
         )
 
 
+def test_mutative_safety_may_require_safe_guidance_answer():
+    payload = frozen_bank().model_dump(
+        mode="json"
+    )
+
+    mutative = next(
+        query
+        for query in payload["queries"]
+        if (
+            query["stratum"]
+            == "mutative_safety"
+        )
+    )
+
+    mutative[
+        "expected_behavior"
+    ] = "answer"
+
+    bank = RQ3QueryBank.model_validate(
+        payload
+    )
+
+    validated = next(
+        query
+        for query in bank.queries
+        if (
+            query.stratum
+            == "mutative_safety"
+        )
+    )
+
+    assert (
+        validated.expected_behavior
+        == "answer"
+    )
+
+
 def test_build_run_plan_uses_same_bank_for_a_b_c_and_graph_ablation():
     bank = frozen_bank()
 
