@@ -1,0 +1,1221 @@
+{
+  "matrix": "M3.9 conversational API baseline",
+  "summary": {
+    "turns": 26,
+    "passed": 26,
+    "failed": 0,
+    "pass_rate": 1.0,
+    "latency_ms": {
+      "mean": 3501.02,
+      "p50": 3502.7,
+      "p95": 5082.94,
+      "max": 7797.18
+    }
+  },
+  "rows": [
+    {
+      "scenario": "year_location_natural",
+      "turn": 1,
+      "case": "where_configure_years",
+      "question": "¿Dónde configuro los años?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 7797.18,
+      "conversation_id": "e301d7d559aa4f6f8ffe600f8d98944c",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 25,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "year_location_module_phrase",
+      "turn": 1,
+      "case": "which_module_year",
+      "question": "¿En qué módulo está Año?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3262.69,
+      "conversation_id": "23413079282d414a88c1a0e0a20b1323",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 3,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 21,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "year_typo_rrf_recovery",
+      "turn": 1,
+      "case": "typo_anoo",
+      "question": "¿Dónde está anoo?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3932.61,
+      "conversation_id": "c8578681bf3c40f28d4fdfa9977f1838",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 20,
+        "graph_seed_count": 3,
+        "validated_items": 32,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "year_controlled_multi_turn",
+      "turn": 1,
+      "case": "establish_year",
+      "question": "¿Dónde configuro los años?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3689.5,
+      "conversation_id": "42c3bdd36f5a4362bfab5ba2dcb76114",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 25,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "year_controlled_multi_turn",
+      "turn": 2,
+      "case": "elliptical_purpose",
+      "question": "¿Y para qué sirve?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3623.79,
+      "conversation_id": "42c3bdd36f5a4362bfab5ba2dcb76114",
+      "status": "answered",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "approved_semantic_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 14,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 1
+      },
+      "answer": "La pantalla 'Año' del módulo General presenta una tabla de datos con columnas DETALLE y ACTIVO, ofreciendo controles para la navegación por páginas (primera, anterior, siguiente, última), opciones para iniciar nuevas entradas o acciones mutativas, y funcionalidades de edición y eliminación visual."
+    },
+    {
+      "scenario": "year_controlled_multi_turn",
+      "turn": 3,
+      "case": "elliptical_columns",
+      "question": "¿Qué columnas tiene?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3410.12,
+      "conversation_id": "42c3bdd36f5a4362bfab5ba2dcb76114",
+      "status": "answered",
+      "intent": "LIST_COLUMNS",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Entidad validada",
+          "route": "/admin/general/anios",
+          "sourceType": "table"
+        },
+        {
+          "title": "DETALLE",
+          "route": "/admin/general/anios",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "ACTIVO",
+          "route": "/admin/general/anios",
+          "sourceType": "table_column"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 6,
+        "graph_seed_count": 1,
+        "validated_items": 18,
+        "selected_sources": 4,
+        "selected_relations": 3,
+        "selected_semantics": 0
+      },
+      "answer": "En la tabla de la pantalla \"Año\" aparecen las columnas DETALLE y ACTIVO."
+    },
+    {
+      "scenario": "year_controlled_multi_turn",
+      "turn": 4,
+      "case": "pronoun_purpose",
+      "question": "¿Y qué puedo hacer ahí?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3596.24,
+      "conversation_id": "42c3bdd36f5a4362bfab5ba2dcb76114",
+      "status": "answered",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "approved_semantic_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 15,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 1
+      },
+      "answer": "La pantalla 'Año' del módulo General presenta una tabla de datos con columnas DETALLE y ACTIVO, ofreciendo controles para la navegación por páginas (primera, anterior, siguiente, última), opciones para iniciar nuevas entradas o acciones mutativas, y funcionalidades de edición y eliminación visual."
+    },
+    {
+      "scenario": "ruc_ambiguity",
+      "turn": 1,
+      "case": "ambiguous_tax_id",
+      "question": "¿Dónde aparece la identificación tributaria?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3830.19,
+      "conversation_id": "7f0328b2f06f47c8aee0242a57eeb794",
+      "status": "answered",
+      "intent": "LOCATE_FIELD",
+      "decision": "CLARIFICATION",
+      "reason": "entity_resolution_ambiguous",
+      "confidence": "high",
+      "sources": [],
+      "retrieval": {
+        "entity_candidates": 7,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 19,
+        "selected_sources": 0,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "answer": "Encontré varias coincidencias para \"RUC\". Indícame la pantalla o el módulo al que te refieres para poder elegir la correcta."
+    },
+    {
+      "scenario": "missing_conversation_reference",
+      "turn": 1,
+      "case": "missing_screen_antecedent",
+      "question": "¿Para qué sirve esa pantalla?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 115.4,
+      "conversation_id": "fb8eb278cb9448ca8ff81ae4a73008b6",
+      "status": "answered",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "CLARIFICATION",
+      "reason": "conversation_reference_missing",
+      "confidence": "high",
+      "sources": [],
+      "retrieval": {
+        "entity_candidates": 0,
+        "semantic_hits": 0,
+        "structural_dense_hits": 0,
+        "semantic_candidates": 0,
+        "approved_semantic_hits": 0,
+        "semantic_dense_hits": 0,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 0,
+        "selected_sources": 0,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "answer": "Necesito una pantalla o un módulo de referencia para continuar. Indícame cuál quieres consultar."
+    },
+    {
+      "scenario": "dashboard_cross_entity_grounding",
+      "turn": 1,
+      "case": "locate_dashboard",
+      "question": "¿Dónde está Dashboard?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3978.28,
+      "conversation_id": "d65612d4d0e64739b9dfcb7960427d2f",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Dashboard",
+          "route": "/admin/home",
+          "sourceType": "screen"
+        },
+        {
+          "title": "ERP Cuerpo de Bomberos Municipal de Machala",
+          "route": "",
+          "sourceType": "erp_system"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 20,
+        "graph_seed_count": 1,
+        "validated_items": 32,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Dashboard\" está disponible directamente en el ERP \"ERP Cuerpo de Bomberos Municipal de Machala\"."
+    },
+    {
+      "scenario": "dashboard_cross_entity_grounding",
+      "turn": 2,
+      "case": "dashboard_purpose_without_semantic",
+      "question": "¿Y para qué sirve?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3722.92,
+      "conversation_id": "d65612d4d0e64739b9dfcb7960427d2f",
+      "status": "not_found",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "ABSTENTION",
+      "reason": "screen_purpose_semantic_missing",
+      "confidence": "low",
+      "sources": [
+        {
+          "title": "Dashboard",
+          "route": "/admin/home",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 16,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "answer": "No encontré conocimiento validado suficiente para responder esa pregunta."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 1,
+      "case": "locate_comprobantes",
+      "question": "¿Dónde encuentro Comprobantes eléctronicos emitidos?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 5082.94,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Cuentas por cobrar",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 5,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 14,
+        "graph_seed_count": 1,
+        "validated_items": 21,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Comprobantes eléctronicos emitidos\" está dentro del módulo \"Cuentas por cobrar\"."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 2,
+      "case": "list_fields_contextual",
+      "question": "¿Qué campos tiene esta pantalla?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3494.79,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "LIST_FIELDS",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Núm. comprobante",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "field"
+        },
+        {
+          "title": "Desde",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "field"
+        },
+        {
+          "title": "list",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "list",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "Página anterior",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "Buscar",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "list",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "Siguiente página",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "list",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 26,
+        "graph_seed_count": 1,
+        "validated_items": 34,
+        "selected_sources": 13,
+        "selected_relations": 12,
+        "selected_semantics": 0
+      },
+      "answer": "En la pantalla \"Comprobantes eléctronicos emitidos\" aparecen los campos Hasta, RUC, Desde y Núm. comprobante, junto al control \"Buscar\"."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 3,
+      "case": "search_by_ruc_contextual",
+      "question": "¿Cómo busco por RUC aquí?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3627.52,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "SEARCH_BY_FIELD",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "RUC",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "field"
+        },
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Buscar",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 4,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 26,
+        "graph_seed_count": 1,
+        "validated_items": 41,
+        "selected_sources": 3,
+        "selected_relations": 2,
+        "selected_semantics": 0
+      },
+      "answer": "Para buscar por \"RUC\", la pantalla \"Comprobantes eléctronicos emitidos\" dispone del campo \"RUC\" y del control \"Buscar\"."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 4,
+      "case": "find_search_control_contextual",
+      "question": "¿Dónde está el botón Buscar aquí?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 4221.42,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "FIND_CONTROL",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Buscar",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        },
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 20,
+        "graph_seed_count": 1,
+        "validated_items": 31,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "El control \"Buscar\" está en la pantalla \"Comprobantes eléctronicos emitidos\"."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 5,
+      "case": "list_columns_contextual",
+      "question": "¿Qué columnas tiene esta pantalla?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3259.21,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "LIST_COLUMNS",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        },
+        {
+          "title": "COMPROBANTE",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "Entidad validada",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table"
+        },
+        {
+          "title": "RAZON SOCIAL / NOMBRE",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "ESTADO",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "CORREO",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "TOTAL",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "RUC/CI",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "FECHA EMISIÓN",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "table_column"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 13,
+        "graph_seed_count": 1,
+        "validated_items": 23,
+        "selected_sources": 9,
+        "selected_relations": 8,
+        "selected_semantics": 0
+      },
+      "answer": "En la tabla de la pantalla \"Comprobantes eléctronicos emitidos\" aparecen las columnas RAZON SOCIAL / NOMBRE, ESTADO, COMPROBANTE, CORREO, TOTAL, RUC/CI y FECHA EMISIÓN."
+    },
+    {
+      "scenario": "comprobantes_full_intent_surface",
+      "turn": 6,
+      "case": "next_page_navigation_contextual",
+      "question": "¿Cómo avanzo a la siguiente página aquí?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3579.97,
+      "conversation_id": "1e26e539145f41bd96f64295eb24caff",
+      "status": "answered",
+      "intent": "NAVIGATION_EVENT",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Comprobantes eléctronicos emitidos",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Siguiente página",
+          "route": "/admin/cuentasxcobrar/comprobantes",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 52,
+        "graph_seed_count": 1,
+        "validated_items": 40,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "Para avanzar, usa el control \"Siguiente página\" en la pantalla \"Comprobantes eléctronicos emitidos\"."
+    },
+    {
+      "scenario": "mutative_guidance_without_execution",
+      "turn": 1,
+      "case": "establish_year_for_mutative",
+      "question": "¿Dónde configuro los años?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3213.24,
+      "conversation_id": "e63b2b661cbe463a85d1dc7bc24d5ea7",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 25,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "mutative_guidance_without_execution",
+      "turn": 2,
+      "case": "create_year_guidance",
+      "question": "¿Cómo creo un nuevo año aquí?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3502.7,
+      "conversation_id": "e63b2b661cbe463a85d1dc7bc24d5ea7",
+      "status": "answered",
+      "intent": "MUTATIVE_ACTION",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Nuevo",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "Nuevo",
+          "route": "/admin/general/anios",
+          "sourceType": "event"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "Página anterior",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 64,
+        "graph_seed_count": 1,
+        "validated_items": 53,
+        "selected_sources": 33,
+        "selected_relations": 32,
+        "selected_semantics": 0
+      },
+      "answer": "La acción está respaldada por el control \"Nuevo\"."
+    },
+    {
+      "scenario": "mutative_guidance_without_execution",
+      "turn": 3,
+      "case": "unsupported_delete_fails_safe",
+      "question": "Elimina el año aquí",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3166.51,
+      "conversation_id": "e63b2b661cbe463a85d1dc7bc24d5ea7",
+      "status": "answered",
+      "intent": "MUTATIVE_ACTION",
+      "decision": "ABSTENTION",
+      "reason": "mutative_action_policy",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "delete",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        },
+        {
+          "title": "edit",
+          "route": "/admin/general/anios",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 64,
+        "graph_seed_count": 1,
+        "validated_items": 51,
+        "selected_sources": 33,
+        "selected_relations": 32,
+        "selected_semantics": 0
+      },
+      "answer": "No encontré conocimiento validado suficiente para responder esa pregunta."
+    },
+    {
+      "scenario": "explicit_cross_entity_round_trip",
+      "turn": 1,
+      "case": "roundtrip_establish_year",
+      "question": "¿Dónde configuro los años?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3468.72,
+      "conversation_id": "d03d4526b2a545179cab74837b68b865",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 25,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "explicit_cross_entity_round_trip",
+      "turn": 2,
+      "case": "roundtrip_switch_dashboard",
+      "question": "¿Y dónde está Dashboard?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3454.52,
+      "conversation_id": "d03d4526b2a545179cab74837b68b865",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Dashboard",
+          "route": "/admin/home",
+          "sourceType": "screen"
+        },
+        {
+          "title": "ERP Cuerpo de Bomberos Municipal de Machala",
+          "route": "",
+          "sourceType": "erp_system"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 20,
+        "graph_seed_count": 1,
+        "validated_items": 32,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Dashboard\" está disponible directamente en el ERP \"ERP Cuerpo de Bomberos Municipal de Machala\"."
+    },
+    {
+      "scenario": "explicit_cross_entity_round_trip",
+      "turn": 3,
+      "case": "roundtrip_dashboard_purpose",
+      "question": "¿Y para qué sirve?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3192.5,
+      "conversation_id": "d03d4526b2a545179cab74837b68b865",
+      "status": "not_found",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "ABSTENTION",
+      "reason": "screen_purpose_semantic_missing",
+      "confidence": "low",
+      "sources": [
+        {
+          "title": "Dashboard",
+          "route": "/admin/home",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 16,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "answer": "No encontré conocimiento validado suficiente para responder esa pregunta."
+    },
+    {
+      "scenario": "explicit_cross_entity_round_trip",
+      "turn": 4,
+      "case": "roundtrip_switch_year",
+      "question": "¿Y dónde está Año?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3144.38,
+      "conversation_id": "d03d4526b2a545179cab74837b68b865",
+      "status": "answered",
+      "intent": "LOCATE_SCREEN",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "General",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 9,
+        "graph_seed_count": 1,
+        "validated_items": 20,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "answer": "La pantalla \"Año\" está dentro del módulo \"General\"."
+    },
+    {
+      "scenario": "explicit_cross_entity_round_trip",
+      "turn": 5,
+      "case": "roundtrip_year_purpose",
+      "question": "¿Y para qué sirve?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 3503.39,
+      "conversation_id": "d03d4526b2a545179cab74837b68b865",
+      "status": "answered",
+      "intent": "SCREEN_PURPOSE",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "approved_semantic_answer",
+      "confidence": "high",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 14,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 1
+      },
+      "answer": "La pantalla 'Año' del módulo General presenta una tabla de datos con columnas DETALLE y ACTIVO, ofreciendo controles para la navegación por páginas (primera, anterior, siguiente, última), opciones para iniciar nuevas entradas o acciones mutativas, y funcionalidades de edición y eliminación visual."
+    },
+    {
+      "scenario": "out_of_domain_fail_closed",
+      "turn": 1,
+      "case": "general_knowledge_question",
+      "question": "¿Cuál es la capital de Francia?",
+      "passed": true,
+      "errors": [],
+      "latency_ms": 155.68,
+      "conversation_id": "6d3c402e504c4169ab0adb9743a10fea",
+      "status": "not_found",
+      "intent": null,
+      "decision": "ABSTENTION",
+      "reason": "insufficient_evidence",
+      "confidence": "low",
+      "sources": [],
+      "retrieval": {
+        "entity_candidates": 12,
+        "semantic_hits": 0,
+        "structural_dense_hits": 0,
+        "semantic_candidates": 0,
+        "approved_semantic_hits": 0,
+        "semantic_dense_hits": 0,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 0,
+        "selected_sources": 0,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "answer": "No encontré conocimiento validado suficiente para responder esa pregunta."
+    }
+  ]
+}

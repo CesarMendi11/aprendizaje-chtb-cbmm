@@ -1,0 +1,88 @@
+{
+  "artifact": {
+    "backend": {
+      "branch": "main",
+      "head": "c384ab6d991594f91d9a87c6ee25826d12b1cb5d"
+    },
+    "frontend": {
+      "branch": "feat/erp-assistant-chat",
+      "head": "96697d3f70ba67fe41e462118fe0547f687003a5"
+    }
+  },
+  "created_at": "2026-09-08T02:45:57.542286+00:00",
+  "development_guardrails": {
+    "development_metrics_are_not_formal_results": true,
+    "development_tuning_closed": true,
+    "expert_references_must_be_frozen_before_corresponding_formal_outputs": true,
+    "formal_environment_must_be_isolated": true,
+    "normal_semantic_errors_do_not_trigger_prompt_retuning": true,
+    "rq3_query_bank_must_be_frozen_before_formal_execution": true
+  },
+  "experiment_harness": {
+    "formal_data_generated": false,
+    "rq1_reference_harness": true,
+    "rq2_scoring_harness": true,
+    "rq3_harness": true,
+    "status": "INTEGRATED"
+  },
+  "formal_rq_data": false,
+  "formal_rq_data_collection_started": false,
+  "freeze_id": "cbmm-global-development-freeze-v1",
+  "m1": {
+    "active_knowledge_version": "4a7f929598c8fa76",
+    "knowledge_items": 2397,
+    "neo4j_nodes": 2397,
+    "neo4j_relationships": 3432,
+    "screens": 57,
+    "status": "FROZEN",
+    "structural_chroma_documents": 2211
+  },
+  "m2": {
+    "approved": 40,
+    "corrected": 15,
+    "effective_claims": 330,
+    "embedding_batch_size": 32,
+    "embedding_dimensions": 1024,
+    "embedding_model": "qwen3-embedding:0.6b",
+    "embedding_timeout_seconds": 300.0,
+    "freeze_path": "experiments/semantic/m2_v14_generator_development_freeze_v3.json",
+    "freeze_sha256": "5368730f4becfdce80ddf3d92c6a8f2a886a60c9dfbd2e012961561649402ba8",
+    "model": "qwen3.5:9b",
+    "pending": 0,
+    "prompt_version": "screen-purpose-v14.2",
+    "publishable_proposals": 55,
+    "rejected": 0,
+    "semantic_chroma_documents": 55,
+    "status": "FROZEN"
+  },
+  "m3": {
+    "conditions_contract": {
+      "path": "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json",
+      "sha256": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e"
+    },
+    "development_e2e": {
+      "failed": 0,
+      "p50_latency_ms": 3502.7,
+      "p95_latency_ms": 5082.94,
+      "pass_rate": 1.0,
+      "passed": 26,
+      "path": "experiments/retrieval/m3_final_development_e2e_v1.json",
+      "sha256": "775c13f508c2e49e900b8e45f2a394ac95589307596c7c6b85f5343bafc6cbd7",
+      "turns": 26
+    },
+    "status": "FROZEN",
+    "writer_freeze": {
+      "path": "experiments/retrieval/m3_writer_development_freeze_v1.json",
+      "sha256": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604"
+    },
+    "writer_model": "qwen3.5:4b",
+    "writer_timeout_seconds": 60.0
+  },
+  "next_phase": "FORMAL_PREPARATION",
+  "phase": "DEVELOPMENT",
+  "protocol": {
+    "path": "experiments/protocol/protocol_v2.json",
+    "sha256": "a7eb71e24049354483591f4e82347d6f0fc5037340d4732e2a64696fb9ec61d6"
+  },
+  "status": "FROZEN"
+}
