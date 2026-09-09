@@ -62,27 +62,28 @@ def frozen_bank() -> RQ3QueryBank:
         ),
     )
 
-    return RQ3QueryBank.model_validate(
-        {
-            "schema_version":
-                "1.0.0",
+    queries = []
+    index = 1
 
-            "status":
-                "frozen",
-
-            "bank_id":
-                "rq3-test-v1",
-
-            "queries": [
+    for (
+        stratum,
+        behavior,
+        current_route,
+    ) in strata:
+        for repetition in range(6):
+            queries.append(
                 {
                     "query_id":
-                        f"Q{index:02d}",
+                        f"Q{index:03d}",
 
                     "stratum":
                         stratum,
 
                     "question":
-                        f"Pregunta {index}",
+                        (
+                            f"Pregunta {index} "
+                            f"repetición {repetition + 1}"
+                        ),
 
                     "current_route":
                         current_route,
@@ -96,22 +97,25 @@ def frozen_bank() -> RQ3QueryBank:
                     "prohibited_claims":
                         [],
                 }
-                for (
-                    index,
-                    (
-                        stratum,
-                        behavior,
-                        current_route,
-                    ),
-                )
-                in enumerate(
-                    strata,
-                    start=1,
-                )
-            ],
+            )
+
+            index += 1
+
+    return RQ3QueryBank.model_validate(
+        {
+            "schema_version":
+                "1.0.0",
+
+            "status":
+                "frozen",
+
+            "bank_id":
+                "rq3-test-v1",
+
+            "queries":
+                queries,
         }
     )
-
 
 def captures_for(
     bank: RQ3QueryBank,
@@ -534,3 +538,22 @@ def test_blind_packet_is_deterministic_for_same_seed_except_timestamp():
             "entries"
         ]
     ]
+
+
+
+def test_frozen_bank_requires_exact_six_queries_per_stratum():
+    payload = frozen_bank().model_dump(
+        mode="json"
+    )
+
+    payload["queries"].pop()
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "exactly 6"
+        ),
+    ):
+        RQ3QueryBank.model_validate(
+            payload
+        )

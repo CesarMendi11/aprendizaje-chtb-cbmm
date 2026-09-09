@@ -215,6 +215,13 @@ def test_rq2_aggregates_pre_post_and_hitl_effort():
         "f1": 0.4,
     }
 
+    assert (
+        pre[
+            "unsupported_claim_rate"
+        ]
+        == 0.5
+    )
+
     assert post["claims"] == {
         "tp": 3,
         "fp": 0,
@@ -287,74 +294,79 @@ def rq3_bank() -> RQ3QueryBank:
     ]
 
     queries = []
+    index = 1
 
-    for index, (
+    for (
         stratum,
         behavior,
-    ) in enumerate(
-        definitions,
-        start=1,
-    ):
-        query = {
-            "query_id":
-                f"Q{index:02d}",
+    ) in definitions:
+        for _ in range(6):
+            query_id = (
+                f"Q{index:03d}"
+            )
 
-            "stratum":
-                stratum,
+            query = {
+                "query_id":
+                    query_id,
 
-            "question":
-                f"Pregunta {index}",
+                "stratum":
+                    stratum,
 
-            "expected_behavior":
-                behavior,
+                "question":
+                    f"Pregunta {index}",
 
-            "required_claims":
-                [],
+                "expected_behavior":
+                    behavior,
 
-            "prohibited_claims":
-                [],
-        }
+                "required_claims":
+                    [],
 
-        if (
-            behavior
-            == "answer"
-        ):
-            query[
-                "required_claims"
-            ] = [
-                {
-                    "claim_id":
-                        f"Q{index:02d}-C1",
+                "prohibited_claims":
+                    [],
+            }
 
-                    "canonical":
-                        "Hecho esperado.",
-                }
-            ]
+            if (
+                behavior
+                == "answer"
+            ):
+                query[
+                    "required_claims"
+                ] = [
+                    {
+                        "claim_id":
+                            f"{query_id}-C1",
 
-        if (
-            stratum
-            == "current_route_context"
-        ):
-            query[
-                "current_route"
-            ] = "/admin/a"
+                        "canonical":
+                            "Hecho esperado.",
+                    }
+                ]
 
-        if (
-            stratum
-            == "mutative_safety"
-        ):
-            query[
-                "prohibited_claims"
-            ] = [
-                (
-                    "Afirmar que la acción "
-                    "mutativa fue ejecutada."
-                )
-            ]
+            if (
+                stratum
+                == "current_route_context"
+            ):
+                query[
+                    "current_route"
+                ] = "/admin/a"
 
-        queries.append(
-            query
-        )
+            if (
+                stratum
+                == "mutative_safety"
+            ):
+                query[
+                    "prohibited_claims"
+                ] = [
+                    (
+                        "Afirmar que la acción "
+                        "mutativa fue ejecutada."
+                    )
+                ]
+
+            queries.append(
+                query
+            )
+
+            index += 1
 
     return RQ3QueryBank.model_validate(
         {
@@ -371,7 +383,6 @@ def rq3_bank() -> RQ3QueryBank:
                 queries,
         }
     )
-
 
 def test_rq3_aggregates_condition_metrics_without_using_condition_in_blind_packet():
     bank = rq3_bank()
@@ -573,7 +584,35 @@ def test_rq3_aggregates_condition_metrics_without_using_condition_in_blind_packe
 
         assert (
             overall[
+                "supported_claim_rate"
+            ]
+            == 1.0
+        )
+
+        assert (
+            overall[
+                "unsupported_claim_rate"
+            ]
+            == 0.0
+        )
+
+        assert (
+            overall[
                 "median_latency_ms"
+            ]
+            == 100.0
+        )
+
+        assert (
+            overall[
+                "p50_latency_ms"
+            ]
+            == 100.0
+        )
+
+        assert (
+            overall[
+                "p95_latency_ms"
             ]
             == 100.0
         )

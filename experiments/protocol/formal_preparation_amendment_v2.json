@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "amendment_id": "formal_preparation_amendment_v2",
+  "status": "frozen_pre_formal",
+  "formal_rq_data_seen_before_amendment": false,
+  "superseded_protocol": {
+    "path": "experiments/protocol/protocol_v2_1.json",
+    "sha256": "f960f5f6f3daaeb1f1077bd29cdc6b966b249b77b6021f96197b632884245754"
+  },
+  "reason": "Final pre-FORMAL measurement closure after external and internal review. The changes clarify RQ1 identity, add non-primary route diagnostics, pre-specify the RQ3 statistical analysis, fix the RQ3 bank size/allocation, and make the shared-Expert-A validity threat explicit.",
+  "changes": [
+    {
+      "area": "RQ1",
+      "change": "Define screen name as the visible in-screen title/header. Keep module, screen and screen_hierarchy as the primary dimensions. Add screen_route/title/hierarchy diagnostics for interpretation only.",
+      "runtime_changed": false
+    },
+    {
+      "area": "RQ3 bank",
+      "change": "Fix final bank at 54 query_ids, 6 per each of nine strata; 216 primary blinded responses.",
+      "runtime_changed": false
+    },
+    {
+      "area": "statistics",
+      "change": "Freeze exact McNemar tests for the two primary binary paired comparisons, Holm correction across them, paired query-level bootstrap intervals, and a secondary Wilcoxon latency sensitivity analysis. Strata remain descriptive.",
+      "runtime_changed": false
+    },
+    {
+      "area": "validity",
+      "change": "Explicitly identify correlated epistemic dependence because Expert A builds independent references/validates the bank and is the primary blind RQ3 scorer.",
+      "runtime_changed": false
+    }
+  ],
+  "non_changes": [
+    "M1 runtime",
+    "M2 runtime",
+    "M3 runtime",
+    "frozen models",
+    "frozen prompts",
+    "DEVELOPMENT persistence",
+    "DEVELOPMENT results",
+    "RQ2 reference schema",
+    "RQ3 A/B/C and graph-ablation condition definitions"
+  ],
+  "formal_analysis_plan": {
+    "path": "experiments/protocol/formal_analysis_plan_v1.json",
+    "sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac"
+  },
+  "formal_operational_plan": {
+    "path": "experiments/protocol/formal_operational_plan_v1.md",
+    "sha256": "2acdf97f04cfc74b467323b3cde0af3222963429503efc2d8745b86d3555a3b5"
+  }
+}

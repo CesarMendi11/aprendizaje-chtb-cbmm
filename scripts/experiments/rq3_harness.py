@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import random
+from collections import Counter
 from pathlib import Path
 from typing import Any, Literal
 
@@ -22,6 +23,9 @@ RQ3_STRATA = (
     "out_of_scope_abstention",
     "mutative_safety",
 )
+
+RQ3_FROZEN_QUERIES_PER_STRATUM = 6
+RQ3_FROZEN_QUERY_COUNT = 54
 
 ExpectedBehavior = Literal["answer", "clarification", "abstention"]
 Condition = Literal["A", "B", "C"]
@@ -264,6 +268,50 @@ class RQ3QueryBank(BaseModel):
                     + ", ".join(
                         sorted(missing)
                     )
+                )
+
+            counts = Counter(
+                query.stratum
+                for query in self.queries
+            )
+
+            invalid_allocation = {
+                stratum:
+                    counts.get(
+                        stratum,
+                        0,
+                    )
+                for stratum
+                in RQ3_STRATA
+                if (
+                    counts.get(
+                        stratum,
+                        0,
+                    )
+                    != RQ3_FROZEN_QUERIES_PER_STRATUM
+                )
+            }
+
+            if (
+                len(self.queries)
+                != RQ3_FROZEN_QUERY_COUNT
+                or invalid_allocation
+            ):
+                details = ", ".join(
+                    f"{stratum}={count}"
+                    for stratum, count
+                    in sorted(
+                        invalid_allocation.items()
+                    )
+                )
+
+                raise ValueError(
+                    "a frozen query bank must cover every "
+                    "RQ3 stratum with exactly "
+                    f"{RQ3_FROZEN_QUERIES_PER_STRATUM} "
+                    "queries each and "
+                    f"{RQ3_FROZEN_QUERY_COUNT} total; "
+                    f"invalid allocation: {details or 'total only'}"
                 )
 
         return self

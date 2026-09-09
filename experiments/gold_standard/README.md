@@ -16,9 +16,9 @@ Columnas:
 
 - `entity_type`: `module` o `screen`;
 - `parent_module_path`: jerarquía humana separada por ` > `; vacía para módulos raíz;
-- `name`: nombre visible del módulo/submódulo o título de pantalla;
+- `name`: para `module`, nombre visible del módulo/submódulo; para `screen`, el título o encabezado visible **dentro de la pantalla una vez abierta**, no la etiqueta del menú usada para llegar a ella;
 - `route`: obligatoria para `screen`; vacía para `module` si no existe una ruta estable propia;
-- `notes`: observaciones del revisor, no utilizadas para el matching.
+- `notes`: observaciones del revisor, no utilizadas para el matching. Si la etiqueta del menú difiere del título interno de una pantalla, puede registrarse aquí como `menu_label: ...`.
 
 Ejemplos ilustrativos de formato (no deben copiarse como datos reales sin verificarlos manualmente):
 
@@ -29,5 +29,11 @@ module,Trámites,Rastrear,,
 screen,General,Año,/admin/general/anios,
 screen,Trámites > Rastrear,Rastrear externos,/admin/tramites/rastrear/externos,
 ```
+
+### Regla de identidad para pantallas
+
+La dimensión primaria `screen` conserva el contrato congelado `route + name`, y `screen_hierarchy` conserva `route + parent_module_path + name`. Para evitar confundir dos textos distintos del ERP, el `name` de una fila `screen` debe corresponder al **título/encabezado visible dentro de la pantalla**, observado después de abrirla. La etiqueta del menú no sustituye ese título.
+
+El evaluador también reporta `screen_route` y coincidencias condicionales de título/jerarquía como **diagnósticos interpretativos**. No reemplazan ni recalculan oportunistamente las dimensiones primarias de RQ1.
 
 Regla de independencia: primero se congela esta referencia humana; después se ejecuta el crawl y se compara con `scripts.experiments.evaluate_structural`.

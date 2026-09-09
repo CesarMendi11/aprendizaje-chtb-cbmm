@@ -115,6 +115,12 @@ def _reference_keys(items: Iterable[ReferenceItem], dimension: str) -> set[tuple
             for item in items
             if item.entity_type == "screen"
         }
+    if dimension == "screen_route":
+        return {
+            (item.route,)
+            for item in items
+            if item.entity_type == "screen"
+        }
     raise ValueError(f"Dimensión estructural no soportada: {dimension}")
 
 
@@ -134,6 +140,11 @@ def _detected_keys(repository: CanonicalKnowledgeRepository, dimension: str) -> 
                 module_paths.get(screen.module_id, ()),
                 normalize_text(screen.title),
             )
+            for screen in repository.knowledge.screens
+        }
+    if dimension == "screen_route":
+        return {
+            (normalize_route(screen.route),)
             for screen in repository.knowledge.screens
         }
     raise ValueError(f"Dimensión estructural no soportada: {dimension}")
@@ -177,6 +188,214 @@ def _render_key(key: tuple) -> object:
     return " > ".join(key)
 
 
+def _screen_identity_diagnostics(
+    items: Iterable[ReferenceItem],
+    repository: CanonicalKnowledgeRepository,
+) -> dict[str, object]:
+    reference_screens = [
+        item
+        for item in items
+        if item.entity_type == "screen"
+    ]
+
+    detected_screens = list(
+        repository.knowledge.screens
+    )
+
+    module_paths = _canonical_module_paths(
+        repository
+    )
+
+    reference_by_route: dict[
+        str,
+        list[ReferenceItem],
+    ] = {}
+
+    detected_by_route: dict[
+        str,
+        list[object],
+    ] = {}
+
+    for item in reference_screens:
+        reference_by_route.setdefault(
+            item.route,
+            [],
+        ).append(
+            item
+        )
+
+    for screen in detected_screens:
+        route = normalize_route(
+            screen.route
+        )
+
+        detected_by_route.setdefault(
+            route,
+            [],
+        ).append(
+            screen
+        )
+
+    shared_routes = sorted(
+        set(reference_by_route)
+        & set(detected_by_route)
+    )
+
+    title_matches = 0
+    hierarchy_matches = 0
+
+    title_mismatches = []
+    hierarchy_mismatches = []
+
+    for route in shared_routes:
+        reference_titles = {
+            normalize_text(item.name)
+            for item in reference_by_route[
+                route
+            ]
+        }
+
+        detected_titles = {
+            normalize_text(screen.title)
+            for screen in detected_by_route[
+                route
+            ]
+        }
+
+        if (
+            reference_titles
+            & detected_titles
+        ):
+            title_matches += 1
+        else:
+            title_mismatches.append(
+                {
+                    "route":
+                        route,
+
+                    "reference_titles":
+                        sorted(
+                            reference_titles
+                        ),
+
+                    "detected_titles":
+                        sorted(
+                            detected_titles
+                        ),
+                }
+            )
+
+        reference_paths = {
+            item.module_path_parts
+            for item in reference_by_route[
+                route
+            ]
+        }
+
+        detected_paths = {
+            module_paths.get(
+                screen.module_id,
+                (),
+            )
+            for screen in detected_by_route[
+                route
+            ]
+        }
+
+        if (
+            reference_paths
+            & detected_paths
+        ):
+            hierarchy_matches += 1
+        else:
+            hierarchy_mismatches.append(
+                {
+                    "route":
+                        route,
+
+                    "reference_module_paths":
+                        sorted(
+                            " > ".join(path)
+                            for path
+                            in reference_paths
+                        ),
+
+                    "detected_module_paths":
+                        sorted(
+                            " > ".join(path)
+                            for path
+                            in detected_paths
+                        ),
+                }
+            )
+
+    shared_count = len(
+        shared_routes
+    )
+
+    return {
+        "screen_route":
+            _metrics(
+                _reference_keys(
+                    reference_screens,
+                    "screen_route",
+                ),
+                _detected_keys(
+                    repository,
+                    "screen_route",
+                ),
+            ),
+
+        "shared_route_count":
+            shared_count,
+
+        "title_match_on_shared_routes": {
+            "matches":
+                title_matches,
+
+            "total":
+                shared_count,
+
+            "accuracy":
+                (
+                    title_matches
+                    / shared_count
+                    if shared_count
+                    else None
+                ),
+
+            "mismatches":
+                title_mismatches,
+        },
+
+        "hierarchy_match_on_shared_routes": {
+            "matches":
+                hierarchy_matches,
+
+            "total":
+                shared_count,
+
+            "accuracy":
+                (
+                    hierarchy_matches
+                    / shared_count
+                    if shared_count
+                    else None
+                ),
+
+            "mismatches":
+                hierarchy_mismatches,
+        },
+
+        "interpretation": (
+            "Diagnostics only. The frozen primary RQ1 dimensions remain "
+            "module, screen and screen_hierarchy. screen_route separates "
+            "route discovery from title-label disagreement without replacing "
+            "the primary metrics."
+        ),
+    }
+
+
 def evaluate(reference_path: Path, knowledge_path: Path) -> dict[str, object]:
     reference = load_reference(reference_path)
     repository = CanonicalKnowledgeRepository(knowledge_path)
@@ -187,12 +406,19 @@ def evaluate(reference_path: Path, knowledge_path: Path) -> dict[str, object]:
             _detected_keys(repository, dimension),
         )
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "evaluation_type": "structural_census",
         "reference_path": reference_path.as_posix(),
         "knowledge_path": knowledge_path.as_posix(),
         "knowledge_version": repository.knowledge.knowledge_version,
         "metrics": metrics,
+        "diagnostics": {
+            "screen_identity":
+                _screen_identity_diagnostics(
+                    reference,
+                    repository,
+                ),
+        },
     }
 
 

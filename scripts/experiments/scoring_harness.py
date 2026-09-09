@@ -457,6 +457,59 @@ def _safe_rate(
     )
 
 
+def _percentile_linear(
+    values: list[float],
+    quantile: float,
+) -> float | None:
+    if not values:
+        return None
+
+    if not (
+        0.0
+        <= quantile
+        <= 1.0
+    ):
+        raise ValueError(
+            "quantile must be in [0, 1]"
+        )
+
+    ordered = sorted(
+        float(value)
+        for value in values
+    )
+
+    if len(ordered) == 1:
+        return ordered[0]
+
+    position = (
+        (len(ordered) - 1)
+        * quantile
+    )
+
+    lower = int(
+        position
+    )
+
+    upper = min(
+        lower + 1,
+        len(ordered) - 1,
+    )
+
+    fraction = (
+        position
+        - lower
+    )
+
+    return (
+        ordered[lower]
+        + (
+            ordered[upper]
+            - ordered[lower]
+        )
+        * fraction
+    )
+
+
 def _load_json(
     path: str | Path,
 ) -> dict[str, Any]:
@@ -641,6 +694,12 @@ def aggregate_rq2(
 
             "unsupported_claims":
                 fp,
+
+            "unsupported_claim_rate":
+                _safe_rate(
+                    fp,
+                    tp + fp,
+                ),
 
             "purpose_ratings":
                 dict(
@@ -896,6 +955,19 @@ def _aggregate_rq3_rows(
                 output_claims,
             ),
 
+        "supported_claim_rate":
+            _safe_rate(
+                grounded_claims,
+                output_claims,
+            ),
+
+        "unsupported_claim_rate":
+            _safe_rate(
+                output_claims
+                - grounded_claims,
+                output_claims,
+            ),
+
         "output_atomic_claims":
             output_claims,
 
@@ -923,6 +995,18 @@ def _aggregate_rq3_rows(
                 median(latencies)
                 if latencies
                 else None
+            ),
+
+        "p50_latency_ms":
+            _percentile_linear(
+                latencies,
+                0.50,
+            ),
+
+        "p95_latency_ms":
+            _percentile_linear(
+                latencies,
+                0.95,
             ),
 
         "writer_invocation_rate":

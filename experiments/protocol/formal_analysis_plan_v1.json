@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0.0",
+  "status": "frozen_pre_formal",
+  "formal_rq_data_seen_before_freeze": false,
+  "purpose": "Pre-specify the analysis before FORMAL data collection. This plan changes measurement/analysis only and does not modify the frozen M1/M2/M3 runtime.",
+  "global_rules": {
+    "confidence_level": 0.95,
+    "alpha": 0.05,
+    "effect_sizes_and_intervals_over_p_values": true,
+    "formal_failures_and_timeouts_remain_in_denominator": true,
+    "no_post_result_metric_or_test_selection": true
+  },
+  "rq1": {
+    "design": "Exhaustive census of the case-study ERP navigation structure against the independent Expert A reference.",
+    "primary_dimensions": [
+      "module",
+      "screen",
+      "screen_hierarchy"
+    ],
+    "primary_reporting": [
+      "tp",
+      "fp",
+      "fn",
+      "precision",
+      "recall",
+      "f1"
+    ],
+    "diagnostics_not_primary": [
+      "screen_route",
+      "title_match_on_shared_routes",
+      "hierarchy_match_on_shared_routes"
+    ],
+    "inferential_hypothesis_tests": [],
+    "reason_no_inferential_test": "RQ1 is an exhaustive census of the bounded case-study ERP structure, not a random sample from a population of ERP screens."
+  },
+  "rq2": {
+    "design": "Paired PRE-HITL/POST-HITL evaluation over all formally eligible screens in the case study.",
+    "report": [
+      "purpose rating distribution",
+      "claim precision",
+      "claim recall",
+      "claim f1",
+      "unsupported claim rate",
+      "semantic screen coverage",
+      "review duration",
+      "approve/correct/reject counts",
+      "retained/changed/removed/human-added claims"
+    ],
+    "formal_generation_failures": "Retain in denominators as not-available outputs; do not use survivor-only scoring.",
+    "inferential_role": "Descriptive paired case-study evidence. Do not generalize to an external population of ERP screens from significance tests."
+  },
+  "rq3": {
+    "experimental_unit": "query_id",
+    "final_query_count": 54,
+    "queries_per_stratum": 6,
+    "strata": [
+      "locate_screen",
+      "screen_purpose",
+      "fields_and_search",
+      "tables_and_columns",
+      "controls_actions_and_navigation",
+      "current_route_context",
+      "ambiguity_and_clarification",
+      "out_of_scope_abstention",
+      "mutative_safety"
+    ],
+    "variants": [
+      "A_graph_on",
+      "B_graph_on",
+      "C_graph_on",
+      "C_graph_off"
+    ],
+    "primary_blind_response_count": 216,
+    "sample_size_rationale": "Balanced coverage of all nine required strata with a feasible human-scoring workload. The 54-query bank is not presented as a power-based random sample from a broader ERP population.",
+    "primary_paired_endpoint": "expected_behavior_correct",
+    "primary_paired_comparisons": [
+      {
+        "comparison": "B_graph_on - A_graph_on",
+        "scientific_effect": "authorized semantic HITL contribution",
+        "test": "exact two-sided McNemar"
+      },
+      {
+        "comparison": "C_graph_on - B_graph_on",
+        "scientific_effect": "grounded writer contribution",
+        "test": "exact two-sided McNemar"
+      }
+    ],
+    "primary_test_multiplicity_control": "Holm adjustment across the two primary McNemar tests; family-wise alpha=0.05. These tests describe paired differences inside the frozen case-study bank and are not a claim of population-level confirmatory power.",
+    "secondary_graph_ablation": {
+      "comparison": "C_graph_on - C_graph_off",
+      "endpoint": "expected_behavior_correct",
+      "test": "exact two-sided McNemar",
+      "interpretation": "Secondary/exploratory. Report unadjusted p-value with effect magnitude and interval; do not promote it to a primary confirmatory claim."
+    },
+    "paired_bootstrap": {
+      "resamples": 5000,
+      "seed": 20260908,
+      "unit": "query_id",
+      "paired_across_conditions": true,
+      "interval": "95% percentile",
+      "comparisons": [
+        "B_graph_on - A_graph_on",
+        "C_graph_on - B_graph_on",
+        "C_graph_on - C_graph_off"
+      ],
+      "metrics": [
+        "expected_behavior_accuracy",
+        "factual_precision",
+        "factual_recall",
+        "factual_f1",
+        "grounding/supported-claim rate",
+        "median end-to-end latency"
+      ],
+      "factual_metric_rule": "For each bootstrap replicate, resample query_ids and recompute aggregate TP/FP/FN within each paired condition before deriving precision/recall/F1. Do not drop queries because a condition produced zero claims."
+    },
+    "latency_sensitivity_analysis": {
+      "test": "two-sided Wilcoxon signed-rank",
+      "unit": "paired query latency",
+      "comparisons": [
+        "B_graph_on - A_graph_on",
+        "C_graph_on - B_graph_on",
+        "C_graph_on - C_graph_off"
+      ],
+      "zero_difference_method": "Pratt",
+      "role": "Secondary sensitivity analysis. Report paired median difference and bootstrap interval as the main effect description."
+    },
+    "latency_percentile_method": "p50 and p95 use deterministic linear interpolation at position (n-1)q on sorted per-query latencies.",
+    "by_stratum": "Descriptive only. Report counts and metrics for each of the nine strata, but do not make stratum-level inferential significance claims because n=6 per stratum.",
+    "expert_A_scoring": {
+      "queries": 54,
+      "blind_responses": 216,
+      "condition_identity_hidden": true,
+      "no_intermediate_aggregate_feedback": true
+    },
+    "expert_B_secondary_scoring": {
+      "queries_per_stratum": 2,
+      "total_queries": 18,
+      "blind_responses": 72,
+      "subset_selection": "Stratified subset frozen before scoring using the formal randomization seed.",
+      "purpose": "Agreement/robustness assessment only, with explicit caveat from prior formal HITL exposure."
+    }
+  },
+  "inter_rater": {
+    "report_raw_agreement": true,
+    "agreement_statistic": "Cohen's kappa for expected_behavior_correct on the frozen shared blinded subset, plus raw percent agreement. Report safety_compliant agreement separately on mutually rated mutative-safety items. Atomic claim-match disagreements are described rather than collapsed into the same kappa.",
+    "expert_B_exposure_caveat": true
+  }
+}

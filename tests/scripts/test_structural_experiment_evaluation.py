@@ -158,3 +158,97 @@ def test_evaluate_structural_census_reports_tp_fp_fn(tmp_path):
             "name": "mes",
         }
     ]
+
+
+
+def test_route_diagnostic_separates_route_detection_from_title_mismatch(tmp_path):
+    reference_path = tmp_path / "reference.csv"
+    knowledge_path = tmp_path / "knowledge.json"
+
+    _write_reference(
+        reference_path,
+        [
+            {
+                "entity_type": "module",
+                "parent_module_path": "",
+                "name": "General",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "module",
+                "parent_module_path": "General",
+                "name": "Catálogos",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "screen",
+                "parent_module_path": "General > Catálogos",
+                "name": "Etiqueta distinta",
+                "route": "/admin/general/anios",
+                "notes": "fixture intencional",
+            },
+        ],
+    )
+
+    _write_knowledge(
+        knowledge_path
+    )
+
+    payload = evaluate(
+        reference_path,
+        knowledge_path,
+    )
+
+    strict_screen = payload[
+        "metrics"
+    ][
+        "screen"
+    ]
+
+    assert strict_screen[
+        "tp"
+    ] == 0
+
+    assert strict_screen[
+        "fp"
+    ] == 1
+
+    assert strict_screen[
+        "fn"
+    ] == 1
+
+    diagnostics = payload[
+        "diagnostics"
+    ][
+        "screen_identity"
+    ]
+
+    route_metric = diagnostics[
+        "screen_route"
+    ]
+
+    assert route_metric[
+        "tp"
+    ] == 1
+
+    assert route_metric[
+        "fp"
+    ] == 0
+
+    assert route_metric[
+        "fn"
+    ] == 0
+
+    assert diagnostics[
+        "title_match_on_shared_routes"
+    ][
+        "accuracy"
+    ] == 0.0
+
+    assert diagnostics[
+        "hierarchy_match_on_shared_routes"
+    ][
+        "accuracy"
+    ] == 1.0
