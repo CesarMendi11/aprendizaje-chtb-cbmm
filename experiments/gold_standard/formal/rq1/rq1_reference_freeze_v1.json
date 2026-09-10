@@ -1,0 +1,69 @@
+{
+  "approved_candidate_trace": {
+    "candidate_anomalies_sha256": "648584c868bfe5e88751d504a9ffe0372f25e7ce81969bd9c8c110d8c3897700",
+    "candidate_reference_sha256": "7ea9f74323c28ad7d9ef075c2c45f2e99ac2c9978663ddf270e42cef4ca5ebbb",
+    "note": "The frozen CSVs preserve the Expert-A-approved candidate content with normalized UTF-8/LF serialization."
+  },
+  "approved_human_artifacts": {
+    "independence_declaration": {
+      "path": "experiments/gold_standard/formal/rq1/expert_A_independence_declaration_v1.md",
+      "sha256": "7d60329f539110891f77c3e48d3335872bf5ae8a3267bdd3b04a6fc9d0028970"
+    },
+    "navigation_anomalies": {
+      "generic_404_destinations": 7,
+      "path": "experiments/gold_standard/formal/rq1/structural_navigation_anomalies_v1.csv",
+      "sha256": "ed866eed4c0f71f3e8d5cfc8d8d0947b00d2890dfb3a06086d58d3f3ae78152e"
+    },
+    "structural_reference": {
+      "items": 80,
+      "modules": 15,
+      "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+      "screens": 65,
+      "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+    }
+  },
+  "assistant_datastores_used_as_reference_source": false,
+  "author_role": "expert_A",
+  "chatbot_answers_used_as_reference_source": false,
+  "chatgpt_role": "transcription, organization and normalization tool only; Expert A supplied and approved the observations",
+  "contracts": {
+    "formal_analysis_plan_v1": {
+      "path": "experiments/protocol/formal_analysis_plan_v1.json",
+      "sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac"
+    },
+    "formal_operational_plan_v2": {
+      "path": "experiments/protocol/formal_operational_plan_v2.md",
+      "sha256": "926ff577b0920c08255c1390c89224a63ccc14a61327b0af35db0f49d14e6d9a"
+    },
+    "formal_preparation_amendment_v3": {
+      "path": "experiments/protocol/formal_preparation_amendment_v3.json",
+      "sha256": "0235ca7af6e9a00c33eef2b80078f4ddd76bd1fc578b1f6995d97cde95541154"
+    },
+    "global_development_freeze_v1": {
+      "path": "experiments/protocol/global_development_freeze_v1.json",
+      "sha256": "74ba08bd594d089baec5568bb136ce5aa4c72c101823aa85b9f1854c1c130582"
+    },
+    "protocol_v2_3": {
+      "path": "experiments/protocol/protocol_v2_3.json",
+      "sha256": "1a7c97fb736ae9b766e9f291a37c76dc063362e0c0210dbc57dc862ea637fb61"
+    }
+  },
+  "development_crawler_output_used_as_reference_source": false,
+  "expert_A_final_confirmation_date": "2026-09-09",
+  "formal_crawler_output_seen_before_freeze": false,
+  "formal_rq_data_seen_before_freeze": false,
+  "freeze_id": "rq1-structural-reference-formal-v1",
+  "frozen_at_utc": "2026-09-10T02:39:13.976098+00:00",
+  "next_gate": "RQ2 independent semantic reference must be frozen before FORMAL starts",
+  "pre_freeze_git_head": "81836088c944308143a68512d12140eb7e3c299f",
+  "prototype_runtime_changed_for_reference": false,
+  "research_question": "RQ1",
+  "rq1_irregular_ui_contract_applied": {
+    "absent_visible_title": "included as screen with blank name and title_status: absent",
+    "generic_404_destination": "recorded separately; not an automatic functional-screen FN",
+    "stable_parameterized_menu_view": "separate route-addressable screen rows when functional context differs"
+  },
+  "schema_version": "1.0.0",
+  "source_basis": "direct_erp_inspection",
+  "status": "frozen"
+}

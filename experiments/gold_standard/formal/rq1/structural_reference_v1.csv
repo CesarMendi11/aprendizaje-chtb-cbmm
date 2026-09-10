@@ -1,0 +1,81 @@
+entity_type,parent_module_path,name,route,notes
+screen,,,/admin/home,title_status: absent; menu_label: Dashboard; expert_A_confirmed: pantalla de bienvenida sin título general visible
+module,,Atención Cliente,,
+screen,Atención Cliente,Consulta y actualización de cuenta portal,/admin/atencion-cliente/recuperacion-cuenta-portal,menu_label: Recuperación Asistida
+module,,Cuentas por cobrar,,
+screen,Cuentas por cobrar,Comprobantes electrónicos emitidos,/admin/cuentasxcobrar/comprobantes,menu_label: Comprobantes
+screen,Cuentas por cobrar,,/admin/cuentasxcobrar/facturacion,title_status: absent; menu_label: Facturación Electrónica; no se identificó un título/encabezado general único
+screen,Cuentas por cobrar,Tipo pago,/admin/cuentasxcobrar/forma-pago,menu_label: Forma pago; breadcrumb_label: Forma pagos
+screen,Cuentas por cobrar,Facturas generadas,/admin/cuentasxcobrar/lista-facturas,menu_label: Lista de facturas
+screen,Cuentas por cobrar,Notas de crédito generados,/admin/cuentasxcobrar/notas-credito,menu_label: Notas de crédito; breadcrumb_label: Notas credito
+screen,Cuentas por cobrar,,/admin/cuentasxcobrar/puntos-emision,title_status: absent; menu_label: Puntos de emisión; breadcrumb_label: Puntos emision; section_header: Tipo Documento
+screen,Cuentas por cobrar,Retenciones generados,/admin/cuentasxcobrar/retenciones,menu_label: Retenciones
+screen,Cuentas por cobrar,Categorías,/admin/cuentasxcobrar/tipo-pago,menu_label: Tipo pago
+module,,General,,
+screen,General,Año,/admin/general/anios,menu_label: Año
+screen,General,Opciones del sistema,/admin/general/areas,menu_label: Area; breadcrumb_observed: Dashboard > Trámites > Categorías; expert_A_confirmed: inconsistencia real del ERP
+screen,General,Cargo Funcional,/admin/general/cargo-funcional,menu_label: Cargo Funcional
+screen,General,Estado Seguimiento,/admin/general/estado-seguimiento,menu_label: Estado Seguimiento
+screen,General,Año,/admin/general/personas,menu_label: Personas; breadcrumb_label: Persona; expert_A_confirmed: encabezado Año observado realmente
+module,,Gerencial,,
+screen,Gerencial,Actividad Portal Ciudadano,/admin/gerencial/actividad-portal,menu_label: Actividad portal ciudadano
+screen,Gerencial,Estadisticas Nómina,/admin/gerencial/talento-humano,menu_label: Talento humano
+screen,Gerencial,Estadisticas Gestión de trámites,/admin/gerencial/tramites,menu_label: Trámites
+module,,Permisos,,
+screen,Permisos,Solicitudes Registrados,/admin/permisos/solicitudes,menu_label: Aprobar solicitudes
+module,Permisos,Consultar,,
+screen,Permisos > Consultar,Solicitudes Registrados,/admin/permisos/consultar/aprobados/3,menu_label: Permisos Espectáculo Público; parameterized_view: true; shared_component_group: permisos_consultar_aprobados
+screen,Permisos > Consultar,Solicitudes Registrados,/admin/permisos/consultar/aprobados/76,menu_label: Permisos Venta Pirotecnia; parameterized_view: true; shared_component_group: permisos_consultar_aprobados
+screen,Permisos > Consultar,Solicitudes Registrados,/admin/permisos/consultar/aprobados/2,menu_label: Transporte de Combustible; parameterized_view: true; shared_component_group: permisos_consultar_aprobados
+screen,Permisos,Solicitudes aprobados,/admin/permisos/emitir,menu_label: Emitir solicitudes
+screen,Permisos,Envio de Inspecciones,/admin/permisos/enviar-inspecciones,menu_label: Enviar Notificaciones
+screen,Permisos,,/admin/permisos/funcionamiento,title_status: absent; menu_label: Ficha inspección; section_header: PERSONERIA
+screen,Permisos,Inspecciones realizadas-,/admin/permisos/inspecciones,menu_label: Inspecciones registradas
+module,,Prevención y Riesgo,,
+screen,Prevención y Riesgo,Certificado de no adeudar,/admin/prevencion-riesgo/certificado-no-adeudar,menu_label: Certificado No Adeudar
+screen,Prevención y Riesgo,Consulta de pagos por cliente,/admin/prevencion-riesgo/consulta-pago-cliente,menu_label: Consulta Pago Cliente
+screen,Prevención y Riesgo,Consulta de información SRI,/admin/prevencion-riesgo/sri,menu_label: Consulta SRI
+module,,Rentas,,
+screen,Rentas,Modulo de Cajas,/admin/rentas/cajas,menu_label: Cajas
+module,,Seguridad,,
+screen,Seguridad,Registro de Auditorias del sistema,/admin/seguridad/auditoria,menu_label: Auditoria
+screen,Seguridad,Correos,/admin/seguridad/correos,menu_label: Correos
+screen,Seguridad,Datos de la empresa,/admin/seguridad/empresa,menu_label: Empresa
+screen,Seguridad,Registro de logs del sistema,/admin/seguridad/logs,menu_label: Logs
+screen,Seguridad,Opciones del sistema,/admin/seguridad/opciones,menu_label: Opciones; breadcrumb_observed: Dashboard > Trámites > Categorías; inconsistencia visible del ERP
+screen,Seguridad,Categorías,/admin/seguridad/parametros,menu_label: Parametros
+screen,Seguridad,Perfil,/admin/seguridad/permisos,menu_label: Permisos
+screen,Seguridad,Usuarios,/admin/seguridad/usuarios,menu_label: Usuarios
+module,,SRI,,
+screen,SRI,Configuración,/admin/sri/firma-electronica,menu_label: Firma electrónica; additional_section: Subir Firma electrónica
+screen,SRI,Impuesto,/admin/sri/impuesto,menu_label: Impuestos Retenciones; additional_section: Detalle impuesto
+screen,SRI,,/admin/sri/tes-impuesto,title_status: absent; menu_label: Renta; section_headers: Tipo Impuesto | impuesto
+screen,SRI,Tipo Emision,/admin/sri/tipo-emision,menu_label: Tipo emisión
+module,,Trámites,,
+screen,Trámites,Trámites pendientes de asignación,/admin/tramites/asignacion-new,menu_label: Asignación
+module,Trámites,Bandeja Externos,,
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/74,menu_label: Cam_DatosPermiso; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/78,menu_label: CierreFuncionamiento; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/7,menu_label: InspInformeRiesgo; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/79,menu_label: ParteEmergencia; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/1,menu_label: Permiso_Funcionamiento; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/4,menu_label: ReimpresionArchivo; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites > Bandeja Externos,Externo Seguimiento,/admin/tramites/bandeja-externos/6,menu_label: ReimpresionTitulos; parameterized_view: true; shared_component_group: tramites_bandeja_externos
+screen,Trámites,,/admin/tramites/bandeja-internos,title_status: absent; menu_label: Bandeja Internos; no se observó contenido funcional/título en la captura
+screen,Trámites,Categorías,/admin/tramites/categorias,menu_label: Categorias
+module,Trámites,Consultar,,
+screen,Trámites > Consultar,Tipo Documento,/admin/tramites/consultar/consultar-externos,menu_label: externos
+screen,Trámites > Consultar,Tipo Documento,/admin/tramites/consultar/consultar-internos,menu_label: internos
+screen,Trámites,Tipo documento,/admin/tramites/documentos,menu_label: Documentos; additional_section: Documento área; tab_observed: Documento adjunto
+screen,Trámites,Persona departamento,/admin/tramites/persona-departamento,menu_label: Empleado documentos; additional_section: Documento área
+screen,Trámites,Trámites generados,/admin/tramites/actividades,menu_label: Gestion de Tareas; breadcrumb_label: Actividades
+screen,Trámites,Trámites generados,/admin/tramites/interno,menu_label: Internos; breadcrumb_label: Asignados
+screen,Trámites,Prioridad,/admin/tramites/prioridad,menu_label: Prioridad
+module,Trámites,Rastrear,,
+screen,Trámites > Rastrear,Trámites generados,/admin/tramites/consultas/consultar-externos,menu_label: externos; breadcrumb_observed: Dashboard > Trámites > Consultar > Internos; inconsistencia visible del ERP
+screen,Trámites > Rastrear,Trámites generados,/admin/tramites/consultas/consultas-internos,menu_label: internos
+module,Trámites,Seguimiento,,
+screen,Trámites > Seguimiento,Tipo Documento,/admin/tramites/seguimiento/seguimiento-externos,menu_label: Externos
+screen,Trámites > Seguimiento,Tipo Documento,/admin/tramites/seguimiento/seguimiento-internos,menu_label: Internos
+screen,Trámites,Subir Firma electrónica,/admin/tramites/subir-firma,menu_label: Subir Firma-Electronica
+screen,Trámites,Tipo adjunto,/admin/tramites/tipo-adjunto,menu_label: Tipo adjuntos

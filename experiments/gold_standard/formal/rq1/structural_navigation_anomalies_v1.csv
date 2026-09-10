@@ -1,0 +1,8 @@
+anomaly_type,parent_module_path,menu_label,route,observed_result,notes
+generic_404,Prevención y Riesgo,Ficha,/admin/prevencion-riesgo/ficha-funcionamiento,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Rentas,Conceptos,/admin/rentas/conceptos,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Rentas,Descuentos,/admin/rentas/descuentos,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Rentas,Impuestos,/admin/rentas/impuestos,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Rentas,Intereses,/admin/rentas/intereses,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Rentas,Titulos credito,/admin/rentas/titulos-credito,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
+generic_404,Seguridad,Multinacional,/admin/seguridad/multinacional,PAGINA NO ENCONTRADA,expert_A_confirmed: destino no disponible durante la inspección independiente
