@@ -26,9 +26,17 @@
   ],
   "created_at_utc": "2026-09-10T02:08:28.718522+00:00",
   "formal_rq_data_seen_before_amendment": false,
+  "metadata_correction": {
+    "committed_lf_sha256": "4fc459dc11745f22ce358fde9268caecce207ae3bfa16792644d26bf58b7dbb6",
+    "description": "The anomaly CSV template was created with CRLF bytes before git add, then normalized by Git to LF. This correction records the SHA256 of the committed/checked-out LF artifact. No methodological or runtime contract changed.",
+    "formal_rq_data_seen_before_correction": false,
+    "runtime_changed": false,
+    "stale_pre_git_normalization_sha256": "b43d4cc1b5fefa9ad44c683d568322a58ace28528e46b5faedbc1e4a1f8a7d3a",
+    "type": "line_ending_sha256_normalization"
+  },
   "navigation_anomaly_template": {
     "path": "experiments/gold_standard/structural_navigation_anomalies_template_v1.csv",
-    "sha256": "b43d4cc1b5fefa9ad44c683d568322a58ace28528e46b5faedbc1e4a1f8a7d3a"
+    "sha256": "4fc459dc11745f22ce358fde9268caecce207ae3bfa16792644d26bf58b7dbb6"
   },
   "non_changes": [
     "M1 runtime",
