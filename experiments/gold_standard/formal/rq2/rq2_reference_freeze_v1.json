@@ -1,0 +1,79 @@
+{
+  "approved_candidate_trace": {
+    "candidate_semantic_reference_sha256": "1d1281b4d5fcbd72201bf4fc03971439f5ca5569d5a6394a4f12f0902cc341f7",
+    "note": "Expert A reviewed and approved the complete draft candidate. The frozen semantic reference changes only status from draft to frozen."
+  },
+  "approved_human_artifacts": {
+    "independence_declaration": {
+      "path": "experiments/gold_standard/formal/rq2/expert_A_independence_declaration_v1.txt",
+      "sha256": "677c96bc927f6d2c8367d66f2347e6a59c4a365729528f26ea86afb90dbb9595"
+    },
+    "semantic_exclusions": {
+      "excluded_screens": 1,
+      "path": "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv",
+      "sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f"
+    },
+    "semantic_reference": {
+      "expected_capability_claims": 237,
+      "included_screens": 64,
+      "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+      "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+    }
+  },
+  "assistant_datastores_used_as_reference_source": false,
+  "author_role": "expert_A",
+  "chatbot_answers_used_as_reference_source": false,
+  "chatgpt_role": "transcription, wording normalization, atomic claim splitting and JSON organization only; Expert A supplied and approved the functional content",
+  "contracts": {
+    "formal_analysis_plan_v1": {
+      "path": "experiments/protocol/formal_analysis_plan_v1.json",
+      "sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac"
+    },
+    "formal_operational_plan_v3": {
+      "path": "experiments/protocol/formal_operational_plan_v3.md",
+      "sha256": "4e9dd754b29d94a07bc5a30177bbd2cd3717c53041f7bfddff6fd22402ddc6f4"
+    },
+    "formal_preparation_amendment_v4": {
+      "path": "experiments/protocol/formal_preparation_amendment_v4.json",
+      "sha256": "a647452eaed51c31278a7a3953e92b406b5faa5c0b3ea606270cea1389d6db06"
+    },
+    "protocol_v2_4": {
+      "path": "experiments/protocol/protocol_v2_4.json",
+      "sha256": "a46f92d17f21b4e221b0101725b3e2a549d3f0f496979c0ad35a259862d18c49"
+    },
+    "rq1_freeze_manifest": {
+      "path": "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json",
+      "sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75"
+    },
+    "rq1_frozen_reference": {
+      "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+      "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+    },
+    "rq2_reference_contract_v2": {
+      "path": "experiments/gold_standard/RQ2_REFERENCE_CONTRACT_v2.md",
+      "sha256": "371a90021411c50a271984d792583ef199821a5ded7e136c688f637c39a3d7c4"
+    }
+  },
+  "development_semantic_proposals_used_as_reference_source": false,
+  "expert_A_final_confirmation_date": "2026-09-09",
+  "formal_rq_data_seen_before_freeze": false,
+  "formal_semantic_proposals_seen_before_freeze": false,
+  "freeze_id": "rq2-semantic-reference-formal-v1",
+  "frozen_at_utc": "2026-09-10T05:49:06.775715+00:00",
+  "next_gate": "Construct, validate and freeze the final RQ3 query bank/key before any FORMAL run begins.",
+  "pre_freeze_git_head": "2ef94bca64c99ddf45f84c4649708445e7bf4334",
+  "prototype_runtime_changed_for_reference": false,
+  "reference_id": "rq2-semantic-reference-formal-v1",
+  "research_question": "RQ2",
+  "rq1_accounting": {
+    "accounted": 65,
+    "explicitly_excluded": 1,
+    "functional_screen_universe": 65,
+    "included_in_rq2": 64,
+    "silent_omissions": 0
+  },
+  "schema_version": "1.0.0",
+  "semantic_reference_schema_version": "1.1.0",
+  "source_basis": "direct_erp_inspection_and_expert_knowledge",
+  "status": "frozen"
+}

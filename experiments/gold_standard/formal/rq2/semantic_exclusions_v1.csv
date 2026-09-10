@@ -1,0 +1,2 @@
+route,title,reason,notes
+/admin/tramites/bandeja-internos,Bandeja Internos,La pantalla observada no mostró contenido funcional ni un propósito funcional determinable durante la inspección de Expert A.,Expert A confirmó que actualmente aparece vacía; se excluye explícitamente para evitar atribuir una función no observada.

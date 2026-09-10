@@ -1,0 +1,1899 @@
+{
+  "schema_version": "1.1.0",
+  "status": "frozen",
+  "reference_id": "rq2-semantic-reference-formal-v1",
+  "author_role": "expert_A",
+  "source_basis": "direct_erp_inspection_and_expert_knowledge",
+  "formal_semantic_proposals_seen_before_freeze": false,
+  "screens": [
+    {
+      "route": "/admin/home",
+      "title": null,
+      "title_status": "absent",
+      "module_path": null,
+      "expected_purpose": "Mostrar una pantalla informativa de bienvenida después del inicio de sesión, con información general de la institución y del acceso reciente del usuario.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra un mensaje de bienvenida asociado al rol del usuario autenticado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra información general de la institución.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra los cinco inicios de sesión más recientes del usuario.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Muestra información del navegador y la fecha y hora actuales.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "No existe un título global visible; Dashboard es la etiqueta del menú. Expert A confirmó que es una pantalla informativa."
+    },
+    {
+      "route": "/admin/atencion-cliente/recuperacion-cuenta-portal",
+      "title": "Consulta y actualización de cuenta portal",
+      "title_status": "observed",
+      "module_path": "Atención Cliente",
+      "expected_purpose": "Consultar una cuenta de portal ya registrada para revisar sus datos y, cuando corresponde, actualizar datos personales o recuperar el acceso.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar a un usuario registrado mediante cédula, RUC o pasaporte.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra información personal y el estado de la cuenta del usuario consultado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite actualizar datos personales del usuario consultado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite iniciar una recuperación de acceso que solicita un nuevo correo y una observación.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Expert A confirmó que la recuperación de acceso es una acción sensible separada de la actualización de datos personales."
+    },
+    {
+      "route": "/admin/cuentasxcobrar/comprobantes",
+      "title": "Comprobantes electrónicos emitidos",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Consultar y gestionar comprobantes electrónicos emitidos mediante filtros y acciones disponibles por comprobante.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra indicadores de cantidad de comprobantes por estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite filtrar comprobantes por tipo, estado, fecha de emisión, RUC y número de comprobante.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra los comprobantes emitidos con sus datos principales y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite visualizar el PDF, descargar el XML, reenviar el correo y anular un comprobante desde las opciones de cada fila.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Las tarjetas superiores son informativas y no interactivas, según Expert A."
+    },
+    {
+      "route": "/admin/cuentasxcobrar/facturacion",
+      "title": null,
+      "title_status": "absent",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Registrar y emitir una factura electrónica desde el punto de venta, asociando cliente, productos, forma de pago y totales.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite facturar a consumidor final o consultar un cliente identificado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite buscar y agregar productos a la factura.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite definir cantidades, precios y descuentos de los productos agregados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite seleccionar la forma de pago y registrar observaciones.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Calcula y muestra subtotales, impuestos, descuentos y valor total.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C06",
+          "statement": "Permite guardar la factura sin firmar o guardarla y enviarla al SRI.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "La pantalla no presenta un título global único visible; Expert A confirmó su función de facturación electrónica."
+    },
+    {
+      "route": "/admin/cuentasxcobrar/forma-pago",
+      "title": "Tipo pago",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Administrar las formas de pago utilizadas por el sistema y sus registros de detalle asociados.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las formas de pago registradas con su código y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar formas de pago.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite agregar y administrar registros de detalle asociados a una forma de pago.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/cuentasxcobrar/lista-facturas",
+      "title": "Facturas generadas",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Consultar las facturas generadas y acceder a sus acciones disponibles.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar facturas por RUC y número de comprobante.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra las facturas generadas con estado, fecha, RUC, cliente, comprobante y total.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite ejecutar la acción disponible sobre una factura desde la columna de acciones.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/cuentasxcobrar/notas-credito",
+      "title": "Notas de crédito generados",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Consultar notas de crédito generadas y crear una nueva nota de crédito a partir de una factura registrada.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las notas de crédito generadas y sus datos principales.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite iniciar la creación de una nueva nota de crédito.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Durante la creación permite seleccionar una factura registrada como comprobante de sustento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Muestra los datos del cliente, del comprobante y de sus ítems para preparar la nota de crédito.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite registrar el motivo y generar la nota de crédito.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/cuentasxcobrar/puntos-emision",
+      "title": null,
+      "title_status": "absent",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Administrar tipos de documento y puntos de emisión asociados.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra tipos de documento con código, estado y condición de aplicación de tributo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar tipos de documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra los puntos de emisión asociados con sus códigos, detalle, estado y secuencial.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite agregar, editar y eliminar puntos de emisión.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "No existe un título global único visible; la pantalla contiene secciones de Tipo Documento y puntos de emisión."
+    },
+    {
+      "route": "/admin/cuentasxcobrar/retenciones",
+      "title": "Retenciones generados",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Consultar retenciones generadas y acceder al flujo para registrar una nueva retención.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar retenciones por RUC, número de comprobante y número de factura.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra las retenciones generadas con sus datos principales y valores.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite iniciar el registro de una nueva retención.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite acceder a la acción disponible por cada retención registrada.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/cuentasxcobrar/tipo-pago",
+      "title": "Categorías",
+      "title_status": "observed",
+      "module_path": "Cuentas por cobrar",
+      "expected_purpose": "Administrar tipos de pago utilizados por el sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los tipos de pago registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear un nuevo tipo de pago.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar tipos de pago.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite sincronizar la información de tipos de pago.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El título visible Categorías es una inconsistencia del ERP; Expert A confirmó que funcionalmente administra tipos de pago, con ejemplos como Efectivo y Cheque."
+    },
+    {
+      "route": "/admin/general/anios",
+      "title": "Año",
+      "title_status": "observed",
+      "module_path": "General",
+      "expected_purpose": "Administrar los años configurados en el sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los años registrados y su estado activo o inactivo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear un nuevo año.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar años registrados.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/general/areas",
+      "title": "Opciones del sistema",
+      "title_status": "observed",
+      "module_path": "General",
+      "expected_purpose": "Administrar unidades organizacionales utilizadas por otras partes del sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra unidades organizacionales en una estructura jerárquica.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite agregar unidades organizacionales.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar unidades organizacionales existentes.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El texto Opciones del sistema y el breadcrumb observado no describen correctamente la función; Expert A confirmó que son unidades organizacionales."
+    },
+    {
+      "route": "/admin/general/cargo-funcional",
+      "title": "Cargo Funcional",
+      "title_status": "observed",
+      "module_path": "General",
+      "expected_purpose": "Administrar cargos funcionales utilizados por el sistema y sus registros asociados.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los cargos funcionales registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar cargos funcionales.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite agregar y administrar registros asociados al cargo funcional seleccionado.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/general/estado-seguimiento",
+      "title": "Estado Seguimiento",
+      "title_status": "observed",
+      "module_path": "General",
+      "expected_purpose": "Administrar estados de seguimiento y su aplicación a trámites internos o externos.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar estados de seguimiento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los estados con indicadores de uso interno y externo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite crear, editar y eliminar estados de seguimiento.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/general/personas",
+      "title": "Año",
+      "title_status": "observed",
+      "module_path": "General",
+      "expected_purpose": "Administrar registros de personas del sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra personas registradas con identificación, nombre, contacto y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear una nueva persona.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar registros de personas.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El encabezado visible Año es una inconsistencia del ERP; Expert A confirmó que la función real corresponde a personas."
+    },
+    {
+      "route": "/admin/gerencial/actividad-portal",
+      "title": "Actividad Portal Ciudadano",
+      "title_status": "observed",
+      "module_path": "Gerencial",
+      "expected_purpose": "Consultar estadísticas de actividad del portal ciudadano y recaudación para un año seleccionado.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite filtrar las estadísticas por año.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de ciudadanos registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra el total recaudado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Presenta la evolución mensual de la actividad mostrada en la pantalla.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/gerencial/talento-humano",
+      "title": "Estadisticas Nómina",
+      "title_status": "observed",
+      "module_path": "Gerencial",
+      "expected_purpose": "Consultar estadísticas de nómina mediante filtros temporales y organizacionales.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite filtrar por año, mes, régimen laboral, área y departamento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra el total de nómina del período seleccionado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Presenta estadísticas de nómina por mes y régimen laboral.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Presenta agregaciones de nómina por área y departamento.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/gerencial/tramites",
+      "title": "Estadisticas Gestión de trámites",
+      "title_status": "observed",
+      "module_path": "Gerencial",
+      "expected_purpose": "Consultar estadísticas de gestión de trámites para un período seleccionado.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite filtrar las estadísticas por año.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra cantidades de trámites generados, atendidos, pendientes y no atendidos.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Presenta distribución de trámites por prioridad.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Presenta estadísticas de trámites por área y por tipo de documento.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/permisos/solicitudes",
+      "title": "Solicitudes Registrados",
+      "title_status": "observed",
+      "module_path": "Permisos",
+      "expected_purpose": "Revisar solicitudes de permisos registradas y decidir su aprobación o no aprobación.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las solicitudes registradas con sus datos principales.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite abrir el detalle de una solicitud.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "En el detalle muestra información del solicitante, datos propios de la solicitud y requisitos adjuntos.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite aprobar o no aprobar la solicitud desde su detalle.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/permisos/consultar/aprobados/3",
+      "title": "Solicitudes Registrados",
+      "title_status": "observed",
+      "module_path": "Permisos > Consultar",
+      "expected_purpose": "Consultar solicitudes aprobadas correspondientes a permisos de espectáculo público.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra solicitudes aprobadas correspondientes a permisos de espectáculo público.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite abrir el detalle de una solicitud para consultar su información.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "El detalle se presenta sin las acciones de aprobar o no aprobar disponibles en la pantalla de aprobación.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada de un componente compartido; Expert A confirmó que cambia el tipo de permiso según el parámetro."
+    },
+    {
+      "route": "/admin/permisos/consultar/aprobados/76",
+      "title": "Solicitudes Registrados",
+      "title_status": "observed",
+      "module_path": "Permisos > Consultar",
+      "expected_purpose": "Consultar solicitudes aprobadas correspondientes a permisos de venta de pirotecnia.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra solicitudes aprobadas correspondientes a permisos de venta de pirotecnia.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite abrir el detalle de una solicitud para consultar su información.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "El detalle se presenta sin las acciones de aprobar o no aprobar disponibles en la pantalla de aprobación.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada de un componente compartido; Expert A confirmó que cambia el tipo de permiso según el parámetro."
+    },
+    {
+      "route": "/admin/permisos/consultar/aprobados/2",
+      "title": "Solicitudes Registrados",
+      "title_status": "observed",
+      "module_path": "Permisos > Consultar",
+      "expected_purpose": "Consultar solicitudes aprobadas correspondientes a permisos de transporte de combustible.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra solicitudes aprobadas correspondientes a permisos de transporte de combustible.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite abrir el detalle de una solicitud para consultar su información.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "El detalle se presenta sin las acciones de aprobar o no aprobar disponibles en la pantalla de aprobación.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada de un componente compartido; Expert A confirmó que cambia el tipo de permiso según el parámetro."
+    },
+    {
+      "route": "/admin/permisos/emitir",
+      "title": "Solicitudes aprobados",
+      "title_status": "observed",
+      "module_path": "Permisos",
+      "expected_purpose": "Gestionar la emisión de solicitudes que se encuentran disponibles para este proceso.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra solicitudes disponibles para emisión.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite seleccionar una solicitud.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite consultar el detalle de la solicitud seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite ejecutar la emisión de una solicitud seleccionada.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El título visible Solicitudes aprobados no describe con precisión la función; Expert A confirmó que aquí se emiten solicitudes."
+    },
+    {
+      "route": "/admin/permisos/enviar-inspecciones",
+      "title": "Envio de Inspecciones",
+      "title_status": "observed",
+      "module_path": "Permisos",
+      "expected_purpose": "Consultar registros de inspección o establecimientos y enviar notificaciones asociadas.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra registros con datos del propietario, establecimiento, zona, categoría y nivel de riesgo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite enviar una notificación por correo desde cada registro.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite actualizar la lista mostrada.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/permisos/funcionamiento",
+      "title": null,
+      "title_status": "absent",
+      "module_path": "Permisos",
+      "expected_purpose": "Registrar una ficha de inspección de un establecimiento a partir de la identificación de una persona natural o jurídica.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite seleccionar personería natural o jurídica y buscar por identificación.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los datos de la persona encontrada antes de registrar la ficha.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite registrar datos del establecimiento y su ubicación geográfica mediante un mapa.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Organiza el registro en etapas que incluyen datos del establecimiento, datos técnicos, características técnicas, graficación y detalles del informe.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite generar un reporte diario desde la pantalla.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "No existe un título global visible; Expert A confirmó la función de registro de ficha de inspección."
+    },
+    {
+      "route": "/admin/permisos/inspecciones",
+      "title": "Inspecciones realizadas-",
+      "title_status": "observed",
+      "module_path": "Permisos",
+      "expected_purpose": "Consultar inspecciones registradas y sus datos principales.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las inspecciones realizadas con datos de fecha, propietario, establecimiento, dirección y zona.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite filtrar las inspecciones por inspector.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite buscar y limpiar el criterio de consulta.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/prevencion-riesgo/certificado-no-adeudar",
+      "title": "Certificado de no adeudar",
+      "title_status": "observed",
+      "module_path": "Prevención y Riesgo",
+      "expected_purpose": "Buscar y procesar certificados de no adeudar pendientes.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar certificados pendientes mediante número de cédula.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los certificados pendientes encontrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite seleccionar uno o varios certificados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite aprobar y emitir los certificados seleccionados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite iniciar el proceso de anulación de los certificados seleccionados.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/prevencion-riesgo/consulta-pago-cliente",
+      "title": "Consulta de pagos por cliente",
+      "title_status": "observed",
+      "module_path": "Prevención y Riesgo",
+      "expected_purpose": "Consultar el historial de títulos pagados de un cliente a partir de su identificación.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar por número de cédula o RUC.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los pagos encontrados para el cliente consultado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Presenta datos del título pagado como número, descripción, año, valor y fechas de emisión y pago.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/prevencion-riesgo/sri",
+      "title": "Consulta de información SRI",
+      "title_status": "observed",
+      "module_path": "Prevención y Riesgo",
+      "expected_purpose": "Consultar información tributaria del contribuyente registrada en el SRI mediante su identificación.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite consultar mediante cédula o RUC.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra RUC, razón social y estado del contribuyente.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra información de régimen y condiciones tributarias disponibles.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Muestra los establecimientos registrados del contribuyente.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/rentas/cajas",
+      "title": "Modulo de Cajas",
+      "title_status": "observed",
+      "module_path": "Rentas",
+      "expected_purpose": "Consultar obligaciones pendientes de un contribuyente y registrar pagos desde una caja.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los datos de la caja y del recaudador activo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite buscar y seleccionar un contribuyente por cédula, RUC o nombre.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite consultar la deuda del contribuyente seleccionado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Muestra los valores pendientes disponibles para selección.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite seleccionar valores, previsualizar y ejecutar el pago cuando existen valores pendientes.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/auditoria",
+      "title": "Registro de Auditorias del sistema",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Consultar registros de auditoría del sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra registros de auditoría con fecha, usuario, IP, tipo y mensaje.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite buscar dentro de los registros de auditoría.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite actualizar la lista mostrada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite eliminar registros de auditoría.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/correos",
+      "title": "Correos",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar configuraciones de correo electrónico utilizadas por el sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las configuraciones de correo registradas.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite registrar una configuración por módulo con servidor SMTP, TLS, puerto, remitente y usuario.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite guardar la configuración de correo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite probar la configuración mediante un correo de prueba.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite actualizar la información mostrada.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/empresa",
+      "title": "Datos de la empresa",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar la información institucional de la empresa configurada en el sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite consultar y editar información general de la empresa.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite administrar información tributaria de la empresa.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite administrar información de contacto y representante legal.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite gestionar el logo institucional y guardar los cambios.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/logs",
+      "title": "Registro de logs del sistema",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Consultar registros de logs del sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra logs con identificador, fecha y hora, usuario, IP, tipo y mensaje.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite buscar dentro de los logs.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite actualizar la lista mostrada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite eliminar registros de logs.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/opciones",
+      "title": "Opciones del sistema",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar opciones del sistema organizadas por grupos funcionales.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las opciones del sistema agrupadas jerárquicamente.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite agregar nuevas opciones o grupos.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar opciones existentes.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite actualizar la información mostrada.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El breadcrumb observado es inconsistente; Expert A confirmó la función de administración de opciones."
+    },
+    {
+      "route": "/admin/seguridad/parametros",
+      "title": "Categorías",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar parámetros configurables del sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra parámetros con código, nombre, valor y otros metadatos disponibles.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear un nuevo parámetro.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar parámetros.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite sincronizar los parámetros.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El título visible Categorías es una inconsistencia del ERP; Expert A confirmó la función de parámetros."
+    },
+    {
+      "route": "/admin/seguridad/permisos",
+      "title": "Perfil",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar perfiles de seguridad y las pantallas o permisos asociados a cada perfil.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los perfiles de seguridad registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar perfiles.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra las pantallas o permisos asociados al perfil seleccionado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite agregar o retirar asociaciones de permisos del perfil.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/seguridad/usuarios",
+      "title": "Usuarios",
+      "title_status": "observed",
+      "module_path": "Seguridad",
+      "expected_purpose": "Administrar usuarios del sistema y sus accesos asociados.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar usuarios por usuario o nombre.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra usuarios con correo, estado y empleado relacionado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite crear, editar y eliminar usuarios.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite iniciar el restablecimiento de clave de un usuario.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "Permite administrar accesos de sucursal asociados al usuario.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/sri/firma-electronica",
+      "title": "Configuración",
+      "title_status": "observed",
+      "module_path": "SRI",
+      "expected_purpose": "Configurar parámetros generales de emisión electrónica utilizados por el módulo SRI.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite seleccionar el ambiente de emisión.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite seleccionar el tipo de emisión.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite seleccionar la moneda.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite actualizar la configuración.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Aunque existe un texto de sección Subir Firma electrónica, Expert A confirmó que esta pantalla no realiza la carga o actualización de la firma del usuario."
+    },
+    {
+      "route": "/admin/sri/impuesto",
+      "title": "Impuesto",
+      "title_status": "observed",
+      "module_path": "SRI",
+      "expected_purpose": "Administrar impuestos y sus detalles utilizados en la configuración tributaria.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los impuestos registrados con código y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar impuestos.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra detalles de impuesto con porcentaje, código, estado y aplicación de IVA.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite agregar, editar y eliminar detalles de impuesto.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/sri/tes-impuesto",
+      "title": null,
+      "title_status": "absent",
+      "module_path": "SRI",
+      "expected_purpose": "Administrar tipos de impuesto y los porcentajes o detalles asociados.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra tipos de impuesto como ISD, IVA y RENTA con su estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar tipos de impuesto.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra detalles asociados con código SRI, porcentaje y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite agregar, editar y eliminar detalles asociados.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "La pantalla reutiliza una estructura visual semejante a la de impuestos, pero Expert A confirmó que corresponde a una configuración tributaria distinta."
+    },
+    {
+      "route": "/admin/sri/tipo-emision",
+      "title": "Tipo Emision",
+      "title_status": "observed",
+      "module_path": "SRI",
+      "expected_purpose": "Administrar los tipos de emisión electrónica configurados en el sistema.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los tipos de emisión registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear un nuevo tipo de emisión.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar tipos de emisión.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/asignacion-new",
+      "title": "Trámites pendientes de asignación",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Consultar trámites pendientes de asignación y asignar un responsable.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar trámites pendientes por número de trámite.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los trámites pendientes de asignación con datos principales.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite seleccionar o asignar un responsable al trámite.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite generar un reporte diario.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/74",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada Cam_DatosPermiso.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: Cam_DatosPermiso."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/78",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada CierreFuncionamiento.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: CierreFuncionamiento."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/7",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada InspInformeRiesgo.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: InspInformeRiesgo."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/79",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada ParteEmergencia.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: ParteEmergencia."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/1",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada Permiso_Funcionamiento.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: Permiso_Funcionamiento."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/4",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada ReimpresionArchivo.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: ReimpresionArchivo."
+    },
+    {
+      "route": "/admin/tramites/bandeja-externos/6",
+      "title": "Externo Seguimiento",
+      "title_status": "observed",
+      "module_path": "Trámites > Bandeja Externos",
+      "expected_purpose": "Consultar el seguimiento de trámites externos correspondiente a la vista parametrizada ReimpresionTitulos.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra estados de seguimiento disponibles para la vista seleccionada.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir un grupo de seguimiento cuando existe información disponible.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Vista parametrizada del mismo componente de Bandeja Externos. Expert A confirmó que el parámetro cambia el contexto funcional; etiqueta de menú observada: ReimpresionTitulos."
+    },
+    {
+      "route": "/admin/tramites/categorias",
+      "title": "Categorías",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Administrar categorías de documentos o trámites utilizadas por el módulo de Trámites.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las categorías registradas con nombre, abreviatura e icono.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear una nueva categoría.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar categorías.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite sincronizar las categorías.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/consultar/consultar-externos",
+      "title": "Tipo Documento",
+      "title_status": "observed",
+      "module_path": "Trámites > Consultar",
+      "expected_purpose": "Consultar tipos de documento y agrupaciones disponibles para trámites externos.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite filtrar por categoría y documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra tipos de documento externos con categoría y cantidad de registros.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir la agrupación asociada a un tipo de documento.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/consultar/consultar-internos",
+      "title": "Tipo Documento",
+      "title_status": "observed",
+      "module_path": "Trámites > Consultar",
+      "expected_purpose": "Consultar tipos de documento y agrupaciones disponibles para trámites internos.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite filtrar por documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra tipos de documento internos y la cantidad de registros asociados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir la agrupación asociada a un tipo de documento.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/documentos",
+      "title": "Tipo documento",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Administrar tipos de documento y sus relaciones con áreas y documentos adjuntos.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los tipos de documento con prioridad, categoría y condición interna o externa.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear, editar y eliminar tipos de documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite asociar áreas a un tipo de documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite administrar documentos adjuntos relacionados mediante la sección correspondiente.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/persona-departamento",
+      "title": "Persona departamento",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Administrar la relación de un empleado con cargos, áreas y configuraciones documentales del trámite.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar y seleccionar un empleado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra y permite registrar relaciones de cargo funcional y área con fechas de inicio y fin.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Muestra indicadores de participación en registro, archivo, recepción de correo, bandeja y estado activo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite asociar tipos de documento mediante la sección Documento área.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/actividades",
+      "title": "Trámites generados",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Consultar y gestionar trámites o tareas generadas.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar por número de trámite, asunto y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los trámites generados con documento, estado, asunto, asignado, área, días y semáforo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite iniciar un nuevo trámite.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite anular o rastrear un trámite mediante las acciones disponibles.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/interno",
+      "title": "Trámites generados",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Consultar trámites internos asignados y registrar un nuevo trámite interno.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar trámites internos por número, asunto y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra trámites internos con fecha, estado, documento, área y asunto.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite anular o rastrear trámites mediante las acciones disponibles.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite iniciar un nuevo trámite interno mediante un flujo de registro, requisitos y confirmación.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C05",
+          "statement": "En el registro del nuevo trámite permite seleccionar área o departamento, tipo de trámite y registrar el asunto.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/prioridad",
+      "title": "Prioridad",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Administrar niveles de prioridad de los trámites.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra las prioridades registradas con tipo y abreviatura.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear una nueva prioridad.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar prioridades.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite sincronizar las prioridades.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/consultas/consultar-externos",
+      "title": "Trámites generados",
+      "title_status": "observed",
+      "module_path": "Trámites > Rastrear",
+      "expected_purpose": "Rastrear trámites externos mediante criterios de búsqueda y estado.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar trámites externos por número, cédula o RUC, asunto y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los trámites externos con fecha, estado, documento, área y semáforo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir el detalle de un trámite externo.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "El breadcrumb observado presenta una inconsistencia, pero Expert A confirmó la función de rastreo externo."
+    },
+    {
+      "route": "/admin/tramites/consultas/consultas-internos",
+      "title": "Trámites generados",
+      "title_status": "observed",
+      "module_path": "Trámites > Rastrear",
+      "expected_purpose": "Rastrear trámites internos mediante criterios de búsqueda y estado.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Permite buscar trámites internos por número, cédula o RUC, asunto y estado.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra los trámites internos con fecha, estado, documento, área y semáforo.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir el detalle de un trámite interno.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/seguimiento/seguimiento-externos",
+      "title": "Tipo Documento",
+      "title_status": "observed",
+      "module_path": "Trámites > Seguimiento",
+      "expected_purpose": "Consultar el seguimiento de trámites externos agrupado por tipo de documento.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra tipos de documento externos disponibles para seguimiento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada tipo de documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir la agrupación de seguimiento correspondiente.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/seguimiento/seguimiento-internos",
+      "title": "Tipo Documento",
+      "title_status": "observed",
+      "module_path": "Trámites > Seguimiento",
+      "expected_purpose": "Consultar el seguimiento de trámites internos agrupado por tipo de documento.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra tipos de documento internos disponibles para seguimiento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Muestra la cantidad de registros asociada a cada tipo de documento.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite abrir la agrupación de seguimiento correspondiente.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    },
+    {
+      "route": "/admin/tramites/subir-firma",
+      "title": "Subir Firma electrónica",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Cargar la firma electrónica del usuario para su uso en el módulo de Trámites.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra el archivo de firma electrónica asociado al usuario cuando existe.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite cargar o actualizar el archivo de firma electrónica del usuario.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite eliminar el archivo de firma electrónica asociado.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": "Expert A confirmó que esta firma corresponde al usuario de Trámites y es independiente de la firma/configuración global de SRI. La referencia no formula una afirmación de auditoría criptográfica sobre almacenamiento de claves."
+    },
+    {
+      "route": "/admin/tramites/tipo-adjunto",
+      "title": "Tipo adjunto",
+      "title_status": "observed",
+      "module_path": "Trámites",
+      "expected_purpose": "Administrar tipos de archivos adjuntos utilizados en los trámites.",
+      "purpose_equivalents": [],
+      "expected_capabilities": [
+        {
+          "claim_id": "C01",
+          "statement": "Muestra los tipos de adjunto registrados.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C02",
+          "statement": "Permite crear un nuevo tipo de adjunto.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C03",
+          "statement": "Permite editar y eliminar tipos de adjunto.",
+          "acceptable_equivalents": []
+        },
+        {
+          "claim_id": "C04",
+          "statement": "Permite sincronizar los tipos de adjunto.",
+          "acceptable_equivalents": []
+        }
+      ],
+      "expert_notes": null
+    }
+  ]
+}

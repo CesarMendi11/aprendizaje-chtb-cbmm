@@ -1,0 +1,42 @@
+RQ2 — DECLARACIÓN DE INDEPENDENCIA
+
+Rol: expert_A
+Referencia: rq2-semantic-reference-formal-v1
+
+1. Construí el contenido funcional de esta referencia mediante inspección
+   directa del ERP y/o mi conocimiento experto del sistema:
+RESPUESTA=SI
+
+2. No utilicé SemanticProposal DEVELOPMENT como fuente de esta referencia:
+RESPUESTA=SI
+
+3. No vi ninguna SemanticProposal FORMAL antes de congelar esta referencia:
+RESPUESTA=SI
+
+4. No utilicé respuestas del chatbot, PostgreSQL, ChromaDB o Neo4j del
+   asistente como fuente factual de la referencia:
+RESPUESTA=SI
+
+5. La referencia estructural RQ1 congelada se utilizó únicamente como roster
+   humano de rutas/títulos/jerarquías para asegurar cobertura:
+RESPUESTA=SI
+
+6. Cuando ChatGPT ayudó a transcribir, normalizar, atomizar o estructurar mis
+   explicaciones, revisé el texto resultante y confirmo que no introduce hechos
+   funcionales que yo no haya aportado o confirmado:
+RESPUESTA=SI
+
+7. Cada ruta funcional del RQ1 congelado quedó incluida en
+   semantic_reference.json o explícitamente registrada en EXCLUSIONES_RQ2.csv:
+RESPUESTA=SI
+
+8. Revisé y aprobé el propósito y las capacidades de cada pantalla incluida:
+RESPUESTA=SI
+
+Fecha de finalización:
+AAAA-MM-DD=2026-09-09
+
+Confirmación final:
+CONFIRMO=SI
+
+Nota de procedencia: esta declaración reproduce la confirmación explícita realizada por Expert A en la conversación de trabajo, después de revisar y aprobar el candidato RQ2 completo y antes del freeze formal.
