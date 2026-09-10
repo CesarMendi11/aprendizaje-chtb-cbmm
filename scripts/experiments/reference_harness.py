@@ -119,10 +119,15 @@ class SemanticScreenReference(BaseModel):
         max_length=500,
     )
 
-    title: str = Field(
-        min_length=1,
+    title: str | None = Field(
+        default=None,
         max_length=500,
     )
+
+    title_status: Literal[
+        "observed",
+        "absent",
+    ] = "observed"
 
     module_path: str | None = Field(
         default=None,
@@ -180,7 +185,6 @@ class SemanticScreenReference(BaseModel):
         return normalized
 
     @field_validator(
-        "title",
         "expected_purpose",
     )
     @classmethod
@@ -198,6 +202,23 @@ class SemanticScreenReference(BaseModel):
             )
 
         return cleaned
+
+    @field_validator(
+        "title",
+    )
+    @classmethod
+    def strip_optional_title(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        cleaned = " ".join(
+            value.split()
+        )
+
+        return cleaned or None
 
     @field_validator(
         "module_path",
@@ -262,9 +283,27 @@ class SemanticScreenReference(BaseModel):
     @model_validator(
         mode="after"
     )
-    def validate_claim_ids(
+    def validate_title_and_claim_ids(
         self,
     ) -> SemanticScreenReference:
+        if (
+            self.title_status == "observed"
+            and self.title is None
+        ):
+            raise ValueError(
+                "observed title_status requires "
+                "a non-blank title"
+            )
+
+        if (
+            self.title_status == "absent"
+            and self.title is not None
+        ):
+            raise ValueError(
+                "absent title_status requires "
+                "title to be null"
+            )
+
         claim_ids = [
             claim.claim_id
             for claim
@@ -289,8 +328,9 @@ class SemanticReference(BaseModel):
     )
 
     schema_version: Literal[
-        "1.0.0"
-    ] = "1.0.0"
+        "1.0.0",
+        "1.1.0",
+    ] = "1.1.0"
 
     status: Literal[
         "template",
@@ -359,23 +399,18 @@ class SemanticReference(BaseModel):
                 "must be unique"
             )
 
-        identities = [
-            (
-                screen.route,
-                normalize_text(
-                    screen.title
-                ),
-            )
+        routes = [
+            screen.route
             for screen
             in self.screens
         ]
 
         if (
-            len(set(identities))
-            != len(identities)
+            len(set(routes))
+            != len(routes)
         ):
             raise ValueError(
-                "semantic screen references "
+                "semantic screen routes "
                 "must be unique"
             )
 
@@ -565,6 +600,320 @@ def semantic_reference_summary(
     }
 
 
+
+def load_semantic_exclusions(
+    path: str | Path,
+) -> list[dict[str, str]]:
+    import csv
+
+    rows: list[
+        dict[str, str]
+    ] = []
+
+    with Path(path).open(
+        "r",
+        encoding="utf-8-sig",
+        newline="",
+    ) as handle:
+        reader = csv.DictReader(
+            handle
+        )
+
+        expected = [
+            "route",
+            "title",
+            "reason",
+            "notes",
+        ]
+
+        if reader.fieldnames != expected:
+            raise ValueError(
+                "RQ2 exclusions must use header: "
+                + ",".join(expected)
+            )
+
+        for line_number, raw in enumerate(
+            reader,
+            start=2,
+        ):
+            if not any(
+                str(value or "").strip()
+                for value in raw.values()
+            ):
+                continue
+
+            route_raw = str(
+                raw.get(
+                    "route"
+                )
+                or ""
+            ).strip()
+
+            if not route_raw:
+                raise ValueError(
+                    f"RQ2 exclusion line {line_number}: "
+                    "route is required"
+                )
+
+            route = normalize_route(
+                route_raw
+            )
+
+            if not route.startswith(
+                "/"
+            ):
+                raise ValueError(
+                    f"RQ2 exclusion line {line_number}: "
+                    "route must be an ERP path"
+                )
+
+            reason = " ".join(
+                str(
+                    raw.get(
+                        "reason"
+                    )
+                    or ""
+                ).split()
+            )
+
+            if not reason:
+                raise ValueError(
+                    f"RQ2 exclusion line {line_number}: "
+                    "reason is required"
+                )
+
+            rows.append(
+                {
+                    "route":
+                        route,
+
+                    "title":
+                        " ".join(
+                            str(
+                                raw.get(
+                                    "title"
+                                )
+                                or ""
+                            ).split()
+                        ),
+
+                    "reason":
+                        reason,
+
+                    "notes":
+                        " ".join(
+                            str(
+                                raw.get(
+                                    "notes"
+                                )
+                                or ""
+                            ).split()
+                        ),
+                }
+            )
+
+    routes = [
+        row["route"]
+        for row in rows
+    ]
+
+    if (
+        len(set(routes))
+        != len(routes)
+    ):
+        raise ValueError(
+            "RQ2 exclusion routes "
+            "must be unique"
+        )
+
+    return rows
+
+
+def semantic_bundle_summary(
+    reference_path: str | Path,
+    exclusions_path: str | Path,
+    structural_reference_path: str | Path,
+) -> dict[str, Any]:
+    reference_path = Path(
+        reference_path
+    )
+
+    exclusions_path = Path(
+        exclusions_path
+    )
+
+    structural_reference_path = Path(
+        structural_reference_path
+    )
+
+    reference = (
+        load_semantic_reference(
+            reference_path
+        )
+    )
+
+    if (
+        reference.status
+        != "frozen"
+    ):
+        raise ValueError(
+            "RQ2 bundle validation "
+            "requires status=frozen"
+        )
+
+    structural_items = load_reference(
+        structural_reference_path
+    )
+
+    universe = {
+        item.route
+        for item in structural_items
+        if item.entity_type == "screen"
+    }
+
+    included = {
+        screen.route
+        for screen
+        in reference.screens
+    }
+
+    exclusions = (
+        load_semantic_exclusions(
+            exclusions_path
+        )
+    )
+
+    excluded = {
+        row["route"]
+        for row in exclusions
+    }
+
+    overlap = (
+        included
+        & excluded
+    )
+
+    if overlap:
+        raise ValueError(
+            "RQ2 routes cannot be both "
+            "included and excluded: "
+            + ", ".join(
+                sorted(
+                    overlap
+                )
+            )
+        )
+
+    extras = (
+        included
+        | excluded
+    ) - universe
+
+    if extras:
+        raise ValueError(
+            "RQ2 bundle contains routes "
+            "outside frozen RQ1: "
+            + ", ".join(
+                sorted(
+                    extras
+                )
+            )
+        )
+
+    missing = universe - (
+        included
+        | excluded
+    )
+
+    if missing:
+        raise ValueError(
+            "RQ2 bundle must account for "
+            "every frozen RQ1 functional "
+            "screen route; missing: "
+            + ", ".join(
+                sorted(
+                    missing
+                )
+            )
+        )
+
+    absent_title_included = sum(
+        (
+            screen.title_status
+            == "absent"
+        )
+        for screen
+        in reference.screens
+    )
+
+    return {
+        "schema_version":
+            "1.0.0",
+
+        "reference_type":
+            "rq2_semantic_reference_bundle",
+
+        "reference_id":
+            reference.reference_id,
+
+        "reference_status":
+            reference.status,
+
+        "rq1_functional_screen_universe":
+            len(
+                universe
+            ),
+
+        "included_semantic_screens":
+            len(
+                included
+            ),
+
+        "excluded_semantic_screens":
+            len(
+                excluded
+            ),
+
+        "accounted_routes":
+            len(
+                included
+                | excluded
+            ),
+
+        "included_without_visible_title":
+            absent_title_included,
+
+        "expected_capability_claims":
+            sum(
+                len(
+                    screen.expected_capabilities
+                )
+                for screen
+                in reference.screens
+            ),
+
+        "reference_file_sha256":
+            sha256_file(
+                reference_path
+            ),
+
+        "reference_canonical_sha256":
+            semantic_reference_hash(
+                reference
+            ),
+
+        "exclusions_file_sha256":
+            sha256_file(
+                exclusions_path
+            ),
+
+        "rq1_structural_reference_sha256":
+            sha256_file(
+                structural_reference_path
+            ),
+    }
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -600,6 +949,24 @@ def _parse_args() -> argparse.Namespace:
         "reference"
     )
 
+    bundle = (
+        subparsers.add_parser(
+            "validate-semantic-bundle"
+        )
+    )
+
+    bundle.add_argument(
+        "reference"
+    )
+
+    bundle.add_argument(
+        "exclusions"
+    )
+
+    bundle.add_argument(
+        "structural_reference"
+    )
+
     return parser.parse_args()
 
 
@@ -616,10 +983,22 @@ def main() -> int:
             )
         )
 
-    else:
+    elif (
+        args.command
+        == "validate-semantic"
+    ):
         summary = (
             semantic_reference_summary(
                 args.reference
+            )
+        )
+
+    else:
+        summary = (
+            semantic_bundle_summary(
+                args.reference,
+                args.exclusions,
+                args.structural_reference,
             )
         )
 

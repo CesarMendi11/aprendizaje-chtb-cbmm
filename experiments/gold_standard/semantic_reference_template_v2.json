@@ -1,0 +1,9 @@
+{
+  "author_role": "expert_A",
+  "formal_semantic_proposals_seen_before_freeze": false,
+  "reference_id": "rq2-semantic-reference-template-v2",
+  "schema_version": "1.1.0",
+  "screens": [],
+  "source_basis": "direct_erp_inspection_and_expert_knowledge",
+  "status": "template"
+}

@@ -1,0 +1,64 @@
+{
+  "amendment_id": "formal-preparation-amendment-v4",
+  "changes": [
+    {
+      "area": "rq2_screen_identity",
+      "change": "RQ2 semantic screen identity is normalized route. title is descriptive and may be null only with title_status=absent.",
+      "runtime_changed": false
+    },
+    {
+      "area": "rq2_exhaustive_accounting",
+      "change": "Every functional route in frozen RQ1 must be included in semantic_reference.json or explicitly listed in EXCLUSIONES_RQ2.csv.",
+      "runtime_changed": false
+    },
+    {
+      "area": "rq2_chatgpt_support",
+      "change": "ChatGPT may transcribe, normalize and atomize Expert A statements but cannot supply unconfirmed functional facts or use Chat-CBMM semantic outputs or datastores as reference sources.",
+      "runtime_changed": false
+    }
+  ],
+  "created_at_utc": "2026-09-10T02:51:53.332047+00:00",
+  "formal_analysis_plan": {
+    "path": "experiments/protocol/formal_analysis_plan_v1.json",
+    "sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac"
+  },
+  "formal_operational_plan": {
+    "path": "experiments/protocol/formal_operational_plan_v3.md",
+    "sha256": "4e9dd754b29d94a07bc5a30177bbd2cd3717c53041f7bfddff6fd22402ddc6f4"
+  },
+  "formal_rq_data_seen_before_amendment": false,
+  "formal_semantic_proposals_seen_before_amendment": false,
+  "non_changes": [
+    "M1 runtime",
+    "M2 runtime",
+    "M3 runtime",
+    "frozen models",
+    "frozen prompts",
+    "RQ1 frozen reference",
+    "RQ1 primary metrics",
+    "RQ2 scoring metrics",
+    "formal_analysis_plan_v1.json",
+    "RQ3 design"
+  ],
+  "rq1_reference_freeze": {
+    "path": "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json",
+    "sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75"
+  },
+  "rq2_reference_contract": {
+    "path": "experiments/gold_standard/RQ2_REFERENCE_CONTRACT_v2.md",
+    "sha256": "371a90021411c50a271984d792583ef199821a5ded7e136c688f637c39a3d7c4"
+  },
+  "rq2_semantic_template": {
+    "path": "experiments/gold_standard/semantic_reference_template_v2.json",
+    "schema_version": "1.1.0",
+    "sha256": "d6102befee8160748246924fa98cd4b0b5466eec71c8a49dab08157bc3618ff2"
+  },
+  "runtime_changed": false,
+  "schema_version": "1.0.0",
+  "status": "FROZEN_PRE_FORMAL",
+  "supersedes_protocol": {
+    "path": "experiments/protocol/protocol_v2_3.json",
+    "sha256": "1a7c97fb736ae9b766e9f291a37c76dc063362e0c0210dbc57dc862ea637fb61"
+  },
+  "trigger": "After the independent RQ1 reference was frozen, RQ2 preparation identified that the semantic reference must represent functional screens without visible titles and must distinguish ChatGPT drafting support from factual LLM-source use."
+}

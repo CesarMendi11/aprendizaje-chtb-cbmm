@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from scripts.experiments.reference_harness import (
     SemanticReference,
     load_semantic_reference,
+    semantic_bundle_summary,
     semantic_reference_hash,
     semantic_reference_summary,
     structural_reference_summary,
@@ -396,4 +397,168 @@ def test_structural_reference_summary_rejects_empty_template(
     ):
         structural_reference_summary(
             path
+        )
+
+
+
+def test_semantic_reference_accepts_absent_visible_title():
+    payload = semantic_payload()
+
+    payload["schema_version"] = "1.1.0"
+    payload["screens"][0]["title"] = None
+    payload["screens"][0]["title_status"] = "absent"
+
+    reference = SemanticReference.model_validate(
+        payload
+    )
+
+    assert reference.screens[0].title is None
+    assert reference.screens[0].title_status == "absent"
+
+
+def test_semantic_reference_rejects_observed_status_without_title():
+    payload = semantic_payload()
+
+    payload["schema_version"] = "1.1.0"
+    payload["screens"][0]["title"] = None
+    payload["screens"][0]["title_status"] = "observed"
+
+    with pytest.raises(
+        ValidationError,
+        match="requires a non-blank title",
+    ):
+        SemanticReference.model_validate(
+            payload
+        )
+
+
+def test_semantic_reference_rejects_absent_status_with_title():
+    payload = semantic_payload()
+
+    payload["schema_version"] = "1.1.0"
+    payload["screens"][0]["title_status"] = "absent"
+
+    with pytest.raises(
+        ValidationError,
+        match="requires title to be null",
+    ):
+        SemanticReference.model_validate(
+            payload
+        )
+
+
+def test_semantic_reference_uniqueness_is_route_based():
+    payload = semantic_payload()
+
+    duplicate = json.loads(
+        json.dumps(
+            payload["screens"][0],
+            ensure_ascii=False,
+        )
+    )
+
+    duplicate["title"] = "Otro título"
+    payload["screens"].append(
+        duplicate
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match="routes must be unique",
+    ):
+        SemanticReference.model_validate(
+            payload
+        )
+
+
+def test_semantic_bundle_accounts_for_every_rq1_screen(tmp_path):
+    semantic = semantic_payload()
+    semantic["schema_version"] = "1.1.0"
+
+    semantic_path = tmp_path / "semantic.json"
+    semantic_path.write_text(
+        json.dumps(
+            semantic,
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    structural_path = tmp_path / "structural.csv"
+    structural_path.write_text(
+        (
+            "entity_type,parent_module_path,"
+            "name,route,notes\n"
+            "module,,General,,\n"
+            "screen,General,Personas,"
+            "/admin/general/personas,\n"
+            "screen,General,Otra,"
+            "/admin/general/otra,\n"
+        ),
+        encoding="utf-8",
+    )
+
+    exclusions_path = tmp_path / "exclusions.csv"
+    exclusions_path.write_text(
+        (
+            "route,title,reason,notes\n"
+            "/admin/general/otra,Otra,"
+            "insufficient_functional_evidence,\n"
+        ),
+        encoding="utf-8",
+    )
+
+    summary = semantic_bundle_summary(
+        semantic_path,
+        exclusions_path,
+        structural_path,
+    )
+
+    assert summary["rq1_functional_screen_universe"] == 2
+    assert summary["included_semantic_screens"] == 1
+    assert summary["excluded_semantic_screens"] == 1
+    assert summary["accounted_routes"] == 2
+
+
+def test_semantic_bundle_rejects_silent_omission(tmp_path):
+    semantic = semantic_payload()
+    semantic["schema_version"] = "1.1.0"
+
+    semantic_path = tmp_path / "semantic.json"
+    semantic_path.write_text(
+        json.dumps(
+            semantic,
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+
+    structural_path = tmp_path / "structural.csv"
+    structural_path.write_text(
+        (
+            "entity_type,parent_module_path,"
+            "name,route,notes\n"
+            "module,,General,,\n"
+            "screen,General,Personas,"
+            "/admin/general/personas,\n"
+            "screen,General,Otra,"
+            "/admin/general/otra,\n"
+        ),
+        encoding="utf-8",
+    )
+
+    exclusions_path = tmp_path / "exclusions.csv"
+    exclusions_path.write_text(
+        "route,title,reason,notes\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="must account for every",
+    ):
+        semantic_bundle_summary(
+            semantic_path,
+            exclusions_path,
+            structural_path,
         )
