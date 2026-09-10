@@ -252,3 +252,80 @@ def test_route_diagnostic_separates_route_detection_from_title_mismatch(tmp_path
     ][
         "accuracy"
     ] == 1.0
+
+
+
+def test_reference_allows_confirmed_absent_screen_title(tmp_path):
+    from scripts.experiments.evaluate_structural import load_reference
+
+    reference_path = tmp_path / "reference.csv"
+    reference_path.write_text(
+        "entity_type,parent_module_path,name,route,notes\n"
+        'screen,General,,/admin/general/blank,"title_status: absent; '
+        'menu_label: Blank"\n',
+        encoding="utf-8",
+    )
+
+    items = load_reference(reference_path)
+
+    assert len(items) == 1
+    assert items[0].entity_type == "screen"
+    assert items[0].name == ""
+    assert items[0].route == "/admin/general/blank"
+
+
+def test_reference_rejects_blank_screen_without_absent_title_marker(tmp_path):
+    import pytest
+
+    from scripts.experiments.evaluate_structural import load_reference
+
+    reference_path = tmp_path / "reference.csv"
+    reference_path.write_text(
+        "entity_type,parent_module_path,name,route,notes\n"
+        "screen,General,,/admin/general/blank,menu_label: Blank\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="title_status: absent",
+    ):
+        load_reference(reference_path)
+
+
+def test_reference_rejects_blank_module_even_with_absent_title_marker(tmp_path):
+    import pytest
+
+    from scripts.experiments.evaluate_structural import load_reference
+
+    reference_path = tmp_path / "reference.csv"
+    reference_path.write_text(
+        "entity_type,parent_module_path,name,route,notes\n"
+        'module,,,,"title_status: absent"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="name es obligatorio para module",
+    ):
+        load_reference(reference_path)
+
+
+def test_reference_rejects_absent_title_marker_with_nonempty_screen_name(tmp_path):
+    import pytest
+
+    from scripts.experiments.evaluate_structural import load_reference
+
+    reference_path = tmp_path / "reference.csv"
+    reference_path.write_text(
+        "entity_type,parent_module_path,name,route,notes\n"
+        'screen,General,Titulo,/admin/general/x,"title_status: absent"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="incompatible",
+    ):
+        load_reference(reference_path)

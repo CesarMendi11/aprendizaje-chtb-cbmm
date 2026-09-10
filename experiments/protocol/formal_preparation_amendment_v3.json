@@ -1,0 +1,58 @@
+{
+  "amendment_id": "formal-preparation-amendment-v3",
+  "analysis_plan": {
+    "path": "experiments/protocol/formal_analysis_plan_v1.json",
+    "sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac"
+  },
+  "changes": [
+    {
+      "area": "rq1_reference_validation",
+      "change": "Allow blank screen.name only when notes explicitly contain 'title_status: absent'. Module names remain mandatory.",
+      "primary_metrics_changed": false,
+      "runtime_changed": false
+    },
+    {
+      "area": "rq1_unavailable_navigation",
+      "change": "Generic 404 navigation destinations are documented in a separate anomaly log and are not inserted as functional reference screens; therefore they are not automatic FNs.",
+      "primary_metrics_changed": false,
+      "runtime_changed": false
+    },
+    {
+      "area": "rq1_screen_unit",
+      "change": "Operationally define screen as a stable route-addressable functional view. Stable menu-exposed parameter variants remain separate reference rows when they change functional context, even if they reuse one Angular component.",
+      "primary_metrics_changed": false,
+      "runtime_changed": false
+    }
+  ],
+  "created_at_utc": "2026-09-10T02:08:28.718522+00:00",
+  "formal_rq_data_seen_before_amendment": false,
+  "navigation_anomaly_template": {
+    "path": "experiments/gold_standard/structural_navigation_anomalies_template_v1.csv",
+    "sha256": "b43d4cc1b5fefa9ad44c683d568322a58ace28528e46b5faedbc1e4a1f8a7d3a"
+  },
+  "non_changes": [
+    "M1 runtime",
+    "M2 runtime",
+    "M3 runtime",
+    "frozen models",
+    "frozen prompts",
+    "primary RQ1 dimensions",
+    "RQ1 screen primary identity route+title",
+    "RQ1 screen_hierarchy primary identity route+module_path+title",
+    "RQ3 design",
+    "RQ2 design",
+    "formal_analysis_plan_v1.json"
+  ],
+  "operational_plan": {
+    "path": "experiments/protocol/formal_operational_plan_v2.md",
+    "sha256": "926ff577b0920c08255c1390c89224a63ccc14a61327b0af35db0f49d14e6d9a"
+  },
+  "runtime_changed": false,
+  "schema_version": "1.0.0",
+  "status": "FROZEN_PRE_FORMAL",
+  "supersedes_protocol": {
+    "path": "experiments/protocol/protocol_v2_2.json",
+    "sha256": "b7970fce9d89cda147b71aa358fc3f2eeb8475699bca0877a479739c7a20f666"
+  },
+  "trigger": "Independent Expert A RQ1 inspection, before reference freeze and before FORMAL crawler output, exposed representational edge cases in the real ERP: reachable screens without a visible page title, dead navigation destinations returning the generic 404 page, and stable menu routes that reuse one frontend component with different functional parameters."
+}

@@ -49,8 +49,26 @@ def load_reference(path: Path) -> list[ReferenceItem]:
             if entity_type not in {"module", "screen"}:
                 raise ValueError(f"Línea {line_number}: entity_type debe ser module o screen")
             name = " ".join(str(row.get("name") or "").split())
-            if not name:
-                raise ValueError(f"Línea {line_number}: name es obligatorio")
+            notes = " ".join(str(row.get("notes") or "").split())
+            absent_title_marker = "title_status: absent" in notes.casefold()
+
+            if entity_type == "module" and not name:
+                raise ValueError(
+                    f"Línea {line_number}: name es obligatorio para module"
+                )
+
+            if entity_type == "screen" and not name and not absent_title_marker:
+                raise ValueError(
+                    f"Línea {line_number}: screen sin name requiere "
+                    "'title_status: absent' en notes"
+                )
+
+            if entity_type == "screen" and name and absent_title_marker:
+                raise ValueError(
+                    f"Línea {line_number}: title_status: absent es incompatible "
+                    "con un screen.name no vacío"
+                )
+
             route_raw = str(row.get("route") or "").strip()
             if entity_type == "screen" and not route_raw:
                 raise ValueError(f"Línea {line_number}: route es obligatorio para screen")
@@ -63,7 +81,7 @@ def load_reference(path: Path) -> list[ReferenceItem]:
                 ),
                 name=name,
                 route=normalize_route(route_raw) if route_raw else "",
-                notes=" ".join(str(row.get("notes") or "").split()),
+                notes=notes,
             )
             key = (
                 item.entity_type,

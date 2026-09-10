@@ -36,4 +36,16 @@ La dimensión primaria `screen` conserva el contrato congelado `route + name`, y
 
 El evaluador también reporta `screen_route` y coincidencias condicionales de título/jerarquía como **diagnósticos interpretativos**. No reemplazan ni recalculan oportunistamente las dimensiones primarias de RQ1.
 
+### Casos de interfaz irregular
+
+La referencia debe conservar lo observado en el ERP, incluso cuando la interfaz sea inconsistente.
+
+- Si una pantalla funcional accesible no presenta un título/encabezado de página visible e inequívoco, deje `name` vacío y escriba `title_status: absent` en `notes`. No sustituya la ausencia con la etiqueta del menú. La pantalla permanece en el censo primario y `screen_route` permite separar detección de ruta de discordancia de título.
+- Si un destino de navegación abre únicamente la página genérica 404/no encontrada durante la inspección independiente, no lo registre como `screen` funcional en `structural_reference.csv`. Regístrelo en `structural_navigation_anomalies.csv`. Por tanto, no se convierte automáticamente en FN. Si el sistema FORMAL materializa de todas formas una pantalla funcional en esa ruta, esa sobre-detección no se enmascara automáticamente.
+- Para RQ1, `screen` significa una **vista funcional estable y direccionable por ruta** expuesta como destino de navegación. Variantes de ruta estables del menú que reutilizan el mismo componente frontend se registran por separado cuando el parámetro cambia el contexto funcional mostrado. Esto no significa que sean componentes Angular distintos.
+- IDs transitorios de registros individuales o rutas generadas ad hoc que no constituyan destinos estables del menú no deben inflar el censo.
+- Las jerarquías deben usar el path completo (`Módulo > Submódulo`) y no solo el nombre del submódulo inmediato.
+
+Estas reglas fueron fijadas PRE-FORMAL a partir de la inspección humana independiente, antes de observar cualquier salida FORMAL del crawler y sin modificar el runtime M1/M2/M3.
+
 Regla de independencia: primero se congela esta referencia humana; después se ejecuta el crawl y se compara con `scripts.experiments.evaluate_structural`.
