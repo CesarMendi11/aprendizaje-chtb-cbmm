@@ -1,0 +1,46 @@
+{
+  "contracts": {
+    "formal_analysis_plan_v1_sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac",
+    "formal_operational_plan_v3_sha256": "4e9dd754b29d94a07bc5a30177bbd2cd3717c53041f7bfddff6fd22402ddc6f4",
+    "protocol_v2_4_sha256": "a46f92d17f21b4e221b0101725b3e2a549d3f0f496979c0ad35a259862d18c49"
+  },
+  "execution_plan": {
+    "entries": 216,
+    "path": "experiments/query_bank/formal/rq3/rq3_execution_plan_v1.json",
+    "sha256": "19e786d6c9dbc7c1e2c7beb17b76d87f22f7af6794592aafe0bd313de6bbdc46"
+  },
+  "expert_A_validation_declaration": {
+    "path": "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v1.txt",
+    "sha256": "cdca1ca7ee46c033077f3796287a437c6d0495896b8cb24e17a5c86c15e17d62"
+  },
+  "expert_B_secondary_subset": {
+    "expected_blind_responses": 72,
+    "path": "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v1.json",
+    "queries": 18,
+    "sha256": "2b333c969fe2d6cd12f3d8767453e1f5122755f61d39b1741d0d4b066b6589e1"
+  },
+  "formal_randomization_seed": 23428886,
+  "formal_rq3_outputs_seen_before_freeze": false,
+  "formal_rq_data_seen_before_freeze": false,
+  "freeze_id": "rq3-query-bank-formal-v1",
+  "frozen_at_utc": "2026-09-10T06:27:14.012842+00:00",
+  "next_gate": "Prepare isolated FORMAL persistence, reset/initial-state evidence, and the complete pre-run manifest before the first FORMAL execution.",
+  "pre_freeze_git_head": "7ae24b71b16561980b526712f2454263bfa62cd5",
+  "prototype_runtime_changed_for_freeze": false,
+  "query_bank": {
+    "approved_candidate_sha256": "01657f16af849df0bd5302ca6a58d35f96cf091409c222f8026318a3af9f99f1",
+    "canonical_sha256": "6add81f8b6967cac6ef920ee07830e0fc59916e87af87b0be85c05d041e35741",
+    "frozen_file_sha256": "c47947059566cb19309d149e44811f618fd3a7bd75bac63c8399b0cf51172d7c",
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v1.json",
+    "queries_per_stratum": 6,
+    "query_count": 54,
+    "status": "frozen"
+  },
+  "research_question": "RQ3",
+  "sampling_allocation_manifest": {
+    "path": "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v1.json",
+    "sha256": "6454d49667df6e3d665b38c57e0f848cfd7b267bf63ac50966da938e73618474"
+  },
+  "schema_version": "1.0.0",
+  "status": "frozen"
+}

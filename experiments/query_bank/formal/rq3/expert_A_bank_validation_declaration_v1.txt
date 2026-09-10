@@ -1,0 +1,37 @@
+RQ3 — DECLARACIÓN DE VALIDACIÓN DEL BANCO Y ANSWER KEY
+
+Rol: expert_A
+Banco: rq3-formal-query-bank-v1
+Tamaño final: 54 consultas, 6 por cada uno de 9 estratos.
+
+1. Revisé la versión final de las 54 preguntas:
+RESPUESTA=SI
+
+2. Confirmé exactamente 6 preguntas por cada estrato:
+RESPUESTA=SI
+
+3. Confirmé que las preguntas representan situaciones funcionales pertinentes:
+RESPUESTA=SI
+
+4. Revisé expected_behavior para cada pregunta:
+RESPUESTA=SI
+
+5. Revisé required_claims y equivalentes aceptables:
+RESPUESTA=SI
+
+6. Revisé prohibited_claims cuando correspondía:
+RESPUESTA=SI
+
+7. No utilicé respuestas FORMAL A/B/C para modificar el banco o answer key:
+RESPUESTA=SI
+
+8. Confirmo que el banco fue finalizado antes de la ejecución RQ3 FORMAL:
+RESPUESTA=SI
+
+Fecha de validación:
+AAAA-MM-DD=2026-09-10
+
+Confirmación final:
+CONFIRMO=SI
+
+Nota de procedencia: esta declaración reproduce la aprobación explícita de Expert A del candidato RQ3 completo antes de cualquier ejecución FORMAL.
