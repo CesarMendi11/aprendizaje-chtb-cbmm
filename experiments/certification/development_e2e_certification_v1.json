@@ -1,0 +1,1669 @@
+{
+  "certification_id": "cbmm-development-e2e-certification-v1",
+  "mode": "DEVELOPMENT",
+  "frontend_smoke": {
+    "status": "PASS",
+    "basis": "manual smoke in operational ERP; no frontend test perfection required"
+  },
+  "formal_bank_read": false,
+  "gold_standard_read": false,
+  "rows": [
+    {
+      "id": "locate_retenciones",
+      "request": {
+        "question": "¿Dónde encuentro la pantalla de Retenciones?",
+        "experimentCondition": "C",
+        "graphEnabled": true
+      },
+      "http_status": 200,
+      "elapsed_ms": 2720.36,
+      "answer_mode": "deterministic_graph",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "answer": "La pantalla \"Retenciones\" está dentro del módulo \"Cuentas por cobrar\".",
+      "sources": [
+        {
+          "title": "Retenciones",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Cuentas por cobrar",
+          "route": "",
+          "sourceType": "module"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 3,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 11,
+        "graph_seed_count": 1,
+        "validated_items": 24,
+        "selected_sources": 2,
+        "selected_relations": 1,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "locate_screen",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "screen:4c3175a29f8bb4dcf439da9c"
+        ],
+        "seed_entity_types": [
+          "screen"
+        ],
+        "endpoint_entity_types": [
+          "screen",
+          "module",
+          "erp_system",
+          "ui_state"
+        ],
+        "relationships": [
+          "HAS_MODULE",
+          "HAS_SUBMODULE",
+          "HAS_SCREEN",
+          "HAS_STATE"
+        ],
+        "max_hops": 2,
+        "limit": 20
+      },
+      "raw_response": {
+        "answer": "La pantalla \"Retenciones\" está dentro del módulo \"Cuentas por cobrar\".",
+        "conversationId": "7a080a5bd3a14761919ffe7d21dd1115",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Cuentas por cobrar",
+            "route": "",
+            "sourceType": "module"
+          }
+        ],
+        "answer_mode": "deterministic_graph",
+        "answerDecision": {
+          "decision": "DETERMINISTIC_ANSWER",
+          "reason": "deterministic_structural_answer",
+          "intent": "LOCATE_SCREEN",
+          "confidence": "high"
+        },
+        "intent": "LOCATE_SCREEN",
+        "confidence": "high",
+        "evidence_ids": [
+          "module:5a684e96772aa7fee6f7d5e2",
+          "screen:4c3175a29f8bb4dcf439da9c"
+        ],
+        "retrieval": {
+          "entity_candidates": 3,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 11,
+          "graph_seed_count": 1,
+          "validated_items": 24,
+          "selected_sources": 2,
+          "selected_relations": 1,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "locate_screen",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "screen:4c3175a29f8bb4dcf439da9c"
+          ],
+          "seed_entity_types": [
+            "screen"
+          ],
+          "endpoint_entity_types": [
+            "screen",
+            "module",
+            "erp_system",
+            "ui_state"
+          ],
+          "relationships": [
+            "HAS_MODULE",
+            "HAS_SUBMODULE",
+            "HAS_SCREEN",
+            "HAS_STATE"
+          ],
+          "max_hops": 2,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "id": "purpose_anio",
+      "request": {
+        "question": "¿Para qué sirve esta pantalla?",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/general/anios"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 2038.0,
+      "answer_mode": "deterministic_semantic",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "approved_semantic_answer",
+      "answer": "La pantalla 'Año' del módulo General presenta una tabla de datos con columnas DETALLE y ACTIVO, ofreciendo controles para la navegación por páginas (primera, anterior, siguiente, última), opciones para iniciar nuevas entradas o acciones mutativas, y funcionalidades de edición y eliminación visual.",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 14,
+        "selected_sources": 1,
+        "selected_relations": 0,
+        "selected_semantics": 1
+      },
+      "graph_expansion": {
+        "enabled": false,
+        "strategy": "screen_purpose",
+        "reason": "query_plan_no_graph_context",
+        "seed_canonical_ids": [],
+        "seed_entity_types": [],
+        "endpoint_entity_types": [
+          "screen"
+        ],
+        "relationships": [],
+        "max_hops": 1,
+        "limit": 20
+      },
+      "raw_response": {
+        "answer": "La pantalla 'Año' del módulo General presenta una tabla de datos con columnas DETALLE y ACTIVO, ofreciendo controles para la navegación por páginas (primera, anterior, siguiente, última), opciones para iniciar nuevas entradas o acciones mutativas, y funcionalidades de edición y eliminación visual.",
+        "conversationId": "e7133a5ab5254fefb7478a36875bd4e2",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "screen"
+          }
+        ],
+        "answer_mode": "deterministic_semantic",
+        "answerDecision": {
+          "decision": "DETERMINISTIC_ANSWER",
+          "reason": "approved_semantic_answer",
+          "intent": "SCREEN_PURPOSE",
+          "confidence": "high"
+        },
+        "intent": "SCREEN_PURPOSE",
+        "confidence": "high",
+        "evidence_ids": [
+          "semantic:57ccb1849a870a508853c33e6e628575dd3105def39f9df29263248b72a387e0",
+          "screen:adbf88ab04313c19f578b57f",
+          "evidence:d45c285eff5a2f7ebdf28d11",
+          "evidence:df2ca226f838d0fe5f0d9551",
+          "evidence:eb60e1681ddf0b9918426794"
+        ],
+        "retrieval": {
+          "entity_candidates": 1,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 0,
+          "graph_seed_count": 0,
+          "validated_items": 14,
+          "selected_sources": 1,
+          "selected_relations": 0,
+          "selected_semantics": 1
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": false,
+          "strategy": "screen_purpose",
+          "reason": "query_plan_no_graph_context",
+          "seed_canonical_ids": [],
+          "seed_entity_types": [],
+          "endpoint_entity_types": [
+            "screen"
+          ],
+          "relationships": [],
+          "max_hops": 1,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "id": "fields_retenciones",
+      "request": {
+        "question": "¿Qué campos aparecen en esta pantalla?",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/cuentasxcobrar/retenciones"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 2265.54,
+      "answer_mode": "deterministic_graph",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "answer": "En la pantalla \"Retenciones\" aparecen los campos RUC, Num. Factura y Núm. comprobante.",
+      "sources": [
+        {
+          "title": "Retenciones",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Núm. comprobante",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "field"
+        },
+        {
+          "title": "Num. Factura",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "field"
+        },
+        {
+          "title": "Última página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Primera página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Siguiente página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 23,
+        "graph_seed_count": 1,
+        "validated_items": 32,
+        "selected_sources": 12,
+        "selected_relations": 11,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "list_fields",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "screen:4c3175a29f8bb4dcf439da9c"
+        ],
+        "seed_entity_types": [
+          "screen"
+        ],
+        "endpoint_entity_types": [
+          "screen",
+          "field",
+          "control",
+          "ui_state"
+        ],
+        "relationships": [
+          "HAS_FIELD",
+          "HAS_CONTROL",
+          "HAS_STATE"
+        ],
+        "max_hops": 2,
+        "limit": 64
+      },
+      "raw_response": {
+        "answer": "En la pantalla \"Retenciones\" aparecen los campos RUC, Num. Factura y Núm. comprobante.",
+        "conversationId": "d900ef82de9141df88b81b8e6951bd01",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Núm. comprobante",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "field"
+          },
+          {
+            "title": "Num. Factura",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "field"
+          },
+          {
+            "title": "Última página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Primera página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Siguiente página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          }
+        ],
+        "answer_mode": "deterministic_graph",
+        "answerDecision": {
+          "decision": "DETERMINISTIC_ANSWER",
+          "reason": "deterministic_structural_answer",
+          "intent": "LIST_FIELDS",
+          "confidence": "high"
+        },
+        "intent": "LIST_FIELDS",
+        "confidence": "high",
+        "evidence_ids": [
+          "screen:4c3175a29f8bb4dcf439da9c",
+          "field:3b699ac45fc82889b5cff47f",
+          "field:88cc016bd25e8be3659934a0",
+          "field:e581811cc747e7aa26f402c0"
+        ],
+        "retrieval": {
+          "entity_candidates": 2,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 23,
+          "graph_seed_count": 1,
+          "validated_items": 32,
+          "selected_sources": 12,
+          "selected_relations": 11,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "list_fields",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "screen:4c3175a29f8bb4dcf439da9c"
+          ],
+          "seed_entity_types": [
+            "screen"
+          ],
+          "endpoint_entity_types": [
+            "screen",
+            "field",
+            "control",
+            "ui_state"
+          ],
+          "relationships": [
+            "HAS_FIELD",
+            "HAS_CONTROL",
+            "HAS_STATE"
+          ],
+          "max_hops": 2,
+          "limit": 64
+        }
+      }
+    },
+    {
+      "id": "table_retenciones",
+      "request": {
+        "question": "¿Qué columnas tiene la tabla de esta pantalla?",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/cuentasxcobrar/retenciones"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 2392.57,
+      "answer_mode": "deterministic_graph",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "answer": "En la tabla de la pantalla \"Retenciones\" aparecen las columnas total, TOTAL RETENIDO, ruc, COMPROBANTE, NOMBRE, num. factura, ACCIONES, fecha emisión, FECHA EMISIÓN, TOTAL FACTURA, NÚMERO FACTURA, ESTADO, razon social y RUC.",
+      "sources": [
+        {
+          "title": "Retenciones",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Entidad validada",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table"
+        },
+        {
+          "title": "Entidad validada",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table"
+        },
+        {
+          "title": "total",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "TOTAL RETENIDO",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "ruc",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "COMPROBANTE",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "NOMBRE",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "num. factura",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        },
+        {
+          "title": "ACCIONES",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "table_column"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 1,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 18,
+        "graph_seed_count": 1,
+        "validated_items": 30,
+        "selected_sources": 17,
+        "selected_relations": 16,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "list_columns",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "screen:4c3175a29f8bb4dcf439da9c"
+        ],
+        "seed_entity_types": [
+          "screen"
+        ],
+        "endpoint_entity_types": [
+          "screen",
+          "table",
+          "table_column",
+          "ui_state"
+        ],
+        "relationships": [
+          "HAS_STATE",
+          "HAS_TABLE",
+          "HAS_COLUMN"
+        ],
+        "max_hops": 3,
+        "limit": 64
+      },
+      "raw_response": {
+        "answer": "En la tabla de la pantalla \"Retenciones\" aparecen las columnas total, TOTAL RETENIDO, ruc, COMPROBANTE, NOMBRE, num. factura, ACCIONES, fecha emisión, FECHA EMISIÓN, TOTAL FACTURA, NÚMERO FACTURA, ESTADO, razon social y RUC.",
+        "conversationId": "191066901b2f43198ecf69317b26c032",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Entidad validada",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table"
+          },
+          {
+            "title": "Entidad validada",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table"
+          },
+          {
+            "title": "total",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "TOTAL RETENIDO",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "ruc",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "COMPROBANTE",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "NOMBRE",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "num. factura",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          },
+          {
+            "title": "ACCIONES",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "table_column"
+          }
+        ],
+        "answer_mode": "deterministic_graph",
+        "answerDecision": {
+          "decision": "DETERMINISTIC_ANSWER",
+          "reason": "deterministic_structural_answer",
+          "intent": "LIST_COLUMNS",
+          "confidence": "high"
+        },
+        "intent": "LIST_COLUMNS",
+        "confidence": "high",
+        "evidence_ids": [
+          "table:233a96bb8ee8d6c7f8d8bcb6",
+          "table_column:0bde61238be4bc6074e7c434",
+          "table:e08786fd6cefb40cd9b867af",
+          "table_column:0f8592d41e66af1b86dbe36c",
+          "table_column:301eb82723c154dd40bea433",
+          "table_column:3f93e8e6a6e86b80628848ab",
+          "table_column:47ed84b993c80ab8c1156013",
+          "table_column:68042e633d94ede604fc0ce5",
+          "table_column:687b64718587d6ad8ffc7edb",
+          "table_column:860c87240408d7ce052e6b98",
+          "table_column:8ac69dbbee7b1f0d47574d59",
+          "table_column:c39a22df2aea1b61d200b640",
+          "table_column:c6531d1b5cd61a231dddbc7e",
+          "table_column:cb724a01ddf6bbe2152e3da3",
+          "table_column:d20fb88431e8d0f0b5626b1b",
+          "table_column:ea012d99613baf8fc10254a4"
+        ],
+        "retrieval": {
+          "entity_candidates": 1,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 18,
+          "graph_seed_count": 1,
+          "validated_items": 30,
+          "selected_sources": 17,
+          "selected_relations": 16,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "list_columns",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "screen:4c3175a29f8bb4dcf439da9c"
+          ],
+          "seed_entity_types": [
+            "screen"
+          ],
+          "endpoint_entity_types": [
+            "screen",
+            "table",
+            "table_column",
+            "ui_state"
+          ],
+          "relationships": [
+            "HAS_STATE",
+            "HAS_TABLE",
+            "HAS_COLUMN"
+          ],
+          "max_hops": 3,
+          "limit": 64
+        }
+      }
+    },
+    {
+      "id": "writer_c_graph_on",
+      "request": {
+        "question": "Resume la evidencia visible de esta pantalla sin asumir nada que no esté mostrado.",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/general/anios"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 19524.38,
+      "answer_mode": "ollama_grounded",
+      "decision": "GROUNDED_LLM",
+      "reason": "grounded_context_available",
+      "answer": "La pantalla \"Año\" muestra una tabla con las columnas DETALLE y ACTIVO, controles de paginación (Primera página, Página anterior, Siguiente página, Última página), un botón 'Nuevo' para iniciar acciones mutativas, botones 'edit' y 'delete' disponibles para los registros, y controles asociados a eventos que abren modales etiquetados como 'x-mark' y 'Cancelar'.",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "link"
+        },
+        {
+          "title": "Certificado de no adeudar",
+          "route": "/admin/prevencion-riesgo/certificado-no-adeudar",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 1,
+        "semantic_dense_hits": 1,
+        "graph_neighbors": 20,
+        "graph_seed_count": 2,
+        "validated_items": 28,
+        "selected_sources": 6,
+        "selected_relations": 10,
+        "selected_semantics": 1
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "generic_fallback",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "screen:adbf88ab04313c19f578b57f",
+          "link:5b14611ef1ce0ef162eb37e0"
+        ],
+        "seed_entity_types": [
+          "screen",
+          "link"
+        ],
+        "endpoint_entity_types": [],
+        "relationships": [
+          "HAS_MODULE",
+          "HAS_SUBMODULE",
+          "HAS_SCREEN",
+          "HAS_STATE",
+          "HAS_FIELD",
+          "HAS_CONTROL",
+          "HAS_TABLE",
+          "HAS_COLUMN",
+          "HAS_LINK",
+          "HAS_EVENT",
+          "FROM_STATE",
+          "TO_STATE",
+          "TRIGGERED_BY"
+        ],
+        "max_hops": 2,
+        "limit": 20
+      },
+      "raw_response": {
+        "answer": "La pantalla \"Año\" muestra una tabla con las columnas DETALLE y ACTIVO, controles de paginación (Primera página, Página anterior, Siguiente página, Última página), un botón 'Nuevo' para iniciar acciones mutativas, botones 'edit' y 'delete' disponibles para los registros, y controles asociados a eventos que abren modales etiquetados como 'x-mark' y 'Cancelar'.",
+        "conversationId": "64a5b7c796844d2cbaa81db8363e9b05",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "link"
+          },
+          {
+            "title": "Certificado de no adeudar",
+            "route": "/admin/prevencion-riesgo/certificado-no-adeudar",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          }
+        ],
+        "answer_mode": "ollama_grounded",
+        "answerDecision": {
+          "decision": "GROUNDED_LLM",
+          "reason": "grounded_context_available",
+          "intent": null,
+          "confidence": "medium"
+        },
+        "intent": null,
+        "confidence": "medium",
+        "evidence_ids": [],
+        "retrieval": {
+          "entity_candidates": 2,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 1,
+          "semantic_dense_hits": 1,
+          "graph_neighbors": 20,
+          "graph_seed_count": 2,
+          "validated_items": 28,
+          "selected_sources": 6,
+          "selected_relations": 10,
+          "selected_semantics": 1
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "generic_fallback",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "screen:adbf88ab04313c19f578b57f",
+            "link:5b14611ef1ce0ef162eb37e0"
+          ],
+          "seed_entity_types": [
+            "screen",
+            "link"
+          ],
+          "endpoint_entity_types": [],
+          "relationships": [
+            "HAS_MODULE",
+            "HAS_SUBMODULE",
+            "HAS_SCREEN",
+            "HAS_STATE",
+            "HAS_FIELD",
+            "HAS_CONTROL",
+            "HAS_TABLE",
+            "HAS_COLUMN",
+            "HAS_LINK",
+            "HAS_EVENT",
+            "FROM_STATE",
+            "TO_STATE",
+            "TRIGGERED_BY"
+          ],
+          "max_hops": 2,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "id": "writer_c_graph_off",
+      "request": {
+        "question": "Resume la evidencia visible de esta pantalla sin asumir nada que no esté mostrado.",
+        "experimentCondition": "C",
+        "graphEnabled": false,
+        "context": {
+          "currentRoute": "/admin/general/anios"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 13225.35,
+      "answer_mode": "ollama_grounded",
+      "decision": "GROUNDED_LLM",
+      "reason": "grounded_context_available",
+      "answer": "La pantalla \"Año\" del módulo General muestra una tabla con columnas DETALLE y ACTIVO. Ofrece controles de paginación ('Página anterior', 'Siguiente página', 'Primera página', 'Última página'), un botón 'Nuevo' para iniciar acciones mutativas, botones 'edit' y 'delete' para los registros, y controles etiquetados como 'x-mark' y 'Cancelar' asociados a eventos que abren modales.",
+      "sources": [
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "link"
+        },
+        {
+          "title": "Certificado de no adeudar",
+          "route": "/admin/prevencion-riesgo/certificado-no-adeudar",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        },
+        {
+          "title": "Año",
+          "route": "/admin/general/anios",
+          "sourceType": "ui_state"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 2,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 1,
+        "semantic_dense_hits": 1,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 9,
+        "selected_sources": 6,
+        "selected_relations": 0,
+        "selected_semantics": 1
+      },
+      "graph_expansion": {
+        "enabled": false,
+        "strategy": "generic_fallback",
+        "reason": "experiment_graph_disabled",
+        "seed_canonical_ids": [],
+        "seed_entity_types": [
+          "screen",
+          "link"
+        ],
+        "endpoint_entity_types": [],
+        "relationships": [
+          "HAS_MODULE",
+          "HAS_SUBMODULE",
+          "HAS_SCREEN",
+          "HAS_STATE",
+          "HAS_FIELD",
+          "HAS_CONTROL",
+          "HAS_TABLE",
+          "HAS_COLUMN",
+          "HAS_LINK",
+          "HAS_EVENT",
+          "FROM_STATE",
+          "TO_STATE",
+          "TRIGGERED_BY"
+        ],
+        "max_hops": 2,
+        "limit": 20
+      },
+      "raw_response": {
+        "answer": "La pantalla \"Año\" del módulo General muestra una tabla con columnas DETALLE y ACTIVO. Ofrece controles de paginación ('Página anterior', 'Siguiente página', 'Primera página', 'Última página'), un botón 'Nuevo' para iniciar acciones mutativas, botones 'edit' y 'delete' para los registros, y controles etiquetados como 'x-mark' y 'Cancelar' asociados a eventos que abren modales.",
+        "conversationId": "ea340137f8cd4e9aa8066bb5306e8c46",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "link"
+          },
+          {
+            "title": "Certificado de no adeudar",
+            "route": "/admin/prevencion-riesgo/certificado-no-adeudar",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          },
+          {
+            "title": "Año",
+            "route": "/admin/general/anios",
+            "sourceType": "ui_state"
+          }
+        ],
+        "answer_mode": "ollama_grounded",
+        "answerDecision": {
+          "decision": "GROUNDED_LLM",
+          "reason": "grounded_context_available",
+          "intent": null,
+          "confidence": "medium"
+        },
+        "intent": null,
+        "confidence": "medium",
+        "evidence_ids": [],
+        "retrieval": {
+          "entity_candidates": 2,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 1,
+          "semantic_dense_hits": 1,
+          "graph_neighbors": 0,
+          "graph_seed_count": 0,
+          "validated_items": 9,
+          "selected_sources": 6,
+          "selected_relations": 0,
+          "selected_semantics": 1
+        },
+        "experimentCondition": "C",
+        "graphEnabled": false,
+        "graphExpansion": {
+          "enabled": false,
+          "strategy": "generic_fallback",
+          "reason": "experiment_graph_disabled",
+          "seed_canonical_ids": [],
+          "seed_entity_types": [
+            "screen",
+            "link"
+          ],
+          "endpoint_entity_types": [],
+          "relationships": [
+            "HAS_MODULE",
+            "HAS_SUBMODULE",
+            "HAS_SCREEN",
+            "HAS_STATE",
+            "HAS_FIELD",
+            "HAS_CONTROL",
+            "HAS_TABLE",
+            "HAS_COLUMN",
+            "HAS_LINK",
+            "HAS_EVENT",
+            "FROM_STATE",
+            "TO_STATE",
+            "TRIGGERED_BY"
+          ],
+          "max_hops": 2,
+          "limit": 20
+        }
+      }
+    },
+    {
+      "id": "mutative_orientation",
+      "request": {
+        "question": "¿Cómo puedo crear una nueva retención?",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/cuentasxcobrar/retenciones"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 1858.78,
+      "answer_mode": "deterministic_graph",
+      "decision": "DETERMINISTIC_ANSWER",
+      "reason": "deterministic_structural_answer",
+      "answer": "La acción está respaldada por el control \"Nueva retención\".",
+      "sources": [
+        {
+          "title": "Nueva retención",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Nueva retención",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "event"
+        },
+        {
+          "title": "Retenciones",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "screen"
+        },
+        {
+          "title": "refresh",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Última página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Primera página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 12,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 23,
+        "graph_seed_count": 1,
+        "validated_items": 43,
+        "selected_sources": 22,
+        "selected_relations": 21,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "mutative_evidence",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "control:f2dc70b1356f1b56f604211b"
+        ],
+        "seed_entity_types": [
+          "control"
+        ],
+        "endpoint_entity_types": [
+          "screen",
+          "ui_state",
+          "control",
+          "event",
+          "transition"
+        ],
+        "relationships": [
+          "HAS_CONTROL",
+          "HAS_STATE",
+          "HAS_EVENT",
+          "FROM_STATE",
+          "TO_STATE",
+          "TRIGGERED_BY"
+        ],
+        "max_hops": 2,
+        "limit": 64
+      },
+      "raw_response": {
+        "answer": "La acción está respaldada por el control \"Nueva retención\".",
+        "conversationId": "b9b9132149894d48b1d60922c6981a4d",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Nueva retención",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Nueva retención",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "event"
+          },
+          {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen"
+          },
+          {
+            "title": "refresh",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Última página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Primera página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          }
+        ],
+        "answer_mode": "deterministic_graph",
+        "answerDecision": {
+          "decision": "DETERMINISTIC_ANSWER",
+          "reason": "deterministic_structural_answer",
+          "intent": "MUTATIVE_ACTION",
+          "confidence": "high"
+        },
+        "intent": "MUTATIVE_ACTION",
+        "confidence": "high",
+        "evidence_ids": [
+          "screen:4c3175a29f8bb4dcf439da9c",
+          "control:f2dc70b1356f1b56f604211b"
+        ],
+        "retrieval": {
+          "entity_candidates": 12,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 23,
+          "graph_seed_count": 1,
+          "validated_items": 43,
+          "selected_sources": 22,
+          "selected_relations": 21,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "mutative_evidence",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "control:f2dc70b1356f1b56f604211b"
+          ],
+          "seed_entity_types": [
+            "control"
+          ],
+          "endpoint_entity_types": [
+            "screen",
+            "ui_state",
+            "control",
+            "event",
+            "transition"
+          ],
+          "relationships": [
+            "HAS_CONTROL",
+            "HAS_STATE",
+            "HAS_EVENT",
+            "FROM_STATE",
+            "TO_STATE",
+            "TRIGGERED_BY"
+          ],
+          "max_hops": 2,
+          "limit": 64
+        }
+      }
+    },
+    {
+      "id": "mutative_execution",
+      "request": {
+        "question": "Crea una nueva retención por mí.",
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "context": {
+          "currentRoute": "/admin/cuentasxcobrar/retenciones"
+        }
+      },
+      "http_status": 200,
+      "elapsed_ms": 2182.59,
+      "answer_mode": "policy_abstention",
+      "decision": "ABSTENTION",
+      "reason": "mutative_action_policy",
+      "answer": "No puedo ejecutar acciones que modifiquen el ERP. Puedo orientarte de forma informativa sobre el control o la función disponible usando conocimiento validado.",
+      "sources": [
+        {
+          "title": "Nueva retención",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Nueva retención",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "event"
+        },
+        {
+          "title": "Retenciones",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "screen"
+        },
+        {
+          "title": "Última página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Primera página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "local_printshop",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        },
+        {
+          "title": "Siguiente página",
+          "route": "/admin/cuentasxcobrar/retenciones",
+          "sourceType": "control"
+        }
+      ],
+      "retrieval": {
+        "entity_candidates": 12,
+        "semantic_hits": 8,
+        "structural_dense_hits": 8,
+        "semantic_candidates": 8,
+        "approved_semantic_hits": 8,
+        "semantic_dense_hits": 8,
+        "graph_neighbors": 23,
+        "graph_seed_count": 1,
+        "validated_items": 45,
+        "selected_sources": 22,
+        "selected_relations": 21,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": true,
+        "strategy": "mutative_evidence",
+        "reason": "query_aware_policy",
+        "seed_canonical_ids": [
+          "control:f2dc70b1356f1b56f604211b"
+        ],
+        "seed_entity_types": [
+          "control"
+        ],
+        "endpoint_entity_types": [
+          "screen",
+          "ui_state",
+          "control",
+          "event",
+          "transition"
+        ],
+        "relationships": [
+          "HAS_CONTROL",
+          "HAS_STATE",
+          "HAS_EVENT",
+          "FROM_STATE",
+          "TO_STATE",
+          "TRIGGERED_BY"
+        ],
+        "max_hops": 2,
+        "limit": 64
+      },
+      "raw_response": {
+        "answer": "No puedo ejecutar acciones que modifiquen el ERP. Puedo orientarte de forma informativa sobre el control o la función disponible usando conocimiento validado.",
+        "conversationId": "437f8e62c17949ed999bc1c995562f0c",
+        "suggestions": [],
+        "status": "answered",
+        "sources": [
+          {
+            "title": "Nueva retención",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Nueva retención",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "event"
+          },
+          {
+            "title": "Retenciones",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "screen"
+          },
+          {
+            "title": "Última página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Primera página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "local_printshop",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          },
+          {
+            "title": "Siguiente página",
+            "route": "/admin/cuentasxcobrar/retenciones",
+            "sourceType": "control"
+          }
+        ],
+        "answer_mode": "policy_abstention",
+        "answerDecision": {
+          "decision": "ABSTENTION",
+          "reason": "mutative_action_policy",
+          "intent": "MUTATIVE_ACTION",
+          "confidence": "high"
+        },
+        "intent": "MUTATIVE_ACTION",
+        "confidence": "high",
+        "evidence_ids": [],
+        "retrieval": {
+          "entity_candidates": 12,
+          "semantic_hits": 8,
+          "structural_dense_hits": 8,
+          "semantic_candidates": 8,
+          "approved_semantic_hits": 8,
+          "semantic_dense_hits": 8,
+          "graph_neighbors": 23,
+          "graph_seed_count": 1,
+          "validated_items": 45,
+          "selected_sources": 22,
+          "selected_relations": 21,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": true,
+          "strategy": "mutative_evidence",
+          "reason": "query_aware_policy",
+          "seed_canonical_ids": [
+            "control:f2dc70b1356f1b56f604211b"
+          ],
+          "seed_entity_types": [
+            "control"
+          ],
+          "endpoint_entity_types": [
+            "screen",
+            "ui_state",
+            "control",
+            "event",
+            "transition"
+          ],
+          "relationships": [
+            "HAS_CONTROL",
+            "HAS_STATE",
+            "HAS_EVENT",
+            "FROM_STATE",
+            "TO_STATE",
+            "TRIGGERED_BY"
+          ],
+          "max_hops": 2,
+          "limit": 64
+        }
+      }
+    },
+    {
+      "id": "out_of_scope",
+      "request": {
+        "question": "¿Cuál es la capital de Francia?",
+        "experimentCondition": "C",
+        "graphEnabled": true
+      },
+      "http_status": 200,
+      "elapsed_ms": 73.82,
+      "answer_mode": "insufficient_evidence",
+      "decision": "ABSTENTION",
+      "reason": "insufficient_evidence",
+      "answer": "No encontré conocimiento validado suficiente para responder esa pregunta.",
+      "sources": [],
+      "retrieval": {
+        "entity_candidates": 12,
+        "semantic_hits": 0,
+        "structural_dense_hits": 0,
+        "semantic_candidates": 0,
+        "approved_semantic_hits": 0,
+        "semantic_dense_hits": 0,
+        "graph_neighbors": 0,
+        "graph_seed_count": 0,
+        "validated_items": 0,
+        "selected_sources": 0,
+        "selected_relations": 0,
+        "selected_semantics": 0
+      },
+      "graph_expansion": {
+        "enabled": false,
+        "strategy": "unsupported_query",
+        "reason": "insufficient_evidence",
+        "seed_canonical_ids": [],
+        "seed_entity_types": [],
+        "endpoint_entity_types": [],
+        "relationships": [],
+        "max_hops": 0,
+        "limit": 0
+      },
+      "raw_response": {
+        "answer": "No encontré conocimiento validado suficiente para responder esa pregunta.",
+        "conversationId": "034a329b0eb34184ba0d2011b0695513",
+        "suggestions": [],
+        "status": "not_found",
+        "sources": [],
+        "answer_mode": "insufficient_evidence",
+        "answerDecision": {
+          "decision": "ABSTENTION",
+          "reason": "insufficient_evidence",
+          "intent": null,
+          "confidence": "low"
+        },
+        "intent": null,
+        "confidence": "low",
+        "evidence_ids": [],
+        "retrieval": {
+          "entity_candidates": 12,
+          "semantic_hits": 0,
+          "structural_dense_hits": 0,
+          "semantic_candidates": 0,
+          "approved_semantic_hits": 0,
+          "semantic_dense_hits": 0,
+          "graph_neighbors": 0,
+          "graph_seed_count": 0,
+          "validated_items": 0,
+          "selected_sources": 0,
+          "selected_relations": 0,
+          "selected_semantics": 0
+        },
+        "experimentCondition": "C",
+        "graphEnabled": true,
+        "graphExpansion": {
+          "enabled": false,
+          "strategy": "unsupported_query",
+          "reason": "insufficient_evidence",
+          "seed_canonical_ids": [],
+          "seed_entity_types": [],
+          "endpoint_entity_types": [],
+          "relationships": [],
+          "max_hops": 0,
+          "limit": 0
+        }
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "all_http_200",
+      "passed": true,
+      "detail": "all live API probes returned HTTP 200"
+    },
+    {
+      "name": "locate_screen",
+      "passed": true,
+      "detail": "decision=DETERMINISTIC_ANSWER routes=['/admin/cuentasxcobrar/retenciones']"
+    },
+    {
+      "name": "semantic_purpose",
+      "passed": true,
+      "detail": "mode=deterministic_semantic decision=DETERMINISTIC_ANSWER"
+    },
+    {
+      "name": "current_route_fields",
+      "passed": true,
+      "detail": "En la pantalla \"Retenciones\" aparecen los campos RUC, Num. Factura y Núm. comprobante."
+    },
+    {
+      "name": "table_columns",
+      "passed": true,
+      "detail": "mode=deterministic_graph answer='En la tabla de la pantalla \"Retenciones\" aparecen las columnas total, TOTAL RETENIDO, ruc, COMPROBANTE, NOMBRE, num. factura, ACCIONES, fecha emisión, FECHA EMISIÓN, TOTAL FACTURA,'"
+    },
+    {
+      "name": "writer_c_observed",
+      "passed": true,
+      "detail": "mode=ollama_grounded decision=GROUNDED_LLM"
+    },
+    {
+      "name": "graph_off_real",
+      "passed": true,
+      "detail": "neighbors=0 seeds=0 reason=experiment_graph_disabled"
+    },
+    {
+      "name": "mutative_orientation_safe",
+      "passed": true,
+      "detail": "decision=DETERMINISTIC_ANSWER reason=deterministic_structural_answer answer='La acción está respaldada por el control \"Nueva retención\".'"
+    },
+    {
+      "name": "mutative_execution_blocked",
+      "passed": true,
+      "detail": "mode=policy_abstention reason=mutative_action_policy"
+    },
+    {
+      "name": "out_of_scope_abstention",
+      "passed": true,
+      "detail": "decision=ABSTENTION reason=insufficient_evidence"
+    }
+  ],
+  "hard_failures": [],
+  "status": "PASS"
+}

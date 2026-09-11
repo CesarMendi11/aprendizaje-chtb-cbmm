@@ -1,0 +1,274 @@
+{
+  "FORMAL002_started": false,
+  "created_at_utc": "2026-09-11T09:38:27.179944+00:00",
+  "development_guardrails": {
+    "FORMAL001_not_confirmatory": true,
+    "FORMAL002_may_not_influence_system": true,
+    "development_metrics_are_not_formal_results": true,
+    "development_tuning_closed": true,
+    "eligible_rq2_failures_remain_in_denominator": true,
+    "failed_or_disturbed_formal_runs_are_preserved": true,
+    "human_references_immutable": true,
+    "policy_blocked_items_are_not_technical_false_negatives": true,
+    "policy_scope_immutable": true,
+    "rq3_bank_v2_immutable": true
+  },
+  "development_runtime_certification": {
+    "backend_changes_after_e2e": [
+      "experiments/protocol/formal001_diagnostic_disposition_v1.json",
+      "experiments/protocol/formal_analysis_plan_v2.json",
+      "experiments/protocol/formal_operational_plan_v4.md",
+      "experiments/protocol/formal_preparation_amendment_v5.json",
+      "experiments/protocol/policy_scope_contract_v1.json",
+      "experiments/protocol/protocol_v2_5.json",
+      "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt",
+      "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json",
+      "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json",
+      "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json",
+      "experiments/query_bank/formal/rq3/rq3_query_bank_v2_provenance_v1.json",
+      "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json",
+      "scripts/experiments/evaluate_structural.py",
+      "scripts/experiments/policy_scope.py",
+      "scripts/experiments/scoring_harness.py",
+      "tests/scripts/test_scoring_harness.py",
+      "tests/scripts/test_structural_experiment_evaluation.py"
+    ],
+    "certified_backend_runtime_head": "a6b75063982486f61a96c804beddc0af340226d7",
+    "e2e_report": {
+      "all_checks_passed": true,
+      "certification_id": "cbmm-development-e2e-certification-v1",
+      "checks": 10,
+      "frontend_smoke_status": "PASS",
+      "hard_failures": 0,
+      "path": "experiments/certification/development_e2e_certification_v1.json",
+      "sha256": "6c0915837667daa6f074ce35821ef086188fade492c1ad68676ab8b0745e8993",
+      "status": "PASS"
+    },
+    "evaluation_harness_recertification": {
+      "head": "321cd5770264834ce7f14cf55001823df7263ceb",
+      "pytest": "12 passed",
+      "ruff": "PASS"
+    },
+    "frontend_post_e2e_change": {
+      "backend_answering_runtime_changed": false,
+      "baseline_head": "96697d3f70ba67fe41e462118fe0547f687003a5",
+      "changed_files": [
+        "src/app/layout/common/erp-assistant-chat/erp-assistant-chat.component.ts"
+      ],
+      "classification": "validated quick-suggestion replacement",
+      "final_head": "998711ae51aac48fadc47a2acc17de473bde7347",
+      "new_suggestion": "¿Cómo puedo crear una nueva retención?",
+      "old_suggestion": "Anula una retención por mí",
+      "source_delta": "1 insertion / 1 deletion",
+      "visual_integration_check": "PASS"
+    },
+    "m1_m2_m3_runtime_changed_after_e2e": false,
+    "runtime_relevant_backend_changes_after_e2e": []
+  },
+  "evaluation_harness": {
+    "policy_scope": {
+      "path": "scripts/experiments/policy_scope.py",
+      "sha256": "7aeacc6bcf36947e2cb9acd09132b9d51fd0e95d076ed8d2b85139f0b38d6f97"
+    },
+    "rq1_evaluator": {
+      "path": "scripts/experiments/evaluate_structural.py",
+      "sha256": "665d314fc16126c15b207f497a39989b9e49f9d8f90fb3398f52e5a116837553"
+    },
+    "rq2_rq3_scoring": {
+      "path": "scripts/experiments/scoring_harness.py",
+      "sha256": "0000dfc12aab31f2a51d001a2922c52fcbf38afed7585393a2c347e06e0302c1"
+    }
+  },
+  "evaluation_scope": {
+    "rq1": {
+      "all_reference_route_diagnostic_screens": 65,
+      "frozen_reference_screens": 65,
+      "policy_blocked_screens": 8,
+      "primary_eligible_screens": 57
+    },
+    "rq2": {
+      "dashboard_primary_eligible": true,
+      "eligible_missing_output_remains_in_denominator": true,
+      "explicit_exclusions": 1,
+      "policy_blocked_screens": 8,
+      "primary_eligible_screens": 56,
+      "semantic_reference_screens": 64
+    }
+  },
+  "formal_history": {
+    "FORMAL001": {
+      "boundary_crossed": true,
+      "confirmatory_results_eligible": false,
+      "disposition": {
+        "path": "experiments/protocol/formal001_diagnostic_disposition_v1.json",
+        "sha256": "6295bb728a54f10e95f0206ccdf40e031edb0dd0f804d615e817678af32c3966"
+      },
+      "rq1_diagnostic_data_exist": true,
+      "rq2_executed": false,
+      "rq3_executed": false,
+      "status": "STOPPED_DIAGNOSTIC_NON_CONFIRMATORY",
+      "structural_hitl_completed": false,
+      "sus_executed": false
+    },
+    "FORMAL002": {
+      "result_data_exist": false,
+      "started": false
+    }
+  },
+  "freeze_id": "cbmm-global-development-freeze-v2",
+  "frozen_artifact": {
+    "backend_source": {
+      "branch": "main",
+      "head": "321cd5770264834ce7f14cf55001823df7263ceb",
+      "note": "Final DEVELOPMENT source HEAD immediately before the metadata-only freeze commit."
+    },
+    "frontend": {
+      "branch": "feat/erp-assistant-chat",
+      "head": "998711ae51aac48fadc47a2acc17de473bde7347"
+    }
+  },
+  "independent_references": {
+    "rq1": {
+      "changed_during_policy_repair": false,
+      "freeze": {
+        "path": "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json",
+        "sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75"
+      },
+      "reference": {
+        "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+        "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+      }
+    },
+    "rq2": {
+      "changed_during_policy_repair": false,
+      "exclusions": {
+        "path": "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv",
+        "sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f"
+      },
+      "freeze": {
+        "path": "experiments/gold_standard/formal/rq2/rq2_reference_freeze_v1.json",
+        "sha256": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571"
+      },
+      "reference": {
+        "canonical_sha256": "5bac6a702c54157088430ac65243706e7659939b930557b691360da81301872b",
+        "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+        "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+      }
+    }
+  },
+  "new_FORMAL002_result_data_created_by_this_freeze": false,
+  "next_phase": "FORMAL002_ENVIRONMENT_PREPARATION",
+  "phase": "DEVELOPMENT",
+  "protocol_contracts": {
+    "formal_analysis_plan_v2": {
+      "path": "experiments/protocol/formal_analysis_plan_v2.json",
+      "sha256": "c7cc3b14e05124484abf46be3ab0d1721e1894243dd4d6fa15e6459359bb5250"
+    },
+    "formal_operational_plan_v4": {
+      "path": "experiments/protocol/formal_operational_plan_v4.md",
+      "sha256": "c6cc30a818d138db618a32e370f961f797c00ed32d1b1edadf8e8e1959fa765d"
+    },
+    "formal_preparation_amendment_v5": {
+      "path": "experiments/protocol/formal_preparation_amendment_v5.json",
+      "sha256": "799496b94540bf87a8e6d544fe52e90ab76b8536826b310dd4292b8061d85919"
+    },
+    "policy_scope_contract_v1": {
+      "path": "experiments/protocol/policy_scope_contract_v1.json",
+      "sha256": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601"
+    },
+    "protocol_v2_5": {
+      "path": "experiments/protocol/protocol_v2_5.json",
+      "sha256": "2bda9d44a5de4b6dc96e105eaf2da3efd718327f7bf8200a8d4bc57dded25476"
+    }
+  },
+  "remaining_before_FORMAL002_start": [
+    "verify fresh isolated FORMAL002 persistence",
+    "verify formal structural and semantic empty state",
+    "freeze FORMAL002 pre-run experiment manifest",
+    "write explicit FORMAL002 start record"
+  ],
+  "rq3": {
+    "FORMAL_RQ3_outputs_seen": false,
+    "bank_v1_preserved": true,
+    "execution_plan": {
+      "entries": 216,
+      "path": "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json",
+      "sha256": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed"
+    },
+    "expert_A_validation": {
+      "path": "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt",
+      "sha256": "6e3d7be8c3a568df689f23cf46e10498daca4faee89f46de15bdee663342218d"
+    },
+    "expert_B_subset": {
+      "blind_responses": 72,
+      "path": "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json",
+      "queries": 18,
+      "sha256": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38"
+    },
+    "provenance": {
+      "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2_provenance_v1.json",
+      "sha256": "6c9c41a7838b1e4083a8346aa5a5f610fa54ac89152079ace85e7e1159ab83a2"
+    },
+    "query_bank_v2": {
+      "canonical_sha256": "2bdccd4bc574be1113a2bf9706f47b170300785b6ec8f6ae9000bd2a092f35bd",
+      "changed_from_v1": 4,
+      "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json",
+      "queries": 54,
+      "queries_per_stratum": 6,
+      "sha256": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16",
+      "strata": 9,
+      "unchanged_from_v1": 50
+    },
+    "randomization_seed": 14011105,
+    "sampling_manifest": {
+      "path": "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json",
+      "sha256": "3fdc4df6de4b11d78ab6a4f889cfd795468fffdef2444a1411acbcd17ebc7b3e"
+    }
+  },
+  "runtime_freezes": {
+    "crawl_profile": {
+      "path": "configs/cbmm.yaml",
+      "sha256": "b773724faba2c6cc130869358cb2d903b74bca5495c39ae11b0f3a987af020b2"
+    },
+    "m1": {
+      "runtime_changed_after_e2e": false,
+      "status": "FROZEN"
+    },
+    "m2": {
+      "generator_freeze": {
+        "path": "experiments/semantic/m2_v14_generator_development_freeze_v3.json",
+        "sha256": "5368730f4becfdce80ddf3d92c6a8f2a886a60c9dfbd2e012961561649402ba8"
+      },
+      "model": "qwen3.5:9b",
+      "prompt_version": "screen-purpose-v14.2",
+      "runtime_changed_after_e2e": false,
+      "status": "FROZEN"
+    },
+    "m3": {
+      "conditions_contract": {
+        "path": "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json",
+        "sha256": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e"
+      },
+      "internal_development_e2e": {
+        "path": "experiments/retrieval/m3_final_development_e2e_v1.json",
+        "sha256": "775c13f508c2e49e900b8e45f2a394ac95589307596c7c6b85f5343bafc6cbd7"
+      },
+      "runtime_changed_after_e2e": false,
+      "status": "FROZEN",
+      "writer_freeze": {
+        "path": "experiments/retrieval/m3_writer_development_freeze_v1.json",
+        "sha256": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604"
+      },
+      "writer_model": "qwen3.5:4b",
+      "writer_timeout_seconds": 60.0
+    }
+  },
+  "schema_version": "2.0.0",
+  "status": "FROZEN_PRE_FORMAL002",
+  "supersedes": {
+    "note": "v1 remains immutable historical lineage. v2 captures the final pre-FORMAL002 state.",
+    "path": "experiments/protocol/global_development_freeze_v1.json",
+    "sha256": "74ba08bd594d089baec5568bb136ce5aa4c72c101823aa85b9f1854c1c130582"
+  },
+  "target_confirmatory_attempt": "FORMAL002"
+}
