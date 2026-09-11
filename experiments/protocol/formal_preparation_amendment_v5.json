@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0.0",
+  "amendment_id": "formal-preparation-amendment-v5",
+  "created_at_utc": "2026-09-11T09:23:46.706940+00:00",
+  "status": "FROZEN_PRE_FORMAL002",
+  "trigger": "FORMAL001 exposed a pre-existing mismatch between the frozen acquisition policy and the evaluation scope: /admin/seguridad was deliberately blocked by acquisition policy while eight functional Seguridad routes remained inside the frozen human references and four expected-answer RQ3 items depended on that blocked knowledge.",
+  "formal_rq_data_seen_before_amendment": true,
+  "formal_confirmatory_rq_data_seen_before_amendment": false,
+  "formal_history": {
+    "FORMAL001": {
+      "status": "STOPPED_DIAGNOSTIC_NON_CONFIRMATORY",
+      "confirmatory_results_eligible": false,
+      "RQ1_data_exist": true,
+      "RQ2_executed": false,
+      "RQ3_executed": false,
+      "SUS_executed": false
+    },
+    "target_confirmatory_attempt": "FORMAL002"
+  },
+  "changes": [
+    {
+      "area": "formal_attempt_disposition",
+      "change": "FORMAL001 is permanently preserved as diagnostic/non-confirmatory; FORMAL002 is defined as the fresh confirmatory campaign.",
+      "runtime_changed": false
+    },
+    {
+      "area": "rq1_policy_scope",
+      "change": "Eight POLICY_BLOCKED Seguridad screens are preserved in the frozen reference but excluded from primary TP/FP/FN; all-reference route coverage remains a non-primary transparency diagnostic.",
+      "runtime_changed": false
+    },
+    {
+      "area": "rq2_policy_scope",
+      "change": "Primary semantic evaluation contains 56 eligible screens: frozen semantic-reference screens minus the eight POLICY_BLOCKED routes. Eligible missing outputs remain in denominators; Dashboard remains eligible.",
+      "runtime_changed": false
+    },
+    {
+      "area": "rq3_bank",
+      "change": "Bank v1 is preserved. Bank v2 replaces only Q003, Q022, Q030 and Q034 one-for-one inside their original strata using already-frozen human-reference facts.",
+      "runtime_changed": false
+    },
+    {
+      "area": "analysis_and_operations",
+      "change": "Formal Analysis Plan v2 and Formal Operational Plan v4 supersede their prior versions for FORMAL002 while preserving the scientific endpoints and A/B/C design.",
+      "runtime_changed": false
+    }
+  ],
+  "non_changes": [
+    "M1 runtime",
+    "M2 runtime",
+    "M3 runtime",
+    "frozen M2 model/prompt",
+    "frozen M3 writer model",
+    "RQ1 human reference content",
+    "RQ2 human reference content",
+    "RQ1 primary dimensions",
+    "RQ2 quality metrics",
+    "RQ3 A/B/C condition definitions",
+    "RQ3 query count",
+    "RQ3 strata",
+    "RQ3 queries per stratum",
+    "formal paired statistical endpoints"
+  ],
+  "supersedes_protocol": {
+    "path": "experiments/protocol/protocol_v2_4.json",
+    "sha256": "a46f92d17f21b4e221b0101725b3e2a549d3f0f496979c0ad35a259862d18c49"
+  },
+  "prior_amendment": {
+    "path": "experiments/protocol/formal_preparation_amendment_v4.json",
+    "sha256": "a647452eaed51c31278a7a3953e92b406b5faa5c0b3ea606270cea1389d6db06"
+  },
+  "formal001_disposition": {
+    "path": "experiments/protocol/formal001_diagnostic_disposition_v1.json",
+    "sha256": "6295bb728a54f10e95f0206ccdf40e031edb0dd0f804d615e817678af32c3966"
+  },
+  "policy_scope_contract": {
+    "path": "experiments/protocol/policy_scope_contract_v1.json",
+    "sha256": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601"
+  },
+  "protocol_v2_5": {
+    "path": "experiments/protocol/protocol_v2_5.json",
+    "sha256": "2bda9d44a5de4b6dc96e105eaf2da3efd718327f7bf8200a8d4bc57dded25476"
+  },
+  "formal_analysis_plan_v2": {
+    "path": "experiments/protocol/formal_analysis_plan_v2.json",
+    "sha256": "c7cc3b14e05124484abf46be3ab0d1721e1894243dd4d6fa15e6459359bb5250"
+  },
+  "formal_operational_plan_v4": {
+    "path": "experiments/protocol/formal_operational_plan_v4.md",
+    "sha256": "c6cc30a818d138db618a32e370f961f797c00ed32d1b1edadf8e8e1959fa765d"
+  },
+  "rq1_reference": {
+    "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+    "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+  },
+  "rq1_reference_freeze": {
+    "path": "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json",
+    "sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75"
+  },
+  "rq2_reference": {
+    "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+    "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+  },
+  "rq2_exclusions": {
+    "path": "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv",
+    "sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f"
+  },
+  "rq2_reference_freeze": {
+    "path": "experiments/gold_standard/formal/rq2/rq2_reference_freeze_v1.json",
+    "sha256": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571"
+  },
+  "rq3_bank_v2": {
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json",
+    "sha256": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16"
+  },
+  "rq3_bank_v2_provenance": {
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2_provenance_v1.json",
+    "sha256": "6c9c41a7838b1e4083a8346aa5a5f610fa54ac89152079ace85e7e1159ab83a2"
+  },
+  "rq3_execution_plan_v2": {
+    "path": "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json",
+    "sha256": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed"
+  },
+  "rq3_expert_B_subset_v2": {
+    "path": "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json",
+    "sha256": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38"
+  },
+  "rq3_sampling_manifest_v2": {
+    "path": "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json",
+    "sha256": "3fdc4df6de4b11d78ab6a4f889cfd795468fffdef2444a1411acbcd17ebc7b3e"
+  },
+  "runtime_changed": false,
+  "human_references_changed": false,
+  "new_FORMAL002_result_data_created": false
+}
