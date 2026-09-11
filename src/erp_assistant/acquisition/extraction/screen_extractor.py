@@ -69,6 +69,11 @@ class ScreenExtractor:
         data["visible_text"] = visible_text[: self.max_visible_text_chars]
         data["visible_text_truncated"] = len(visible_text) > self.max_visible_text_chars
 
+        observed = self.title_resolver.resolve_in_screen(data)
+        data["in_screen_title"] = observed.title
+        data["in_screen_title_source"] = observed.source
+        data["in_screen_title_confidence"] = observed.confidence
+
         resolved = self.title_resolver.resolve(data, title_hint=title_hint)
         data["functional_title"] = resolved.title
         data["title_source"] = resolved.source
@@ -534,6 +539,81 @@ class ScreenExtractor:
 
             addTitleCandidates("h1", "main_heading", 100, true);
             addTitleCandidates("h2", "main_heading", 96, true);
+            const addVisualHeadingCandidates = () => {
+                const roots = visibleRoots(regionSelectors.main_content);
+                const searchRoots = roots.length ? roots : [document.body];
+                const seenSelectors = new Set(
+                    titleCandidates.map((candidate) => candidate.selector).filter(Boolean)
+                );
+
+                for (const root of searchRoots) {
+                    if (!root || !root.querySelectorAll) continue;
+                    const rootRect = root.getBoundingClientRect();
+                    const elements = Array.from(root.querySelectorAll("div, p, span"));
+
+                    for (const element of elements) {
+                        if (!isVisible(element) || regionOf(element) !== "main_content") continue;
+                        if (element.closest(
+                            "button, a, table, mat-table, form, label, mat-label, " +
+                            "[role='button'], [role='menuitem'], [role='tab'], " +
+                            "[role='dialog'], mat-dialog-container"
+                        )) continue;
+
+                        const text = textOf(element);
+                        if (!text || text.length > 120 || text.split(/\s+/).length > 14) continue;
+
+                        // Prefer heading-like leaf nodes. Containers that merely
+                        // concatenate several child labels are not titles.
+                        const childTexts = Array.from(element.children || [])
+                            .map(textOf)
+                            .filter(Boolean);
+                        if (childTexts.length > 1 && !Array.from(element.childNodes || [])
+                            .some((node) => node.nodeType === Node.TEXT_NODE && normalizeText(node.textContent))) {
+                            continue;
+                        }
+
+                        const style = window.getComputedStyle(element);
+                        const fontSize = Number.parseFloat(style.fontSize || "0") || 0;
+                        const rawWeight = String(style.fontWeight || "400").toLowerCase();
+                        const fontWeight = rawWeight === "bold"
+                            ? 700
+                            : (Number.parseInt(rawWeight, 10) || 400);
+                        if (fontSize < 16 || fontWeight < 600) continue;
+
+                        const rect = element.getBoundingClientRect();
+                        const relativeTop = rect.top - rootRect.top;
+                        if (relativeTop < -20 || relativeTop > 520) continue;
+                        if (rect.height > Math.max(96, fontSize * 4.5)) continue;
+
+                        const selector = cssPath(element);
+                        if (selector && seenSelectors.has(selector)) continue;
+
+                        let score = 86;
+                        if (fontSize >= 24) score += 4;
+                        else if (fontSize >= 20) score += 3;
+                        else if (fontSize >= 18) score += 2;
+                        if (fontWeight >= 700) score += 2;
+                        if (relativeTop <= 220) score += 2;
+                        score = Math.min(score, 93);
+
+                        titleCandidates.push({
+                            text,
+                            source: "visual_heading",
+                            score,
+                            selector,
+                            region: "main_content",
+                            visual: {
+                                font_size_px: Math.round(fontSize * 10) / 10,
+                                font_weight: fontWeight,
+                                relative_top_px: Math.round(relativeTop),
+                            },
+                        });
+                        if (selector) seenSelectors.add(selector);
+                    }
+                }
+            };
+
+            addVisualHeadingCandidates();
             addTitleCandidates(
                 ".page-title, .screen-title, .card-title, mat-card-title, [data-page-title]",
                 "page_title",

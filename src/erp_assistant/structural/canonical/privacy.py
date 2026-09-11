@@ -178,6 +178,7 @@ PERSISTED_TEXT_KEYS = {
     "placeholder",
     "document_title",
     "functional_title",
+    "in_screen_title",
     "observed_functional_title",
     "expected_title",
     "observed_title",

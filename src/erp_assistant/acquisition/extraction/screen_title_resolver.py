@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import unquote
 
+from erp_assistant.structural.canonical.privacy import contains_sensitive
+
 
 @dataclass(frozen=True)
 class ResolvedScreenTitle:
@@ -44,13 +46,16 @@ class ScreenTitleResolver:
         "route_override": 1.0,
         "main_heading": 0.98,
         "page_title": 0.95,
+        "visual_heading": 0.94,
         "breadcrumb": 0.92,
         "discovery_hint": 0.90,
         "active_navigation": 0.86,
         "document_title": 0.60,
         "route_fallback": 0.55,
         "unknown": 0.0,
+        "not_observed": 0.0,
     }
+    OBSERVED_TITLE_SOURCES = {"main_heading", "page_title", "visual_heading"}
 
     def __init__(self, profile: dict[str, Any]):
         config = profile.get("extraction", {}).get("title_resolution", {})
@@ -68,6 +73,42 @@ class ScreenTitleResolver:
         }
         self.max_title_length = int(config.get("max_title_length", 120))
 
+    def resolve_in_screen(
+        self,
+        screen_data: dict[str, Any],
+    ) -> ResolvedScreenTitle:
+        """Return only a title visibly observed inside the screen content.
+
+        Navigation labels, discovery hints, document titles and route fallbacks
+        are useful operational names, but they are not evidence that the
+        rendered screen itself exposes a heading. Keeping this signal separate
+        lets acquisition remain useful while preserving a faithful RQ1
+        observation.
+        """
+        candidates: list[tuple[int, str, str]] = []
+        for candidate in screen_data.get("title_candidates", []):
+            source = str(candidate.get("source") or "unknown")
+            if source not in self.OBSERVED_TITLE_SOURCES:
+                continue
+            text = self._clean(candidate.get("text"))
+            score = int(candidate.get("score") or 0)
+            if self._is_usable_candidate(text, source=source, score=score):
+                candidates.append((score, source, text))
+
+        if not candidates:
+            return self._result("", "not_observed")
+
+        candidates.sort(
+            key=lambda item: (
+                item[0],
+                self.SOURCE_CONFIDENCE.get(item[1], 0.0),
+                -len(item[2]),
+            ),
+            reverse=True,
+        )
+        _, source, title = candidates[0]
+        return self._result(title, source)
+
     def resolve(
         self,
         screen_data: dict[str, Any],
@@ -84,7 +125,7 @@ class ScreenTitleResolver:
             text = self._clean(candidate.get("text"))
             source = str(candidate.get("source") or "unknown")
             score = int(candidate.get("score") or 0)
-            if self._is_usable(text):
+            if self._is_usable_candidate(text, source=source, score=score):
                 if self._is_generic(text):
                     score -= 60
                 candidates.append((score, source, text))
@@ -139,7 +180,21 @@ class ScreenTitleResolver:
     def _is_usable(self, value: str) -> bool:
         if not value or len(value) > self.max_title_length:
             return False
+        if contains_sensitive(value):
+            return False
         return len(value.split()) <= 14
+
+    def _is_usable_candidate(self, value: str, *, source: str, score: int) -> bool:
+        if not self._is_usable(value):
+            return False
+        # Generic visual-heading discovery intentionally has a higher bar than
+        # semantic heading selectors. This keeps local card/field labels such
+        # as ``CAJA`` or ``FACTURA No.`` from becoming the screen identity
+        # merely because they are bold. Real screen-level visual headings must
+        # accumulate enough prominence/position evidence in the extractor.
+        if source == "visual_heading" and score < 90:
+            return False
+        return True
 
     def _is_generic(self, value: str) -> bool:
         return self._normalize(value) in self.generic_titles

@@ -201,3 +201,64 @@ def test_screen_extractor_recovers_icon_only_button_semantics():
     assert [item["icon_label"] for item in data["buttons"]] == ["mail", "delete"]
     assert data["buttons"][0]["icon_source"] in {"svgIcon", "svgicon"}
     assert data["buttons"][1]["icon_source"] == "data-mat-icon-name"
+
+
+def test_screen_extractor_detects_generic_visual_heading_inside_main_content():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Dashboard</title></head>
+      <body>
+        <main role="main">
+          <div style="font-size: 16px; font-weight: 700;">Tipo pago</div>
+          <button style="font-size: 18px; font-weight: 700;">Nuevo</button>
+          <table>
+            <thead><tr><th style="font-weight: 700;">NOMBRE</th></tr></thead>
+          </table>
+        </main>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html, "http://localhost:8080/admin/forma-pago")
+
+        data = ScreenExtractor(page, build_profile()).extract(title_hint="Forma pago")
+
+        browser.close()
+
+    assert data["in_screen_title"] == "Tipo pago"
+    assert data["in_screen_title_source"] == "visual_heading"
+    assert data["functional_title"] == "Tipo pago"
+    assert data["title_source"] == "visual_heading"
+
+
+def test_screen_extractor_keeps_navigation_name_without_fabricating_in_screen_title():
+    html = """
+    <!DOCTYPE html>
+    <html>
+      <head><title>Dashboard</title></head>
+      <body>
+        <main role="main">
+          <button>Buscar</button>
+          <table><thead><tr><th>ID</th></tr></thead></table>
+        </main>
+      </body>
+    </html>
+    """
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        load_fake_page(page, html, "http://localhost:8080/admin/facturacion")
+
+        data = ScreenExtractor(page, build_profile()).extract(title_hint="Facturación")
+
+        browser.close()
+
+    assert data["in_screen_title"] == ""
+    assert data["in_screen_title_source"] == "not_observed"
+    assert data["functional_title"] == "Facturación"
+    assert data["title_source"] == "discovery_hint"

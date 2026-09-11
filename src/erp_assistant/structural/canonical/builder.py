@@ -33,7 +33,7 @@ from .privacy import (
 from .validator import CanonicalKnowledgeValidator
 
 SCHEMA_VERSION = "1.1.0"
-GENERATOR_VERSION = "4.0.6"
+GENERATOR_VERSION = "4.1.0"
 NONFUNCTIONAL_ICON_LABELS = {"bars-3"}
 CONTROL_IDENTITY_LABEL_KEYS = ("label", "text", "aria_label", "title", "placeholder")
 ARTIFACT_NAMES = (
@@ -194,7 +194,13 @@ class CanonicalKnowledgeBuilder:
                 source_refs=["screen_index.json"],
                 evidence_ids=[evidence_id],
                 metadata=safe_metadata(
-                    {"status": raw.get("status"), "knowledge_origin": raw.get("knowledge_origin")}
+                    {
+                        "status": raw.get("status"),
+                        "knowledge_origin": raw.get("knowledge_origin"),
+                        "in_screen_title": raw.get("in_screen_title"),
+                        "in_screen_title_source": raw.get("in_screen_title_source"),
+                        "in_screen_title_confidence": raw.get("in_screen_title_confidence"),
+                    }
                 ),
             )
             screens.append(screen)
@@ -296,34 +302,63 @@ class CanonicalKnowledgeBuilder:
                         evidence_ids=ev_ids,
                     )
                 )
-            for pos, item in enumerate(raw.get("buttons") or []):
+            control_by_key = {
+                (
+                    item.screen_id,
+                    item.control_type.value,
+                    item.normalized_label,
+                    item.region,
+                ): item
+                for item in controls
+            }
+            control_keys = set(control_by_key)
+            for item in raw.get("buttons") or []:
                 if self._excluded(item):
                     continue
-                label = self._label(item) or "unlabeled control"
-                identity_label = (
-                    self._label_from_keys(item, CONTROL_IDENTITY_LABEL_KEYS)
-                    or "unlabeled control"
+                label = self._label(item)
+                if not label:
+                    # An unlabeled visual affordance is still available in the
+                    # raw crawl artifacts and event-policy audit, but it cannot
+                    # be represented safely as a functional canonical Control.
+                    self._omit("unlabeled_controls")
+                    continue
+                normalized_label = normalize_text(label)
+                region = item.get("region") or "main_content"
+                key = (
+                    screen.id,
+                    ControlType.BUTTON.value,
+                    normalized_label,
+                    region,
                 )
-                controls.append(
-                    Control(
+                if key in control_keys:
+                    existing = control_by_key[key]
+                    if self._mutative(item) and not existing.mutative:
+                        updated = existing.model_copy(update={"mutative": True})
+                        controls[controls.index(existing)] = updated
+                        control_by_key[key] = updated
+                    self._omit("duplicate_controls")
+                    continue
+                control_keys.add(key)
+                control = Control(
                         id=stable_id(
                             "control",
                             screen.id,
-                            "button",
-                            normalize_text(identity_label),
-                            pos,
+                            ControlType.BUTTON.value,
+                            normalized_label,
+                            region,
                         ),
                         screen_id=screen.id,
                         label=label,
-                        normalized_label=normalize_text(label),
+                        normalized_label=normalized_label,
                         control_type=ControlType.BUTTON,
                         mutative=self._mutative(item),
-                        region=item.get("region") or "main_content",
+                        region=region,
                         selector=self._clean_optional(item.get("selector")),
                         source_refs=["screen_index.json"],
                         evidence_ids=ev_ids,
                     )
-                )
+                controls.append(control)
+                control_by_key[key] = control
             for pos, item in enumerate(raw.get("tables") or []):
                 if self._excluded(item):
                     continue
@@ -682,33 +717,60 @@ class CanonicalKnowledgeBuilder:
                 )
             )
 
-        control_keys = {
-            (item.screen_id, item.control_type.value, item.normalized_label, item.mutative)
+        control_by_key = {
+            (
+                item.screen_id,
+                item.control_type.value,
+                item.normalized_label,
+                item.region,
+            ): item
             for item in controls
         }
+        control_keys = set(control_by_key)
         for item in summary.get("buttons") or []:
             if not isinstance(item, dict) or self._excluded(item):
                 continue
-            label = self._label(item) or "unlabeled control"
-            mutative = self._mutative(item)
-            key = (screen.id, ControlType.BUTTON.value, normalize_text(label), mutative)
+            label = self._label(item)
+            if not label:
+                self._omit("unlabeled_controls")
+                continue
+            normalized_label = normalize_text(label)
+            region = item.get("region") or "main_content"
+            key = (
+                screen.id,
+                ControlType.BUTTON.value,
+                normalized_label,
+                region,
+            )
             if key in control_keys:
+                existing = control_by_key[key]
+                if self._mutative(item) and not existing.mutative:
+                    updated = existing.model_copy(update={"mutative": True})
+                    controls[controls.index(existing)] = updated
+                    control_by_key[key] = updated
+                self._omit("duplicate_controls")
                 continue
             control_keys.add(key)
-            controls.append(
-                Control(
-                    id=stable_id("control", screen.id, "state", "button", key[2], mutative),
+            control = Control(
+                    id=stable_id(
+                        "control",
+                        screen.id,
+                        ControlType.BUTTON.value,
+                        normalized_label,
+                        region,
+                    ),
                     screen_id=screen.id,
                     label=label,
-                    normalized_label=key[2],
+                    normalized_label=normalized_label,
                     control_type=ControlType.BUTTON,
-                    mutative=mutative,
-                    region=item.get("region") or "main_content",
+                    mutative=self._mutative(item),
+                    region=region,
                     selector=self._clean_optional(item.get("selector")),
                     source_refs=source_refs,
                     evidence_ids=evidence_ids,
                 )
-            )
+            controls.append(control)
+            control_by_key[key] = control
 
         table_keys = {}
         for item in tables:
