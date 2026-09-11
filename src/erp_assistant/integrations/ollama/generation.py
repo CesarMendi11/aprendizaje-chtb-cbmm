@@ -71,7 +71,7 @@ class OllamaGenerationSettings:
         default_factory=lambda: float(
             os.getenv(
                 "ERP_ASSISTANT_OLLAMA_STRUCTURED_TIMEOUT",
-                "120",
+                "360",
             )
         )
     )

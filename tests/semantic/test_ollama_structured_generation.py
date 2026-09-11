@@ -215,9 +215,9 @@ def test_writer_settings_are_independent_from_semantic_generation_model(monkeypa
     assert OllamaGenerationClient().settings.model == "qwen3.5:4b"
 
 
-def test_structured_timeout_defaults_to_120_and_can_be_overridden():
+def test_structured_timeout_defaults_to_frozen_360_and_can_be_overridden():
     settings = OllamaGenerationSettings(timeout=30)
-    assert OllamaStructuredGenerationClient(settings).timeout == 120
+    assert OllamaStructuredGenerationClient(settings).timeout == 360
     assert OllamaStructuredGenerationClient(settings, timeout=45).timeout == 45
     assert OllamaGenerationClient(settings).settings.timeout == 30
 
