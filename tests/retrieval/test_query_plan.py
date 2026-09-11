@@ -38,8 +38,15 @@ def test_locative_mutative_wording_locates_the_screen_without_requesting_mutatio
         assert plan.intent == QueryIntent.LOCATE_SCREEN
         assert plan.mutative_action is False
 
-    assert planner.plan("Quiero registrar un año").intent == QueryIntent.MUTATIVE_ACTION
-    assert planner.plan("¿Cómo elimino un comprobante?").intent == QueryIntent.MUTATIVE_ACTION
+    for question in (
+        "Quiero registrar un año",
+        "¿Cómo elimino un comprobante?",
+        "¿Cómo puedo anular una retención?",
+        "¿Cómo guardo una factura?",
+    ):
+        plan = planner.plan(question)
+        assert plan.intent == QueryIntent.MUTATIVE_ACTION
+        assert plan.mutative_action is False
 
 
 def test_query_planner_does_not_treat_descriptive_module_mentions_as_location_requests():
@@ -89,7 +96,7 @@ def test_query_plan_normalization_is_accent_and_punctuation_stable():
 
 
 def test_query_plan_serialization_uses_stable_primitive_values():
-    payload = QueryPlanner().plan("Quiero registrar un año").as_dict()
+    payload = QueryPlanner().plan("Registra un año por mí").as_dict()
 
     assert payload["intent"] == "MUTATIVE_ACTION"
     assert payload["mutative_action"] is True
@@ -107,3 +114,29 @@ def test_navigation_event_query_plan_includes_visible_controls_as_resolvable_tar
         "event",
         "transition",
     )
+
+
+def test_mutative_execution_detection_distinguishes_mentions_guidance_and_delegation():
+    planner = QueryPlanner()
+
+    for question in (
+        "¿Qué registros aparecen en esta pantalla?",
+        "¿Qué credenciales están registradas para este usuario?",
+        "¿Cuál es el estado de aprobación de esta solicitud?",
+        "¿Cómo puedo anular una retención?",
+        "¿Cómo guardo una factura?",
+    ):
+        assert planner.plan(question).mutative_action is False
+
+    for question in (
+        "Anula esta retención por mí.",
+        "Aprueba esta solicitud por mí.",
+        "Restablece esta contraseña por mí.",
+        "Paga esta factura por mí.",
+        "Elimina este registro por mí.",
+        "¿Puedes anular esta retención?",
+        "Quiero que apruebes esta solicitud.",
+    ):
+        plan = planner.plan(question)
+        assert plan.intent == QueryIntent.MUTATIVE_ACTION
+        assert plan.mutative_action is True

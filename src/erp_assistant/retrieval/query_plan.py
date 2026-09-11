@@ -5,6 +5,28 @@ import unicodedata
 from dataclasses import dataclass
 from enum import StrEnum
 
+_ACTION_INFINITIVES = (
+    "eliminar|borrar|anular|modificar|editar|guardar|crear|registrar|"
+    "aprobar|confirmar|restablecer|pagar"
+)
+_ACTION_IMPERATIVES = (
+    "elimina|borra|anula|modifica|edita|guarda|crea|registra|"
+    "aprueba|confirma|restablece|paga"
+)
+_ACTION_SUBJUNCTIVES = (
+    "elimines|borres|anules|modifiques|edites|guardes|crees|registres|"
+    "apruebes|confirmes|restablezcas|pagues"
+)
+_ACTION_OTHER_FORMS = (
+    "elimino|eliminas|borro|borras|anulo|anulas|modifico|modificas|"
+    "edito|editas|guardo|guardas|creo|creas|registro|registras|"
+    "apruebo|apruebas|confirmo|confirmas|restablezco|restableces|"
+    "pago|pagas"
+)
+_ACTION_WORD_PATTERN = (
+    rf"\b(?:{_ACTION_INFINITIVES}|{_ACTION_IMPERATIVES}|"
+    rf"{_ACTION_SUBJUNCTIVES}|{_ACTION_OTHER_FORMS})\b"
+)
 
 class QueryIntent(StrEnum):
     MUTATIVE_ACTION = "MUTATIVE_ACTION"
@@ -68,6 +90,7 @@ class QueryPlanner:
         normalized = self.normalize(clean_question)
         intent = self.detect_intent(clean_question, normalized=normalized)
         target_types = INTENT_ENTITY_TYPES.get(intent, ()) if intent is not None else ()
+        execution_request = self.detect_execution_request(normalized)
 
         return QueryPlan(
             question=clean_question,
@@ -77,7 +100,7 @@ class QueryPlanner:
             requires_entity_resolution=True,
             requires_graph_context=intent != QueryIntent.SCREEN_PURPOSE,
             requires_semantic_evidence=intent == QueryIntent.SCREEN_PURPOSE,
-            mutative_action=intent == QueryIntent.MUTATIVE_ACTION,
+            mutative_action=execution_request,
         )
 
     @staticmethod
@@ -87,22 +110,56 @@ class QueryPlanner:
         return " ".join(re.sub(r"[^\w\s]", " ", text).split())
 
     @staticmethod
+    def detect_execution_request(normalized: str) -> bool:
+        """Return whether the user asks the assistant to execute a state-changing action.
+
+        Action-oriented questions remain retrievable through MUTATIVE_ACTION intent,
+        but only delegated/direct execution requests trigger the safety abstention flag.
+        """
+
+        text = QueryPlanner.normalize(normalized)
+        if not re.search(_ACTION_WORD_PATTERN, text):
+            return False
+
+        if re.search(
+            rf"^(?:por favor )?(?:{_ACTION_IMPERATIVES})\b",
+            text,
+        ):
+            return True
+
+        if re.search(
+            rf"\b(?:puedes|podrias|puede|podria) "
+            rf"(?:por favor )?(?:me )?(?:{_ACTION_INFINITIVES})\b",
+            text,
+        ):
+            return True
+
+        if re.search(
+            rf"\b(?:quiero|necesito) que (?:me )?(?:{_ACTION_SUBJUNCTIVES})\b",
+            text,
+        ):
+            return True
+
+        return bool(
+            re.search(r"\b(?:por mi|hazlo|ejecutalo|realizalo)\b", text)
+        )
+
+    @staticmethod
     def detect_intent(question: str, *, normalized: str | None = None) -> QueryIntent | None:
         q = str(question).casefold()
         normalized = normalized if normalized is not None else QueryPlanner.normalize(question)
 
-        mutative_pattern = r"\b(elimin|borr|anul|modific|edit|guard|cre|registr|aprob|confirm)"
         locative_action = bool(
             re.search(
                 r"\b(?:donde|en (?:que|cual) (?:pantalla|modulo))\b",
                 normalized,
             )
-            and re.search(mutative_pattern, normalized)
+            and re.search(_ACTION_WORD_PATTERN, normalized)
             and not re.search(r"\b(?:campo|boton|control)\b", normalized)
         )
         if locative_action:
             return QueryIntent.LOCATE_SCREEN
-        if re.search(mutative_pattern, q):
+        if re.search(_ACTION_WORD_PATTERN, normalized):
             return QueryIntent.MUTATIVE_ACTION
         if any(
             phrase in normalized

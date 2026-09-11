@@ -32,7 +32,7 @@ from .conversation_context import (
 from .entity_resolver import CanonicalEntityResolver, EntityResolution
 from .evidence_selector import EvidenceSelection, EvidenceSelector
 from .graph_expansion import GraphExpansionPlan, QueryAwareGraphExpansionPlanner
-from .query_plan import QueryIntent, QueryPlan, QueryPlanner
+from .query_plan import QueryPlan, QueryPlanner
 from .rank_fusion import RankedItem, ReciprocalRankFusion
 
 ALLOWED_RELATIONSHIPS = {
@@ -1210,15 +1210,13 @@ class HybridKnowledgeRetriever:
         *,
         query_plan=None,
     ):
-        # A clear locative formulation such as "¿Dónde registro...?"
-        # asks where the action is available; it does not ask the
-        # assistant to perform or operationally guide the mutation.
-        if (
-            query_plan is not None
-            and query_plan.intent == QueryIntent.LOCATE_SCREEN
-        ):
-            return False
+        # Modern callers already carry the execution-safety decision in
+        # QueryPlan. Respect that single authority instead of reclassifying
+        # the raw wording with a second mutative heuristic.
+        if query_plan is not None:
+            return bool(query_plan.mutative_action)
 
+        # Compatibility fallback for legacy callers without QueryPlan.
         terms = {
             action
             for action, pattern in MUTATIVE_FORMS.items()

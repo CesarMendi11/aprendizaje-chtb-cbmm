@@ -136,7 +136,7 @@ def test_clarification_renderer_never_exposes_canonical_ids():
     assert "field:" not in answer
 
 
-def test_supported_mutative_guidance_stays_deterministic_before_policy_abstention():
+def test_mutative_execution_abstention_precedes_supported_deterministic_plan():
     planner = AnswerDecisionPlanner()
     decision = planner.decide(
         plan(QueryIntent.MUTATIVE_ACTION, mutative=True),
@@ -144,8 +144,22 @@ def test_supported_mutative_guidance_stays_deterministic_before_policy_abstentio
         deterministic_plan={"supported": True, "confidence": "high"},
         has_context=True,
         has_sources=True,
+    )
+
+    assert decision.decision == AnswerDecisionType.ABSTENTION
+    assert decision.reason == "mutative_action_policy"
+
+
+def test_policy_abstention_precedes_supported_deterministic_plan():
+    planner = AnswerDecisionPlanner()
+    decision = planner.decide(
+        plan(QueryIntent.LOCATE_SCREEN),
+        evidence_selection={"status": "selected", "reason": "locate_screen"},
+        deterministic_plan={"supported": True, "confidence": "high"},
+        has_context=True,
+        has_sources=True,
         policy_abstention=True,
     )
 
-    assert decision.decision == AnswerDecisionType.DETERMINISTIC_ANSWER
-    assert decision.reason == "deterministic_structural_answer"
+    assert decision.decision == AnswerDecisionType.ABSTENTION
+    assert decision.reason == "mutative_action_policy"

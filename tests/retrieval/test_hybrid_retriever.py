@@ -2369,21 +2369,40 @@ def test_locative_action_wording_does_not_trigger_mutative_policy_fallback():
         is False
     )
 
-    mutative_plan = planner.plan(
+    orientation_plan = planner.plan(
         "¿Cómo elimino un comprobante?"
     )
 
     assert (
-        mutative_plan.intent
+        orientation_plan.intent
         == QueryIntent.MUTATIVE_ACTION
     )
-    assert mutative_plan.mutative_action is True
+    assert orientation_plan.mutative_action is False
 
     assert (
         HybridKnowledgeRetriever._needs_abstention(
             "¿Cómo elimino un comprobante?",
             {"sources": []},
-            query_plan=mutative_plan,
+            query_plan=orientation_plan,
+        )
+        is False
+    )
+
+    direct_execution_plan = planner.plan(
+        "Elimina este comprobante por mí."
+    )
+
+    assert (
+        direct_execution_plan.intent
+        == QueryIntent.MUTATIVE_ACTION
+    )
+    assert direct_execution_plan.mutative_action is True
+
+    assert (
+        HybridKnowledgeRetriever._needs_abstention(
+            "Elimina este comprobante por mí.",
+            {"sources": []},
+            query_plan=direct_execution_plan,
         )
         is True
     )

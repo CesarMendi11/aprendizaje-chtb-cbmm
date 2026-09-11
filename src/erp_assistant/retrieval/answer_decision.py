@@ -53,6 +53,14 @@ class AnswerDecisionPlanner:
         deterministic_plan = deterministic_plan or {}
         intent = str(query_plan.intent) if query_plan.intent is not None else None
 
+        if query_plan.mutative_action or policy_abstention:
+            return AnswerDecision(
+                decision=AnswerDecisionType.ABSTENTION,
+                reason="mutative_action_policy",
+                intent=intent,
+                confidence="high",
+            )
+
         if status == "clarification_required":
             return AnswerDecision(
                 decision=AnswerDecisionType.CLARIFICATION,
@@ -72,14 +80,6 @@ class AnswerDecisionPlanner:
                 reason=reason,
                 intent=intent,
                 confidence=str(deterministic_plan.get("confidence") or "high"),
-            )
-
-        if query_plan.mutative_action or policy_abstention:
-            return AnswerDecision(
-                decision=AnswerDecisionType.ABSTENTION,
-                reason="mutative_action_policy",
-                intent=intent,
-                confidence="high",
             )
 
         # Mocked/legacy callers may not yet provide evidence_selection. In that
