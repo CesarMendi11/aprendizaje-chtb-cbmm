@@ -61,7 +61,7 @@ class OllamaGenerationSettings:
     model: str = field(
         default_factory=lambda: os.getenv(
             "ERP_ASSISTANT_GENERATION_MODEL",
-            "llama3.2:3b",
+            "qwen3.5:9b",
         )
     )
     timeout: float = field(

@@ -54,6 +54,7 @@ from erp_assistant.semantic.services.semantic_review_service import SemanticRevi
 from erp_assistant.structural.canonical.enums import ReviewStatus
 
 HASH = "a" * 64
+FROZEN_GENERATION_MODEL = "qwen3.5:9b"
 
 
 def build_factory():
@@ -154,7 +155,7 @@ def candidate(value):
     return GeneratedScreenPurposeCandidate.model_validate(
         {
             "inference": inference,
-            "generation_model": "llama3.2:3b",
+            "generation_model": FROZEN_GENERATION_MODEL,
             "prompt_version": PROMPT_VERSION,
             "prompt_hash": PROMPT_HASH,
             "generation_parameters": GENERATION_PARAMETERS,
@@ -183,7 +184,7 @@ class Inference:
         self.error = error
         self.on_generate = on_generate
         self.calls = 0
-        self.client = SimpleNamespace(settings=SimpleNamespace(model="llama3.2:3b"))
+        self.client = SimpleNamespace(settings=SimpleNamespace(model=FROZEN_GENERATION_MODEL))
 
     def generate(self, _package):
         self.calls += 1
@@ -382,7 +383,7 @@ def publish_lifecycle_source(
             source_payload=lifecycle_source_payload(),
             evidence_payload=validated_semantic_evidence_snapshot(source_package),
             evidence_ids=list(source_package.evidence_ids),
-            generation_model="llama3.2:3b",
+            generation_model=FROZEN_GENERATION_MODEL,
             prompt_version=PROMPT_VERSION,
             prompt_hash=PROMPT_HASH,
             generation_parameters=GENERATION_PARAMETERS,
@@ -688,7 +689,7 @@ def test_executor_carries_forward_without_constructing_or_calling_ollama():
         factory,
         inference_service_factory=inference_factory,
         evidence_builder_factory=lambda _session: MappingBuilder(packages),
-        generation_model="llama3.2:3b",
+        generation_model=FROZEN_GENERATION_MODEL,
     )
 
     result = executor.execute(
@@ -787,7 +788,7 @@ def test_executor_reinfers_changed_evidence_and_requires_new_hitl():
         factory,
         inference_service_factory=inference_factory,
         evidence_builder_factory=lambda _session: MappingBuilder(packages),
-        generation_model="llama3.2:3b",
+        generation_model=FROZEN_GENERATION_MODEL,
     )
 
     result = executor.execute(
@@ -883,7 +884,7 @@ def test_executor_fails_closed_when_lifecycle_plan_changes_during_generation():
         factory,
         inference_service_factory=lambda: inference,
         evidence_builder_factory=lambda _session: MappingBuilder(packages),
-        generation_model="llama3.2:3b",
+        generation_model=FROZEN_GENERATION_MODEL,
     )
 
     with pytest.raises(

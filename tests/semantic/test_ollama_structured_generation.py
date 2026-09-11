@@ -196,6 +196,12 @@ def test_existing_text_generation_client_contract_is_unchanged():
     assert OllamaGenerationClient(settings).settings.model == "existing-model"
 
 
+def test_semantic_generation_model_defaults_to_frozen_qwen(monkeypatch):
+    monkeypatch.delenv("ERP_ASSISTANT_GENERATION_MODEL", raising=False)
+
+    assert OllamaGenerationSettings().model == "qwen3.5:9b"
+
+
 def test_writer_settings_are_independent_from_semantic_generation_model(monkeypatch):
     monkeypatch.setenv("ERP_ASSISTANT_GENERATION_MODEL", "qwen3.5:9b")
     monkeypatch.setenv("ERP_ASSISTANT_WRITER_MODEL", "qwen3.5:4b")
