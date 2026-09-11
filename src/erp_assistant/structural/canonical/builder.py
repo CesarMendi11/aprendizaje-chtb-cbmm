@@ -538,6 +538,8 @@ class CanonicalKnowledgeBuilder:
                 )
             )
 
+        controls = self._reconcile_control_mutativity_from_events(controls, events)
+
         entity_lists = {
             "modules": modules,
             "screens": screens,
@@ -1291,6 +1293,52 @@ class CanonicalKnowledgeBuilder:
                 continue
             return value
         return ""
+
+    @staticmethod
+    def _reconcile_control_mutativity_from_events(controls, events):
+        mutative_selectors = {
+            (event.screen_id, event.selector)
+            for event in events
+            if event.mutative and event.selector
+        }
+        mutative_functional_identities = {
+            (event.screen_id, event.normalized_label, event.region)
+            for event in events
+            if event.mutative and event.normalized_label
+        }
+
+        reconciled = []
+        for control in controls:
+            if control.mutative:
+                reconciled.append(control)
+                continue
+
+            selector_match = bool(
+                control.selector
+                and (control.screen_id, control.selector) in mutative_selectors
+            )
+            identity_match = (
+                control.screen_id,
+                control.normalized_label,
+                control.region,
+            ) in mutative_functional_identities
+            if not selector_match and not identity_match:
+                reconciled.append(control)
+                continue
+
+            source_refs = list(
+                dict.fromkeys([*control.source_refs, "state_flow_graph.json"])
+            )
+            reconciled.append(
+                control.model_copy(
+                    update={
+                        "mutative": True,
+                        "source_refs": source_refs,
+                    }
+                )
+            )
+
+        return reconciled
 
     @staticmethod
     def _mutative(item):

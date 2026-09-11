@@ -1168,3 +1168,164 @@ def test_builder_keeps_unreachable_state_without_screen_as_omission():
     assert any(warning.code == "state_without_screen" for warning in kb.build_warnings)
     assert report["omitted_entities"]["ui_states"] == 1
     assert not any(field.label == "Should not materialize" for field in kb.fields)
+
+
+
+def _append_product_event_transition(artifacts, event):
+    product_state_id = next(
+        state["state_id"]
+        for state in artifacts["state_registry.json"]["states"]
+        if state["route"] == "/app/inventory/products"
+    )
+    artifacts["state_flow_graph.json"]["transitions"].append(
+        {
+            "source_state_id": product_state_id,
+            "target_state_id": product_state_id,
+            "event": event,
+            "changed_route": False,
+            "observed": True,
+        }
+    )
+
+
+def test_mutative_event_reconciles_matching_control_without_word_heuristics():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "text": "New",
+            "type": "button",
+            "selector": "button[data-action='new']",
+        }
+    )
+    _append_product_event_transition(
+        artifacts,
+        {
+            "event_type": "mutative_action",
+            "label": "New",
+            "selector": "button[data-action='new']",
+            "decision": "deny",
+            "metadata": {"region": "main_content"},
+        },
+    )
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item
+        for item in kb.controls
+        if item.screen_id == screen.id and item.label == "New"
+    )
+
+    assert control.mutative is True
+    assert control.source_refs == ["screen_index.json", "state_flow_graph.json"]
+
+
+def test_mutative_event_reconciles_deduplicated_control_by_functional_identity():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].extend(
+        [
+            {
+                "text": "Edit",
+                "type": "button",
+                "selector": "button[data-row='1']",
+                "region": "main_content",
+            },
+            {
+                "text": "Edit",
+                "type": "button",
+                "selector": "button[data-row='2']",
+                "region": "main_content",
+            },
+        ]
+    )
+    _append_product_event_transition(
+        artifacts,
+        {
+            "event_type": "mutative_action",
+            "label": "Edit",
+            "selector": "button[data-row='2']",
+            "decision": "deny",
+            "metadata": {"region": "main_content"},
+        },
+    )
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    controls = [
+        item
+        for item in kb.controls
+        if item.screen_id == screen.id and item.label == "Edit"
+    ]
+
+    assert len(controls) == 1
+    assert controls[0].selector == "button[data-row='1']"
+    assert controls[0].mutative is True
+    assert controls[0].source_refs == ["screen_index.json", "state_flow_graph.json"]
+
+
+def test_mutative_event_same_label_in_different_region_does_not_reconcile_control():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "text": "Edit",
+            "type": "button",
+            "region": "secondary_panel",
+        }
+    )
+    _append_product_event_transition(
+        artifacts,
+        {
+            "event_type": "mutative_action",
+            "label": "Edit",
+            "decision": "deny",
+            "metadata": {"region": "main_content"},
+        },
+    )
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item
+        for item in kb.controls
+        if item.screen_id == screen.id and item.label == "Edit"
+    )
+
+    assert control.region == "secondary_panel"
+    assert control.mutative is False
+    assert control.source_refs == ["screen_index.json"]
+
+
+def test_nonmutative_event_does_not_change_control_mutativity():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "text": "Preview",
+            "type": "button",
+            "selector": "button[data-action='preview']",
+        }
+    )
+    _append_product_event_transition(
+        artifacts,
+        {
+            "event_type": "open_readonly_view",
+            "label": "Preview",
+            "selector": "button[data-action='preview']",
+            "decision": "allow",
+            "metadata": {"region": "main_content"},
+        },
+    )
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item
+        for item in kb.controls
+        if item.screen_id == screen.id and item.label == "Preview"
+    )
+
+    assert control.mutative is False
+    assert control.source_refs == ["screen_index.json"]
