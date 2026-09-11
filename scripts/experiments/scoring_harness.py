@@ -18,6 +18,10 @@ from scripts.experiments.common import (
     utc_now_iso,
     write_json_atomic,
 )
+from scripts.experiments.policy_scope import (
+    PolicyScope,
+    load_policy_scope,
+)
 from scripts.experiments.reference_harness import (
     SemanticReference,
     load_semantic_reference,
@@ -523,6 +527,7 @@ def _load_json(
 def aggregate_rq2(
     reference: SemanticReference,
     scoring: RQ2ScoringSet,
+    policy_scope: PolicyScope | None = None,
 ) -> dict[str, Any]:
     if (
         scoring.reference_id
@@ -533,11 +538,33 @@ def aggregate_rq2(
             "does not match reference"
         )
 
-    reference_by_route = {
+    all_reference_by_route = {
         screen.route:
             screen
         for screen
         in reference.screens
+    }
+
+    blocked_routes: set[str] = set()
+    if policy_scope is not None:
+        blocked_routes = (
+            set(policy_scope.policy_blocked_routes)
+            & set(all_reference_by_route)
+        )
+        missing_blocked_routes = (
+            set(policy_scope.policy_blocked_routes)
+            - set(all_reference_by_route)
+        )
+        if missing_blocked_routes:
+            raise ValueError(
+                "policy scope blocked routes do not match semantic reference; "
+                f"missing={sorted(missing_blocked_routes)}"
+            )
+
+    reference_by_route = {
+        route: screen
+        for route, screen in all_reference_by_route.items()
+        if route not in blocked_routes
     }
 
     expected_keys = {
@@ -581,7 +608,7 @@ def aggregate_rq2(
     ):
         raise ValueError(
             "RQ2 score matrix does not "
-            "cover every reference screen "
+            "cover every primary-eligible reference screen "
             "at pre_hitl and post_hitl"
         )
 
@@ -807,7 +834,7 @@ def aggregate_rq2(
             ),
     }
 
-    return {
+    result: dict[str, Any] = {
         "schema_version":
             "1.0.0",
 
@@ -827,7 +854,7 @@ def aggregate_rq2(
 
         "screens":
             len(
-                reference.screens
+                reference_by_route
             ),
 
         "stages":
@@ -836,6 +863,31 @@ def aggregate_rq2(
         "hitl_effort":
             effort_summary,
     }
+
+    if policy_scope is not None:
+        result["policy_scope"] = {
+            "contract_id":
+                policy_scope.contract_id,
+            "path":
+                policy_scope.source_path.as_posix(),
+            "sha256":
+                policy_scope.file_sha256,
+            "reference_screens_total":
+                len(all_reference_by_route),
+            "policy_blocked_screens":
+                len(blocked_routes),
+            "policy_blocked_routes":
+                sorted(blocked_routes),
+            "primary_eligible_screens":
+                len(reference_by_route),
+            "primary_eligibility_rule": (
+                "Semantic-reference routes blocked by the frozen "
+                "acquisition policy are reported separately and excluded "
+                "from PRE/POST quality denominators."
+            ),
+        }
+
+    return result
 
 
 def _condition_key(
@@ -1398,6 +1450,10 @@ def _parse_args() -> argparse.Namespace:
     )
 
     rq2.add_argument(
+        "--policy-scope",
+    )
+
+    rq2.add_argument(
         "--output",
         required=True,
     )
@@ -1455,9 +1511,18 @@ def main() -> int:
             )
         )
 
+        policy_scope = (
+            load_policy_scope(
+                args.policy_scope
+            )
+            if args.policy_scope
+            else None
+        )
+
         result = aggregate_rq2(
             reference,
             scoring,
+            policy_scope,
         )
 
     else:

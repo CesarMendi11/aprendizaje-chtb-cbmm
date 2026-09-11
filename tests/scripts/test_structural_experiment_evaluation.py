@@ -329,3 +329,92 @@ def test_reference_rejects_absent_title_marker_with_nonempty_screen_name(tmp_pat
         match="incompatible",
     ):
         load_reference(reference_path)
+
+
+def test_policy_scope_excludes_blocked_screens_and_modules_from_primary_metrics(
+    tmp_path,
+):
+    reference_path = tmp_path / "reference.csv"
+    knowledge_path = tmp_path / "knowledge.json"
+    policy_path = tmp_path / "policy.json"
+
+    _write_reference(
+        reference_path,
+        [
+            {
+                "entity_type": "module",
+                "parent_module_path": "",
+                "name": "General",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "module",
+                "parent_module_path": "General",
+                "name": "Catálogos",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "screen",
+                "parent_module_path": "General > Catálogos",
+                "name": "Año",
+                "route": "/admin/general/anios",
+                "notes": "",
+            },
+            {
+                "entity_type": "module",
+                "parent_module_path": "",
+                "name": "Seguridad",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "screen",
+                "parent_module_path": "Seguridad",
+                "name": "Usuarios",
+                "route": "/admin/seguridad/usuarios",
+                "notes": "",
+            },
+        ],
+    )
+    _write_knowledge(knowledge_path)
+    policy_path.write_text(
+        json.dumps(
+            {
+                "contract_id": "policy-test",
+                "status": "FROZEN_PRE_FORMAL002_INPUT",
+                "policy_source": {
+                    "blocked_route_prefix": "/admin/seguridad",
+                },
+                "policy_blocked_routes": [
+                    "/admin/seguridad/usuarios",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = evaluate(
+        reference_path,
+        knowledge_path,
+        policy_path,
+    )
+
+    assert payload["metrics"]["module"]["reference"] == 2
+    assert payload["metrics"]["module"]["fn"] == 0
+    assert payload["metrics"]["screen"]["reference"] == 1
+    assert payload["metrics"]["screen"]["fn"] == 0
+    assert payload["metrics"]["screen_hierarchy"]["reference"] == 1
+    assert payload["metrics"]["screen_hierarchy"]["fn"] == 0
+
+    policy = payload["policy_scope"]
+    assert policy["policy_blocked_screen_count"] == 1
+    assert policy["policy_blocked_module_paths"] == ["seguridad"]
+    assert policy["eligible_screen_count"] == 1
+    assert policy["policy_violation_count"] == 0
+
+    all_routes = payload["diagnostics"]["all_reference_screen_route"]
+    assert all_routes["reference"] == 2
+    assert all_routes["detected"] == 1
+    assert all_routes["fn"] == 1

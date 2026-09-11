@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from scripts.experiments.reference_harness import (
     SemanticReference,
 )
@@ -759,3 +761,77 @@ def test_rq3_reports_mutative_safety_separately():
             ]
             == 1.0
         )
+
+
+def test_rq2_policy_scope_excludes_blocked_reference_routes(tmp_path):
+    from scripts.experiments.policy_scope import load_policy_scope
+
+    reference = semantic_reference()
+    policy_path = tmp_path / "policy.json"
+    policy_path.write_text(
+        json.dumps(
+            {
+                "contract_id": "policy-test",
+                "status": "FROZEN_PRE_FORMAL002_INPUT",
+                "policy_source": {
+                    "blocked_route_prefix": "/admin/b",
+                },
+                "policy_blocked_routes": [
+                    "/admin/b",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    policy_scope = load_policy_scope(policy_path)
+
+    scoring = RQ2ScoringSet(
+        reference_id=reference.reference_id,
+        records=[
+            RQ2StageScore(
+                route="/admin/a",
+                stage="pre_hitl",
+                output_available=False,
+                purpose_rating="not_available",
+            ),
+            RQ2StageScore(
+                route="/admin/a",
+                stage="post_hitl",
+                output_available=True,
+                purpose_rating="correct",
+                output_claim_ids=["o1", "o2"],
+                matches=[
+                    ClaimMatch(
+                        output_claim_id="o1",
+                        reference_claim_id="A1",
+                    ),
+                    ClaimMatch(
+                        output_claim_id="o2",
+                        reference_claim_id="A2",
+                    ),
+                ],
+            ),
+        ],
+        hitl_effort=[
+            RQ2HitlEffort(
+                route="/admin/a",
+                action="correct",
+                review_duration_ms=500,
+                human_added_claims=2,
+            ),
+        ],
+    )
+
+    result = aggregate_rq2(
+        reference,
+        scoring,
+        policy_scope,
+    )
+
+    assert result["screens"] == 1
+    assert result["policy_scope"]["reference_screens_total"] == 2
+    assert result["policy_scope"]["policy_blocked_screens"] == 1
+    assert result["policy_scope"]["primary_eligible_screens"] == 1
+    assert result["stages"]["pre_hitl"]["generation_coverage"] == 0.0
+    assert result["stages"]["pre_hitl"]["claims"]["fn"] == 2
+    assert result["stages"]["post_hitl"]["claims"]["recall"] == 1.0

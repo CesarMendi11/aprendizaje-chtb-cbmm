@@ -9,6 +9,7 @@ from typing import Iterable
 
 from erp_assistant.structural.canonical.ids import normalize_route, normalize_text
 from erp_assistant.structural.canonical.repository import CanonicalKnowledgeRepository
+from scripts.experiments.policy_scope import PolicyScope, load_policy_scope
 
 
 @dataclass(frozen=True)
@@ -168,6 +169,78 @@ def _detected_keys(repository: CanonicalKnowledgeRepository, dimension: str) -> 
     raise ValueError(f"Dimensión estructural no soportada: {dimension}")
 
 
+def _path_is_within(path: tuple[str, ...], prefix: tuple[str, ...]) -> bool:
+    return len(path) >= len(prefix) and path[: len(prefix)] == prefix
+
+
+def _policy_partition_reference(
+    items: list[ReferenceItem],
+    policy_scope: PolicyScope,
+) -> tuple[list[ReferenceItem], set[tuple[str, ...]], list[ReferenceItem]]:
+    screens = [item for item in items if item.entity_type == "screen"]
+    blocked_screens = [
+        item for item in screens if policy_scope.is_reference_blocked(item.route)
+    ]
+
+    blocked_module_paths: set[tuple[str, ...]] = set()
+    for item in items:
+        if item.entity_type != "module":
+            continue
+        module_path = item.module_path_parts
+        descendants = [
+            screen
+            for screen in screens
+            if _path_is_within(screen.module_path_parts, module_path)
+        ]
+        if descendants and all(
+            policy_scope.is_reference_blocked(screen.route)
+            for screen in descendants
+        ):
+            blocked_module_paths.add(module_path)
+
+    eligible = [
+        item
+        for item in items
+        if not (
+            (
+                item.entity_type == "screen"
+                and policy_scope.is_reference_blocked(item.route)
+            )
+            or (
+                item.entity_type == "module"
+                and item.module_path_parts in blocked_module_paths
+            )
+        )
+    ]
+    return eligible, blocked_module_paths, blocked_screens
+
+
+def _filter_detected_for_policy(
+    detected: set[tuple],
+    dimension: str,
+    policy_scope: PolicyScope,
+    blocked_module_paths: set[tuple[str, ...]],
+) -> set[tuple]:
+    if dimension == "module":
+        return {
+            key
+            for key in detected
+            if not any(
+                _path_is_within(key, blocked_path)
+                for blocked_path in blocked_module_paths
+            )
+        }
+
+    if dimension in {"screen", "screen_hierarchy", "screen_route"}:
+        return {
+            key
+            for key in detected
+            if not policy_scope.is_under_blocked_prefix(key[0])
+        }
+
+    raise ValueError(f"Dimensión estructural no soportada: {dimension}")
+
+
 def _metrics(reference: set[tuple], detected: set[tuple]) -> dict[str, object]:
     tp_items = reference & detected
     fp_items = detected - reference
@@ -209,6 +282,7 @@ def _render_key(key: tuple) -> object:
 def _screen_identity_diagnostics(
     items: Iterable[ReferenceItem],
     repository: CanonicalKnowledgeRepository,
+    policy_scope: PolicyScope | None = None,
 ) -> dict[str, object]:
     reference_screens = [
         item
@@ -216,9 +290,14 @@ def _screen_identity_diagnostics(
         if item.entity_type == "screen"
     ]
 
-    detected_screens = list(
-        repository.knowledge.screens
-    )
+    detected_screens = [
+        screen
+        for screen in repository.knowledge.screens
+        if not (
+            policy_scope
+            and policy_scope.is_under_blocked_prefix(screen.route)
+        )
+    ]
 
     module_paths = _canonical_module_paths(
         repository
@@ -414,30 +493,113 @@ def _screen_identity_diagnostics(
     }
 
 
-def evaluate(reference_path: Path, knowledge_path: Path) -> dict[str, object]:
+def evaluate(
+    reference_path: Path,
+    knowledge_path: Path,
+    policy_scope_path: Path | None = None,
+) -> dict[str, object]:
     reference = load_reference(reference_path)
     repository = CanonicalKnowledgeRepository(knowledge_path)
+    policy_scope = (
+        load_policy_scope(policy_scope_path)
+        if policy_scope_path is not None
+        else None
+    )
+
+    scoring_reference = reference
+    blocked_module_paths: set[tuple[str, ...]] = set()
+    blocked_screens: list[ReferenceItem] = []
+
+    if policy_scope is not None:
+        (
+            scoring_reference,
+            blocked_module_paths,
+            blocked_screens,
+        ) = _policy_partition_reference(reference, policy_scope)
+
+        reference_blocked_routes = {item.route for item in blocked_screens}
+        if reference_blocked_routes != policy_scope.policy_blocked_routes:
+            missing = sorted(
+                policy_scope.policy_blocked_routes - reference_blocked_routes
+            )
+            raise ValueError(
+                "policy scope blocked routes do not match structural reference; "
+                f"missing={missing}"
+            )
+
     metrics = {}
     for dimension in ("module", "screen", "screen_hierarchy"):
+        detected = _detected_keys(repository, dimension)
+        if policy_scope is not None:
+            detected = _filter_detected_for_policy(
+                detected,
+                dimension,
+                policy_scope,
+                blocked_module_paths,
+            )
         metrics[dimension] = _metrics(
-            _reference_keys(reference, dimension),
-            _detected_keys(repository, dimension),
+            _reference_keys(scoring_reference, dimension),
+            detected,
         )
-    return {
+
+    diagnostics: dict[str, object] = {
+        "screen_identity": _screen_identity_diagnostics(
+            scoring_reference,
+            repository,
+            policy_scope,
+        ),
+    }
+
+    payload: dict[str, object] = {
         "schema_version": "1.1.0",
         "evaluation_type": "structural_census",
         "reference_path": reference_path.as_posix(),
         "knowledge_path": knowledge_path.as_posix(),
         "knowledge_version": repository.knowledge.knowledge_version,
         "metrics": metrics,
-        "diagnostics": {
-            "screen_identity":
-                _screen_identity_diagnostics(
-                    reference,
-                    repository,
-                ),
-        },
+        "diagnostics": diagnostics,
     }
+
+    if policy_scope is not None:
+        detected_under_blocked_prefix = sorted(
+            {
+                normalize_route(screen.route)
+                for screen in repository.knowledge.screens
+                if policy_scope.is_under_blocked_prefix(screen.route)
+            }
+        )
+        diagnostics["all_reference_screen_route"] = _metrics(
+            _reference_keys(reference, "screen_route"),
+            _detected_keys(repository, "screen_route"),
+        )
+        payload["policy_scope"] = {
+            "contract_id": policy_scope.contract_id,
+            "path": policy_scope.source_path.as_posix(),
+            "sha256": policy_scope.file_sha256,
+            "blocked_route_prefix": policy_scope.blocked_route_prefix,
+            "policy_blocked_screen_routes": sorted(
+                policy_scope.policy_blocked_routes
+            ),
+            "policy_blocked_screen_count": len(blocked_screens),
+            "policy_blocked_module_paths": sorted(
+                " > ".join(path) for path in blocked_module_paths
+            ),
+            "eligible_screen_count": len(
+                [
+                    item
+                    for item in scoring_reference
+                    if item.entity_type == "screen"
+                ]
+            ),
+            "detected_under_blocked_prefix": detected_under_blocked_prefix,
+            "policy_violation_count": len(detected_under_blocked_prefix),
+            "primary_metric_rule": (
+                "POLICY_BLOCKED items are reported separately and excluded "
+                "from primary TP/FP/FN denominators."
+            ),
+        }
+
+    return payload
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -446,13 +608,14 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--reference", type=Path, required=True)
     parser.add_argument("--knowledge", type=Path, required=True)
+    parser.add_argument("--policy-scope", type=Path)
     parser.add_argument("--output", type=Path)
     return parser
 
 
 def main() -> int:
     args = _parser().parse_args()
-    payload = evaluate(args.reference, args.knowledge)
+    payload = evaluate(args.reference, args.knowledge, args.policy_scope)
     text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
