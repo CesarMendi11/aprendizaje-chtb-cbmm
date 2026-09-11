@@ -51,6 +51,11 @@ ALLOWED_RELATIONSHIPS = {
     "TRIGGERED_BY",
 }
 ABSTAIN = "No encontré conocimiento validado suficiente para responder esa pregunta."
+POLICY_ABSTAIN = (
+    "No puedo ejecutar acciones que modifiquen el ERP. "
+    "Puedo orientarte de forma informativa sobre el control o la función disponible "
+    "usando conocimiento validado."
+)
 SYSTEM_PROMPT = (
     "Responde en español usando exclusivamente el contexto validado. No inventes "
     "pantallas, botones ni pasos. Abstente si el contexto no basta."
@@ -731,10 +736,11 @@ class HybridKnowledgeRetriever:
             return finalize()
 
         if decision.decision == AnswerDecisionType.ABSTENTION:
-            result["answer"] = ABSTAIN
+            policy_abstention = decision.reason == "mutative_action_policy"
+            result["answer"] = POLICY_ABSTAIN if policy_abstention else ABSTAIN
             result["answer_mode"] = (
                 "policy_abstention"
-                if decision.reason == "mutative_action_policy"
+                if policy_abstention
                 else "insufficient_evidence"
             )
             result["evidence_ids"] = []

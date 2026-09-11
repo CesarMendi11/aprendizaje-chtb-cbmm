@@ -1,4 +1,8 @@
-from erp_assistant.retrieval.retriever import ABSTAIN, HybridKnowledgeRetriever
+from erp_assistant.retrieval.retriever import (
+    ABSTAIN,
+    POLICY_ABSTAIN,
+    HybridKnowledgeRetriever,
+)
 
 
 class Generator:
@@ -2406,3 +2410,47 @@ def test_locative_action_wording_does_not_trigger_mutative_policy_fallback():
         )
         is True
     )
+
+def test_direct_mutative_execution_uses_explicit_policy_abstention_message():
+    retriever = HybridKnowledgeRetriever(
+        None,
+        chroma=None,
+        neo4j=None,
+        embeddings=None,
+    )
+    retriever.retrieve = lambda question, **kwargs: {
+        "status": "ok",
+        "question": question,
+        "sources": [
+            {
+                "canonical_id": "control:nueva-retencion",
+                "entity_type": "control",
+                "safe_label": "Nueva retención",
+                "screen_route": "/admin/cuentasxcobrar/retenciones",
+            },
+            {
+                "canonical_id": "screen:retenciones",
+                "entity_type": "screen",
+                "safe_label": "Retenciones",
+                "screen_route": "/admin/cuentasxcobrar/retenciones",
+            },
+        ],
+        "relations": [],
+        "approved_semantics": [],
+        "context": (
+            "ENTIDADES VALIDADAS\n"
+            "- control: Nueva retención\n"
+            "- screen: Retenciones\n"
+        ),
+    }
+
+    result = retriever.ask(
+        "Crea una nueva retención por mí.",
+    )
+
+    assert result["answer_decision"]["decision"] == "ABSTENTION"
+    assert result["answer_decision"]["reason"] == "mutative_action_policy"
+    assert result["answer_mode"] == "policy_abstention"
+    assert result["answer"] == POLICY_ABSTAIN
+    assert result["answer"] != ABSTAIN
+    assert "No puedo ejecutar acciones" in result["answer"]
