@@ -217,6 +217,33 @@
   background: #e5f0f4;
   box-shadow: inset 3px 0 #397f9b;
 }
+.structural-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 13px;
+  border-top: 1px solid #e4ebed;
+  background: #f8fafb;
+}
+.structural-pagination span {
+  color: #718189;
+  font-size: 10px;
+}
+.structural-pagination button {
+  border: 1px solid #bdccd2;
+  background: #fff;
+  color: #405b67;
+  border-radius: 7px;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+.structural-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .structural-item-main {
   min-width: 0;
 }

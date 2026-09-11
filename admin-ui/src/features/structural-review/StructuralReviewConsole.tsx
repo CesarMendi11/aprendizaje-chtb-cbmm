@@ -19,6 +19,8 @@ import "./structural-review.css";
 
 type FilterStatus = "all" | ReviewStatus;
 
+const PAGE_LIMIT = 100;
+
 type ReviewState = {
   versions: PipelineJobSummary[];
   versionId: string | null;
@@ -135,6 +137,7 @@ export function StructuralReviewConsole() {
   const [reason, setReason] = useState("");
   const [correctionText, setCorrectionText] = useState("");
   const [showCorrection, setShowCorrection] = useState(false);
+  const [offset, setOffset] = useState(0);
 
   const loadVersions = useCallback(async () => {
     setState((old) => ({ ...old, loadingVersions: true, message: null }));
@@ -164,7 +167,7 @@ export function StructuralReviewConsole() {
   }, [loadVersions]);
 
   const loadItems = useCallback(
-    async (versionId: string, keepSelection = true) => {
+    async (versionId: string, pageOffset: number, keepSelection = true) => {
       setState((old) => ({ ...old, loadingItems: true, message: null }));
       try {
         const response = await getStructuralReviewItems({
@@ -172,8 +175,15 @@ export function StructuralReviewConsole() {
           status: status === "all" ? undefined : status,
           entityType: entityType || undefined,
           search: search || undefined,
-          limit: 100,
+          limit: PAGE_LIMIT,
+          offset: pageOffset,
         });
+        if (response.total > 0 && pageOffset >= response.total) {
+          setOffset(
+            Math.floor((response.total - 1) / PAGE_LIMIT) * PAGE_LIMIT,
+          );
+          return;
+        }
         setState((old) => {
           const selectedStillExists =
             keepSelection &&
@@ -203,11 +213,11 @@ export function StructuralReviewConsole() {
     const versionId = state.versionId;
     if (!versionId) return;
     const timer = window.setTimeout(
-      () => void loadItems(versionId, false),
+      () => void loadItems(versionId, offset, false),
       180,
     );
     return () => window.clearTimeout(timer);
-  }, [loadItems, state.versionId]);
+  }, [loadItems, offset, state.versionId]);
 
   const selectItem = useCallback(async (itemId: string) => {
     setState((old) => ({ ...old, loadingDetail: true, message: null }));
@@ -292,7 +302,7 @@ export function StructuralReviewConsole() {
       setCorrectionText(stringifyCorrection(updated.effective_payload));
       setReason("");
       setShowCorrection(false);
-      await loadItems(state.versionId, true);
+      await loadItems(state.versionId, offset, true);
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : errorMessage(error);
@@ -311,6 +321,10 @@ export function StructuralReviewConsole() {
     detail?.knowledge_version ??
     selectedVersion?.knowledge_version_id?.slice(0, 8) ??
     "—";
+  const firstVisible = state.total > 0 ? offset + 1 : 0;
+  const lastVisible = Math.min(offset + state.items.length, state.total);
+  const hasPrevious = offset > 0;
+  const hasNext = offset + state.items.length < state.total;
 
   return (
     <section
@@ -346,13 +360,14 @@ export function StructuralReviewConsole() {
           <span>Versión staging</span>
           <select
             value={state.versionId ?? ""}
-            onChange={(event) =>
+            onChange={(event) => {
               setState((old) => ({
                 ...old,
                 versionId: event.target.value || null,
                 detail: null,
-              }))
-            }
+              }));
+              setOffset(0);
+            }}
             disabled={state.loadingVersions || state.versions.length === 0}
           >
             <option value="">Sin importaciones</option>
@@ -367,7 +382,10 @@ export function StructuralReviewConsole() {
           <span>Estado</span>
           <select
             value={status}
-            onChange={(event) => setStatus(event.target.value as FilterStatus)}
+            onChange={(event) => {
+              setStatus(event.target.value as FilterStatus);
+              setOffset(0);
+            }}
           >
             <option value="pending_review">Pendientes</option>
             <option value="approved">Aprobados</option>
@@ -380,7 +398,10 @@ export function StructuralReviewConsole() {
           <span>Tipo</span>
           <select
             value={entityType}
-            onChange={(event) => setEntityType(event.target.value)}
+            onChange={(event) => {
+              setEntityType(event.target.value);
+              setOffset(0);
+            }}
           >
             <option value="">Todos</option>
             <option value="screen">Pantalla</option>
@@ -389,6 +410,8 @@ export function StructuralReviewConsole() {
             <option value="table">Tabla</option>
             <option value="table_column">Columna</option>
             <option value="link">Enlace</option>
+            <option value="event">Evento</option>
+            <option value="transition">Transición</option>
             <option value="ui_state">Estado UI</option>
             <option value="module">Módulo</option>
             <option value="evidence">Evidencia</option>
@@ -399,7 +422,10 @@ export function StructuralReviewConsole() {
           <span>Buscar</span>
           <input
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setOffset(0);
+            }}
             placeholder="Título, canonical ID o ruta"
           />
         </label>
@@ -437,7 +463,7 @@ export function StructuralReviewConsole() {
               <h3>
                 {state.loadingItems
                   ? "Consultando…"
-                  : `${state.total} elementos`}
+                  : `${firstVisible}-${lastVisible} de ${state.total} elementos`}
               </h3>
             </div>
             <span className="structural-version">{versionText}</span>
@@ -468,6 +494,26 @@ export function StructuralReviewConsole() {
                 </span>
               </button>
             ))}
+          </div>
+          <div
+            className="structural-pagination"
+            aria-label="Paginación de revisión"
+          >
+            <button
+              onClick={() => setOffset(Math.max(0, offset - PAGE_LIMIT))}
+              disabled={!hasPrevious || state.loadingItems}
+            >
+              Anterior
+            </button>
+            <span>
+              {firstVisible}-{lastVisible} de {state.total}
+            </span>
+            <button
+              onClick={() => setOffset(offset + PAGE_LIMIT)}
+              disabled={!hasNext || state.loadingItems}
+            >
+              Siguiente
+            </button>
           </div>
         </article>
 
