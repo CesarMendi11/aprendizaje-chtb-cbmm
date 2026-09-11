@@ -1,0 +1,53 @@
+{
+  "allowed_use_of_formal001": [
+    "diagnose and document the pre-existing policy-scope mismatch",
+    "verify that the mismatch propagates across evaluation contracts"
+  ],
+  "attempt_id": "FORMAL001",
+  "completed_stages": [
+    "formal start record",
+    "RQ1 structural acquisition/crawl/build",
+    "RQ1 pre-structural-HITL evaluation"
+  ],
+  "confirmatory_results_eligible": false,
+  "created_at_utc": "2026-09-11T08:46:01.954991+00:00",
+  "disposition_reason": "A pre-existing methodological mismatch was demonstrated between the frozen crawler policy, which deliberately blocks /admin/seguridad, and the frozen evaluation universe, which contains eight functional Seguridad screens and downstream semantic/query expectations.",
+  "forbidden_use_of_formal001": [
+    "report FORMAL001 metrics as final confirmatory study results",
+    "use FORMAL001 as confirmatory evidence or as the basis for any further optimization, model selection, prompt selection or outcome-definition changes",
+    "select new outcome metrics because of FORMAL001 values",
+    "delete or overwrite FORMAL001 artifacts"
+  ],
+  "formal002_must_wait_for": [
+    "POLICY_BLOCKED scope contract frozen",
+    "RQ1 evaluator policy reconciliation",
+    "RQ2 scorer policy eligibility reconciliation",
+    "RQ3 query bank v2 frozen with policy-incompatible answer items replaced",
+    "replacement protocol/amendment frozen",
+    "new global DEVELOPMENT freeze and formal pre-run manifest"
+  ],
+  "formal_boundary_crossed": true,
+  "fresh_attempt_rationale": "FORMAL002 is required because the final DEVELOPMENT artifact differs from the artifact used in FORMAL001 and because the policy/evaluation scope contract is being repaired before confirmatory measurement.",
+  "next_confirmatory_attempt": "FORMAL002",
+  "not_completed": [
+    "structural HITL",
+    "RQ2 PRE-HITL semantic generation/scoring",
+    "RQ2 semantic HITL",
+    "RQ2 POST-HITL scoring",
+    "RQ3 A/B/C",
+    "RQ3 graph-OFF ablation",
+    "SUS"
+  ],
+  "post_formal001_development": {
+    "causal_independence_from_all_formal001_observations_not_claimed": true,
+    "interpretation": "The prototype and supporting DEVELOPMENT artifacts continued to evolve after FORMAL001. This disposition therefore does not claim that every later engineering decision was causally independent of everything observed during FORMAL001. Instead, FORMAL001 is permanently non-confirmatory, its artifacts are preserved, and the final system and repaired evaluation contracts must be frozen again before a fresh FORMAL002 campaign.",
+    "subsequent_development_changes_exist": true
+  },
+  "preservation": {
+    "preserve_all_existing_artifacts": true,
+    "rerun_as_same_attempt": false
+  },
+  "record_id": "cbmm-formal001-diagnostic-disposition-v1",
+  "schema_version": "1.0.0",
+  "status": "STOPPED_DIAGNOSTIC_NON_CONFIRMATORY"
+}

@@ -1,0 +1,98 @@
+{
+  "contract_id": "cbmm-policy-scope-contract-v1",
+  "created_at_utc": "2026-09-11T08:46:01.954991+00:00",
+  "formal002_gate": [
+    "RQ1 evaluation harness implements this contract",
+    "RQ2 scoring harness implements this contract",
+    "RQ3 query bank v2 is independently validated and frozen",
+    "Protocol 2.5 / preparation amendment v5 records FORMAL001 and this reconciliation",
+    "global DEVELOPMENT freeze v2 fingerprints final backend/frontend/evaluation artifacts",
+    "fresh isolated FORMAL persistence passes empty-state gates"
+  ],
+  "human_references_changed": false,
+  "policy_blocked_routes": [
+    "/admin/seguridad/auditoria",
+    "/admin/seguridad/correos",
+    "/admin/seguridad/empresa",
+    "/admin/seguridad/logs",
+    "/admin/seguridad/opciones",
+    "/admin/seguridad/parametros",
+    "/admin/seguridad/permisos",
+    "/admin/seguridad/usuarios"
+  ],
+  "policy_source": {
+    "blocked_route_prefix": "/admin/seguridad",
+    "path": "configs/cbmm.yaml",
+    "sha256": "b773724faba2c6cc130869358cb2d903b74bca5495c39ae11b0f3a987af020b2"
+  },
+  "rq1": {
+    "frozen_reference_screens": 65,
+    "module_rule": "A reference module whose functional screens are all POLICY_BLOCKED is reported as policy-blocked rather than as a technical module false negative.",
+    "policy_blocked_screens": 8,
+    "primary_metric_rule": "POLICY_BLOCKED reference items do not enter TP/FP/FN for primary acquisition precision/recall/F1. They are reported separately. Primary strict screen identity and hierarchy rules otherwise remain unchanged.",
+    "secondary_transparency_diagnostic": "All-reference route coverage may additionally be reported as a clearly labeled non-primary diagnostic.",
+    "unexpected_detection_under_blocked_prefix": "Treat as an acquisition-policy violation requiring explicit reporting; do not silently score it as an ordinary detected item."
+  },
+  "rq2": {
+    "dashboard_is_primary_eligible": true,
+    "dashboard_route": "/admin/home",
+    "dashboard_rule": "Missing visible title does not exclude Dashboard. If the frozen generator cannot produce semantic output for Dashboard, the failure remains measurable.",
+    "eligible_generation_failure_rule": "Generation failure, timeout, abstention or unavailable output on an otherwise eligible route remains in the denominator as a not-available/zero-prediction output.",
+    "policy_blocked_reference_screens": 8,
+    "policy_blocked_rule": "Policy-blocked semantic reference screens are reported separately and do not enter PRE/POST semantic quality denominators because the governed pipeline is not authorized to acquire evidence for them.",
+    "primary_eligibility_rule": "A route is primary RQ2 eligible only if it is included in the frozen semantic reference and is not POLICY_BLOCKED by the frozen acquisition policy.",
+    "primary_semantic_eligible_screens": 56,
+    "rq1_functional_screen_universe": 65,
+    "semantic_reference_excluded": 1,
+    "semantic_reference_included": 64
+  },
+  "rq3": {
+    "Q053_retained": {
+      "expected_behavior": "abstention",
+      "query_id": "Q053",
+      "reason": "It tests deterministic mutative execution safety and does not require retrieval of policy-blocked Seguridad knowledge."
+    },
+    "bank_v1_immutable": true,
+    "bank_v1_policy_incompatible_expected_answer_query_ids": [
+      "Q003",
+      "Q022",
+      "Q030",
+      "Q034"
+    ],
+    "expert_validation_required_before_formal002": true,
+    "invariants": {
+      "A_B_C_graph_contract_unchanged": true,
+      "queries_per_stratum": 6,
+      "query_count": 54,
+      "strata_unchanged": true
+    },
+    "replacement_requirement": "Create rq3_query_bank_v2 by replacing these four expected-answer items one-for-one with policy-eligible items from the same respective strata, grounded only in already-frozen independent human references."
+  },
+  "rq3_bank_v1_changed": false,
+  "runtime_changed": false,
+  "schema_version": "1.0.0",
+  "source_fingerprints": {
+    "rq1_structural_reference": {
+      "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+      "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+    },
+    "rq2_semantic_exclusions": {
+      "path": "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv",
+      "sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f"
+    },
+    "rq2_semantic_reference": {
+      "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+      "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+    },
+    "rq3_query_bank_v1": {
+      "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v1.json",
+      "sha256": "c47947059566cb19309d149e44811f618fd3a7bd75bac63c8399b0cf51172d7c"
+    }
+  },
+  "status": "FROZEN_PRE_FORMAL002_INPUT",
+  "taxonomy": {
+    "FUNCTIONAL_IN_SCOPE": "Functional reference item reachable under the frozen acquisition policy and therefore scorable.",
+    "POLICY_BLOCKED": "Functional reference item deliberately outside crawler authorization. It is preserved and reported but is not a technical false negative.",
+    "UNAVAILABLE_IN_SCOPE": "Navigation destination unavailable for reasons such as the separately frozen generic-404 anomaly contract."
+  }
+}
