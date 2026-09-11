@@ -1,0 +1,72 @@
+{
+  "artifact": "rq3-query-bank-v2-freeze-provenance",
+  "candidate": {
+    "candidate_provenance_sha256": "03181eae06f7f3d946941930e0b2ca04e8f25cd0005e581425a37863e9655116",
+    "sha256": "00d5cae14569894e46477413a3c9eb4e1d1beba8f2dccc7f7846f81d03756c68"
+  },
+  "change_reason": "Pre-FORMAL002 reconciliation of the frozen RQ3 bank with the acquisition POLICY_BLOCKED scope. Four expected-answer items that required blocked Seguridad knowledge were replaced one-for-one within their original strata.",
+  "created_at_utc": "2026-09-11T09:16:53.297478+00:00",
+  "formal_history": {
+    "FORMAL001_RQ3_executed": false,
+    "FORMAL001_confirmatory_eligible": false,
+    "FORMAL001_exists": true,
+    "FORMAL_RQ3_outputs_seen_before_v2_freeze": false
+  },
+  "frozen_bank_v1": {
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v1.json",
+    "sha256": "c47947059566cb19309d149e44811f618fd3a7bd75bac63c8399b0cf51172d7c"
+  },
+  "frozen_bank_v2": {
+    "canonical_sha256": "2bdccd4bc574be1113a2bf9706f47b170300785b6ec8f6ae9000bd2a092f35bd",
+    "file_sha256": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16",
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json"
+  },
+  "frozen_sources": {
+    "formal001_disposition": {
+      "path": "experiments/protocol/formal001_diagnostic_disposition_v1.json",
+      "sha256": "6295bb728a54f10e95f0206ccdf40e031edb0dd0f804d615e817678af32c3966"
+    },
+    "policy_scope_contract": {
+      "path": "experiments/protocol/policy_scope_contract_v1.json",
+      "sha256": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601"
+    },
+    "rq1_structural_reference": {
+      "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+      "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+    },
+    "rq2_semantic_reference": {
+      "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+      "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+    }
+  },
+  "human_review": {
+    "confirmation": "approved",
+    "confirmation_date": "2026-09-11",
+    "review_scope": [
+      "Q003",
+      "Q022",
+      "Q030",
+      "Q034"
+    ],
+    "reviewer_role": "expert_A",
+    "unchanged_queries_inherited_from_validated_v1": 50
+  },
+  "invariants": {
+    "A_B_C_graph_contract_changed": false,
+    "changed_queries": 4,
+    "human_references_changed": false,
+    "queries_per_stratum": 6,
+    "query_count": 54,
+    "runtime_changed": false,
+    "strata": 9,
+    "unchanged_queries": 50
+  },
+  "replacement_query_ids": [
+    "Q003",
+    "Q022",
+    "Q030",
+    "Q034"
+  ],
+  "schema_version": "1.0.0",
+  "status": "frozen"
+}

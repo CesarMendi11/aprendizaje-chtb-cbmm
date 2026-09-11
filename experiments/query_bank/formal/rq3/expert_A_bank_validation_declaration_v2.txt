@@ -1,0 +1,48 @@
+RQ3 — DECLARACIÓN DE VALIDACIÓN DEL BANCO Y ANSWER KEY v2
+
+Rol: expert_A
+Banco: rq3-formal-query-bank-v2
+Tamaño final: 54 consultas, 6 por cada uno de 9 estratos.
+
+Contexto de la revisión v2:
+- El banco v1 se preserva sin modificación.
+- 50 consultas permanecen exactamente iguales al banco v1 previamente validado.
+- Se sustituyeron únicamente Q003, Q022, Q030 y Q034 debido a la reconciliación POLICY_BLOCKED previa a FORMAL002.
+- Las cuatro sustituciones se construyeron exclusivamente a partir de las referencias humanas RQ1/RQ2 ya congeladas y de rutas permitidas por la política de adquisición.
+- FORMAL001 produjo datos RQ1 diagnósticos no confirmatorios, pero no llegó a ejecutar RQ3 A/B/C ni la ablación graph-OFF.
+
+1. Revisé las cuatro consultas sustituidas Q003, Q022, Q030 y Q034:
+RESPUESTA=SI
+
+2. Confirmé que sus preguntas representan correctamente las funciones descritas en las referencias humanas congeladas:
+RESPUESTA=SI
+
+3. Revisé expected_behavior para las cuatro consultas sustituidas:
+RESPUESTA=SI
+
+4. Revisé required_claims y equivalentes aceptables de las cuatro consultas sustituidas:
+RESPUESTA=SI
+
+5. Confirmé que ninguna de las cuatro sustituciones requiere conocimiento de rutas POLICY_BLOCKED:
+RESPUESTA=SI
+
+6. Confirmé que las otras 50 consultas permanecen sin modificación respecto al banco v1 ya validado:
+RESPUESTA=SI
+
+7. Confirmé exactamente 54 consultas, 9 estratos y 6 consultas por estrato:
+RESPUESTA=SI
+
+8. No utilicé respuestas FORMAL RQ3 A/B/C para modificar el banco o answer key; no existen ejecuciones FORMAL RQ3 previas:
+RESPUESTA=SI
+
+9. Confirmo que este banco v2 queda finalizado antes de la ejecución RQ3 de FORMAL002:
+RESPUESTA=SI
+
+Fecha de validación:
+AAAA-MM-DD=2026-09-11
+
+Confirmación final:
+CONFIRMO=SI
+
+Nota de procedencia:
+La confirmación explícita de Expert A fue recibida después de mostrar el paquete exacto de revisión de Q003, Q022, Q030 y Q034. Expert A respondió que todo estaba bien. Esta declaración documenta esa aprobación y no altera las referencias humanas congeladas.

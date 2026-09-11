@@ -1,0 +1,76 @@
+{
+  "condition_execution_plan": {
+    "entries": 216,
+    "entries_per_query": 4,
+    "path": "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json",
+    "sha256": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed",
+    "variants": [
+      "A_graph_on",
+      "B_graph_on",
+      "C_graph_on",
+      "C_graph_off"
+    ]
+  },
+  "created_at_utc": "2026-09-11T09:16:53.322076+00:00",
+  "expert_A_bank_validation": {
+    "date": "2026-09-11",
+    "path": "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt",
+    "sha256": "6e3d7be8c3a568df689f23cf46e10498daca4faee89f46de15bdee663342218d"
+  },
+  "expert_A_primary_blind_scoring": {
+    "condition_identity_hidden": true,
+    "expected_blind_responses": 216,
+    "queries": 54
+  },
+  "expert_B_secondary_blind_scoring": {
+    "expected_blind_responses": 72,
+    "queries": 18,
+    "queries_per_stratum": 2,
+    "subset_frozen_before_scoring": true,
+    "subset_path": "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json",
+    "subset_sha256": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38"
+  },
+  "formal_history": {
+    "FORMAL001_RQ3_executed": false,
+    "formal_rq3_outputs_seen_before_this_freeze": false,
+    "formal_rq_data_seen_before_this_freeze": true,
+    "reason": "FORMAL001 produced RQ1 diagnostic data and was permanently classified as non-confirmatory.",
+    "target_confirmatory_attempt": "FORMAL002"
+  },
+  "formal_randomization": {
+    "candidate_sha256": "00d5cae14569894e46477413a3c9eb4e1d1beba8f2dccc7f7846f81d03756c68",
+    "seed": 14011105,
+    "seed_derivation": "int(first 8 hex characters of the Expert-A-approved candidate file SHA256, base 16)",
+    "selected_before_any_FORMAL002_RQ3_output": true
+  },
+  "freeze_provenance": {
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2_provenance_v1.json",
+    "sha256": "6c9c41a7838b1e4083a8346aa5a5f610fa54ac89152079ace85e7e1159ab83a2"
+  },
+  "manifest_id": "rq3-formal-sampling-allocation-v2",
+  "prototype_runtime_changed": false,
+  "query_bank": {
+    "approved_candidate_sha256": "00d5cae14569894e46477413a3c9eb4e1d1beba8f2dccc7f7846f81d03756c68",
+    "bank_id": "rq3-formal-query-bank-v2",
+    "canonical_sha256": "2bdccd4bc574be1113a2bf9706f47b170300785b6ec8f6ae9000bd2a092f35bd",
+    "frozen_file_sha256": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16",
+    "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json",
+    "queries_per_stratum": 6,
+    "query_count": 54,
+    "strata": 9
+  },
+  "schema_version": "1.0.0",
+  "status": "frozen",
+  "upstream_frozen_artifacts": {
+    "formal001_disposition_sha256": "6295bb728a54f10e95f0206ccdf40e031edb0dd0f804d615e817678af32c3966",
+    "formal_analysis_plan_v1_sha256": "3557bd52e303882d08e8ef41589dc3e6e7e6e469e31d99ba2a172d1939aa92ac",
+    "formal_operational_plan_v3_sha256": "4e9dd754b29d94a07bc5a30177bbd2cd3717c53041f7bfddff6fd22402ddc6f4",
+    "policy_scope_contract_sha256": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601",
+    "protocol_v2_4_sha256": "a46f92d17f21b4e221b0101725b3e2a549d3f0f496979c0ad35a259862d18c49",
+    "rq1_reference_freeze_sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75",
+    "rq1_structural_reference_sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c",
+    "rq2_exclusions_sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f",
+    "rq2_reference_freeze_sha256": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571",
+    "rq2_semantic_reference_file_sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+  }
+}

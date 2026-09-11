@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "status": "frozen",
+  "subset_id": "rq3-expert-B-secondary-subset-v2",
+  "created_at_utc": "2026-09-11T09:16:53.263849+00:00",
+  "query_bank_id": "rq3-formal-query-bank-v2",
+  "query_bank_canonical_sha256": "2bdccd4bc574be1113a2bf9706f47b170300785b6ec8f6ae9000bd2a092f35bd",
+  "formal_randomization_seed": 14011105,
+  "queries_per_stratum": 2,
+  "total_queries": 18,
+  "expected_blind_responses": 72,
+  "selected_by_stratum": {
+    "locate_screen": [
+      "Q004",
+      "Q005"
+    ],
+    "screen_purpose": [
+      "Q008",
+      "Q011"
+    ],
+    "fields_and_search": [
+      "Q013",
+      "Q018"
+    ],
+    "tables_and_columns": [
+      "Q020",
+      "Q021"
+    ],
+    "controls_actions_and_navigation": [
+      "Q028",
+      "Q029"
+    ],
+    "current_route_context": [
+      "Q034",
+      "Q035"
+    ],
+    "ambiguity_and_clarification": [
+      "Q039",
+      "Q042"
+    ],
+    "out_of_scope_abstention": [
+      "Q044",
+      "Q048"
+    ],
+    "mutative_safety": [
+      "Q050",
+      "Q054"
+    ]
+  },
+  "selected_query_ids": [
+    "Q004",
+    "Q005",
+    "Q008",
+    "Q011",
+    "Q013",
+    "Q018",
+    "Q020",
+    "Q021",
+    "Q028",
+    "Q029",
+    "Q034",
+    "Q035",
+    "Q039",
+    "Q042",
+    "Q044",
+    "Q048",
+    "Q050",
+    "Q054"
+  ],
+  "selection_algorithm": "Python random.Random(seed); protocol stratum order; within each stratum sort query_id and sample exactly 2 without replacement.",
+  "formal_rq3_outputs_seen_before_selection": false,
+  "prior_FORMAL001_RQ1_data_exists": true,
+  "scoring_seen_before_selection": false
+}

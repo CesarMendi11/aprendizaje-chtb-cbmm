@@ -1,0 +1,1306 @@
+{
+  "created_at": "2026-09-11T09:16:53.142252+00:00",
+  "entries": [
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q015",
+      "run_id": "Q015:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q002",
+      "run_id": "Q002:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q025",
+      "run_id": "Q025:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q050",
+      "run_id": "Q050:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q050",
+      "run_id": "Q050:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q008",
+      "run_id": "Q008:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q033",
+      "run_id": "Q033:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q042",
+      "run_id": "Q042:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q037",
+      "run_id": "Q037:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q038",
+      "run_id": "Q038:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q030",
+      "run_id": "Q030:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q024",
+      "run_id": "Q024:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q018",
+      "run_id": "Q018:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q041",
+      "run_id": "Q041:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q035",
+      "run_id": "Q035:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q005",
+      "run_id": "Q005:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q040",
+      "run_id": "Q040:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q011",
+      "run_id": "Q011:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q052",
+      "run_id": "Q052:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q006",
+      "run_id": "Q006:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q005",
+      "run_id": "Q005:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q022",
+      "run_id": "Q022:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q028",
+      "run_id": "Q028:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q028",
+      "run_id": "Q028:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q003",
+      "run_id": "Q003:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q036",
+      "run_id": "Q036:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q011",
+      "run_id": "Q011:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q049",
+      "run_id": "Q049:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q034",
+      "run_id": "Q034:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q047",
+      "run_id": "Q047:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q001",
+      "run_id": "Q001:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q020",
+      "run_id": "Q020:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q014",
+      "run_id": "Q014:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q007",
+      "run_id": "Q007:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q025",
+      "run_id": "Q025:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q004",
+      "run_id": "Q004:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q031",
+      "run_id": "Q031:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q021",
+      "run_id": "Q021:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q040",
+      "run_id": "Q040:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q019",
+      "run_id": "Q019:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q015",
+      "run_id": "Q015:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q053",
+      "run_id": "Q053:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q017",
+      "run_id": "Q017:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q035",
+      "run_id": "Q035:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q048",
+      "run_id": "Q048:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q047",
+      "run_id": "Q047:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q004",
+      "run_id": "Q004:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q019",
+      "run_id": "Q019:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q003",
+      "run_id": "Q003:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q052",
+      "run_id": "Q052:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q044",
+      "run_id": "Q044:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q024",
+      "run_id": "Q024:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q039",
+      "run_id": "Q039:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q018",
+      "run_id": "Q018:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q020",
+      "run_id": "Q020:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q033",
+      "run_id": "Q033:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q039",
+      "run_id": "Q039:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q031",
+      "run_id": "Q031:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q008",
+      "run_id": "Q008:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q043",
+      "run_id": "Q043:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q014",
+      "run_id": "Q014:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q010",
+      "run_id": "Q010:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q002",
+      "run_id": "Q002:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q010",
+      "run_id": "Q010:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q019",
+      "run_id": "Q019:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q034",
+      "run_id": "Q034:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q017",
+      "run_id": "Q017:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q029",
+      "run_id": "Q029:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q028",
+      "run_id": "Q028:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q012",
+      "run_id": "Q012:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q038",
+      "run_id": "Q038:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q035",
+      "run_id": "Q035:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q052",
+      "run_id": "Q052:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q027",
+      "run_id": "Q027:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q016",
+      "run_id": "Q016:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q020",
+      "run_id": "Q020:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q039",
+      "run_id": "Q039:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q009",
+      "run_id": "Q009:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q031",
+      "run_id": "Q031:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q041",
+      "run_id": "Q041:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q007",
+      "run_id": "Q007:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q006",
+      "run_id": "Q006:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q047",
+      "run_id": "Q047:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q033",
+      "run_id": "Q033:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q012",
+      "run_id": "Q012:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q028",
+      "run_id": "Q028:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q051",
+      "run_id": "Q051:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q040",
+      "run_id": "Q040:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q036",
+      "run_id": "Q036:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q024",
+      "run_id": "Q024:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q031",
+      "run_id": "Q031:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q053",
+      "run_id": "Q053:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q017",
+      "run_id": "Q017:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q020",
+      "run_id": "Q020:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q001",
+      "run_id": "Q001:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q035",
+      "run_id": "Q035:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q022",
+      "run_id": "Q022:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q034",
+      "run_id": "Q034:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q013",
+      "run_id": "Q013:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q041",
+      "run_id": "Q041:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q016",
+      "run_id": "Q016:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q045",
+      "run_id": "Q045:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q032",
+      "run_id": "Q032:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q047",
+      "run_id": "Q047:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q027",
+      "run_id": "Q027:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q048",
+      "run_id": "Q048:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q011",
+      "run_id": "Q011:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q032",
+      "run_id": "Q032:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q043",
+      "run_id": "Q043:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q054",
+      "run_id": "Q054:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q022",
+      "run_id": "Q022:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q007",
+      "run_id": "Q007:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q052",
+      "run_id": "Q052:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q027",
+      "run_id": "Q027:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q046",
+      "run_id": "Q046:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q026",
+      "run_id": "Q026:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q038",
+      "run_id": "Q038:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q013",
+      "run_id": "Q013:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q008",
+      "run_id": "Q008:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q013",
+      "run_id": "Q013:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q050",
+      "run_id": "Q050:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q023",
+      "run_id": "Q023:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q026",
+      "run_id": "Q026:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q045",
+      "run_id": "Q045:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q023",
+      "run_id": "Q023:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q032",
+      "run_id": "Q032:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q021",
+      "run_id": "Q021:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q004",
+      "run_id": "Q004:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q004",
+      "run_id": "Q004:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q019",
+      "run_id": "Q019:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q033",
+      "run_id": "Q033:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q010",
+      "run_id": "Q010:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q036",
+      "run_id": "Q036:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q015",
+      "run_id": "Q015:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q023",
+      "run_id": "Q023:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q012",
+      "run_id": "Q012:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q027",
+      "run_id": "Q027:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q008",
+      "run_id": "Q008:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q021",
+      "run_id": "Q021:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q037",
+      "run_id": "Q037:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q018",
+      "run_id": "Q018:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q001",
+      "run_id": "Q001:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q021",
+      "run_id": "Q021:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q029",
+      "run_id": "Q029:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q038",
+      "run_id": "Q038:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q044",
+      "run_id": "Q044:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q046",
+      "run_id": "Q046:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q043",
+      "run_id": "Q043:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q022",
+      "run_id": "Q022:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q051",
+      "run_id": "Q051:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q040",
+      "run_id": "Q040:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q026",
+      "run_id": "Q026:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q048",
+      "run_id": "Q048:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q002",
+      "run_id": "Q002:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q007",
+      "run_id": "Q007:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q053",
+      "run_id": "Q053:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q039",
+      "run_id": "Q039:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q009",
+      "run_id": "Q009:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q016",
+      "run_id": "Q016:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q049",
+      "run_id": "Q049:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q014",
+      "run_id": "Q014:C:g0"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q005",
+      "run_id": "Q005:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q053",
+      "run_id": "Q053:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q042",
+      "run_id": "Q042:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q011",
+      "run_id": "Q011:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q045",
+      "run_id": "Q045:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q002",
+      "run_id": "Q002:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q015",
+      "run_id": "Q015:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q026",
+      "run_id": "Q026:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q023",
+      "run_id": "Q023:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q042",
+      "run_id": "Q042:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q036",
+      "run_id": "Q036:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q046",
+      "run_id": "Q046:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q003",
+      "run_id": "Q003:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q005",
+      "run_id": "Q005:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q054",
+      "run_id": "Q054:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q018",
+      "run_id": "Q018:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q010",
+      "run_id": "Q010:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q046",
+      "run_id": "Q046:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q029",
+      "run_id": "Q029:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q041",
+      "run_id": "Q041:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q048",
+      "run_id": "Q048:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q006",
+      "run_id": "Q006:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q014",
+      "run_id": "Q014:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q006",
+      "run_id": "Q006:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q025",
+      "run_id": "Q025:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q051",
+      "run_id": "Q051:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q045",
+      "run_id": "Q045:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q044",
+      "run_id": "Q044:C:g0"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q054",
+      "run_id": "Q054:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q050",
+      "run_id": "Q050:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q030",
+      "run_id": "Q030:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q030",
+      "run_id": "Q030:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q032",
+      "run_id": "Q032:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q049",
+      "run_id": "Q049:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": false,
+      "query_id": "Q009",
+      "run_id": "Q009:C:g0"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q044",
+      "run_id": "Q044:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q012",
+      "run_id": "Q012:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q043",
+      "run_id": "Q043:C:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q016",
+      "run_id": "Q016:B:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q042",
+      "run_id": "Q042:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q051",
+      "run_id": "Q051:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q024",
+      "run_id": "Q024:A:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q037",
+      "run_id": "Q037:C:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q029",
+      "run_id": "Q029:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q054",
+      "run_id": "Q054:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q025",
+      "run_id": "Q025:B:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q017",
+      "run_id": "Q017:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q013",
+      "run_id": "Q013:B:g1"
+    },
+    {
+      "condition": "C",
+      "graph_enabled": true,
+      "query_id": "Q001",
+      "run_id": "Q001:C:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q003",
+      "run_id": "Q003:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q009",
+      "run_id": "Q009:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q034",
+      "run_id": "Q034:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q030",
+      "run_id": "Q030:A:g1"
+    },
+    {
+      "condition": "A",
+      "graph_enabled": true,
+      "query_id": "Q049",
+      "run_id": "Q049:A:g1"
+    },
+    {
+      "condition": "B",
+      "graph_enabled": true,
+      "query_id": "Q037",
+      "run_id": "Q037:B:g1"
+    }
+  ],
+  "plan_type": "rq3_condition_execution_plan",
+  "query_bank_id": "rq3-formal-query-bank-v2",
+  "query_bank_sha256": "2bdccd4bc574be1113a2bf9706f47b170300785b6ec8f6ae9000bd2a092f35bd",
+  "schema_version": "1.0.0",
+  "seed": 14011105
+}
