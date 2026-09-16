@@ -36,6 +36,7 @@ login:
   success_url_contains: "/admin/home"
   wait_until: "domcontentloaded"
   initial_wait_ms: 1000
+  post_login_timeout_ms: 20000
   post_login_wait_ms: 3000
 
 navigation:
@@ -190,6 +191,7 @@ extraction:
       - "[role='alertdialog']"
       - "mat-dialog-container"
       - ".modal.show"
+      - ".swal2-container.swal2-backdrop-show"
     volatile: []
 
   title_resolution:
@@ -261,6 +263,17 @@ browser_interaction:
   retry_wait_ms: 500
   pre_click_wait_ms: 200
   scroll_into_view: true
+
+ui_readiness:
+  # El frontend CBMM muestra este overlay mientras existen solicitudes HTTP
+  # activas. La estabilidad estructural por sí sola no basta: la pantalla puede
+  # parecer estable mientras este bloqueador todavía intercepta los clics.
+  enabled: true
+  blocking_selectors:
+    - ".loader-container.svelte-jutlet"
+  timeout_ms: 30000
+  poll_interval_ms: 100
+  clear_stability_ms: 300
 
 state_replay:
   # Restaura el estado fuente antes de probar cada evento seguro.

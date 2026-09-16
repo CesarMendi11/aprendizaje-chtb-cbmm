@@ -119,3 +119,58 @@ def test_state_observer_respects_minimum_observation_time():
     assert result.samples_count == 3
     assert result.elapsed_ms == 20
     assert waits == [10, 10]
+
+
+class ReadinessLocator:
+    def __init__(self, page):
+        self.page = page
+
+    @property
+    def first(self):
+        return self
+
+    def is_visible(self):
+        return self.page.visibility[min(self.page.index, len(self.page.visibility) - 1)]
+
+
+class ReadinessPage:
+    def __init__(self, visibility):
+        self.visibility = list(visibility)
+        self.index = 0
+        self.waits = []
+
+    def locator(self, selector):
+        assert selector == ".loader"
+        return ReadinessLocator(self)
+
+    def wait_for_timeout(self, milliseconds):
+        self.waits.append(milliseconds)
+        self.index += 1
+
+
+def test_state_observer_waits_for_profile_blocker_before_extracting():
+    extractor = SequenceExtractor([screen("Contenido listo")])
+    page = ReadinessPage([True, False, False])
+    cfg = {
+        "state_detection": {"stability": {"enabled": False}},
+        "ui_readiness": {
+            "enabled": True,
+            "blocking_selectors": [".loader"],
+            "timeout_ms": 1000,
+            "poll_interval_ms": 50,
+            "clear_stability_ms": 50,
+        },
+    }
+    observer = StableStateObserver(
+        profile=cfg,
+        extractor=extractor,
+        signature_builder=StateSignatureBuilder(),
+        wait_fn=page.wait_for_timeout,
+        page=page,
+    )
+
+    result = observer.observe()
+
+    assert result.stable is True
+    assert extractor.calls == 1
+    assert page.waits == [50, 50]

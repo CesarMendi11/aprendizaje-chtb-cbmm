@@ -143,13 +143,33 @@ def _reference_keys(items: Iterable[ReferenceItem], dimension: str) -> set[tuple
     raise ValueError(f"Dimensión estructural no soportada: {dimension}")
 
 
+
+def _rq1_in_screen_title(screen: object) -> str:
+    """Return the title identity frozen by the RQ1 contract.
+
+    Canonical ``Screen.title`` is the functional/operational title and may
+    legitimately fall back to navigation/discovery information. RQ1 v2.5,
+    however, freezes identity against the *observed in-screen title*. The
+    builder persists that observation in ``Screen.metadata``.
+
+    Old synthetic fixtures predate that metadata; for those only, retain the
+    legacy title so unit tests that are unrelated to the formal contract remain
+    backwards compatible. An explicitly present empty in-screen title must stay
+    empty and must never fall back to the menu/functional label.
+    """
+
+    metadata = getattr(screen, "metadata", {}) or {}
+    if "in_screen_title" in metadata:
+        return str(metadata.get("in_screen_title") or "")
+    return str(getattr(screen, "title", "") or "")
+
 def _detected_keys(repository: CanonicalKnowledgeRepository, dimension: str) -> set[tuple]:
     module_paths = _canonical_module_paths(repository)
     if dimension == "module":
         return set(module_paths.values())
     if dimension == "screen":
         return {
-            (normalize_route(screen.route), normalize_text(screen.title))
+            (normalize_route(screen.route), normalize_text(_rq1_in_screen_title(screen)))
             for screen in repository.knowledge.screens
         }
     if dimension == "screen_hierarchy":
@@ -157,7 +177,7 @@ def _detected_keys(repository: CanonicalKnowledgeRepository, dimension: str) -> 
             (
                 normalize_route(screen.route),
                 module_paths.get(screen.module_id, ()),
-                normalize_text(screen.title),
+                normalize_text(_rq1_in_screen_title(screen)),
             )
             for screen in repository.knowledge.screens
         }
@@ -353,7 +373,7 @@ def _screen_identity_diagnostics(
         }
 
         detected_titles = {
-            normalize_text(screen.title)
+            normalize_text(_rq1_in_screen_title(screen))
             for screen in detected_by_route[
                 route
             ]

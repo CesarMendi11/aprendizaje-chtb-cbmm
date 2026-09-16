@@ -100,3 +100,28 @@ def test_menu_discovery_ignores_large_container_text():
     candidates = discovery.discover_menu_candidates(screen_data)
 
     assert candidates == []
+
+
+def test_menu_discovery_prefers_framework_navigation_label_over_descendant_text():
+    screen_data = {
+        "custom_interactives": [
+            {
+                "text": "Atención Cliente cliente",
+                "navigation_label": "Atención Cliente",
+                "tag": "fuse-vertical-navigation-collapsable-item",
+                "selector": "collapsable-one",
+            }
+        ]
+    }
+
+    candidates = MenuDiscovery().discover_menu_candidates(screen_data)
+
+    assert candidates == [
+        {
+            "label": "Atención Cliente",
+            "tag": "fuse-vertical-navigation-collapsable-item",
+            "selector": "collapsable-one",
+            "kind": "collapsable_menu",
+            "reason": "custom_navigation_item",
+        }
+    ]

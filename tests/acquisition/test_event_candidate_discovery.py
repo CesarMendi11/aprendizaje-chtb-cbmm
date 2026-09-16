@@ -814,3 +814,75 @@ def test_event_candidate_discovery_keeps_shell_icon_as_metadata_not_functional_l
     assert candidates[0].label == ""
     assert candidates[0].metadata["icon_label"] == "bars-3"
     assert candidates[0].metadata["icon_source"] == "data-mat-icon-name"
+
+
+def test_listbox_popup_is_not_treated_as_dropdown_opener():
+    discovery = build_discovery()
+    screen_data = {
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "Value A Value B",
+                "tag": "div",
+                "role": "listbox",
+                "selector": ".cdk-overlay-pane [role='listbox']",
+                "region": "main_content",
+            }
+        ],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].event_category == "unknown"
+    assert candidates[0].decision != "allow"
+    assert candidates[0].label == ""
+
+
+def test_combobox_uses_structural_label_not_selected_value():
+    discovery = build_discovery()
+    screen_data = {
+        "buttons": [],
+        "links": [],
+        "custom_interactives": [
+            {
+                "text": "Selected Business Value",
+                "control_label": "Moneda",
+                "formcontrolname": "moneda",
+                "tag": "mat-select",
+                "role": "combobox",
+                "aria_expanded": "false",
+                "selector": "mat-select[formcontrolname='moneda']",
+                "region": "main_content",
+            }
+        ],
+    }
+
+    candidates = discovery.discover_candidates(screen_data)
+
+    assert len(candidates) == 1
+    assert candidates[0].label == "Moneda"
+    assert candidates[0].event_category == "open_dropdown"
+
+
+def test_non_actionable_candidate_is_denied_for_inert_or_pointer_events_none():
+    discovery = build_discovery()
+    for flag in ("inert", "pointer_events_none"):
+        screen_data = {
+            "buttons": [
+                {
+                    "text": "Consultar",
+                    "tag": "button",
+                    "type": "button",
+                    "selector": f"button.{flag}",
+                    "region": "main_content",
+                    flag: True,
+                }
+            ],
+            "links": [],
+            "custom_interactives": [],
+        }
+        candidate = discovery.discover_candidates(screen_data)[0]
+        assert candidate.decision == "deny"
+        assert candidate.risk_level == "low"

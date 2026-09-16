@@ -61,7 +61,26 @@ class ERPNavigator:
 
         self.page.wait_for_load_state("domcontentloaded")
 
-        post_login_wait_ms = login_config.get("post_login_wait_ms", 2000)
+        expected_fragment = login_config.get("success_url_contains")
+        post_login_timeout_ms = int(
+            login_config.get("post_login_timeout_ms", 20000)
+        )
+
+        if expected_fragment and not self.auth_manager.is_successful_login_url(self.page.url):
+            try:
+                self.page.wait_for_url(
+                    lambda url: expected_fragment in str(url),
+                    timeout=post_login_timeout_ms,
+                )
+            except PlaywrightTimeoutError as exc:
+                raise RuntimeError(
+                    "No se pudo confirmar login exitoso dentro del timeout. "
+                    f"URL actual: {self.page.url}. "
+                    f"Se esperaba que contenga: {expected_fragment}. "
+                    f"Timeout: {post_login_timeout_ms} ms"
+                ) from exc
+
+        post_login_wait_ms = int(login_config.get("post_login_wait_ms", 2000))
         if post_login_wait_ms:
             self.page.wait_for_timeout(post_login_wait_ms)
 
@@ -69,7 +88,7 @@ class ERPNavigator:
             raise RuntimeError(
                 "No se pudo confirmar login exitoso. "
                 f"URL actual: {self.page.url}. "
-                f"Se esperaba que contenga: {login_config.get('success_url_contains')}"
+                f"Se esperaba que contenga: {expected_fragment}"
             )
 
     def goto_home(self) -> None:

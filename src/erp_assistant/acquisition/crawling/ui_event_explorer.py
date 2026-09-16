@@ -205,6 +205,10 @@ class UIEventExplorer:
             self.candidate_discovery.discover_exploration_candidates(current_screen_data)
         )
         candidates = self._deduplicate_candidates_by_selector(candidates)
+        candidates = self._filter_candidates_for_active_context(
+            candidates,
+            current_screen_data,
+        )
         candidates = self._filter_candidates_for_ui_events(
             candidates,
             allowed_categories=allowed_categories,
@@ -266,6 +270,68 @@ class UIEventExplorer:
             self.state_restorer.restore(source_state)
 
         return results
+
+    def _filter_candidates_for_active_context(
+        self,
+        candidates: list[EventCandidate],
+        screen_data: dict[str, Any],
+    ) -> list[EventCandidate]:
+        """Restrict exploration to the interaction surface currently on top.
+
+        CDK/listbox overlays and dialogs intercept pointer events from the
+        underlying page. Retrying those covered controls creates false
+        ``interaction_failed`` results and can fabricate recursive dropdown
+        transitions. The overlay itself is still captured as a UI state; option
+        selection is intentionally outside the current exploration contract.
+        """
+        custom = screen_data.get("custom_interactives") or []
+        has_listbox = any(
+            str(item.get("role") or "").casefold() == "listbox"
+            for item in custom
+            if isinstance(item, dict)
+        )
+        has_expanded_choice = any(
+            (
+                str(item.get("role") or "").casefold() == "combobox"
+                or str(item.get("tag") or "").casefold() in {"select", "mat-select"}
+            )
+            and str(item.get("aria_expanded") or "").casefold() == "true"
+            for item in custom
+            if isinstance(item, dict)
+        )
+        if has_listbox and has_expanded_choice:
+            return []
+
+        dialogs = screen_data.get("dialogs") or []
+        regions = screen_data.get("regions") or {}
+        dialog_region = regions.get("dialog") if isinstance(regions, dict) else {}
+        dialog_region_present = bool(
+            isinstance(dialog_region, dict)
+            and int(dialog_region.get("elements_count") or 0) > 0
+        )
+        custom_dialog_present = any(
+            str(item.get("role") or "").casefold() == "dialog"
+            and str(item.get("region") or "dialog") == "dialog"
+            for item in custom
+            if isinstance(item, dict)
+        )
+        active_dialog = (
+            any(
+                bool(item.get("open", True))
+                for item in dialogs
+                if isinstance(item, dict)
+            )
+            or dialog_region_present
+            or custom_dialog_present
+        )
+        if not active_dialog:
+            return candidates
+
+        return [
+            candidate
+            for candidate in candidates
+            if str(candidate.metadata.get("region") or "main_content") == "dialog"
+        ]
 
     def _filter_candidates_for_ui_events(
         self,
@@ -513,6 +579,7 @@ class UIEventExplorer:
                     extractor=self.extractor,
                     signature_builder=self.state_signature_builder,
                     wait_fn=self.page.wait_for_timeout,
+                    page=self.page,
                 )
                 observation = observer.observe(
                     title_hint=(

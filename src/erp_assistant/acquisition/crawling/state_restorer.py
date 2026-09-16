@@ -271,6 +271,7 @@ class StateRestorer:
             extractor=self.extractor,
             signature_builder=self.signature_builder,
             wait_fn=self.navigator.page.wait_for_timeout,
+            page=self.navigator.page,
         )
 
     @staticmethod

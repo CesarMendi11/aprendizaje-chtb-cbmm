@@ -75,3 +75,11 @@ def test_event_policy_audit_reports_pipeline_and_exclusions():
     assert audit["pipeline_totals"]["raw_candidates_count"] == 2
     assert audit["pipeline_totals"]["selected_for_exploration_count"] == 1
     assert audit["selection_exclusion_totals"]["global_navigation_outside_home"] == 1
+    assert len(audit["screens"][0]["candidates"]) == 2
+    search = next(
+        candidate
+        for candidate in audit["screens"][0]["candidates"]
+        if candidate["label"] == "Buscar"
+    )
+    assert search["event_category"] == "submit_search"
+    assert search["decision"] == "allow"

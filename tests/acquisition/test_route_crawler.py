@@ -476,3 +476,64 @@ def test_route_crawler_fixed_point_stops_when_page_budget_is_exhausted():
     crawler._crawl_until_fixed_point()
 
     assert crawler.frontier.pending_count() == 3
+
+
+def test_route_crawler_fails_closed_when_root_observation_is_unstable():
+    class Observation:
+        stable = False
+        screen_data = {"path": "/admin/inestable"}
+
+        @staticmethod
+        def diagnostics():
+            return {
+                "stable": False,
+                "samples_count": 17,
+                "consecutive_samples": 1,
+                "elapsed_ms": 4000,
+            }
+
+    crawler = object.__new__(RouteCrawler)
+    crawler.navigator = type(
+        "Navigator",
+        (),
+        {"current_path": lambda self: "/admin/inestable"},
+    )()
+    crawler._observe_screen = lambda **kwargs: Observation()
+    crawler._is_allowed_route = lambda route: route == "/admin/inestable"
+
+    uncertainties = []
+    checkpoints = []
+    progress = []
+    crawler._save_uncertainty = lambda **kwargs: uncertainties.append(kwargs)
+    crawler._checkpoint_outputs = lambda: checkpoints.append(True)
+    crawler._emit_progress = lambda stage, **kwargs: progress.append((stage, kwargs))
+
+    crawler._capture_current_screen(
+        source="test",
+        depth=2,
+        reason="href_discovered",
+        title_hint="Pantalla inestable",
+    )
+
+    assert uncertainties == [
+        {
+            "route": "/admin/inestable",
+            "reason": "dynamic_state_exploration_error",
+            "extra": {
+                "error": "state_observation_unstable",
+                "source": "test",
+                "depth": 2,
+                "capture_reason": "href_discovered",
+                "state_observation": {
+                    "stable": False,
+                    "samples_count": 17,
+                    "consecutive_samples": 1,
+                    "elapsed_ms": 4000,
+                },
+            },
+        }
+    ]
+    assert checkpoints == [True]
+    assert progress == [
+        ("screen_unstable", {"current_route": "/admin/inestable"})
+    ]

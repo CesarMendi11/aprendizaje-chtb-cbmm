@@ -615,3 +615,104 @@ def test_ui_event_explorer_test_full_blocks_mutating_network_request():
             "path": "/api/create",
         }
     ]
+
+
+def test_active_dialog_context_filters_underlying_page_candidates():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    discovery = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))
+
+    underlying = discovery._from_buttons(
+        [{"text": "Siguiente página", "tag": "button", "selector": "main button", "region": "main_content"}]
+    )[0]
+    dialog = discovery._from_buttons(
+        [{"text": "Cerrar", "tag": "button", "selector": "dialog button", "region": "dialog"}]
+    )[0]
+
+    filtered = explorer._filter_candidates_for_active_context(
+        [underlying, dialog],
+        {"dialogs": [{"role": "dialog", "open": True}], "custom_interactives": []},
+    )
+
+    assert filtered == [dialog]
+
+
+def test_active_dialog_context_detects_region_and_custom_role_without_dialog_rows():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    discovery = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))
+
+    underlying = discovery._from_buttons(
+        [{"text": "Siguiente página", "tag": "button", "selector": "main button", "region": "main_content"}]
+    )[0]
+    dialog = discovery._from_buttons(
+        [{"text": "Cancelar", "tag": "button", "selector": "dialog button", "region": "dialog"}]
+    )[0]
+
+    filtered = explorer._filter_candidates_for_active_context(
+        [underlying, dialog],
+        {
+            "dialogs": [],
+            "regions": {"dialog": {"visible_text": "", "elements_count": 2}},
+            "custom_interactives": [
+                {"role": "dialog", "tag": "div", "region": "dialog"},
+                {"role": "combobox", "tag": "mat-select", "region": "dialog"},
+            ],
+        },
+    )
+
+    assert filtered == [dialog]
+
+
+def test_active_listbox_context_is_observed_without_recursive_exploration():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    discovery = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))
+    combobox = discovery._from_custom_interactives(
+        [
+            {
+                "text": "Selected value",
+                "control_label": "Moneda",
+                "tag": "mat-select",
+                "role": "combobox",
+                "aria_expanded": "true",
+                "selector": "mat-select",
+                "region": "main_content",
+            }
+        ]
+    )[0]
+
+    filtered = explorer._filter_candidates_for_active_context(
+        [combobox],
+        {
+            "dialogs": [],
+            "custom_interactives": [
+                {
+                    "role": "combobox",
+                    "tag": "mat-select",
+                    "aria_expanded": "true",
+                    "region": "main_content",
+                },
+                {"role": "listbox", "tag": "div", "text": "A B", "region": "main_content"},
+            ],
+        },
+    )
+
+    assert filtered == []
+
+
+def test_static_listbox_without_expanded_combobox_does_not_block_page_exploration():
+    explorer = UIEventExplorer.__new__(UIEventExplorer)
+    discovery = EventCandidateDiscovery(build_profile(), RoutePolicy(build_profile()))
+    button = discovery._from_buttons(
+        [{"text": "Consultar", "tag": "button", "selector": "button", "region": "main_content"}]
+    )[0]
+
+    filtered = explorer._filter_candidates_for_active_context(
+        [button],
+        {
+            "dialogs": [],
+            "custom_interactives": [
+                {"role": "listbox", "tag": "div", "text": "A B", "region": "main_content"}
+            ],
+        },
+    )
+
+    assert filtered == [button]

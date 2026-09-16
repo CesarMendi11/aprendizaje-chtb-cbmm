@@ -538,7 +538,12 @@ class CanonicalKnowledgeBuilder:
                 )
             )
 
-        controls = self._reconcile_control_mutativity_from_events(controls, events)
+        controls = self._reconcile_controls_from_policy_audit(
+            controls,
+            artifacts.get("event_policy_audit.json"),
+            by_route,
+        )
+        controls = self._reconcile_controls_from_events(controls, events)
 
         entity_lists = {
             "modules": modules,
@@ -1295,48 +1300,178 @@ class CanonicalKnowledgeBuilder:
         return ""
 
     @staticmethod
-    def _reconcile_control_mutativity_from_events(controls, events):
-        mutative_selectors = {
-            (event.screen_id, event.selector)
-            for event in events
-            if event.mutative and event.selector
+    def _policy_candidate_label(candidate):
+        metadata = candidate.get("metadata") or {}
+        return next(
+            (
+                str(value).strip()
+                for value in (
+                    candidate.get("label"),
+                    metadata.get("aria_label"),
+                    metadata.get("title"),
+                    metadata.get("icon_label"),
+                )
+                if value and str(value).strip()
+            ),
+            "",
+        )
+
+    @classmethod
+    def _reconcile_controls_from_policy_audit(cls, controls, audit, by_route):
+        """Project policy classification onto canonical controls.
+
+        ``Control.mutative`` is a policy/functional property, not an HTML-form
+        property.  The event-policy audit is therefore authoritative whenever
+        it contains a matching candidate.  Full candidate census was added to
+        the audit during hardening; older artifacts remain usable through the
+        historical ``denied``/``review`` subsets.
+
+        Persistence intentionally removes selectors/text for per-row controls
+        to protect record-level data.  For those controls we fall back to the
+        canonical functional identity (screen + normalized label + region),
+        using the sanitized icon label carried in policy metadata.
+        """
+
+        if not isinstance(audit, dict):
+            return controls
+
+        route_to_screen_id = {
+            normalize_route(route): screen.id
+            for route, screen in by_route.items()
         }
-        mutative_functional_identities = {
-            (event.screen_id, event.normalized_label, event.region)
-            for event in events
-            if event.mutative and event.normalized_label
-        }
+        candidates = []
+        for screen_audit in audit.get("screens") or []:
+            if not isinstance(screen_audit, dict):
+                continue
+            route = normalize_route(screen_audit.get("route"))
+            screen_id = route_to_screen_id.get(route)
+            if not screen_id:
+                continue
+            screen_candidates = screen_audit.get("candidates")
+            if not isinstance(screen_candidates, list):
+                screen_candidates = [
+                    *(screen_audit.get("denied") or []),
+                    *(screen_audit.get("review") or []),
+                ]
+            for candidate in screen_candidates:
+                if not isinstance(candidate, dict):
+                    continue
+                metadata = candidate.get("metadata") or {}
+                label = cls._policy_candidate_label(candidate)
+                candidates.append(
+                    {
+                        "screen_id": screen_id,
+                        "selector": cls._clean_optional(candidate.get("selector")),
+                        "normalized_label": normalize_text(label),
+                        "region": str(metadata.get("region") or "main_content"),
+                        "event_category": str(candidate.get("event_category") or "unknown"),
+                        "decision": str(candidate.get("decision") or "unknown"),
+                        "score": int(candidate.get("score") or 0),
+                    }
+                )
+
+        if not candidates:
+            return controls
+
+        decision_rank = {"deny": 3, "review": 2, "allow": 1, "unknown": 0}
 
         reconciled = []
         for control in controls:
-            if control.mutative:
+            matches = []
+            for candidate in candidates:
+                if candidate["screen_id"] != control.screen_id:
+                    continue
+                selector_match = bool(
+                    control.selector
+                    and candidate["selector"]
+                    and control.selector == candidate["selector"]
+                )
+                identity_match = bool(
+                    candidate["normalized_label"]
+                    and candidate["normalized_label"] == control.normalized_label
+                    and candidate["region"] == control.region
+                )
+                if selector_match or identity_match:
+                    matches.append((selector_match, candidate))
+
+            if not matches:
                 reconciled.append(control)
                 continue
 
-            selector_match = bool(
-                control.selector
-                and (control.screen_id, control.selector) in mutative_selectors
+            # Prefer exact selector evidence, then the most conservative policy
+            # decision/category.  Duplicated row controls normally collapse to
+            # the same classification and remain deterministic here.
+            _, chosen = max(
+                matches,
+                key=lambda pair: (
+                    int(pair[0]),
+                    int(pair[1]["event_category"] == "mutative_action"),
+                    decision_rank.get(pair[1]["decision"], 0),
+                    pair[1]["score"],
+                    pair[1]["event_category"],
+                ),
             )
-            identity_match = (
-                control.screen_id,
-                control.normalized_label,
-                control.region,
-            ) in mutative_functional_identities
-            if not selector_match and not identity_match:
-                reconciled.append(control)
-                continue
-
             source_refs = list(
-                dict.fromkeys([*control.source_refs, "state_flow_graph.json"])
+                dict.fromkeys([*control.source_refs, "event_policy_audit.json"])
             )
             reconciled.append(
                 control.model_copy(
                     update={
-                        "mutative": True,
+                        "event_category": chosen["event_category"],
+                        "safety_decision": chosen["decision"],
+                        "mutative": chosen["event_category"] == "mutative_action",
                         "source_refs": source_refs,
                     }
                 )
             )
+
+        return reconciled
+
+    @staticmethod
+    def _reconcile_controls_from_events(controls, events):
+        selector_events = {
+            (event.screen_id, event.selector): event
+            for event in events
+            if event.selector
+        }
+        identity_events = {}
+        for event in events:
+            if not event.normalized_label:
+                continue
+            key = (event.screen_id, event.normalized_label, event.region)
+            existing = identity_events.get(key)
+            if existing is None or (event.mutative and not existing.mutative):
+                identity_events[key] = event
+
+        reconciled = []
+        for control in controls:
+            event = None
+            if control.selector:
+                event = selector_events.get((control.screen_id, control.selector))
+            if event is None:
+                event = identity_events.get(
+                    (control.screen_id, control.normalized_label, control.region)
+                )
+            if event is None:
+                reconciled.append(control)
+                continue
+
+            update = {}
+            # Policy-audit classification is preferred if present.  Otherwise
+            # an observed event still provides authoritative event metadata.
+            if control.event_category is None:
+                update["event_category"] = event.category
+            if control.safety_decision is None:
+                update["safety_decision"] = event.policy_decision
+            if event.mutative and not control.mutative:
+                update["mutative"] = True
+            if not update:
+                reconciled.append(control)
+                continue
+            update["source_refs"] = list(
+                dict.fromkeys([*control.source_refs, "state_flow_graph.json"])
+            )
+            reconciled.append(control.model_copy(update=update))
 
         return reconciled
 

@@ -52,6 +52,12 @@ def build_event_policy_audit(
                 "decisions": dict(sorted(decisions.items())),
                 "categories": dict(sorted(categories.items())),
                 "regions": dict(sorted(regions.items())),
+                # Keep the complete, persistence-sanitized candidate census so
+                # downstream canonical construction can reuse the exact policy
+                # classification instead of guessing safety from HTML details
+                # such as ``type=submit``. Older audits may not have this key;
+                # canonical construction remains backwards compatible.
+                "candidates": [candidate.to_dict() for candidate in candidates],
                 "denied": [
                     candidate.to_dict() for candidate in candidates if candidate.decision == "deny"
                 ],

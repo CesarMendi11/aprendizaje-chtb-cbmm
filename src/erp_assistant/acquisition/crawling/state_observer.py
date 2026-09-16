@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from playwright.sync_api import Page
+
+from erp_assistant.acquisition.browser.ui_readiness import UIReadinessWaiter
 from erp_assistant.acquisition.crawling.state_signature import StateSignature, StateSignatureBuilder
 from erp_assistant.acquisition.extraction.screen_extractor import ScreenExtractor
 
@@ -49,6 +52,7 @@ class StableStateObserver:
         extractor: ScreenExtractor,
         signature_builder: StateSignatureBuilder,
         wait_fn: Callable[[int], None] | None = None,
+        page: Page | None = None,
     ):
         config = profile.get("state_detection", {}).get("stability", {})
         self.extractor = extractor
@@ -58,6 +62,7 @@ class StableStateObserver:
         self.timeout_ms = max(0, int(config.get("timeout_ms", 3000)))
         self.interval_ms = max(0, int(config.get("interval_ms", 250)))
         self.minimum_observation_ms = max(0, int(config.get("minimum_observation_ms", 0)))
+        self.readiness_waiter = UIReadinessWaiter(page, profile) if page is not None else None
         self.required_consecutive_samples = max(
             1,
             int(config.get("required_consecutive_samples", 2)),
@@ -78,6 +83,16 @@ class StableStateObserver:
         elapsed_ms = 0
 
         while True:
+            if self.readiness_waiter is not None:
+                readiness = self.readiness_waiter.wait_until_ready()
+                if not readiness.ready:
+                    active = ", ".join(readiness.active_selectors) or "<unknown>"
+                    raise RuntimeError(
+                        "ui_readiness_timeout: la UI siguió bloqueada "
+                        f"después de {readiness.waited_ms} ms; "
+                        f"active blockers: {active}"
+                    )
+
             screen_data = self._extract(title_hint=title_hint)
             self._apply_canonical_title(screen_data, canonical_title)
             signature = self.signature_builder.build(screen_data)

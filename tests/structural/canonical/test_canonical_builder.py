@@ -1328,4 +1328,139 @@ def test_nonmutative_event_does_not_change_control_mutativity():
     )
 
     assert control.mutative is False
-    assert control.source_refs == ["screen_index.json"]
+    assert control.event_category == "open_readonly_view"
+    assert control.safety_decision == "allow"
+    assert control.source_refs == ["screen_index.json", "state_flow_graph.json"]
+
+
+def test_policy_audit_reconciles_denied_mutative_control_not_in_state_graph():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "text": "Pay",
+            "type": "button",
+            "selector": "button[data-action='pay']",
+            "region": "main_content",
+        }
+    )
+    artifacts["event_policy_audit.json"] = {
+        "screens": [
+            {
+                "route": "/app/inventory/products",
+                "candidates": [
+                    {
+                        "label": "Pay",
+                        "selector": "button[data-action='pay']",
+                        "event_category": "mutative_action",
+                        "decision": "deny",
+                        "score": 10,
+                        "metadata": {"region": "main_content"},
+                    }
+                ],
+                "denied": [],
+                "review": [],
+            }
+        ]
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item for item in kb.controls if item.screen_id == screen.id and item.label == "Pay"
+    )
+
+    assert control.mutative is True
+    assert control.event_category == "mutative_action"
+    assert control.safety_decision == "deny"
+    assert control.source_refs == ["screen_index.json", "event_policy_audit.json"]
+
+
+def test_policy_audit_can_override_submit_fallback_for_readonly_search():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "text": "Search",
+            "type": "submit",
+            "selector": "button[data-action='search']",
+            "region": "main_content",
+        }
+    )
+    artifacts["event_policy_audit.json"] = {
+        "screens": [
+            {
+                "route": "/app/inventory/products",
+                "candidates": [
+                    {
+                        "label": "Search",
+                        "selector": "button[data-action='search']",
+                        "event_category": "submit_search",
+                        "decision": "allow",
+                        "score": 8,
+                        "metadata": {"region": "main_content", "type": "submit"},
+                    }
+                ],
+                "denied": [],
+                "review": [],
+            }
+        ]
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item for item in kb.controls if item.screen_id == screen.id and item.label == "Search"
+    )
+
+    assert control.mutative is False
+    assert control.event_category == "submit_search"
+    assert control.safety_decision == "allow"
+
+
+def test_policy_audit_reconciles_privacy_stripped_table_control_by_icon_identity():
+    artifacts = fictional_artifacts()
+    products = artifacts["screen_index.json"]["screens"][1]
+    products["buttons"].append(
+        {
+            "icon_label": "delete",
+            "type": "button",
+            "selector": None,
+            "within_table": True,
+            "region": "main_content",
+        }
+    )
+    artifacts["event_policy_audit.json"] = {
+        "screens": [
+            {
+                "route": "/app/inventory/products",
+                "candidates": [
+                    {
+                        "label": None,
+                        "selector": None,
+                        "event_category": "mutative_action",
+                        "decision": "deny",
+                        "score": 9,
+                        "metadata": {
+                            "region": "main_content",
+                            "within_table": True,
+                            "icon_label": "delete",
+                        },
+                    }
+                ],
+                "denied": [],
+                "review": [],
+            }
+        ]
+    }
+
+    kb = CanonicalKnowledgeBuilder().build(fictional_profile(), artifacts)
+    screen = next(item for item in kb.screens if item.route == "/app/inventory/products")
+    control = next(
+        item for item in kb.controls if item.screen_id == screen.id and item.label == "delete"
+    )
+
+    assert control.selector is None
+    assert control.mutative is True
+    assert control.event_category == "mutative_action"
+    assert control.safety_decision == "deny"

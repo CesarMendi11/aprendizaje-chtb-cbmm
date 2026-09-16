@@ -125,3 +125,40 @@ def test_persisted_route_keeps_only_internal_state_fragment():
 
     assert safe["route"] == "/admin/home#state:abcdef123456"
     assert safe["target_route"] == "/admin/home"
+
+
+def test_persisted_artifact_drops_dynamic_choice_values_but_keeps_control_identity():
+    payload = {
+        "custom_interactives": [
+            {
+                "text": "Arbitrary Person Name",
+                "tag": "mat-option",
+                "role": "option",
+                "region": "main_content",
+            },
+            {
+                "text": "Arbitrary Person Name Other Value",
+                "tag": "div",
+                "role": "listbox",
+                "region": "main_content",
+            },
+            {
+                "text": "Arbitrary Person Name",
+                "control_label": "Responsable",
+                "formcontrolname": "responsable",
+                "tag": "mat-select",
+                "role": "combobox",
+                "aria_expanded": "false",
+                "region": "main_content",
+            },
+        ]
+    }
+
+    safe = sanitize_artifact_payload(payload)
+    option, listbox, combobox = safe["custom_interactives"]
+
+    assert "text" not in option
+    assert "text" not in listbox
+    assert "text" not in combobox
+    assert combobox["control_label"] == "Responsable"
+    assert combobox["formcontrolname"] == "responsable"

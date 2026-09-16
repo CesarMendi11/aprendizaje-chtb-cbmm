@@ -346,6 +346,35 @@ class ProfileLoader:
                 "extraction.title_resolution.generic_document_titles debe ser una lista."
             )
 
+        ui_readiness = profile.get("ui_readiness", {}) or {}
+        if ui_readiness and not isinstance(ui_readiness, dict):
+            raise ValueError("ui_readiness debe ser un objeto.")
+
+        readiness_enabled = ui_readiness.get("enabled")
+        if readiness_enabled is not None and not isinstance(readiness_enabled, bool):
+            raise ValueError("ui_readiness.enabled debe ser booleano.")
+
+        blocking_selectors = ui_readiness.get("blocking_selectors")
+        if blocking_selectors is not None and (
+            not isinstance(blocking_selectors, list)
+            or not all(
+                isinstance(selector, str) and selector.strip()
+                for selector in blocking_selectors
+            )
+        ):
+            raise ValueError(
+                "ui_readiness.blocking_selectors debe ser una lista de selectores no vacíos."
+            )
+
+        for field in ["timeout_ms", "poll_interval_ms", "clear_stability_ms"]:
+            value = ui_readiness.get(field)
+            if value is not None and (not isinstance(value, int) or value < 0):
+                raise ValueError(f"ui_readiness.{field} debe ser un entero no negativo.")
+
+        poll_interval_ms = ui_readiness.get("poll_interval_ms")
+        if poll_interval_ms == 0:
+            raise ValueError("ui_readiness.poll_interval_ms debe ser mayor que cero.")
+
         state_replay = profile.get("state_replay", {})
         if state_replay and not isinstance(state_replay, dict):
             raise ValueError("state_replay debe ser un objeto.")

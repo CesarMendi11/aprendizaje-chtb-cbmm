@@ -351,12 +351,15 @@ class ScreenExtractor:
             const limit = (items, max = 300) => items.slice(0, max);
             const baseItem = (element) => {
                 const form = element.closest ? element.closest("form") : null;
+                const style = window.getComputedStyle(element);
                 return {
                     selector: cssPath(element),
                     tag: element.tagName.toLowerCase(),
                     region: regionOf(element),
                     within_table: Boolean(element.closest && element.closest("table")),
                     within_form: Boolean(form),
+                    inert: Boolean(element.closest && element.closest("[inert]")),
+                    pointer_events_none: Boolean(style && style.pointerEvents === "none"),
                     form_method: form
                         ? normalizeText(form.getAttribute("method") || "get").toLowerCase()
                         : null,
@@ -364,6 +367,31 @@ class ScreenExtractor:
                         ? form.getAttribute("action") || window.location.pathname
                         : null,
                 };
+            };
+
+            const controlLabelOf = (element) => {
+                if (!element || !element.getAttribute) return "";
+
+                const ariaLabel = normalizeText(element.getAttribute("aria-label") || "");
+                if (ariaLabel) return ariaLabel;
+
+                const field = element.closest
+                    ? element.closest("mat-form-field, .mat-mdc-form-field, .mat-form-field")
+                    : null;
+                if (field) {
+                    const label = field.querySelector(
+                        "mat-label, label, .mat-mdc-floating-label, .mat-form-field-label"
+                    );
+                    const fieldLabel = label ? textOf(label) : "";
+                    if (fieldLabel) return fieldLabel;
+                }
+
+                return normalizeText(
+                    element.getAttribute("formcontrolname") ||
+                    element.getAttribute("name") ||
+                    element.getAttribute("placeholder") ||
+                    ""
+                );
             };
 
             const links = limit(
@@ -471,12 +499,33 @@ class ScreenExtractor:
                 "[class*='accordion']"
             ].join(",");
 
+            const navigationLabelOf = (element) => {
+                if (!element || !element.tagName) return "";
+                const tag = element.tagName.toLowerCase();
+                if (tag.startsWith("fuse-vertical-navigation-")) {
+                    const title = element.querySelector(
+                        ".fuse-vertical-navigation-item-title"
+                    );
+                    if (title) return textOf(title);
+                }
+                if (tag === "mat-expansion-panel") {
+                    const header = element.querySelector("mat-expansion-panel-header");
+                    if (header) return textOf(header);
+                }
+                return "";
+            };
+
             const custom_interactives = limit(
                 Array.from(document.querySelectorAll(customSelectors))
                     .filter(isVisible)
                     .map((element) => ({
                         ...baseItem(element),
                         text: textOf(element),
+                        navigation_label: navigationLabelOf(element),
+                        control_label: controlLabelOf(element),
+                        name: element.getAttribute("name"),
+                        formcontrolname: element.getAttribute("formcontrolname"),
+                        placeholder: element.getAttribute("placeholder"),
                         role: element.getAttribute("role"),
                         aria_expanded: element.getAttribute("aria-expanded"),
                         aria_selected: element.getAttribute("aria-selected"),
@@ -495,12 +544,9 @@ class ScreenExtractor:
                     .filter((item) => item.text || item.onclick || item.aria_expanded !== null)
             );
 
+            const dialogRoots = visibleRoots(regionSelectors.dialog);
             const dialogs = limit(
-                Array.from(document.querySelectorAll(
-                    "dialog, [role='dialog'], [role='alertdialog'], " +
-                    "mat-dialog-container, .modal.show"
-                ))
-                    .filter(isVisible)
+                dialogRoots
                     .map((element) => ({
                         ...baseItem(element),
                         title: textOf(element.querySelector(
@@ -578,7 +624,14 @@ class ScreenExtractor:
                         const fontWeight = rawWeight === "bold"
                             ? 700
                             : (Number.parseInt(rawWeight, 10) || 400);
-                        if (fontSize < 16 || fontWeight < 600) continue;
+                        // Enterprise/Tailwind UIs frequently render genuine
+                        // card/screen headings at the 14px base size and signal
+                        // hierarchy through weight, position and surrounding
+                        // layout rather than font size. Requiring 16px caused
+                        // visible headings to disappear from the RQ1 observed
+                        // title signal. The resolver still requires a score >=90,
+                        // so a 14px candidate must also be bold and near the top.
+                        if (fontSize < 14 || fontWeight < 600) continue;
 
                         const rect = element.getBoundingClientRect();
                         const relativeTop = rect.top - rootRect.top;

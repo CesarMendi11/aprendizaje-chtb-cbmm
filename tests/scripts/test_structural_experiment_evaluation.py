@@ -418,3 +418,66 @@ def test_policy_scope_excludes_blocked_screens_and_modules_from_primary_metrics(
     assert all_routes["reference"] == 2
     assert all_routes["detected"] == 1
     assert all_routes["fn"] == 1
+
+
+def test_rq1_screen_identity_uses_observed_in_screen_title_not_functional_title(tmp_path):
+    reference_path = tmp_path / "reference.csv"
+    knowledge_path = tmp_path / "knowledge.json"
+    _write_reference(
+        reference_path,
+        [
+            {
+                "entity_type": "module",
+                "parent_module_path": "",
+                "name": "General",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "module",
+                "parent_module_path": "General",
+                "name": "Catálogos",
+                "route": "",
+                "notes": "",
+            },
+            {
+                "entity_type": "screen",
+                "parent_module_path": "General > Catálogos",
+                "name": "",
+                "route": "/admin/general/anios",
+                "notes": "title_status: absent; menu_label: Año",
+            },
+        ],
+    )
+
+    erp = ERPSystem(id="erp:1", slug="cbmm", name="ERP", profile_name="cbmm")
+    general = Module(
+        id="module:general", erp_id=erp.id, parent_module_id=None, depth=0,
+        navigation_path=["General"], name="General", normalized_name="general",
+    )
+    catalogos = Module(
+        id="module:catalogos", erp_id=erp.id, parent_module_id=general.id, depth=1,
+        navigation_path=["General", "Catálogos"], name="Catálogos",
+        normalized_name="catalogos",
+    )
+    screen = Screen(
+        id="screen:anio", erp_id=erp.id, module_id=catalogos.id,
+        title="Año", normalized_title="ano", route="/admin/general/anios",
+        metadata={"in_screen_title": "", "in_screen_title_source": "not_observed"},
+    )
+    knowledge = CanonicalKnowledgeBase(
+        schema_version="1.1.0", knowledge_version="fixture-v1",
+        generated_at=datetime.now(timezone.utc), source_profile="cbmm",
+        source_artifacts=[], source_artifact_hashes={}, erp_system=erp,
+        modules=[general, catalogos], screens=[screen],
+        statistics={"modules": 2, "screens": 1},
+    )
+    knowledge_path.write_text(
+        json.dumps(knowledge.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    payload = evaluate(reference_path, knowledge_path)
+    assert payload["metrics"]["screen"]["tp"] == 1
+    assert payload["metrics"]["screen_hierarchy"]["tp"] == 1
+    assert payload["diagnostics"]["screen_identity"]["title_match_on_shared_routes"]["matches"] == 1

@@ -435,3 +435,26 @@ output:
 
     with pytest.raises(ValueError, match="test_full solo se permite"):
         ProfileLoader(profile_path).load()
+
+
+def test_profile_loader_accepts_cbmm_ui_readiness_contract():
+    profile = ProfileLoader(Path("configs/cbmm.yaml")).load()
+
+    readiness = profile["ui_readiness"]
+    assert readiness["enabled"] is True
+    assert ".loader-container.svelte-jutlet" in readiness["blocking_selectors"]
+    assert readiness["timeout_ms"] >= 1000
+    assert readiness["poll_interval_ms"] > 0
+
+
+def test_profile_loader_rejects_invalid_ui_readiness_selector_list(tmp_path):
+    source = Path("configs/cbmm.yaml").read_text(encoding="utf-8")
+    source = source.replace(
+        '  blocking_selectors:\n    - ".loader-container.svelte-jutlet"',
+        '  blocking_selectors: ["", 123]',
+    )
+    profile_path = tmp_path / "invalid_readiness.yaml"
+    profile_path.write_text(source, encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ui_readiness.blocking_selectors"):
+        ProfileLoader(profile_path).load()

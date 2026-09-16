@@ -174,6 +174,8 @@ PERSISTED_TEXT_KEYS = {
     "text",
     "label",
     "aria_label",
+    "control_label",
+    "navigation_label",
     "title",
     "placeholder",
     "document_title",
@@ -267,6 +269,10 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
         metadata = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
         region = str(value.get("region") or metadata.get("region") or "").casefold()
         within_table = bool(value.get("within_table") or metadata.get("within_table"))
+        role = str(value.get("role") or metadata.get("role") or "").casefold()
+        tag = str(value.get("tag") or metadata.get("tag") or "").casefold()
+        choice_panel = role in {"option", "listbox"}
+        choice_control = role == "combobox" or tag in {"select", "mat-select"}
         cleaned: dict[str, Any] = {}
         for raw_name, item in value.items():
             name = str(raw_name)
@@ -275,6 +281,16 @@ def sanitize_artifact_payload(value: Any, *, key: str = "") -> Any:
             if lowered in PERSISTED_DROP_KEYS:
                 continue
             if lowered in PERSISTED_FORBIDDEN_KEYS:
+                continue
+
+            # Dynamic choice values are business data, not durable structural
+            # knowledge. Option/listbox labels can contain arbitrary names or
+            # identifiers that regex-based PII detection cannot recognize. A
+            # combobox/select may likewise render the currently selected value
+            # as ``text``. Persist the stable control metadata, not those values.
+            if choice_panel and lowered in PERSISTED_TEXT_KEYS:
+                continue
+            if choice_control and lowered == "text":
                 continue
 
             # Header/session/volatile regions are excluded from canonical

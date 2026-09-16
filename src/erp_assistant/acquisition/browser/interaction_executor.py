@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from playwright.sync_api import Page
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
+from erp_assistant.acquisition.browser.ui_readiness import UIReadinessWaiter
+
 
 @dataclass(frozen=True)
 class InteractionResult:
@@ -50,6 +52,7 @@ class BrowserInteractionExecutor:
             int(config.get("pre_click_wait_ms", 150)),
         )
         self.scroll_into_view = bool(config.get("scroll_into_view", True))
+        self.readiness_waiter = UIReadinessWaiter(page, profile)
 
     def click(
         self,
@@ -70,6 +73,16 @@ class BrowserInteractionExecutor:
         errors: list[str] = []
 
         for attempt in range(1, self.click_attempts + 1):
+            readiness = self.readiness_waiter.wait_until_ready()
+            if not readiness.ready:
+                active = ", ".join(readiness.active_selectors) or "<unknown>"
+                errors.append(
+                    "attempt_"
+                    f"{attempt}: ui_readiness_timeout after {readiness.waited_ms} ms; "
+                    f"active blockers: {active}"
+                )
+                break
+
             try:
                 locator = self.page.locator(selector).first
                 locator.wait_for(state="attached", timeout=timeout)

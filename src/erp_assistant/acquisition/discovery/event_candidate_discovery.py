@@ -446,6 +446,8 @@ class EventCandidateDiscovery:
                     "aria_selected": item.get("aria_selected"),
                     "aria_controls": item.get("aria_controls"),
                     "disabled": item.get("disabled"),
+                    "inert": item.get("inert", False),
+                    "pointer_events_none": item.get("pointer_events_none", False),
                     "region": item.get("region", "main_content"),
                     "within_table": item.get("within_table", False),
                     "form_method": item.get("form_method"),
@@ -486,6 +488,12 @@ class EventCandidateDiscovery:
                     "onclick": item.get("onclick"),
                     "type": item.get("type"),
                     "disabled": item.get("disabled"),
+                    "inert": item.get("inert", False),
+                    "pointer_events_none": item.get("pointer_events_none", False),
+                    "control_label": item.get("control_label"),
+                    "name": item.get("name"),
+                    "formcontrolname": item.get("formcontrolname"),
+                    "placeholder": item.get("placeholder"),
                     "region": item.get("region", "main_content"),
                     "href": item.get("href"),
                     "absolute_href": item.get("absolute_href"),
@@ -677,7 +685,14 @@ class EventCandidateDiscovery:
         if role == "tab" or self._selector_has_tab_semantics(selector):
             return UIEventType.ACTIVATE_TAB
 
-        if role in {"combobox", "listbox"} or tag in {"select", "mat-select"}:
+        # ``listbox`` is the popup/panel that appears *after* a dropdown is
+        # opened. Treating the panel itself as another opener caused recursive
+        # clicks on CDK overlays and polluted the state graph. Only the actual
+        # choice control (combobox/select) can open or close a dropdown.
+        if role == "listbox":
+            return UIEventType.UNKNOWN
+
+        if role == "combobox" or tag in {"select", "mat-select"}:
             if str(aria_expanded).lower() == "true":
                 return UIEventType.CLOSE_DROPDOWN
             return UIEventType.OPEN_DROPDOWN
@@ -752,7 +767,33 @@ class EventCandidateDiscovery:
         return "generic_ui_click"
 
     def _best_label(self, item: dict[str, Any]) -> str:
+        role = self._normalize_for_matching(item.get("role"))
+        tag = self._normalize_for_matching(item.get("tag"))
+
+        # Values rendered by choice widgets are business data, not the
+        # identity of the control. Prefer structural labels/names and never
+        # use option/listbox contents as an event label.
+        if role in {"option", "listbox"}:
+            return ""
+
+        if role == "combobox" or tag in {"select", "mat-select"}:
+            values = [
+                ("control_label", item.get("control_label")),
+                ("aria_label", item.get("aria_label")),
+                ("title", item.get("title")),
+                ("placeholder", item.get("placeholder")),
+                ("formcontrolname", item.get("formcontrolname")),
+                ("name", item.get("name")),
+                ("id", item.get("id")),
+            ]
+            for _source, value in values:
+                cleaned = self._clean_text(value)
+                if cleaned:
+                    return cleaned
+            return "dropdown"
+
         values = [
+            ("navigation_label", item.get("navigation_label")),
             ("text", item.get("text")),
             ("aria_label", item.get("aria_label")),
             ("title", item.get("title")),

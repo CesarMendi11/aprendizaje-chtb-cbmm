@@ -42,7 +42,9 @@ class MenuDiscovery:
         seen_keys: set[str] = set()
 
         for item in custom_interactives:
-            text = self._clean_text(item.get("text", ""))
+            text = self._clean_text(
+                item.get("navigation_label") or item.get("text", "")
+            )
             tag = (item.get("tag") or "").lower().strip()
             selector = item.get("selector", "")
 

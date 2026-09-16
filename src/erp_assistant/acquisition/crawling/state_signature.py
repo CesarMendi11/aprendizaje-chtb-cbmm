@@ -193,11 +193,20 @@ class StateSignatureBuilder:
                 screen_data.get("main_visible_text")
                 or screen_data.get("regions", {}).get("main_content", {}).get("visible_text", "")
             )[: self.visible_text_limit]
-            links = self._local_items(screen_data.get("links", []))
-            buttons = self._local_items(screen_data.get("buttons", []))
-            inputs = self._local_items(screen_data.get("inputs", []))
+            # La identidad estructural describe la pantalla/estado funcional,
+            # no la cantidad de registros actualmente cargados. Los elementos
+            # dentro de filas de tabla aparecen y desaparecen con los datos
+            # (editar/eliminar/ver, links, inputs, etc.) y por tanto son
+            # record-scoped. Mantenerlos en la firma haría que una tabla vacía
+            # y la misma tabla con registros fueran estados distintos, aun
+            # cuando ignore_table_row_count=True.
+            links = self._structural_items(screen_data.get("links", []))
+            buttons = self._structural_items(screen_data.get("buttons", []))
+            inputs = self._structural_items(screen_data.get("inputs", []))
             tables = self._local_items(screen_data.get("tables", []))
-            interactives = self._local_items(screen_data.get("custom_interactives", []))
+            interactives = self._structural_items(
+                screen_data.get("custom_interactives", [])
+            )
         else:
             visible_text = (screen_data.get("visible_text") or "")[: self.visible_text_limit]
             links = screen_data.get("links", [])
@@ -222,7 +231,9 @@ class StateSignatureBuilder:
             "buttons": self._normalize_buttons(buttons),
             "inputs": self._normalize_inputs(inputs),
             "tables": self._normalize_tables(tables, structural=structural),
-            "custom_interactives": self._normalize_custom_interactives(interactives),
+            "custom_interactives": self._normalize_custom_interactives(
+                interactives, structural=structural
+            ),
             "dialogs": self._normalize_dialogs(screen_data.get("dialogs", [])),
         }
 
@@ -247,6 +258,22 @@ class StateSignatureBuilder:
             item
             for item in items
             if item.get("region") not in {"global_navigation", "header", "footer", "volatile"}
+        ]
+
+    def _structural_items(
+        self,
+        items: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """Elementos locales que pueden definir identidad funcional.
+
+        Los controles dentro de filas de tabla dependen de que existan datos
+        transaccionales. Se conservan en la vista exacta y en los artefactos
+        extraídos/canónicos, pero no deben cambiar la identidad estructural.
+        """
+        return [
+            item
+            for item in self._local_items(items)
+            if not bool(item.get("within_table"))
         ]
 
     def _should_include_navigation_state(self, route: str) -> bool:
@@ -280,7 +307,9 @@ class StateSignatureBuilder:
         ]
         return {
             "links": self._normalize_links(global_links, structural=True),
-            "interactives": self._normalize_custom_interactives(global_interactives),
+            "interactives": self._normalize_custom_interactives(
+                global_interactives, structural=True
+            ),
         }
 
     def _normalize_region_summary(
@@ -380,15 +409,76 @@ class StateSignatureBuilder:
     def _normalize_custom_interactives(
         self,
         custom_interactives: list[dict[str, Any]],
+        *,
+        structural: bool,
     ) -> list[dict[str, str]]:
+        """Normalize custom controls without mixing business values into state identity.
+
+        Choice options and the currently selected/displayed value are useful in the
+        transient/exact observation, but they are data rather than structural UI
+        identity. The structural view therefore keeps only the choice control's
+        stable label/name plus open/closed state. A visible listbox is represented
+        by its presence, never by the option labels it happens to contain.
+        """
         normalized = []
 
         for item in custom_interactives:
+            role = self._normalize_text(item.get("role"))
+            tag = self._normalize_text(item.get("tag"))
+
+            if structural and role == "option":
+                # Option values can be names, identifiers or other business data.
+                # Their existence is represented by the surrounding listbox.
+                continue
+
+            if structural and role == "listbox":
+                normalized.append(
+                    {
+                        "tag": tag,
+                        "role": role,
+                        "aria_expanded": "",
+                        "aria_selected": "",
+                        "aria_hidden": self._normalize_text(item.get("aria_hidden")),
+                        "onclick": str(bool(item.get("onclick"))).lower(),
+                    }
+                )
+                continue
+
+            if structural and (role == "combobox" or tag in {"select", "mat-select"}):
+                structural_label = next(
+                    (
+                        self._normalize_text(item.get(key))
+                        for key in (
+                            "control_label",
+                            "aria_label",
+                            "title",
+                            "placeholder",
+                            "formcontrolname",
+                            "name",
+                            "id",
+                        )
+                        if self._normalize_text(item.get(key))
+                    ),
+                    "",
+                )
+                normalized.append(
+                    {
+                        "control_label": structural_label,
+                        "tag": tag,
+                        "role": role,
+                        "aria_expanded": self._normalize_text(item.get("aria_expanded")),
+                        "aria_selected": "",
+                        "aria_hidden": self._normalize_text(item.get("aria_hidden")),
+                        "onclick": str(bool(item.get("onclick"))).lower(),
+                    }
+                )
+                continue
+
             normalized.append(
                 {
                     "text": self._normalize_text(item.get("text")),
-                    "tag": self._normalize_text(item.get("tag")),
-                    "role": self._normalize_text(item.get("role")),
+                    "tag": tag,
+                    "role": role,
                     "aria_expanded": self._normalize_text(item.get("aria_expanded")),
                     "aria_selected": self._normalize_text(item.get("aria_selected")),
                     "aria_hidden": self._normalize_text(item.get("aria_hidden")),

@@ -526,3 +526,132 @@ def test_region_element_count_does_not_change_structural_signature():
         builder.build(base).structural_fingerprint
         == builder.build(changed_count).structural_fingerprint
     )
+
+def test_structural_signature_ignores_record_scoped_table_elements():
+    """Filas cargadas no deben fabricar otro estado funcional."""
+    builder = StateSignatureBuilder(ignore_table_row_count=True)
+
+    empty_table = {
+        "path": "/admin/personas",
+        "functional_title": "Personas",
+        "visible_text": "Personas",
+        "main_visible_text": "Personas",
+        "regions": {
+            "main_content": {"visible_text": "Personas", "elements_count": 1},
+            "dialog": {"visible_text": "", "elements_count": 0},
+        },
+        "links": [],
+        "buttons": [
+            {
+                "text": "Nuevo",
+                "tag": "button",
+                "region": "main_content",
+                "within_table": False,
+            }
+        ],
+        "inputs": [],
+        "tables": [
+            {
+                "headers": ["ID", "NOMBRE", "ACTIVO"],
+                "rows_count": 0,
+                "region": "main_content",
+            }
+        ],
+        "dialogs": [],
+        "custom_interactives": [],
+    }
+
+    populated_table = {
+        **empty_table,
+        "buttons": [
+            *empty_table["buttons"],
+            {
+                "text": "",
+                "tag": "button",
+                "type": "button",
+                "region": "main_content",
+                "within_table": True,
+            },
+        ],
+        "links": [
+            {
+                "text": "Ver",
+                "href": "/admin/personas/123456",
+                "tag": "a",
+                "region": "main_content",
+                "within_table": True,
+            }
+        ],
+        "inputs": [
+            {
+                "id": "row-123456",
+                "tag": "input",
+                "region": "main_content",
+                "within_table": True,
+            }
+        ],
+        "custom_interactives": [
+            {
+                "text": "Editar",
+                "tag": "button",
+                "region": "main_content",
+                "within_table": True,
+            }
+        ],
+        "tables": [
+            {
+                "headers": ["ID", "NOMBRE", "ACTIVO"],
+                "rows_count": 10,
+                "region": "main_content",
+            }
+        ],
+    }
+
+    before = builder.build(empty_table)
+    after = builder.build(populated_table)
+
+    # La vista exacta conserva que aparecieron elementos dependientes de filas.
+    assert before.exact_fingerprint != after.exact_fingerprint
+
+    # La identidad estructural permanece: misma pantalla, misma tabla/esquema.
+    assert before.structural_fingerprint == after.structural_fingerprint
+    assert not builder.has_changed(before, after)
+
+
+def test_structural_signature_keeps_non_table_button_changes():
+    """Un control de pantalla real sí debe seguir distinguiendo estados."""
+    builder = StateSignatureBuilder(ignore_table_row_count=True)
+
+    before_data = {
+        "path": "/admin/personas",
+        "functional_title": "Personas",
+        "visible_text": "Personas",
+        "main_visible_text": "Personas",
+        "regions": {
+            "main_content": {"visible_text": "Personas", "elements_count": 1},
+            "dialog": {"visible_text": "", "elements_count": 0},
+        },
+        "links": [],
+        "buttons": [],
+        "inputs": [],
+        "tables": [],
+        "dialogs": [],
+        "custom_interactives": [],
+    }
+    after_data = {
+        **before_data,
+        "buttons": [
+            {
+                "text": "Nuevo",
+                "tag": "button",
+                "region": "main_content",
+                "within_table": False,
+            }
+        ],
+    }
+
+    before = builder.build(before_data)
+    after = builder.build(after_data)
+
+    assert before.structural_fingerprint != after.structural_fingerprint
+    assert builder.has_changed(before, after)

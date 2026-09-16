@@ -92,8 +92,20 @@ class EventPolicy:
         metadata = metadata or {}
         reasons: list[str] = []
 
-        if bool(metadata.get("disabled")):
-            reasons.append("element_disabled")
+        non_actionable_reason = next(
+            (
+                reason
+                for flag, reason in (
+                    ("disabled", "element_disabled"),
+                    ("inert", "element_inert"),
+                    ("pointer_events_none", "element_pointer_events_none"),
+                )
+                if bool(metadata.get(flag))
+            ),
+            None,
+        )
+        if non_actionable_reason:
+            reasons.append(non_actionable_reason)
             return EventPolicyResult(
                 decision=EventDecision.DENY,
                 risk_level=RiskLevel.LOW,

@@ -589,6 +589,22 @@ class RouteCrawler:
         if not self._is_allowed_route(route):
             return
 
+        if not observation.stable:
+            self._save_uncertainty(
+                route=route,
+                reason="dynamic_state_exploration_error",
+                extra={
+                    "error": "state_observation_unstable",
+                    "source": source,
+                    "depth": depth,
+                    "capture_reason": reason,
+                    "state_observation": observation.diagnostics(),
+                },
+            )
+            self._checkpoint_outputs()
+            self._emit_progress("screen_unstable", current_route=route)
+            return
+
         if self.frontier.is_visited(route):
             return
 
@@ -720,6 +736,7 @@ class RouteCrawler:
             extractor=self.extractor,
             signature_builder=self.state_signature_builder,
             wait_fn=self.page.wait_for_timeout,
+            page=self.page,
         )
         return observer.observe(
             title_hint=title_hint,

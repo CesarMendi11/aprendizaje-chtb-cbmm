@@ -52,3 +52,60 @@ def test_privacy_audit_fails_without_echoing_sensitive_value(tmp_path: Path):
     assert report["violation_count"] >= 3
     assert "alice@example.test" not in rendered
     assert "0701234567" not in rendered
+
+
+def test_privacy_audit_accepts_generated_internal_file_path(tmp_path: Path):
+    root = tmp_path / "run"
+    path = root / "processed" / "structural" / "ui_event_execution_audit.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        json.dumps(
+            {
+                "routes": [
+                    {
+                        "file": (
+                            "/tmp/run/raw/playwright/"
+                            "route-123e4567-e89b-12d3-a456-426614174000.json"
+                        )
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = audit_tree(root)
+
+    assert report["status"] == "passed"
+    assert report["violation_count"] == 0
+
+
+def test_privacy_audit_flags_dynamic_choice_text_without_echoing_value(tmp_path: Path):
+    root = tmp_path / "run"
+    path = root / "raw" / "playwright" / "screen.json"
+    path.parent.mkdir(parents=True)
+    sensitive_value = "Arbitrary Person Name"
+    path.write_text(
+        json.dumps(
+            {
+                "custom_interactives": [
+                    {
+                        "text": sensitive_value,
+                        "tag": "mat-option",
+                        "role": "option",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = audit_tree(root)
+    rendered = json.dumps(report, ensure_ascii=False)
+
+    assert report["status"] == "failed"
+    assert any(
+        item["reason"] == "dynamic_choice_option_text_persisted"
+        for item in report["violations"]
+    )
+    assert sensitive_value not in rendered

@@ -81,6 +81,21 @@ def audit_tree(root: Path) -> dict[str, Any]:
     }
 
 
+def _is_safe_internal_artifact_file_ref(filename: str, key: str, value: str) -> bool:
+    """Recognize the generated JSON pointer used by execution-audit manifests.
+
+    ``file`` is too generic to whitelist globally: a business payload could also
+    contain a field with that name. Restrict the exception to the known audit
+    artifact and to a run-internal JSON path.
+    """
+    if key != "file" or not filename.endswith("ui_event_execution_audit.json"):
+        return False
+    normalized = value.replace("\\", "/")
+    return normalized.endswith(".json") and (
+        "/raw/playwright/" in normalized or "/review/structural/" in normalized
+    )
+
+
 def _scan_roots(root: Path) -> list[Path]:
     """Limit one run audit to pre-canonical crawler persistence boundaries."""
     candidates = [
@@ -100,6 +115,12 @@ def _audit_value(
     violations: list[dict[str, str]],
 ) -> None:
     if isinstance(value, dict):
+        metadata = value.get("metadata") if isinstance(value.get("metadata"), dict) else {}
+        role = str(value.get("role") or metadata.get("role") or "").casefold()
+        tag = str(value.get("tag") or metadata.get("tag") or "").casefold()
+        choice_panel = role in {"option", "listbox"}
+        choice_control = role == "combobox" or tag in {"select", "mat-select"}
+
         for raw_name, item in value.items():
             name = str(raw_name)
             lowered = name.casefold()
@@ -112,6 +133,32 @@ def _audit_value(
                 continue
             if lowered in {"html", "screenshot"}:
                 _add(violations, filename, child_location, "forbidden_rendered_artifact_reference")
+                continue
+            if (
+                choice_panel
+                and lowered in {
+                    "text",
+                    "label",
+                    "aria_label",
+                    "control_label",
+                    "navigation_label",
+                    "title",
+                    "placeholder",
+                    "functional_title",
+                    "in_screen_title",
+                }
+                and isinstance(item, str)
+                and item.strip()
+            ):
+                _add(violations, filename, child_location, "dynamic_choice_option_text_persisted")
+                continue
+            if (
+                choice_control
+                and lowered == "text"
+                and isinstance(item, str)
+                and item.strip()
+            ):
+                _add(violations, filename, child_location, "dynamic_choice_value_text_persisted")
                 continue
             _audit_value(item, filename, child_location, lowered, violations)
         return
@@ -128,6 +175,7 @@ def _audit_value(
         _is_technical_persistence_key(key)
         or _is_safe_technical_token(key, value)
         or key in ARTIFACT_PATH_KEYS
+        or _is_safe_internal_artifact_file_ref(filename, key, value)
     ):
         return
 

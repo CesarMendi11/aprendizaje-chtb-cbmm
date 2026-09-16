@@ -60,3 +60,63 @@ def test_interaction_executor_returns_diagnostic_for_missing_selector():
     assert result.success is False
     assert result.attempts == 4
     assert "timeout" in (result.error or "").lower()
+
+
+def test_interaction_executor_waits_for_global_blocker_to_disappear():
+    html = """
+    <html><body>
+      <div id="busy" style="position:fixed;inset:0;z-index:10"></div>
+      <button id="target" onclick="document.body.dataset.clicked='yes'">Abrir</button>
+      <script>setTimeout(() => document.querySelector('#busy').remove(), 600)</script>
+    </body></html>
+    """
+    cfg = profile()
+    cfg["ui_readiness"] = {
+        "enabled": True,
+        "blocking_selectors": ["#busy"],
+        "timeout_ms": 2000,
+        "poll_interval_ms": 50,
+        "clear_stability_ms": 50,
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html)
+        executor = BrowserInteractionExecutor(page, cfg)
+        result = executor.click("#target")
+        clicked = page.locator("body").get_attribute("data-clicked")
+        browser.close()
+
+    assert result.success is True
+    assert clicked == "yes"
+
+
+def test_interaction_executor_fails_closed_when_global_blocker_persists():
+    html = """
+    <html><body>
+      <div id="busy" style="position:fixed;inset:0;z-index:10"></div>
+      <button id="target" onclick="document.body.dataset.clicked='yes'">Abrir</button>
+    </body></html>
+    """
+    cfg = profile()
+    cfg["ui_readiness"] = {
+        "enabled": True,
+        "blocking_selectors": ["#busy"],
+        "timeout_ms": 200,
+        "poll_interval_ms": 50,
+        "clear_stability_ms": 50,
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html)
+        executor = BrowserInteractionExecutor(page, cfg)
+        result = executor.click("#target")
+        clicked = page.locator("body").get_attribute("data-clicked")
+        browser.close()
+
+    assert result.success is False
+    assert "ui_readiness_timeout" in (result.error or "")
+    assert clicked is None

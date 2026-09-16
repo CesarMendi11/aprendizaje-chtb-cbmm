@@ -51,3 +51,47 @@ def test_screen_extractor_separates_layout_regions_and_resolves_title():
     assert data["regions"]["main_content"]["visible_text"].startswith("Consulta de facturas")
     assert len(data["global_links"]) == 1
     assert data["local_links"] == []
+
+
+def test_screen_extractor_uses_profile_dialog_selector_for_sweetalert_overlay():
+    html = """
+    <html>
+      <head><title>ERP</title></head>
+      <body>
+        <main><button id="underlying">Underlying</button></main>
+        <div class="swal2-container swal2-center swal2-backdrop-show">
+          <div class="swal2-popup">
+            <h2 class="swal2-title">Información</h2>
+            <button id="accept">Aceptar</button>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    profile = {
+        "extraction": {
+            "regions": {
+                "global_navigation": [],
+                "header": [],
+                "main_content": ["main"],
+                "footer": [],
+                "dialog": [".swal2-container.swal2-backdrop-show"],
+                "volatile": [],
+            },
+        }
+    }
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.set_content(html)
+        data = ScreenExtractor(page, profile).extract()
+        browser.close()
+
+    assert len(data["dialogs"]) == 1
+    assert data["dialogs"][0]["title"] == "Información"
+    assert data["dialogs"][0]["region"] == "dialog"
+
+    buttons = {item["selector"]: item for item in data["buttons"]}
+    assert any(item["region"] == "main_content" for item in buttons.values())
+    assert any(item["region"] == "dialog" for item in buttons.values())

@@ -324,3 +324,74 @@ def test_canonical_self_loop_keeps_the_event_as_effective():
     assert transition.source_state_id == transition.target_state_id
     assert transition.changed is True
     assert transition.effect == "CONTENT_CHANGE"
+
+
+def test_dropdown_option_values_do_not_define_structural_identity():
+    """Different business values in the same opened dropdown are one UI state."""
+    builder = StateSignatureBuilder()
+
+    def opened(options):
+        return _screen(
+            "same rows",
+            extra_interactives=[
+                {
+                    "text": "Current selection",
+                    "control_label": "Responsable",
+                    "formcontrolname": "responsable",
+                    "tag": "mat-select",
+                    "role": "combobox",
+                    "aria_expanded": "true",
+                    "region": "main_content",
+                },
+                {
+                    "text": " ".join(options),
+                    "tag": "div",
+                    "role": "listbox",
+                    "region": "main_content",
+                },
+                *[
+                    {
+                        "text": label,
+                        "tag": "mat-option",
+                        "role": "option",
+                        "aria_selected": "false",
+                        "region": "main_content",
+                    }
+                    for label in options
+                ],
+            ],
+        )
+
+    first = builder.build(opened(["Value A", "Value B"]))
+    second = builder.build(opened(["Other X", "Other Y"]))
+
+    assert first.structural_fingerprint == second.structural_fingerprint
+    assert first.exact_fingerprint != second.exact_fingerprint
+
+
+def test_combobox_selected_value_does_not_define_structural_identity():
+    builder = StateSignatureBuilder()
+
+    def screen(selected):
+        return _screen(
+            "same rows",
+            extra_interactives=[
+                {
+                    "text": selected,
+                    "control_label": "Moneda",
+                    "formcontrolname": "moneda",
+                    "tag": "mat-select",
+                    "role": "combobox",
+                    "aria_expanded": "false",
+                    "region": "main_content",
+                }
+            ],
+        )
+
+    first = builder.build(screen("USD"))
+    second = builder.build(screen("EUR"))
+
+    assert first.structural_fingerprint == second.structural_fingerprint
+    assert first.exact_fingerprint != second.exact_fingerprint
+    assert sanitize_artifact_payload(first.summary) == first.summary
+    assert builder._hash(first.summary) == first.structural_fingerprint
