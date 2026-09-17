@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0.0",
+  "contract_id": "cbmm-formal003-evidence-traceability-v1",
+  "status": "FROZEN_PRE_FORMAL003_INPUT",
+  "formal003_output_seen_before_freeze": false,
+  "purpose": "Pre-specify the separate deterministic provenance audit required by Protocol 2.5 for RQ1 evidence traceability before any FORMAL003 structural output is inspected.",
+  "scientific_role": {
+    "rq": "RQ1",
+    "role": "secondary deterministic provenance/traceability audit",
+    "replaces_primary_precision_recall_f1": false,
+    "inference": "descriptive deterministic audit; no new significance test"
+  },
+  "timing": {
+    "input_becomes_available": "after the single immutable FORMAL003 M1 canonical artifact is built and validated",
+    "execution_order": [
+      "freeze immutable FORMAL003 M1 structural/canonical artifacts",
+      "compute primary RQ1 PRE-HITL metrics",
+      "run the pre-canonical privacy audit at its frozen boundary",
+      "run canonical validation/privacy checks",
+      "run this deterministic evidence-traceability audit",
+      "run remaining pre-specified structural consistency/observability diagnostics",
+      "only then begin structural HITL"
+    ],
+    "must_finish_before_structural_hitl": true,
+    "must_finish_before_structural_publication": true
+  },
+  "input": {
+    "artifact": "FORMAL003 processed/canonical/knowledge.json",
+    "immutable_before_audit": true,
+    "auditor": "scripts/audit/audit_evidence_traceability.py"
+  },
+  "entity_universe": {
+    "collections": [
+      "modules",
+      "screens",
+      "ui_states",
+      "fields",
+      "controls",
+      "tables",
+      "table_columns",
+      "links",
+      "events",
+      "transitions"
+    ],
+    "erp_system": "excluded from the structural-entity denominator because the canonical ERPSystem model does not declare per-entity source_refs",
+    "evidence": "audited separately as provenance records, not counted as subject structural entities"
+  },
+  "rules": {
+    "source_artifact_registry": [
+      "source_artifacts and source_artifact_hashes must contain the same keys",
+      "every source_artifact_hashes value must be a 64-character lowercase SHA-256 hex digest"
+    ],
+    "entity_source_refs": [
+      "every structural entity in the frozen universe must declare at least one source_ref",
+      "every declared source_ref must resolve in both source_artifacts and source_artifact_hashes"
+    ],
+    "declared_evidence_ids": [
+      "evidence_ids are optional for canonical entity types whose builder intentionally represents provenance only through source_refs",
+      "when an entity declares evidence_ids, every declared ID must resolve to a canonical evidence record"
+    ],
+    "evidence_records": [
+      "every evidence record must resolve its artifact_path basename to the frozen source-artifact registry",
+      "every evidence artifact_hash must be a valid 64-character lowercase SHA-256 hex digest",
+      "every structural_json evidence artifact_hash must exactly equal the corresponding source_artifact_hashes value",
+      "network_trace evidence is allowed to hash the sanitized per-screen observation subset while source_artifact_hashes stores the full network-evidence container hash",
+      "every evidence source_entity_type/source_entity_id pair must resolve to an entity in the frozen structural universe"
+    ]
+  },
+  "primary_traceability_metric": {
+    "name": "entity_source_traceability",
+    "numerator": "structural entities with at least one source_ref and with all declared source_refs resolved in the frozen source-artifact registry",
+    "denominator": "all structural entities in the frozen audit universe",
+    "pass_requirement": "numerator == denominator"
+  },
+  "additional_reported_metrics": [
+    "entity_source_ref_presence",
+    "source_ref_resolution",
+    "declared_evidence_id_resolution",
+    "entities_with_direct_evidence_ids",
+    "entities_with_all_declared_evidence_ids_resolved",
+    "evidence_artifact_resolution",
+    "evidence_hash_validity",
+    "structural_evidence_container_hash_match",
+    "evidence_source_entity_resolution",
+    "source_artifact_registry consistency"
+  ],
+  "pass_criteria": {
+    "issue_count": 0,
+    "entity_source_traceability": 1.0,
+    "source_ref_resolution": 1.0,
+    "declared_evidence_id_resolution": "1.0 when denominator > 0",
+    "evidence_artifact_resolution": "1.0 when denominator > 0",
+    "evidence_hash_validity": "1.0 when denominator > 0",
+    "structural_evidence_container_hash_match": "1.0 when denominator > 0",
+    "evidence_source_entity_resolution": "1.0 when denominator > 0"
+  },
+  "failure_rule": "A failed traceability audit is preserved and blocks structural HITL/publication for that FORMAL003 attempt. Do not repair the formal artifact or change this contract after observing the failed formal result.",
+  "privacy": {
+    "auditor_must_not_emit_observed_text": true,
+    "issue_rows_may_emit": [
+      "internal canonical IDs",
+      "artifact/source references",
+      "evidence IDs",
+      "issue codes"
+    ]
+  }
+}

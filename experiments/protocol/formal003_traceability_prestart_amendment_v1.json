@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "amendment_id": "cbmm-formal003-traceability-prestart-amendment-v1",
+  "status": "FROZEN_PRE_FORMAL003_INPUT",
+  "formal003_started": false,
+  "formal003_output_seen": false,
+  "reason": "After creating cbmm-preformal003-global-freeze-v1, a pre-START audit found that Protocol 2.5 required a separate deterministic evidence-traceability audit but the frozen repository contained no executable auditor/contract. The omission was detected before provisioning/starting FORMAL003 and before any FORMAL003 output existed.",
+  "disposition_of_global_freeze_v1": {
+    "tag": "cbmm-preformal003-global-freeze-v1",
+    "preserve_immutably": true,
+    "use_as_final_FORMAL003_freeze": false,
+    "reason": "Evaluation-harness traceability contract was incomplete.",
+    "required_successor": "cbmm-preformal003-global-freeze-v2"
+  },
+  "change_scope": {
+    "runtime_M1_M2_M3_changed": false,
+    "prompts_changed": false,
+    "models_changed": false,
+    "profiles_or_policies_changed": false,
+    "RQ1_reference_changed": false,
+    "RQ2_reference_changed": false,
+    "RQ3_bank_or_plan_changed": false,
+    "primary_metrics_changed": false,
+    "primary_statistics_changed": false,
+    "new_files": [
+      "scripts/audit/audit_evidence_traceability.py",
+      "tests/scripts/test_evidence_traceability_audit.py",
+      "experiments/protocol/formal003_evidence_traceability_contract_v1.json",
+      "experiments/protocol/formal003_traceability_prestart_amendment_v1.json"
+    ]
+  },
+  "required_development_validation_before_successor_global_freeze": [
+    "targeted evidence-traceability unit tests pass",
+    "full pytest passes",
+    "ruff passes",
+    "the deterministic traceability audit passes against the accepted frozen DEVELOPMENT M1 FULL canonical"
+  ],
+  "formal_execution_timing": "Run after RQ1 primary + privacy/canonical validation and before structural HITL/publication, exactly as frozen by formal003_evidence_traceability_contract_v1.json."
+}
