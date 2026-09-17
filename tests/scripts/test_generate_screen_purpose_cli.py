@@ -17,7 +17,7 @@ class Result:
 
 
 class Connection:
-    def __init__(self, *, revision="20260721_01", proposals=True, actions=True):
+    def __init__(self, *, revision="20260904_01", proposals=True, actions=True):
         self.revision = revision
         self.proposals = proposals
         self.actions = actions

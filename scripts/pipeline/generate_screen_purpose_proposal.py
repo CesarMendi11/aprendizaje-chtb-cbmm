@@ -111,7 +111,7 @@ def _semantic_schema_preflight(connection) -> None:
     actions = connection.exec_driver_sql(
         "SELECT to_regclass('public.semantic_review_actions')"
     ).scalar_one()
-    if revision != "20260721_01" or proposals is None or actions is None:
+    if revision != "20260904_01" or proposals is None or actions is None:
         raise CLIError("semantic_schema_not_applied")
 
 
