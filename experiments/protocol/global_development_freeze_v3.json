@@ -1,0 +1,314 @@
+{
+  "schema_version": "3.0.0",
+  "freeze_id": "cbmm-preformal003-global-freeze-v1",
+  "created_at_utc": "2026-09-17T02:53:11.437368+00:00",
+  "status": "FROZEN_PRE_FORMAL003",
+  "formal003_started": false,
+  "purpose": "Definitive metadata-only GLOBAL experimental freeze binding stabilized M1/M2/M3 runtime lineage, frozen evaluation instruments, accepted final DEVELOPMENT E2E, model/runtime environment fingerprints, and the no-tuning boundary before FORMAL003.",
+  "scientific_disposition": {
+    "FORMAL001": "preserved diagnostic/non-confirmatory iteration; excluded from primary final RQ evidence",
+    "FORMAL002": "preserved diagnostic/non-confirmatory iteration; excluded from primary final RQ evidence",
+    "FORMAL003": "not started; next formal campaign after fresh-state gates and explicit START record",
+    "evaluation_characterization": "final pre-specified evaluation of a stabilized artifact following diagnostic Design Science iterations"
+  },
+  "lineage": {
+    "m1_freeze": {
+      "tag": "cbmm-preformal003-m1-freeze-v1",
+      "commit": "0a63f3e67b9047d306ce191394a4824d1ca0b13a"
+    },
+    "instrument_freeze": {
+      "tag": "cbmm-preformal003-instruments-v1",
+      "commit": "9765789f85e36133e544cd45a8b134e7cf4464c9"
+    },
+    "global_freeze_parent_commit": "9765789f85e36133e544cd45a8b134e7cf4464c9",
+    "global_freeze_tag_created_by_outer_script": "cbmm-preformal003-global-freeze-v1"
+  },
+  "source_freeze": {
+    "backend": {
+      "head": "9765789f85e36133e544cd45a8b134e7cf4464c9",
+      "tree": "cd2e402dad0d25ff1ece2044e5dda0edcb45fae9",
+      "branch": "dev/hardening-pre-formal003-v1",
+      "runtime_tree_fingerprints": {
+        "src/erp_assistant/acquisition": "9fb898a51de97d8850688455b2040f4d693ab0bd",
+        "src/erp_assistant/structural": "0b6c2ae3258179dc00c65797157636e492aab0f2",
+        "src/erp_assistant/semantic": "f69bef5f7b6c154169beeafec581d8069541362f",
+        "src/erp_assistant/retrieval": "9ea884374c4020a0e01328ba23b13f0ded555e23",
+        "src/erp_assistant/projections": "3fa7568cc4e63f72d2f6a475afcad43aac3dcaf5",
+        "src/erp_assistant/orchestration": "8014bf1c998419bf3772d518feb04798db993a4f",
+        "src/erp_assistant/integrations": "06e70a12d9f67a7b59f4ec4b4071707a00c675f6",
+        "src/erp_assistant/persistence": "f3d8f158da8d29f25d5106dc5caa0b5f68d653f0",
+        "src/erp_assistant/api": "de487368f230ee78e0212fbfbc1fde926aeb73df",
+        "src/erp_assistant/config": "fe7ba0972181c6d64b66d9f2e882b386a0d65061",
+        "scripts/experiments": "843b24c39630f85d276a29e9b556077030ceb133",
+        "scripts/operations": "491f0451f81aaef56a5af4fa16d20a8cc56f3978",
+        "configs": "23ea92d1cab0d3c8fe6a3b90fa01002f4cafb489",
+        "experiments/protocol": "6e44377912727c0048f26049508441618a06d3ef"
+      },
+      "critical_file_sha256": {
+        "configs/cbmm.yaml": "61fc42bf1375231b193bb92f0556b1a979fb1475397be91889f0acb19b0f0429",
+        "pyproject.toml": "4b1e98f86ae43ffcd273402cb3c0727d4677dd6bb609379dfede06d0be124d34",
+        "requirements.txt": "a76dc1b04b9a5796a21f93279d4dddce7a4c900b491450bb1c79f7c11a87c88b",
+        "alembic.ini": "ff9788508ddc4dbd103dcf5979c78e683c0a9caca3244367689c59aa6b51d3db",
+        "experiments/protocol/protocol_v2_5.json": "2bda9d44a5de4b6dc96e105eaf2da3efd718327f7bf8200a8d4bc57dded25476",
+        "experiments/protocol/formal_analysis_plan_v2.json": "c7cc3b14e05124484abf46be3ab0d1721e1894243dd4d6fa15e6459359bb5250",
+        "experiments/protocol/policy_scope_contract_v1.json": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601",
+        "experiments/protocol/formal003_preparation_amendment_v1.json": "dfaba9578b815efe9ecb191c4295fa0184f75c0f1dd42a93df4ed180fc2ed08f",
+        "experiments/protocol/formal003_secondary_analysis_contract_v1.json": "4759845cc8dbda762341170d0eab5f2abc1e3d381d79df8aa728f3d2a835e7d9",
+        "experiments/protocol/formal_operational_plan_v5.md": "1d4cece3668454061e38538cb7533da3a4758fbea4188cf97f0dfb471c1b7ef6",
+        "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e",
+        "experiments/retrieval/m3_writer_development_freeze_v1.json": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604",
+        "experiments/semantic/m2_v14_generator_development_freeze_v3.json": "5368730f4becfdce80ddf3d92c6a8f2a886a60c9dfbd2e012961561649402ba8",
+        "experiments/gold_standard/formal/rq1/structural_reference_v1.csv": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c",
+        "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75",
+        "experiments/gold_standard/formal/rq2/semantic_reference_v1.json": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8",
+        "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f",
+        "experiments/gold_standard/formal/rq2/rq2_reference_freeze_v1.json": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571",
+        "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16",
+        "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed",
+        "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38",
+        "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json": "3fdc4df6de4b11d78ab6a4f889cfd795468fffdef2444a1411acbcd17ebc7b3e",
+        "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt": "6e3d7be8c3a568df689f23cf46e10498daca4faee89f46de15bdee663342218d"
+      }
+    },
+    "frontend": {
+      "head": "998711ae51aac48fadc47a2acc17de473bde7347",
+      "tree": "dd2aa23c13d51cf664ed569ed83a97f492899eb7",
+      "branch": "feat/erp-assistant-chat"
+    },
+    "target_erp_backend": {
+      "status": "EXTERNAL_CASE_STUDY_DEPENDENCY_NOT_VERSIONED_BY_THIS_PROJECT",
+      "blocking": false,
+      "limitation": "The evaluated ERP backend revision is not captured by this repository-level freeze. The ERP frontend revision is captured exactly. This dependency must be disclosed in reproducibility/threats-to-validity material."
+    }
+  },
+  "accepted_development_e2e": {
+    "accepted_run_id": "8315eaeb-98bc-4d0e-a79a-68e812726e7e",
+    "accepted_report_sha256": "4e16ba3afaba522281ee80a7d31ba9fea2fd645584e37d6132c2dfec6ef291ac",
+    "checks": 44,
+    "hard_failures": 0,
+    "failed_predecessor_run_id": "86574815-d720-4eec-a8ce-9103cabaa6a9",
+    "failed_predecessor_report_sha256": "5270b860bdb08f4ecd921d0406ac76deda6db4c29c459d6060fdf2823d7b04b6",
+    "failed_predecessor_preserved": true,
+    "interpretation": "The predecessor v1 failure was a preserved DEVELOPMENT harness population-count assertion defect. The corrected v2 E2E passed 44/44 integration checks without runtime changes."
+  },
+  "model_freeze": {
+    "ollama_endpoint": {
+      "resolved_url": "http://100.114.228.27:11434",
+      "note": "Endpoint is configuration metadata only. No credentials are included."
+    },
+    "models": {
+      "qwen3.5:9b": {
+        "digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+        "size": 6594474711,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen35",
+          "families": [
+            "qwen35"
+          ],
+          "parameter_size": "9.7B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 262144,
+          "embedding_length": 4096
+        },
+        "show_response_sha256": "b24866c70862c082c7fba54f1ea50ff143b67e65988bf86981f4d2e7fe6b6a64"
+      },
+      "qwen3.5:4b": {
+        "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd",
+        "size": 3389983735,
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen35",
+          "families": [
+            "qwen35"
+          ],
+          "parameter_size": "4.7B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 262144,
+          "embedding_length": 2560
+        },
+        "show_response_sha256": "9f33e2fd1ca976b38980e84de9772fcb83a9c03c1bd2b78438d2e624c19f918c"
+      },
+      "qwen3-embedding:0.6b": {
+        "digest": "ac6da0dfba84a81fdbfbaf330198c33cd77c4cdfc53e8bc50eb581914a15621d",
+        "size": 639150858,
+        "details": {
+          "parent_model": "/Users/ollama/.ollama/models/blobs/sha256-06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "595.78M",
+          "quantization_level": "Q8_0",
+          "context_length": 32768,
+          "embedding_length": 1024
+        },
+        "show_response_sha256": "d892086d3beae10f3e91bbfba9e4a443919f783f8893f0bb4b4323e418a7e2d4"
+      }
+    },
+    "semantic_generator": {
+      "model": "qwen3.5:9b",
+      "role": "M2 grounded semantic proposal generation",
+      "temperature": 0,
+      "think": false
+    },
+    "grounded_writer": {
+      "model": "qwen3.5:4b",
+      "role": "M3 grounded writer",
+      "temperature": 0,
+      "think": false
+    },
+    "embedding": {
+      "model": "qwen3-embedding:0.6b",
+      "observed_dimensions_in_final_e2e": 1024
+    },
+    "development_model_selection_benchmarks": {
+      "reportable_in_article": true,
+      "formal_rq_evidence": false
+    }
+  },
+  "environment_freeze": {
+    "docker_images": {
+      "postgres:17-alpine": {
+        "id": "sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193",
+        "repo_digests": "[\"postgres@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193\"]"
+      },
+      "neo4j:2026.04.0": {
+        "id": "sha256:7d8d70f78c0c55830a162e6ae212799649b0cfd349dbfe413aab8124f7cabf1b",
+        "repo_digests": "[\"neo4j@sha256:7d8d70f78c0c55830a162e6ae212799649b0cfd349dbfe413aab8124f7cabf1b\"]"
+      }
+    },
+    "python": {
+      "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+      "implementation": "CPython",
+      "platform": "Linux-6.12.96+deb13-amd64-x86_64-with-glibc2.41",
+      "packages": {
+        "alembic": "1.19.0",
+        "chromadb": "1.5.9",
+        "fastapi": "0.141.1",
+        "neo4j": "6.2.0",
+        "playwright": "1.62.0",
+        "psycopg": "3.3.4",
+        "pydantic": "2.13.4",
+        "pytest": "9.1.1",
+        "sqlalchemy": "2.0.51",
+        "uvicorn": "0.52.1"
+      },
+      "pip_freeze_sha256": "6c992799b681bca1aade9c2dce335eb44be7ce9b26de379d4abe3892a32c13e7"
+    },
+    "browser": {
+      "playwright_package": "1.62.0",
+      "chromium_executable": "/home/familia/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome",
+      "chromium_version": "Google Chrome for Testing 151.0.7922.34",
+      "chromium_binary_sha256": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71"
+    },
+    "preflight_report": {
+      "source_path": "/home/familia/Downloads/cbmm-PREFORMAL003-GLOBAL-FREEZE-PREFLIGHT-20260916_214907/preflight_report.json",
+      "sha256": "8895eb9b4274e8b60ef398bb253a2fbc74d6341c828ad6799efa9b4b1dba9d18",
+      "preflight_version": "v3",
+      "status": "PASS"
+    },
+    "secrets": {
+      "env_files_committed": false,
+      "credentials_in_manifest": false,
+      "database_passwords_in_manifest": false
+    }
+  },
+  "evaluation_freeze": {
+    "primary_rqs": [
+      "RQ1",
+      "RQ2",
+      "RQ3"
+    ],
+    "rq1": {
+      "primary_policy_eligible_routes": 57,
+      "secondary_analyses": [
+        "observability budget",
+        "deterministic identity-discrepancy taxonomy"
+      ]
+    },
+    "rq2": {
+      "primary_eligible_routes": 56,
+      "eligible_failure_timeout_abstention_remains_in_denominator": true
+    },
+    "rq3": {
+      "queries": 54,
+      "strata": 9,
+      "conditions_per_query": 4,
+      "responses": 216,
+      "primary_paired_comparisons": {
+        "B-A": "authorized semantic HITL contribution",
+        "C-B": "grounded writer contribution"
+      },
+      "secondary_graph_ablation": {
+        "C_graph_on-C_graph_off": "governed graph-expansion contribution"
+      },
+      "expert_B_queries": 18,
+      "expert_B_responses": 72,
+      "inter_rater": "raw agreement + Cohen's kappa for expected_behavior_correct; safety agreement separately on mutually rated mutative-safety items"
+    },
+    "sus": "exploratory",
+    "frozen_input_hashes": {
+      "configs/cbmm.yaml": "61fc42bf1375231b193bb92f0556b1a979fb1475397be91889f0acb19b0f0429",
+      "pyproject.toml": "4b1e98f86ae43ffcd273402cb3c0727d4677dd6bb609379dfede06d0be124d34",
+      "requirements.txt": "a76dc1b04b9a5796a21f93279d4dddce7a4c900b491450bb1c79f7c11a87c88b",
+      "alembic.ini": "ff9788508ddc4dbd103dcf5979c78e683c0a9caca3244367689c59aa6b51d3db",
+      "experiments/protocol/protocol_v2_5.json": "2bda9d44a5de4b6dc96e105eaf2da3efd718327f7bf8200a8d4bc57dded25476",
+      "experiments/protocol/formal_analysis_plan_v2.json": "c7cc3b14e05124484abf46be3ab0d1721e1894243dd4d6fa15e6459359bb5250",
+      "experiments/protocol/policy_scope_contract_v1.json": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601",
+      "experiments/protocol/formal003_preparation_amendment_v1.json": "dfaba9578b815efe9ecb191c4295fa0184f75c0f1dd42a93df4ed180fc2ed08f",
+      "experiments/protocol/formal003_secondary_analysis_contract_v1.json": "4759845cc8dbda762341170d0eab5f2abc1e3d381d79df8aa728f3d2a835e7d9",
+      "experiments/protocol/formal_operational_plan_v5.md": "1d4cece3668454061e38538cb7533da3a4758fbea4188cf97f0dfb471c1b7ef6",
+      "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e",
+      "experiments/retrieval/m3_writer_development_freeze_v1.json": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604",
+      "experiments/semantic/m2_v14_generator_development_freeze_v3.json": "5368730f4becfdce80ddf3d92c6a8f2a886a60c9dfbd2e012961561649402ba8",
+      "experiments/gold_standard/formal/rq1/structural_reference_v1.csv": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c",
+      "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75",
+      "experiments/gold_standard/formal/rq2/semantic_reference_v1.json": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8",
+      "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f",
+      "experiments/gold_standard/formal/rq2/rq2_reference_freeze_v1.json": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571",
+      "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16",
+      "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed",
+      "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38",
+      "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json": "3fdc4df6de4b11d78ab6a4f889cfd795468fffdef2444a1411acbcd17ebc7b3e",
+      "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt": "6e3d7be8c3a568df689f23cf46e10498daca4faee89f46de15bdee663342218d"
+    }
+  },
+  "no_tuning_boundary": {
+    "becomes_operational_at": "FORMAL003 START record, after fresh-store/empty-state and pre-run manifest gates",
+    "already_frozen_before_start": true,
+    "must_not_change_from_this_global_freeze_based_on_formal_outputs": [
+      "M1/M2/M3 runtime",
+      "prompts",
+      "profiles",
+      "policies",
+      "models",
+      "embedding model",
+      "retrieval settings",
+      "graph settings",
+      "RQ1 reference",
+      "RQ2 reference/exclusion",
+      "RQ3 bank",
+      "RQ3 execution plan",
+      "answer key / bank-validation artifacts",
+      "rubrics",
+      "metrics",
+      "denominators",
+      "statistical analysis",
+      "secondary-analysis definitions",
+      "privacy-audit sequence",
+      "evidence-traceability sequence"
+    ]
+  },
+  "next_required_steps": [
+    "Provision completely fresh isolated FORMAL003 PostgreSQL, Neo4j, Chroma and result directories.",
+    "Verify empty state and no DEVELOPMENT data contamination.",
+    "Create immutable FORMAL003 pre-run manifest binding this global freeze tag/commit and all formal-store identities.",
+    "Verify/freeze privacy-audit and evidence-traceability execution order.",
+    "Write explicit FORMAL003 START record.",
+    "Only after START: execute one M1 FORMAL003 acquisition under the frozen protocol."
+  ]
+}
