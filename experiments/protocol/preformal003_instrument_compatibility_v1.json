@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0.0",
+  "created_at_utc": "2026-09-17T01:09:34.666761+00:00",
+  "audit_type": "preformal003_instrument_compatibility",
+  "status": "PASS_REQUIRES_FORMAL003_ADDITIVE_AMENDMENT",
+  "accepted_m1": {
+    "freeze_commit": "0a63f3e67b9047d306ce191394a4824d1ca0b13a",
+    "freeze_tag": "cbmm-preformal003-m1-freeze-v1",
+    "development_full_run_id": "ebf66b91-7e26-4e20-bd2f-e4f73f315f29",
+    "knowledge_version": "0c1263082883c047"
+  },
+  "rq1": {
+    "reference_routes": 65,
+    "policy_blocked": 8,
+    "eligible": 57,
+    "frozen_m1_routes": 57,
+    "exact_eligible_route_match": true
+  },
+  "rq2": {
+    "reference_routes": 64,
+    "eligible": 56,
+    "explicit_exclusions": [
+      "/admin/tramites/bandeja-internos"
+    ],
+    "frozen_m1_minus_rq2": [
+      "/admin/tramites/bandeja-internos"
+    ],
+    "exact_exclusion_contract": true
+  },
+  "rq3": {
+    "queries": 54,
+    "strata": {
+      "ambiguity_and_clarification": 6,
+      "controls_actions_and_navigation": 6,
+      "current_route_context": 6,
+      "fields_and_search": 6,
+      "locate_screen": 6,
+      "mutative_safety": 6,
+      "out_of_scope_abstention": 6,
+      "screen_purpose": 6,
+      "tables_and_columns": 6
+    },
+    "entries": 216,
+    "expert_B_queries": 18,
+    "expert_B_strata": {
+      "ambiguity_and_clarification": 2,
+      "controls_actions_and_navigation": 2,
+      "current_route_context": 2,
+      "fields_and_search": 2,
+      "locate_screen": 2,
+      "mutative_safety": 2,
+      "out_of_scope_abstention": 2,
+      "screen_purpose": 2,
+      "tables_and_columns": 2
+    },
+    "primary_comparisons": [
+      {
+        "comparison": "B-A",
+        "effect": "authorized semantic HITL contribution"
+      },
+      {
+        "comparison": "C-B",
+        "effect": "grounded writer contribution"
+      }
+    ],
+    "secondary_graph_ablation": {
+      "comparison": "C_graph_on-C_graph_off",
+      "effect": "governed graph-expansion contribution"
+    },
+    "inter_rater": "Cohen's kappa for expected_behavior_correct on the frozen shared blinded subset, plus raw percent agreement. Report safety_compliant agreement separately on mutually rated mutative-safety items. Atomic claim-match disagreements are described rather than collapsed into the same kappa."
+  },
+  "development_only_diagnostics_not_formal_results": {
+    "observed_titles": [
+      44,
+      57
+    ],
+    "classified_controls": [
+      317,
+      323
+    ],
+    "unknown_selected": [
+      0,
+      2777
+    ],
+    "ui_failures": [
+      1,
+      173
+    ],
+    "identity_taxonomy_proof_of_computability": {
+      "reference_absent__observed_absent": 3,
+      "reference_absent__observed_named": 3,
+      "reference_named__observed_absent": 10,
+      "reference_named__observed_exact": 41
+    }
+  },
+  "frozen_input_hashes": {
+    "protocol": {
+      "path": "experiments/protocol/protocol_v2_5.json",
+      "sha256": "2bda9d44a5de4b6dc96e105eaf2da3efd718327f7bf8200a8d4bc57dded25476"
+    },
+    "analysis_plan": {
+      "path": "experiments/protocol/formal_analysis_plan_v2.json",
+      "sha256": "c7cc3b14e05124484abf46be3ab0d1721e1894243dd4d6fa15e6459359bb5250"
+    },
+    "operational_plan_legacy": {
+      "path": "experiments/protocol/formal_operational_plan_v4.md",
+      "sha256": "c6cc30a818d138db618a32e370f961f797c00ed32d1b1edadf8e8e1959fa765d"
+    },
+    "policy_scope": {
+      "path": "experiments/protocol/policy_scope_contract_v1.json",
+      "sha256": "366dad2cea6256270aff11dde55ea3861adae6420385c555521e75b4cbe5c601"
+    },
+    "rq1_reference": {
+      "path": "experiments/gold_standard/formal/rq1/structural_reference_v1.csv",
+      "sha256": "826eeb1b1d04c58036a459736c0ca97eed3d3c17b1f67d7be215fd7e1520308c"
+    },
+    "rq1_freeze": {
+      "path": "experiments/gold_standard/formal/rq1/rq1_reference_freeze_v1.json",
+      "sha256": "222635c286bdda72ed2e828f833e088ec09c316bbf4845d746209fcc5b273a75"
+    },
+    "rq2_reference": {
+      "path": "experiments/gold_standard/formal/rq2/semantic_reference_v1.json",
+      "sha256": "79362b8d8e3acf5304bb3b70ee404a92ffbc22ebfabd1170f345f51130ce8fa8"
+    },
+    "rq2_exclusions": {
+      "path": "experiments/gold_standard/formal/rq2/semantic_exclusions_v1.csv",
+      "sha256": "17530a2a242b406ce1f27778d9bcb972f8049d4499cb8dae980fe6d9345ba48f"
+    },
+    "rq2_freeze": {
+      "path": "experiments/gold_standard/formal/rq2/rq2_reference_freeze_v1.json",
+      "sha256": "70828da66110ec47e7df3af92e8d9aca1da33c60ace19311f4f70a8f6203a571"
+    },
+    "rq3_bank": {
+      "path": "experiments/query_bank/formal/rq3/rq3_query_bank_v2.json",
+      "sha256": "78677c09e4843cbf195d800de725e8b81bbcaa12fb52c70a9b15180aacf37a16"
+    },
+    "rq3_plan": {
+      "path": "experiments/query_bank/formal/rq3/rq3_execution_plan_v2.json",
+      "sha256": "02734574d8c3d49a1ba492fc2ef29aa22b69dfb7b1fd92ee11b2f380640f87ed"
+    },
+    "rq3_subset": {
+      "path": "experiments/query_bank/formal/rq3/rq3_expert_B_subset_v2.json",
+      "sha256": "0f0364a43878c5f5e83511e825b1534dc95b760d28ab82fbdb3826a2390ade38"
+    },
+    "rq3_sampling": {
+      "path": "experiments/query_bank/formal/rq3/rq3_sampling_allocation_manifest_v2.json",
+      "sha256": "3fdc4df6de4b11d78ab6a4f889cfd795468fffdef2444a1411acbcd17ebc7b3e"
+    },
+    "rq3_A_validation": {
+      "path": "experiments/query_bank/formal/rq3/expert_A_bank_validation_declaration_v2.txt",
+      "sha256": "6e3d7be8c3a568df689f23cf46e10498daca4faee89f46de15bdee663342218d"
+    },
+    "rq3_conditions": {
+      "path": "experiments/retrieval/m3_rq3_conditions_development_contract_v1.json",
+      "sha256": "c3920866a545df5ff4611ef32b274237649a827232b5772e5f71e5a07e10a22e"
+    },
+    "m2_freeze": {
+      "path": "experiments/semantic/m2_v14_generator_development_freeze_v3.json",
+      "sha256": "5368730f4becfdce80ddf3d92c6a8f2a886a60c9dfbd2e012961561649402ba8"
+    },
+    "m3_writer_freeze": {
+      "path": "experiments/retrieval/m3_writer_development_freeze_v1.json",
+      "sha256": "b2163f1a2edd0ce4d212bcfc802240c3211ca80371aa2a8e651f71069ff99604"
+    }
+  }
+}
